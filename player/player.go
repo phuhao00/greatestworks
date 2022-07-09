@@ -1,43 +1,31 @@
 package player
 
-import (
-	"greatestworks/chat"
-	"greatestworks/function"
-)
+import "greatestworks/define"
 
 type Player struct {
-	UId        uint64
-	FriendList []uint64 //朋友
-	chChat     chan chat.Msg
+	UId            uint64
+	FriendList     []uint64 //朋友
+	HandlerParamCh chan define.HandlerParam
+	handlers       map[string]Handler
 }
 
 func NewPlayer() *Player {
 	p := &Player{
 		UId:        0,
-		FriendList: nil,
+		FriendList: make([]uint64, 100),
+		handlers:   make(map[string]Handler),
 	}
+	p.HandlerRegister()
 	return p
-}
-
-func (p *Player) AddFriend(fId uint64) {
-	if !function.CheckInNumberSlice(fId, p.FriendList) {
-		p.FriendList = append(p.FriendList, fId)
-	}
-}
-
-func (p *Player) DelFriend(fId uint64) {
-	p.FriendList = function.DelEleInSlice(fId, p.FriendList)
 }
 
 func (p *Player) Run() {
 	for {
 		select {
-		case chatMsg := <-p.chChat:
-			p.ResolveChatMsg(chatMsg)
+		case handlerParam := <-p.HandlerParamCh:
+			if fn, ok := p.handlers[handlerParam.HandlerKey]; ok {
+				fn(handlerParam.Data)
+			}
 		}
 	}
-}
-
-func (p *Player) ResolveChatMsg(chatMsg chat.Msg) {
-
 }

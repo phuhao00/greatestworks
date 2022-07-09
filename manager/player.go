@@ -14,12 +14,16 @@ func (pm *PlayerMgr) Add(p player.Player) {
 	go p.Run()
 }
 
+//Del ...
+func (pm *PlayerMgr) Del(p player.Player) {
+	delete(pm.players, p.UId)
+}
+
 func (pm *PlayerMgr) Run() {
 	for {
 		select {
 		case p := <-pm.addPCh:
 			pm.Add(p)
 		}
-
 	}
 }
