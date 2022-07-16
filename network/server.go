@@ -3,7 +3,8 @@ package network
 import "net"
 
 type Server struct {
-	tcpListener net.Listener
+	tcpListener     net.Listener
+	OnSessionPacket func(packet *SessionPacket)
 }
 
 func NewServer(address string) *Server {

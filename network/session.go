@@ -8,16 +8,18 @@ import (
 )
 
 type Session struct {
-	UId     int64
-	Conn    net.Conn
-	IsClose bool
-	packer  IPacker
-	writeCh chan *Message
+	UId            int64
+	Conn           net.Conn
+	IsClose        bool
+	packer         IPacker
+	WriteCh        chan *Message
+	IsPlayerOnline bool
+	MessageHandler func(packet *SessionPacket)
 	//
 }
 
 func NewSession(conn net.Conn) *Session {
-	return &Session{Conn: conn, packer: &NormalPacker{ByteOrder: binary.BigEndian}, writeCh: make(chan *Message, 1)}
+	return &Session{Conn: conn, packer: &NormalPacker{ByteOrder: binary.BigEndian}, WriteCh: make(chan *Message, 1)}
 }
 
 func (s *Session) Run() {
@@ -38,17 +40,22 @@ func (s *Session) Read() {
 			continue
 		}
 		fmt.Println("receive message:", string(message.Data))
-		s.writeCh <- &Message{
+		s.MessageHandler(&SessionPacket{
+			Msg:  message,
+			Sess: s,
+		})
+		s.WriteCh <- &Message{
 			ID:   555,
 			Data: []byte("hi"),
 		}
+
 	}
 }
 
 func (s *Session) Write() {
 	for {
 		select {
-		case resp := <-s.writeCh:
+		case resp := <-s.WriteCh:
 			s.send(resp)
 		}
 	}

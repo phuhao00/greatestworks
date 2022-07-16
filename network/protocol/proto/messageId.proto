@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package  messageId;
+
+option go_package="/messageId";
+
+enum MessageId {
+  None =0;
+
+  CSLogin=50001;
+  SCLogin=50002;
+
+  //player
+  CSAddFriend=100001;
+  SCAddFriend=100002;
+  CSDelFriend=100003;
+  SCDelFriend=100004;
+  CSSendChatMsg=100005;
+  SCSendChatMsg=100006;
+
+}

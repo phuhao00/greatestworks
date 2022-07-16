@@ -1,7 +1,7 @@
 package player
 
 func (p *Player) HandlerRegister() {
-	p.handlers["add_friend"] = p.AddFriend
-	p.handlers["del_friend"] = p.DelFriend
-	p.handlers["del_friend"] = p.ResolveChatMsg
+	p.handlers[111] = p.AddFriend
+	p.handlers[222] = p.DelFriend
+	p.handlers[333] = p.ResolveChatMsg
 }
