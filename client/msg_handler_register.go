@@ -1,9 +1,11 @@
 package main
 
+import "greatestworks/network/protocol/gen/messageId"
+
 func (c *Client) MessageHandlerRegister() {
-	c.messageHandlers[111] = c.OnLoginRsp
-	c.messageHandlers[222] = c.OnAddFriendRsp
-	c.messageHandlers[333] = c.OnDelFriendRsp
-	c.messageHandlers[444] = c.OnSendChatMsgRsp
+	c.messageHandlers[messageId.MessageId_SCLogin] = c.OnLoginRsp
+	c.messageHandlers[messageId.MessageId_SCAddFriend] = c.OnAddFriendRsp
+	c.messageHandlers[messageId.MessageId_SCDelFriend] = c.OnDelFriendRsp
+	c.messageHandlers[messageId.MessageId_SCSendChatMsg] = c.OnSendChatMsgRsp
 
 }

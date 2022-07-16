@@ -1,8 +1,13 @@
 package main
 
+import "greatestworks/network/protocol/gen/messageId"
+
 func (c *Client) InputHandlerRegister() {
-	c.inputHandlers["login"] = c.Login
-	c.inputHandlers["add_friend"] = c.AddFriend
-	c.inputHandlers["del_friend"] = c.DelFriend
-	c.inputHandlers["chat_msg"] = c.SendChatMsg
+	c.inputHandlers[messageId.MessageId_CSLogin.String()] = c.Login
+	c.inputHandlers[messageId.MessageId_CSAddFriend.String()] = c.AddFriend
+	c.inputHandlers[messageId.MessageId_CSDelFriend.String()] = c.DelFriend
+	c.inputHandlers[messageId.MessageId_CSSendChatMsg.String()] = c.SendChatMsg
 }
+
+// CSAddFriend 10001
+//
