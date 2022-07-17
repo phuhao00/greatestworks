@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"greatestworks/network"
 	"greatestworks/network/protocol/gen/messageId"
 )
@@ -33,7 +32,6 @@ func (c *Client) Run() {
 		for {
 			select {
 			case input := <-c.chInput:
-				fmt.Printf("cmd:%s,param:%v  <<<\t \n", input.Command, input.Param)
 				inputHandler := c.inputHandlers[input.Command]
 				if inputHandler != nil {
 					inputHandler(input)
@@ -42,7 +40,7 @@ func (c *Client) Run() {
 		}
 	}()
 	go c.console.Run()
-	//go c.cli.Run()
+	go c.cli.Run()
 }
 
 func (c *Client) OnMessage(packet *network.ClientPacket) {

@@ -7,8 +7,10 @@ option go_package="/messageId";
 enum MessageId {
   None =0;
 
-  CSLogin=50001;
-  SCLogin=50002;
+  CSCreatePlayer=50001;
+  SCCreatePlayer=50002;
+  CSLogin=50003;
+  SCLogin=50004;
 
   //player
   CSAddFriend=100001;
