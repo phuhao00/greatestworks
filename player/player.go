@@ -10,7 +10,7 @@ type Player struct {
 	FriendList     []uint64 //朋友
 	HandlerParamCh chan *network.Message
 	handlers       map[messageId.MessageId]Handler
-	session        *network.Session
+	Session        *network.Session
 }
 
 func NewPlayer() *Player {

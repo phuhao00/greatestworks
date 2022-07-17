@@ -14,7 +14,7 @@ type MgrMgr struct {
 }
 
 func NewMgrMgr() *MgrMgr {
-	m := &MgrMgr{Pm: &manager.PlayerMgr{}}
+	m := &MgrMgr{Pm: manager.NewPlayerMgr()}
 	m.Server = network.NewServer(":8023")
 	m.Server.OnSessionPacket = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.SessionPacket))
@@ -27,7 +27,7 @@ var MM *MgrMgr
 func (mm *MgrMgr) Run() {
 	mm.HandlerRegister()
 	go mm.Server.Run()
-	//go mm.Pm.Run()
+	go mm.Pm.Run()
 }
 
 func (mm *MgrMgr) OnSessionPacket(packet *network.SessionPacket) {

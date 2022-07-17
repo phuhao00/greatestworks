@@ -17,6 +17,9 @@ func NewPlayerMgr() *PlayerMgr {
 
 //Add ...
 func (pm *PlayerMgr) Add(p *player.Player) {
+	if pm.players[p.UId] != nil {
+		return
+	}
 	pm.players[p.UId] = p
 	go p.Run()
 }
