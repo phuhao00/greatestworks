@@ -2,9 +2,10 @@ package player
 
 import (
 	"fmt"
-	"greatestworks/function"
 	"greatestworks/network"
 	"greatestworks/network/protocol/gen/player"
+
+	"github.com/phuhao00/sugar"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -17,7 +18,7 @@ func (p *Player) AddFriend(packet *network.SessionPacket) {
 	if err != nil {
 		return
 	}
-	if !function.CheckInNumberSlice(req.UId, p.FriendList) {
+	if !sugar.CheckInSlice(req.UId, p.FriendList) {
 		p.FriendList = append(p.FriendList, req.UId)
 	}
 }
@@ -28,7 +29,7 @@ func (p *Player) DelFriend(packet *network.SessionPacket) {
 	if err != nil {
 		return
 	}
-	p.FriendList = function.DelEleInSlice(req.UId, p.FriendList)
+	p.FriendList = sugar.DelOneInSlice(req.UId, p.FriendList)
 }
 
 func (p *Player) ResolveChatMsg(packet *network.SessionPacket) {
