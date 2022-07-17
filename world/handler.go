@@ -3,6 +3,7 @@ package world
 import (
 	"fmt"
 	"greatestworks/network"
+	"greatestworks/network/protocol/gen/messageId"
 	"greatestworks/network/protocol/gen/player"
 	logicPlayer "greatestworks/player"
 	"time"
@@ -17,7 +18,7 @@ func (mm *MgrMgr) CreatePlayer(message *network.SessionPacket) {
 		return
 	}
 	fmt.Println("[MgrMgr.CreatePlayer]", msg)
-	mm.SendMsg(message.Msg.ID, &player.SCCreateUser{}, message.Sess)
+	mm.SendMsg(uint64(messageId.MessageId_SCCreatePlayer), &player.SCCreateUser{}, message.Sess)
 
 }
 

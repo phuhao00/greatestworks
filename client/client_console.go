@@ -29,14 +29,23 @@ func (c *ClientConsole) Run() {
 			fmt.Println("input err ,check your input and  try again !!!")
 			continue
 		}
-		split := strings.Split(readString, " ")
-		if len(split) == 0 {
+		split := strings.Split(readString, "|")
+		newSlice := make([]string, 0)
+		for i, s := range split {
+			split[i] = strings.TrimSpace(s)
+			split[i] = strings.Trim(s, "\n")
+			split[i] = strings.Trim(s, "\r")
+			if len(s) != 0 {
+				newSlice = append(newSlice, s)
+			}
+		}
+		if len(newSlice) == 0 {
 			fmt.Println("input err, check your input and  try again !!! ")
 			continue
 		}
 		in := &InputParam{
-			Command: split[0],
-			Param:   split[1:],
+			Command: newSlice[0],
+			Param:   newSlice[1:],
 		}
 		c.chInput <- in
 	}

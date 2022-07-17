@@ -3,6 +3,7 @@ package player
 import (
 	"fmt"
 	"greatestworks/network"
+	"greatestworks/network/protocol/gen/messageId"
 	"greatestworks/network/protocol/gen/player"
 
 	"github.com/phuhao00/sugar"
@@ -14,13 +15,27 @@ type Handler func(packet *network.Message)
 
 func (p *Player) AddFriend(packet *network.Message) {
 	req := &player.CSAddFriend{}
+
 	err := proto.Unmarshal(packet.Data, req)
 	if err != nil {
 		return
 	}
+
 	if !sugar.CheckInSlice(req.UId, p.FriendList) {
 		p.FriendList = append(p.FriendList, req.UId)
 	}
+
+	bytes, err := proto.Marshal(&player.SCSendChatMsg{})
+	if err != nil {
+		return
+	}
+
+	rsp := &network.Message{
+		ID:   uint64(messageId.MessageId_SCSendChatMsg),
+		Data: bytes,
+	}
+
+	p.session.SendMsg(rsp)
 }
 
 func (p *Player) DelFriend(packet *network.Message) {
@@ -30,6 +45,18 @@ func (p *Player) DelFriend(packet *network.Message) {
 		return
 	}
 	p.FriendList = sugar.DelOneInSlice(req.UId, p.FriendList)
+
+	bytes, err := proto.Marshal(&player.SCDelFriend{})
+	if err != nil {
+		return
+	}
+
+	rsp := &network.Message{
+		ID:   uint64(messageId.MessageId_SCDelFriend),
+		Data: bytes,
+	}
+
+	p.session.SendMsg(rsp)
 }
 
 func (p *Player) ResolveChatMsg(packet *network.Message) {
@@ -40,5 +67,16 @@ func (p *Player) ResolveChatMsg(packet *network.Message) {
 		return
 	}
 	fmt.Println(req.Msg.Content)
-	// todo 收到消息 然后转发给客户端（当你的好友给你发消息情况）
+
+	bytes, err := proto.Marshal(&player.SCSendChatMsg{})
+	if err != nil {
+		return
+	}
+
+	rsp := &network.Message{
+		ID:   uint64(messageId.MessageId_SCSendChatMsg),
+		Data: bytes,
+	}
+
+	p.session.SendMsg(rsp)
 }

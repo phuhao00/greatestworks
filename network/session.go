@@ -19,7 +19,7 @@ type Session struct {
 }
 
 func NewSession(conn net.Conn) *Session {
-	return &Session{Conn: conn, packer: &NormalPacker{ByteOrder: binary.BigEndian}, WriteCh: make(chan *Message, 1)}
+	return &Session{Conn: conn, packer: &NormalPacker{ByteOrder: binary.BigEndian}, WriteCh: make(chan *Message, 10)}
 }
 
 func (s *Session) Run() {
@@ -44,10 +44,6 @@ func (s *Session) Read() {
 			Msg:  message,
 			Sess: s,
 		})
-		s.WriteCh <- &Message{
-			ID:   555,
-			Data: []byte("hi"),
-		}
 	}
 }
 

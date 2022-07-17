@@ -4,5 +4,6 @@ import "greatestworks/world"
 
 func main() {
 	world.MM = world.NewMgrMgr()
-	world.MM.Run()
+	go world.MM.Run()
+	select {}
 }

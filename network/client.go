@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
-	"time"
 )
 
 type Client struct {
@@ -36,14 +35,8 @@ func (c *Client) Run() {
 }
 
 func (c *Client) Write(conn net.Conn) {
-	tick := time.NewTicker(time.Second)
 	for {
 		select {
-		case <-tick.C:
-			c.ChMsg <- &Message{
-				ID:   111,
-				Data: []byte("hello world "),
-			}
 		case msg := <-c.ChMsg:
 			c.Send(conn, msg)
 		}
@@ -53,7 +46,7 @@ func (c *Client) Write(conn net.Conn) {
 func (c *Client) Send(conn net.Conn, message *Message) {
 	pack, err := c.packer.Pack(message)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return
 	}
 	conn.Write(pack)
@@ -63,7 +56,7 @@ func (c *Client) Read(conn net.Conn) {
 	for {
 		message, err := c.packer.Unpack(conn)
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Println(err)
 			continue
 		}
 		c.OnMessage(&ClientPacket{

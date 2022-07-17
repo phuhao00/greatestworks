@@ -1,14 +1,26 @@
 package network
 
-import "net"
+import (
+	"fmt"
+	"net"
+)
 
 type Server struct {
 	tcpListener     net.Listener
 	OnSessionPacket func(packet *SessionPacket)
+	Address         string
 }
 
 func NewServer(address string) *Server {
-	resolveTCPAddr, err := net.ResolveTCPAddr("tcp6", address)
+
+	s := &Server{Address: address}
+
+	return s
+
+}
+
+func (s *Server) Run() {
+	resolveTCPAddr, err := net.ResolveTCPAddr("tcp6", s.Address)
 	if err != nil {
 		panic(err)
 	}
@@ -16,25 +28,20 @@ func NewServer(address string) *Server {
 	if err != nil {
 		panic(err)
 	}
-	s := &Server{}
 	s.tcpListener = tcpListener
-	return s
-
-}
-
-func (s *Server) Run() {
 	for {
 		conn, err := s.tcpListener.Accept()
 		if err != nil {
 			if _, ok := err.(net.Error); ok {
+				fmt.Println(err)
 				continue
 			}
 		}
-		go func() {
-			newSession := NewSession(conn)
-			SessionMgrInstance.AddSession(newSession)
-			newSession.Run()
-			SessionMgrInstance.DelSession(newSession.UId)
-		}()
+
+		newSession := NewSession(conn)
+		newSession.MessageHandler = s.OnSessionPacket
+		SessionMgrInstance.AddSession(newSession)
+		newSession.Run()
+		SessionMgrInstance.DelSession(newSession.UId)
 	}
 }
