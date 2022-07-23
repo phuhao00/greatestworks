@@ -1,9 +1,12 @@
 package world
 
 import (
+	"greatestworks/logger"
 	"greatestworks/manager"
 	"greatestworks/network"
 	"greatestworks/network/protocol/gen/messageId"
+	"os"
+	"syscall"
 )
 
 type MgrMgr struct {
@@ -38,4 +41,19 @@ func (mm *MgrMgr) OnSessionPacket(packet *network.SessionPacket) {
 	if p := mm.Pm.GetPlayer(packet.Sess.UId); p != nil {
 		p.HandlerParamCh <- packet.Msg
 	}
+}
+
+func (mm *MgrMgr) OnSystemSignal(signal os.Signal) bool {
+	logger.Logger.DebugF("[MgrMgr] 收到信号 %v \n", signal)
+	tag := true
+	switch signal {
+	case syscall.SIGHUP:
+		//todo
+	case syscall.SIGPIPE:
+	default:
+		logger.Logger.DebugF("[MgrMgr] 收到信号准备退出...")
+		tag = false
+
+	}
+	return tag
 }
