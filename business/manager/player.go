@@ -1,6 +1,8 @@
 package manager
 
-import "greatestworks/player"
+import (
+	"greatestworks/business/player"
+)
 
 //PlayerMgr 维护在线玩家
 type PlayerMgr struct {

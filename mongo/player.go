@@ -1,4 +1,4 @@
-package transport
+package mongo
 
 type Player struct {
 	Uid        uint64   `bson:"uid"`

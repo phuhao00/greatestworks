@@ -1,8 +1,9 @@
 package player
 
 import (
-	"github.com/phuhao00/network"
 	"greatestworks/network/protocol/gen/messageId"
+
+	"github.com/phuhao00/network"
 )
 
 type Player struct {
@@ -32,4 +33,14 @@ func (p *Player) Run() {
 			}
 		}
 	}
+}
+
+func (p *Player) OnLogin() {
+	//从db加载数据初始化
+	//同步数据给客户端
+
+}
+
+func (p *Player) OnLogout() {
+	//存db
 }

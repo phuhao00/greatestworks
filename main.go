@@ -1,8 +1,8 @@
 package main
 
 import (
+	"greatestworks/business/world"
 	"greatestworks/logger"
-	"greatestworks/world"
 
 	"github.com/phuhao00/sugar"
 )

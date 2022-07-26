@@ -2,11 +2,11 @@ package world
 
 import (
 	"fmt"
-	"github.com/phuhao00/network"
+	logicPlayer "greatestworks/business/player"
 	"greatestworks/network/protocol/gen/messageId"
 	"greatestworks/network/protocol/gen/player"
-	logicPlayer "greatestworks/player"
 
+	"github.com/phuhao00/network"
 	"google.golang.org/protobuf/proto"
 )
 
