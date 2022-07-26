@@ -2,7 +2,7 @@ package world
 
 import (
 	"fmt"
-	"greatestworks/network"
+	"github.com/phuhao00/network"
 	"greatestworks/network/protocol/gen/messageId"
 	"greatestworks/network/protocol/gen/player"
 	logicPlayer "greatestworks/player"

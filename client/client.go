@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/phuhao00/network"
 	"greatestworks/logger"
-	"greatestworks/network"
 	"greatestworks/network/protocol/gen/messageId"
 	"os"
 	"syscall"

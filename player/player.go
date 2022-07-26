@@ -1,7 +1,7 @@
 package player
 
 import (
-	"greatestworks/network"
+	"github.com/phuhao00/network"
 	"greatestworks/network/protocol/gen/messageId"
 )
 

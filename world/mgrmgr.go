@@ -1,9 +1,9 @@
 package world
 
 import (
+	"github.com/phuhao00/network"
 	"greatestworks/logger"
 	"greatestworks/manager"
-	"greatestworks/network"
 	"greatestworks/network/protocol/gen/messageId"
 	"os"
 	"syscall"

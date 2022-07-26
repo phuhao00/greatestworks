@@ -1,6 +1,8 @@
 package main
 
-import "greatestworks/network"
+import (
+	"github.com/phuhao00/network"
+)
 
 func main() {
 	server := network.NewServer(":8023")
