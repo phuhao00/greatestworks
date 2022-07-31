@@ -25,7 +25,5 @@ func init() {
 			}),
 		}
 		tc.Launch()
-		defer tc.Stop()
 	})
-
 }
