@@ -1,5 +1,8 @@
 package task
 
-type Target struct {
-	Observer
+type Target interface {
+	CheckDone() bool
+	OnNotify(Event)
+	GetTargetId() uint32
+	SetTaskCB(func())
 }

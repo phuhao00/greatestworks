@@ -1,9 +1,10 @@
 package task
 
 type Task struct {
-	Conf   *Config
-	Next   *Task
-	Status Status
+	Conf    *Config
+	Next    *Task
+	Status  Status
+	Targets []*Target
 }
 
 func NewTask(config *Config) *Task {
@@ -20,5 +21,9 @@ func (t *Task) Accept(config *Config) {
 
 func (t *Task) Finish() {
 	t.Status = FINISH
+
+}
+
+func (t *Task) TargetDoneCallBack() {
 
 }
