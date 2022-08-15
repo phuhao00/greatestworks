@@ -1,0 +1,3 @@
+[submodule "network/proto"]
+	path = network/proto
+	url = https://github.com/phuhao00/greatestworks-proto.git
