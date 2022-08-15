@@ -6,11 +6,17 @@ type TTarget struct {
 	Id   uint32
 	Data int
 	Done bool
-	task.TargetBase
+	*task.TargetBase
 }
 
-func NewTTarget() {
-
+func NewTTarget() *TTarget {
+	tt := &TTarget{
+		Id:         0,
+		Data:       0,
+		Done:       false,
+		TargetBase: task.NewTargetBase(),
+	}
+	return tt
 }
 
 func (T TTarget) CheckDone() bool {
@@ -22,12 +28,11 @@ func (T *TTarget) OnNotify(event task.Event) {
 	if e.Data == T.Data {
 		T.Done = true
 	}
+	if T.Done {
+		T.TaskCB()
+	}
 }
 
 func (T TTarget) GetTargetId() uint32 {
 	return T.Id
-}
-
-func (T TTarget) SetTaskCB(fn func()) {
-
 }

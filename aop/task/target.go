@@ -11,6 +11,10 @@ type TargetBase struct {
 	TaskCB func()
 }
 
+func NewTargetBase() *TargetBase {
+	return &TargetBase{}
+}
+
 func (t *TargetBase) CheckDone() bool {
 	return false
 }

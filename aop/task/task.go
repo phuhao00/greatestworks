@@ -1,29 +1,22 @@
 package task
 
-type Task struct {
-	Conf    *Config
-	Next    *Task
-	Status  Status
-	Targets []*Target
+type Task interface {
+	Accept(config *Config)
+	Finish()
+	TargetDoneCallBack()
 }
 
-func NewTask(config *Config) *Task {
-	t := &Task{
-		Conf: config,
-	}
-	return t
-
+type Base struct {
 }
 
-func (t *Task) Accept(config *Config) {
-	t.Status = ACCEPT
-}
-
-func (t *Task) Finish() {
-	t.Status = FINISH
+func (b *Base) Accept(config *Config) {
 
 }
 
-func (t *Task) TargetDoneCallBack() {
+func (b *Base) Finish() {
+
+}
+
+func (b *Base) TargetDoneCallBack() {
 
 }
