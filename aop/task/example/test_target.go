@@ -6,6 +6,7 @@ type TTarget struct {
 	Id   uint32
 	Data int
 	Done bool
+	task.TargetBase
 }
 
 func NewTTarget() {
