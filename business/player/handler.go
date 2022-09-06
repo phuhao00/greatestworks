@@ -2,9 +2,9 @@ package player
 
 import (
 	"fmt"
+	"github.com/phuhao00/greatestworks-proto/gen/messageId"
+	"github.com/phuhao00/greatestworks-proto/gen/player"
 	"github.com/phuhao00/network"
-	"greatestworks/network/protocol/gen/messageId"
-	"greatestworks/network/protocol/gen/player"
 
 	"github.com/phuhao00/sugar"
 

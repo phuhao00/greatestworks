@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/aop/logger"
-	"greatestworks/network/protocol/gen/messageId"
 	"os"
 	"syscall"
 
@@ -28,6 +28,8 @@ func NewClient() *Client {
 	c.cli.ChMsg = make(chan *network.Message, 1)
 	c.chInput = make(chan *InputParam, 1)
 	c.console.chInput = c.chInput
+	//https://github.com/phuhao00/greatestworks-proto.git
+	//github.com/phuhao00/greatestworks-proto
 	return c
 }
 

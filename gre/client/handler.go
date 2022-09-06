@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/phuhao00/greatestworks-proto/gen/player"
 	"github.com/phuhao00/network"
-	"greatestworks/network/protocol/gen/player"
 	"strconv"
 
 	"google.golang.org/protobuf/proto"

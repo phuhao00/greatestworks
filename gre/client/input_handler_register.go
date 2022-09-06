@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/network"
-	"greatestworks/network/protocol/gen/messageId"
 
 	"google.golang.org/protobuf/proto"
 )
