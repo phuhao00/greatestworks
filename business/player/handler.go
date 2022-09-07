@@ -25,17 +25,8 @@ func (p *Player) AddFriend(packet *network.Message) {
 		p.FriendList = append(p.FriendList, req.UId)
 	}
 
-	bytes, err := proto.Marshal(&player.SCSendChatMsg{})
-	if err != nil {
-		return
-	}
+	p.SendMsg(messageId.MessageId_SCAddFriend, &player.SCSendChatMsg{})
 
-	rsp := &network.Message{
-		ID:   uint64(messageId.MessageId_SCAddFriend),
-		Data: bytes,
-	}
-
-	p.Session.SendMsg(rsp)
 }
 
 func (p *Player) DelFriend(packet *network.Message) {
@@ -45,18 +36,7 @@ func (p *Player) DelFriend(packet *network.Message) {
 		return
 	}
 	p.FriendList = sugar.DelOneInSlice(req.UId, p.FriendList)
-
-	bytes, err := proto.Marshal(&player.SCDelFriend{})
-	if err != nil {
-		return
-	}
-
-	rsp := &network.Message{
-		ID:   uint64(messageId.MessageId_SCDelFriend),
-		Data: bytes,
-	}
-
-	p.Session.SendMsg(rsp)
+	p.SendMsg(messageId.MessageId_SCDelFriend, &player.SCDelFriend{})
 }
 
 func (p *Player) ResolveChatMsg(packet *network.Message) {
@@ -67,16 +47,10 @@ func (p *Player) ResolveChatMsg(packet *network.Message) {
 		return
 	}
 	fmt.Println(req.Msg.Content)
+	p.SendMsg(messageId.MessageId_SCSendChatMsg, &player.SCSendChatMsg{})
+}
 
-	bytes, err := proto.Marshal(&player.SCSendChatMsg{})
-	if err != nil {
-		return
-	}
-
-	rsp := &network.Message{
-		ID:   uint64(messageId.MessageId_SCSendChatMsg),
-		Data: bytes,
-	}
-
-	p.Session.SendMsg(rsp)
+func (p *Player) SendMsg(ID messageId.MessageId, message proto.Message) {
+	id := uint64(ID)
+	p.Session.AsyncSend(uint16(id), message)
 }

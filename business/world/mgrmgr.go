@@ -1,9 +1,9 @@
 package world
 
 import (
+	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/aop/logger"
 	"greatestworks/business/manager"
-	"greatestworks/network/protocol/gen/messageId"
 	"os"
 	"syscall"
 
@@ -13,15 +13,15 @@ import (
 type MgrMgr struct {
 	Pm              *manager.PlayerMgr
 	Server          *network.Server
-	Handlers        map[messageId.MessageId]func(message *network.SessionPacket)
-	chSessionPacket chan *network.SessionPacket
+	Handlers        map[messageId.MessageId]func(message *network.Packet)
+	chSessionPacket chan *network.Packet
 }
 
 func NewMgrMgr() *MgrMgr {
 	m := &MgrMgr{Pm: manager.NewPlayerMgr()}
-	m.Server = network.NewServer(":8023")
-	m.Server.OnSessionPacket = m.OnSessionPacket
-	m.Handlers = make(map[messageId.MessageId]func(message *network.SessionPacket))
+	m.Server = network.NewServer(":8023", 100, 200, logger.Logger)
+	m.Server.MessageHandler = m.OnSessionPacket
+	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
 
 	return m
 }
@@ -34,12 +34,12 @@ func (mm *MgrMgr) Run() {
 	go mm.Pm.Run()
 }
 
-func (mm *MgrMgr) OnSessionPacket(packet *network.SessionPacket) {
+func (mm *MgrMgr) OnSessionPacket(packet *network.Packet) {
 	if handler, ok := mm.Handlers[messageId.MessageId(packet.Msg.ID)]; ok {
 		handler(packet)
 		return
 	}
-	if p := mm.Pm.GetPlayer(packet.Sess.UId); p != nil {
+	if p := mm.Pm.GetPlayer(uint64(packet.Conn.ConnID)); p != nil {
 		p.HandlerParamCh <- packet.Msg
 	}
 }

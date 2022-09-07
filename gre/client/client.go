@@ -19,12 +19,12 @@ type Client struct {
 
 func NewClient() *Client {
 	c := &Client{
-		cli:             network.NewClient(":8023"),
+		cli:             network.NewClient(":8023", 200, logger.Logger),
 		inputHandlers:   map[string]InputHandler{},
 		messageHandlers: map[messageId.MessageId]MessageHandler{},
 		console:         NewClientConsole(),
 	}
-	c.cli.OnMessage = c.OnMessage
+	c.cli.OnMessageCb = c.OnMessage
 	c.cli.ChMsg = make(chan *network.Message, 1)
 	c.chInput = make(chan *InputParam, 1)
 	c.console.chInput = c.chInput
@@ -49,7 +49,7 @@ func (c *Client) Run() {
 	go c.cli.Run()
 }
 
-func (c *Client) OnMessage(packet *network.ClientPacket) {
+func (c *Client) OnMessage(packet *network.Packet) {
 	if handler, ok := c.messageHandlers[messageId.MessageId(packet.Msg.ID)]; ok {
 		handler(packet)
 	}

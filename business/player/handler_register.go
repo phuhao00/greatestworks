@@ -1,6 +1,6 @@
 package player
 
-import "greatestworks/network/protocol/gen/messageId"
+import "github.com/phuhao00/greatestworks-proto/gen/messageId"
 
 func (p *Player) HandlerRegister() {
 	p.handlers[messageId.MessageId_CSAddFriend] = p.AddFriend

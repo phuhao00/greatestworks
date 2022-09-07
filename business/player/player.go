@@ -1,7 +1,7 @@
 package player
 
 import (
-	"greatestworks/network/protocol/gen/messageId"
+	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 
 	"github.com/phuhao00/network"
 )
@@ -11,7 +11,7 @@ type Player struct {
 	FriendList     []uint64 //朋友
 	HandlerParamCh chan *network.Message
 	handlers       map[messageId.MessageId]Handler
-	Session        *network.Session
+	Session        *network.TcpConnX
 }
 
 func NewPlayer() *Player {

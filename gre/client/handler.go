@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type MessageHandler func(packet *network.ClientPacket)
+type MessageHandler func(packet *network.Packet)
 
 type InputHandler func(param *InputParam)
 
@@ -29,7 +29,7 @@ func (c *Client) CreatePlayer(param *InputParam) {
 	c.Transport(id, msg)
 }
 
-func (c *Client) OnCreatePlayerRsp(packet *network.ClientPacket) {
+func (c *Client) OnCreatePlayerRsp(packet *network.Packet) {
 	fmt.Println("恭喜你创建角色成功")
 }
 
@@ -49,7 +49,7 @@ func (c *Client) Login(param *InputParam) {
 
 }
 
-func (c *Client) OnLoginRsp(packet *network.ClientPacket) {
+func (c *Client) OnLoginRsp(packet *network.Packet) {
 	rsp := &player.SCLogin{}
 
 	err := proto.Unmarshal(packet.Msg.Data, rsp)
@@ -78,7 +78,7 @@ func (c *Client) AddFriend(param *InputParam) {
 	c.Transport(id, msg)
 }
 
-func (c *Client) OnAddFriendRsp(packet *network.ClientPacket) {
+func (c *Client) OnAddFriendRsp(packet *network.Packet) {
 	fmt.Println("add friend success !!")
 }
 
@@ -101,7 +101,7 @@ func (c *Client) DelFriend(param *InputParam) {
 	c.Transport(id, msg)
 }
 
-func (c *Client) OnDelFriendRsp(packet *network.ClientPacket) {
+func (c *Client) OnDelFriendRsp(packet *network.Packet) {
 	fmt.Println("you have del friend success")
 
 }
@@ -134,7 +134,7 @@ func (c *Client) SendChatMsg(param *InputParam) {
 	c.Transport(id, msg)
 }
 
-func (c *Client) OnSendChatMsgRsp(packet *network.ClientPacket) {
+func (c *Client) OnSendChatMsgRsp(packet *network.Packet) {
 	fmt.Println("send  chat message success")
 
 }
