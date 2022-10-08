@@ -24,7 +24,7 @@ func NewPlayer() *Player {
 	return p
 }
 
-func (p *Player) Run() {
+func (p *Player) Start() {
 	for {
 		select {
 		case handlerParam := <-p.HandlerParamCh:
@@ -33,6 +33,10 @@ func (p *Player) Run() {
 			}
 		}
 	}
+}
+
+func (p *Player) Stop() {
+
 }
 
 func (p *Player) OnLogin() {

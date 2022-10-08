@@ -3,7 +3,7 @@ package world
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/aop/logger"
-	"greatestworks/business/manager"
+	"greatestworks/business/module/player"
 	"os"
 	"syscall"
 
@@ -11,14 +11,14 @@ import (
 )
 
 type MgrMgr struct {
-	Pm              *manager.PlayerMgr
+	Pm              *player.Manager
 	Server          *network.Server
 	Handlers        map[messageId.MessageId]func(message *network.Packet)
 	chSessionPacket chan *network.Packet
 }
 
 func NewMgrMgr() *MgrMgr {
-	m := &MgrMgr{Pm: manager.NewPlayerMgr()}
+	m := &MgrMgr{Pm: player.NewPlayerMgr()}
 	m.Server = network.NewServer(":8023", 100, 200, logger.Logger)
 	m.Server.MessageHandler = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
@@ -28,10 +28,14 @@ func NewMgrMgr() *MgrMgr {
 
 var MM *MgrMgr
 
-func (mm *MgrMgr) Run() {
+func (mm *MgrMgr) Start() {
 	mm.HandlerRegister()
 	go mm.Server.Run()
 	go mm.Pm.Run()
+}
+
+func (mm *MgrMgr) Stop() {
+
 }
 
 func (mm *MgrMgr) OnSessionPacket(packet *network.Packet) {

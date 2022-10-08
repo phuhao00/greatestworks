@@ -9,7 +9,7 @@ import (
 
 func main() {
 	world.MM = world.NewMgrMgr()
-	go world.MM.Run()
+	go world.MM.Start()
 	logger.Logger.InfoF("server start !!")
 	sugar.WaitSignal(world.MM.OnSystemSignal)
 }

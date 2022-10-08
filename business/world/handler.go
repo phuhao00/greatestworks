@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/greatestworks-proto/gen/player"
-	logicPlayer "greatestworks/business/player"
-
 	"github.com/phuhao00/network"
 	"google.golang.org/protobuf/proto"
+	logicPlayer "greatestworks/business/module/player"
 )
 
 func (mm *MgrMgr) CreatePlayer(message *network.Packet) {

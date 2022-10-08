@@ -1,12 +1,14 @@
 package example
 
-import "greatestworks/aop/task"
+import (
+	task2 "greatestworks/business/module/task"
+)
 
 type TTarget struct {
 	Id   uint32
 	Data int
 	Done bool
-	*task.TargetBase
+	*task2.TargetBase
 }
 
 func NewTTarget() *TTarget {
@@ -14,7 +16,7 @@ func NewTTarget() *TTarget {
 		Id:         0,
 		Data:       0,
 		Done:       false,
-		TargetBase: task.NewTargetBase(),
+		TargetBase: task2.NewTargetBase(),
 	}
 	return tt
 }
@@ -23,7 +25,7 @@ func (T TTarget) CheckDone() bool {
 	return T.Done
 }
 
-func (T *TTarget) OnNotify(event task.Event) {
+func (T *TTarget) OnNotify(event task2.Event) {
 	e := event.(*TEvent)
 	if e.Data == T.Data {
 		T.Done = true

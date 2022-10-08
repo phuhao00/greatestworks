@@ -1,6 +1,8 @@
 package example
 
-import "greatestworks/aop/task"
+import (
+	"greatestworks/business/module/task"
+)
 
 type TEvent struct {
 	Data        int
