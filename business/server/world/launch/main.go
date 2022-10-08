@@ -1,10 +1,9 @@
 package main
 
 import (
-	"greatestworks/aop/logger"
-	"greatestworks/business/world"
-
 	"github.com/phuhao00/sugar"
+	"greatestworks/aop/logger"
+	"greatestworks/business/server/world"
 )
 
 func main() {
