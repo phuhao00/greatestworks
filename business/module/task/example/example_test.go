@@ -2,13 +2,13 @@ package example
 
 import (
 	"fmt"
-	"greatestworks/business/module/task"
+	"greatestworks/business/module/condition"
 	"testing"
 )
 
 func TestEvent(t *testing.T) {
 	te := TEvent{
-		Subscribers: make([]task.Target, 0),
+		Subscribers: make([]condition.Condition, 0),
 	}
 	tg := &TTarget{
 		Id:   111,
@@ -17,7 +17,7 @@ func TestEvent(t *testing.T) {
 	te.Attach(tg)
 	te.Data = 1
 	te.Notify()
-	fmt.Println("CheckDone:", tg.CheckDone())
+	fmt.Println("CheckArrived:", tg.CheckArrived())
 }
 
 func TestTask(t *testing.T) {

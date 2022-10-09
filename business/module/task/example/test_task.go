@@ -1,6 +1,7 @@
 package example
 
 import (
+	"greatestworks/business/module/condition"
 	task2 "greatestworks/business/module/task"
 )
 
@@ -8,7 +9,7 @@ type TTask struct {
 	Conf    *task2.Config
 	Next    *TTask
 	Status  task2.Status
-	Targets []task2.Target
+	Targets []condition.Condition
 }
 
 func NewTTask(config *task2.Config) *TTask {
@@ -31,7 +32,7 @@ func (t *TTask) Finish() {
 func (t *TTask) TargetDoneCallBack() {
 	count := 0
 	for _, target := range t.Targets {
-		if target.CheckDone() {
+		if target.CheckArrived() {
 			count++
 		}
 	}

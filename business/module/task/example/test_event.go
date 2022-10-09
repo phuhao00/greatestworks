@@ -1,12 +1,12 @@
 package example
 
 import (
-	"greatestworks/business/module/task"
+	"greatestworks/business/module/condition"
 )
 
 type TEvent struct {
 	Data        int
-	Subscribers []task.Target
+	Subscribers []condition.Condition
 }
 
 func (e *TEvent) Notify() {
@@ -15,13 +15,13 @@ func (e *TEvent) Notify() {
 	}
 }
 
-func (e *TEvent) Attach(target task.Target) {
+func (e *TEvent) Attach(target condition.Condition) {
 	e.Subscribers = append(e.Subscribers, target)
 }
 
 func (e *TEvent) Detach(id uint32) {
 	for i, subscriber := range e.Subscribers {
-		if subscriber.GetTargetId() == id {
+		if subscriber.GetId() == id {
 			e.Subscribers = append(e.Subscribers[:i], e.Subscribers[i+1:]...)
 		}
 	}
