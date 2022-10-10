@@ -3,6 +3,8 @@ module greatestworks
 go 1.18
 
 require (
+	github.com/gorilla/context v1.1.1
+	github.com/gorilla/mux v1.8.0
 	github.com/phuhao00/broker v1.0.2
 	github.com/phuhao00/greatestworks-proto v1.0.1
 	github.com/phuhao00/network v1.0.4
