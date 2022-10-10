@@ -7,6 +7,7 @@ import (
 
 type Manager struct {
 	*base.MetricsBase
+	*base.DBActionBase
 }
 
 var (
