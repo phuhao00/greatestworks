@@ -1,5 +1,6 @@
 package base
 
+// MetricsBase  ...
 type MetricsBase struct {
 	Name string
 }

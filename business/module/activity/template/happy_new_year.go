@@ -8,6 +8,10 @@ type HappyNewYear struct {
 	EndTime   time.Time
 }
 
-func (y *HappyNewYear) Init(conf Conf) *HappyNewYear {
+func (h *HappyNewYear) Init(conf Conf) *HappyNewYear {
 	return &HappyNewYear{}
+}
+
+func (h *HappyNewYear) GetReward() {
+
 }

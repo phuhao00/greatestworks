@@ -1,5 +1,6 @@
 package template
 
+//Conf 活动配置
 type Conf struct {
 	Id          uint32
 	Description string
