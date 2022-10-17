@@ -3,19 +3,7 @@ package server
 import "github.com/phuhao00/network"
 
 type Server struct {
-	clients map[int64]*network.Client
-}
-
-func (s *Server) AddClient(client *network.Client) {
-	s.clients[client.ConnID] = client
-}
-
-func (s *Server) DelClient(client *network.Client) {
-	delete(s.clients, client.ConnID)
-}
-
-func (s *Server) GetServerCount() int32 {
-	return int32(len(s.clients))
+	real *network.Server
 }
 
 func (s *Server) Loop() {
@@ -23,7 +11,31 @@ func (s *Server) Loop() {
 	for {
 		select {
 		//case Message
-
+			
 		}
 	}
+}
+
+func (s *Server) KickUser() {
+
+}
+
+func (s *Server) KickAllUser() {
+
+}
+
+func (s *Server) TransMessageToGateway() {
+
+}
+
+func (s *Server) UpdateRegister() {
+
+}
+
+func (s *Server) CheckRegister() bool {
+	return true
+}
+
+func (s *Server) ReLoginAll() {
+
 }
