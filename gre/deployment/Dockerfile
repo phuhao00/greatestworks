@@ -9,3 +9,5 @@ EXPOSE 1101
 RUN chmod +x main
 
 ENTRYPOINT ["./main"]
+
+

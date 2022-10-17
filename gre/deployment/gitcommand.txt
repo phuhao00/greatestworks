@@ -41,7 +41,6 @@ git  mv a b //把a 文件名改成 b 并直接放入git add 后的暂存区
 git  mv b ./demo/  把b文件移动到文件夹下
 
 git diff
-git diff tt 倒数第五个版本与第一个的区别
 git diff HEAD
 git diff --cached
 git diff 版本哈希值 版本哈希值 //查看两个版本的区别
