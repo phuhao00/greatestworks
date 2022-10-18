@@ -1,6 +1,7 @@
 package template
 
-//Conf  配置
+// Conf  配置
 type Conf struct {
-	Id uint32
+	Id       uint32
+	Category int
 }
