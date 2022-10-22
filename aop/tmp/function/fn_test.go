@@ -7,3 +7,9 @@ func TestFn(t *testing.T) {
 	tm(1)
 
 }
+
+func TestAbc(t *testing.T) {
+	var a *ABC
+	a.DO()
+
+}

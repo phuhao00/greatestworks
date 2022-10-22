@@ -1,8 +1,13 @@
 package slice
 
-import "testing"
+import (
+	"fmt"
+	"reflect"
+	"testing"
+)
 
 func TestSlice(t *testing.T) {
-	S()
-
+	//S()
+	v := [3]int{}
+	fmt.Println(reflect.TypeOf(v).Kind())
 }
