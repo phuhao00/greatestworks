@@ -9,18 +9,18 @@ import (
 	logicPlayer "greatestworks/business/module/player"
 )
 
-func (mm *MgrMgr) CreatePlayer(message *network.Packet) {
+func (w *World) CreatePlayer(message *network.Packet) {
 	msg := &player.CSCreateUser{}
 	err := proto.Unmarshal(message.Msg.Data, msg)
 	if err != nil {
 		return
 	}
-	fmt.Println("[MgrMgr.CreatePlayer]", msg)
-	mm.SendMsg(uint64(messageId.MessageId_SCCreatePlayer), &player.SCCreateUser{}, message.Conn)
+	fmt.Println("[World.CreatePlayer]", msg)
+	w.SendMsg(uint64(messageId.MessageId_SCCreatePlayer), &player.SCCreateUser{}, message.Conn)
 
 }
 
-func (mm *MgrMgr) UserLogin(message *network.Packet) {
+func (w *World) UserLogin(message *network.Packet) {
 	msg := &player.CSLogin{}
 	err := proto.Unmarshal(message.Msg.Data, msg)
 	if err != nil {
@@ -29,10 +29,10 @@ func (mm *MgrMgr) UserLogin(message *network.Packet) {
 	newPlayer := logicPlayer.NewPlayer()
 	newPlayer.UId = 111
 	newPlayer.Session = message.Conn
-	mm.Pm.Add(newPlayer)
+	w.Pm.Add(newPlayer)
 
 }
 
-func (mm *MgrMgr) SendMsg(id uint64, message proto.Message, session *network.TcpConnX) {
+func (w *World) SendMsg(id uint64, message proto.Message, session *network.TcpConnX) {
 	session.AsyncSend(uint16(id), message)
 }

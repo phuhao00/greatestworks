@@ -24,3 +24,6 @@ type ConfigMgrAction interface {
 	Load()
 	Get(id uint32) interface{}
 }
+
+type Abstract interface {
+}

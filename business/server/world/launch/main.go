@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	world.MM = world.NewMgrMgr()
-	go world.MM.Start()
+	world.Oasis = world.NewWorld()
+	go world.Oasis.Start()
 	logger.Logger.InfoF("server start !!")
-	sugar.WaitSignal(world.MM.OnSystemSignal)
+	sugar.WaitSignal(world.Oasis.OnSystemSignal)
 }
