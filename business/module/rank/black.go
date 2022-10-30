@@ -1,7 +1,7 @@
 package rank
 
 type BlackList struct {
-	Rank      uint32                `bson:"rank"`
+	RankId    uint32                `bson:"rankid"`
 	BlackList map[string]*BlackInfo `bson:"blacklist"`
 }
 

@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.8.0
-	github.com/phuhao00/broker v1.0.2
+	github.com/phuhao00/broker v1.0.3
 	github.com/phuhao00/greatestworks-proto v1.0.1
 	github.com/phuhao00/network v1.0.4
 	github.com/phuhao00/spoor v1.0.2
@@ -14,6 +14,9 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
