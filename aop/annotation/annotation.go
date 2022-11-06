@@ -14,7 +14,7 @@ func (a *Annotation) Register(key uint16, pm proto.Message) {
 		return
 	}
 	of := reflect.TypeOf(pm)
-	a.Prototypes[key] = of
+	a.Prototypes[key] = of.Elem()
 }
 
 func (a *Annotation) GetProtoType(id uint16) reflect.Type {
