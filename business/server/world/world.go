@@ -3,6 +3,7 @@ package world
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/aop/logger"
+	"greatestworks/business/module/chat"
 	"greatestworks/business/module/player"
 	"os"
 	"syscall"
@@ -15,6 +16,7 @@ type World struct {
 	Server          *network.Server
 	Handlers        map[messageId.MessageId]func(message *network.Packet)
 	chSessionPacket chan *network.Packet
+	ChatSystem      chat.Chat
 }
 
 func NewWorld() *World {
@@ -22,6 +24,7 @@ func NewWorld() *World {
 	m.Server = network.NewServer(":8023", 100, 200, logger.Logger)
 	m.Server.MessageHandler = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
+	m.ChatSystem.SetOwner(m)
 
 	return m
 }

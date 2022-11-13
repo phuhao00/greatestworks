@@ -4,7 +4,8 @@ import "google.golang.org/protobuf/proto"
 
 type Player struct {
 	*Base
-	real PlayerReal
+	real  PlayerReal
+	Title string
 }
 
 func NewPlayer() *Player {

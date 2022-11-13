@@ -7,9 +7,9 @@ type Actor interface {
 }
 
 type Base struct {
-	Hp     int64
-	Damage int64
-	Pos    []float64
+	Hp     int64     `json:"hp"`
+	Damage int64     `json:"damage"`
+	Pos    []float64 `json:"pos"`
 }
 
 func (b Base) OnDamage(delta int64) {
