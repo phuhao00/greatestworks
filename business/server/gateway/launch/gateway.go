@@ -19,8 +19,8 @@ type MetricInfo struct {
 }
 
 func (g *Gateway) Update() {
-	g.Metrics.ServerCount = g.serverServer.GetServerCount()
-	g.Metrics.ClientCount = g.clientServer.GetServerCount()
+	//g.Metrics.ServerCount = g.serverServer.GetServerCount()
+	//g.Metrics.ClientCount = g.clientServer.GetServerCount()
 }
 
 func (g *Gateway) Loop() {
