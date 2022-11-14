@@ -2,6 +2,8 @@ package player
 
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
+	"greatestworks/business/module/chat"
+	"greatestworks/business/module/friend"
 
 	"github.com/phuhao00/network"
 )
@@ -12,6 +14,8 @@ type Player struct {
 	HandlerParamCh chan *network.Message
 	handlers       map[messageId.MessageId]Handler
 	Session        *network.TcpConnX
+	FriendSystem   friend.System
+	PrivateChat    chat.PrivateChat
 }
 
 func NewPlayer() *Player {
@@ -21,6 +25,8 @@ func NewPlayer() *Player {
 		handlers:   make(map[messageId.MessageId]Handler),
 	}
 	p.HandlerRegister()
+	p.FriendSystem.SetOwner(p)
+	p.PrivateChat.SetHandler(p)
 	return p
 }
 

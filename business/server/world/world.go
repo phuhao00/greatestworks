@@ -16,7 +16,7 @@ type World struct {
 	Server          *network.Server
 	Handlers        map[messageId.MessageId]func(message *network.Packet)
 	chSessionPacket chan *network.Packet
-	ChatSystem      chat.Chat
+	ChatSystem      chat.System
 }
 
 func NewWorld() *World {
@@ -25,7 +25,6 @@ func NewWorld() *World {
 	m.Server.MessageHandler = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
 	m.ChatSystem.SetOwner(m)
-
 	return m
 }
 

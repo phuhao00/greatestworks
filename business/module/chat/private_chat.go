@@ -7,3 +7,7 @@ type PrivateChat struct {
 	Handler
 	PrivateTransfer
 }
+
+func (p *PrivateChat) SetHandler(handler Handler) {
+	p.Handler = handler
+}

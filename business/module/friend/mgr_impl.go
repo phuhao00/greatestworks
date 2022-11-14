@@ -6,6 +6,11 @@ type System struct {
 	friends   []Info
 	BlackList []uint64
 	requests  []Request
+	Owner
+}
+
+func (s *System) SetOwner(owner Owner) {
+	s.Owner = owner
 }
 
 func (s *System) Add(uId uint64) {

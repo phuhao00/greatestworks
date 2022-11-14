@@ -1,8 +1,10 @@
 package player
 
-import "greatestworks/business/module/base"
+import (
+	"greatestworks/business/module/base"
+)
 
-//Manager 维护在线玩家
+// Manager 维护在线玩家
 type Manager struct {
 	*base.MetricsBase
 	players map[uint64]*Player
