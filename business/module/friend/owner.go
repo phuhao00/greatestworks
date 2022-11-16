@@ -1,13 +1,12 @@
 package friend
 
-import "github.com/phuhao00/network"
+import (
+	"github.com/phuhao00/greatestworks-proto/gen/messageId"
+	"google.golang.org/protobuf/proto"
+)
 
 type Owner interface {
-	GetFriendList()
-	GetFriendInfo()
-	AddFriend(packet *network.Message)
-	DelFriend(packet *network.Message)
-	GiveFriendItem()
-	FriendAddApply()
-	ManagerFriendApply()
+	Start()
+	Stop()
+	SendMsg(ID messageId.MessageId, message proto.Message)
 }

@@ -8,7 +8,7 @@ type Info struct {
 }
 
 type Request struct {
-	Userid  uint64 // 玩家ID
-	OpTime  int64  // 操作时间
-	AddType int32  // 申请加好友的途径
+	Userid  uint64 `json:"userid" bson:"userid"`   // 玩家ID
+	OpTime  int64  `json:"opTime" bson:"opTime"`   // 操作时间
+	AddType int32  `json:"addType" bson:"addType"` // 申请加好友的途径
 }

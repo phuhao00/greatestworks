@@ -10,21 +10,16 @@ import (
 
 type Player struct {
 	UId            uint64
-	FriendList     []uint64 //朋友
 	HandlerParamCh chan *network.Message
-	handlers       map[messageId.MessageId]Handler
 	Session        *network.TcpConnX
-	FriendSystem   friend.System
-	PrivateChat    chat.PrivateChat
+	FriendSystem   *friend.System
+	PrivateChat    *chat.PrivateChat
 }
 
 func NewPlayer() *Player {
 	p := &Player{
-		UId:        0,
-		FriendList: make([]uint64, 100),
-		handlers:   make(map[messageId.MessageId]Handler),
+		UId: 0,
 	}
-	p.HandlerRegister()
 	p.FriendSystem.SetOwner(p)
 	p.PrivateChat.SetHandler(p)
 	return p
@@ -34,8 +29,8 @@ func (p *Player) Start() {
 	for {
 		select {
 		case handlerParam := <-p.HandlerParamCh:
-			if fn, ok := p.handlers[messageId.MessageId(handlerParam.ID)]; ok {
-				fn(handlerParam)
+			if fn, ok := handlers[messageId.MessageId(handlerParam.ID)]; ok {
+				fn(p, handlerParam)
 			}
 		}
 	}
