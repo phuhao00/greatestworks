@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-type Handler func(p Owner, s *System, packet *network.Message)
+type Handler func(s *System, packet *network.Message)
 
 var (
 	handlers map[messageId.MessageId]Handler
@@ -39,7 +39,7 @@ func GetFriendInfo(p Owner, s *System, packet *network.Message) {
 
 }
 
-func AddFriend(p Owner, s *System, packet *network.Message) {
+func AddFriend(s *System, packet *network.Message) {
 	req := &player.CSAddFriend{}
 
 	err := proto.Unmarshal(packet.Data, req)
@@ -50,11 +50,11 @@ func AddFriend(p Owner, s *System, packet *network.Message) {
 	if !sugar.CheckInSlice(req.UId, s.FriendList) {
 		s.FriendList = append(s.FriendList, req.UId)
 	}
-	p.SendMsg(messageId.MessageId_SCAddFriend, &player.SCSendChatMsg{})
+	s.Owner.SendMsg(messageId.MessageId_SCAddFriend, &player.SCSendChatMsg{})
 
 }
 
-func DelFriend(o Owner, s *System, packet *network.Message) {
+func DelFriend(s *System, packet *network.Message) {
 	req := &player.CSDelFriend{}
 	err := proto.Unmarshal(packet.Data, req)
 	if err != nil {
@@ -62,7 +62,7 @@ func DelFriend(o Owner, s *System, packet *network.Message) {
 	}
 	s.FriendList = sugar.DelOneInSlice(req.UId, s.FriendList)
 
-	o.SendMsg(messageId.MessageId_SCDelFriend, &player.SCDelFriend{})
+	s.Owner.SendMsg(messageId.MessageId_SCDelFriend, &player.SCDelFriend{})
 }
 
 func GiveFriendItem(p Owner, s *System, packet *network.Message) {

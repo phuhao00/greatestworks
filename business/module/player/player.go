@@ -20,8 +20,6 @@ func NewPlayer() *Player {
 	p := &Player{
 		UId: 0,
 	}
-	p.FriendSystem.SetOwner(p)
-	p.PrivateChat.SetHandler(p)
 	return p
 }
 
@@ -29,9 +27,7 @@ func (p *Player) Start() {
 	for {
 		select {
 		case handlerParam := <-p.HandlerParamCh:
-			if fn, ok := handlers[messageId.MessageId(handlerParam.ID)]; ok {
-				fn(p, handlerParam)
-			}
+			p.Handler(messageId.MessageId(handlerParam.ID), handlerParam)
 		}
 	}
 }
