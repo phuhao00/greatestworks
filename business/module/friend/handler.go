@@ -1,6 +1,7 @@
 package friend
 
 import (
+	"errors"
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/greatestworks-proto/gen/player"
 	"github.com/phuhao00/network"
@@ -9,15 +10,28 @@ import (
 	"sync"
 )
 
-type Handler func(s *System, packet *network.Message)
+type Handler struct {
+	Id messageId.MessageId
+	Fn func(s *System, packet *network.Message)
+}
 
 var (
-	handlers map[messageId.MessageId]Handler
-	onceInit sync.Once
+	handlers                   []*Handler
+	onceInit                   sync.Once
+	MinMessageId, MaxMessageId messageId.MessageId
 )
 
-func GetHandler(id messageId.MessageId) Handler {
-	return handlers[id]
+func GetHandler(id messageId.MessageId) (*Handler, error) {
+
+	if id > MinMessageId && id < MaxMessageId {
+		return nil, errors.New("not in")
+	}
+	for _, handler := range handlers {
+		if handler.Id == id {
+			return handler, nil
+		}
+	}
+	return nil, errors.New("not exist")
 }
 
 func init() {
@@ -27,8 +41,14 @@ func init() {
 }
 
 func HandlerFriendRegister() {
-	handlers[messageId.MessageId_CSAddFriend] = AddFriend
-	handlers[messageId.MessageId_CSDelFriend] = DelFriend
+	handlers[0] = &Handler{
+		messageId.MessageId_CSAddFriend,
+		AddFriend,
+	}
+	handlers[1] = &Handler{
+		messageId.MessageId_CSDelFriend,
+		DelFriend,
+	}
 }
 
 func GetFriendList(p Owner, s *System, packet *network.Message) {

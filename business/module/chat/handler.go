@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"errors"
 	"fmt"
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/greatestworks-proto/gen/player"
@@ -9,9 +10,15 @@ import (
 	"sync"
 )
 
+type PrivateChatHandler struct {
+	Id messageId.MessageId
+	Fn func(p *PrivateChat, packet *network.Message)
+}
+
 var (
-	handlers map[messageId.MessageId]func(p *PrivateChat, packet *network.Message)
-	onceInit sync.Once
+	handlers                   []*PrivateChatHandler
+	onceInit                   sync.Once
+	MinMessageId, MaxMessageId messageId.MessageId
 )
 
 func init() {
@@ -20,12 +27,23 @@ func init() {
 	})
 }
 
-func GetHandler(id messageId.MessageId) func(p *PrivateChat, packet *network.Message) {
-	return handlers[id]
+func GetHandler(id messageId.MessageId) (*PrivateChatHandler, error) {
+	if id > MinMessageId && id < MaxMessageId {
+		return nil, errors.New("not in")
+	}
+	for _, handler := range handlers {
+		if handler.Id == id {
+			return handler, nil
+		}
+	}
+	return nil, errors.New("not exist")
 }
 
 func HandlerChatRegister() {
-	handlers[messageId.MessageId_CSSendChatMsg] = ResolvePrivateChatMsg
+	handlers[0] = &PrivateChatHandler{
+		Id: messageId.MessageId_SCSendChatMsg,
+		Fn: ResolvePrivateChatMsg,
+	}
 }
 
 func ResolvePrivateChatMsg(p *PrivateChat, packet *network.Message) {

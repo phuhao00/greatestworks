@@ -14,10 +14,11 @@ func (p *Player) SendMsg(ID messageId.MessageId, message proto.Message) {
 }
 
 func (p *Player) Handler(id messageId.MessageId, msg *network.Message) {
-	if handler := friend.GetHandler(id); handler != nil {
-		handler(p.FriendSystem, msg)
+	if handler, _ := friend.GetHandler(id); handler != nil {
+		handler.Fn(p.FriendSystem, msg)
 	}
-	if handler := chat.GetHandler(id); handler != nil {
-		handler(p.PrivateChat, msg)
+	if handler, _ := chat.GetHandler(id); handler != nil {
+		handler.Fn(p.PrivateChat, msg)
 	}
+
 }
