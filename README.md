@@ -16,6 +16,13 @@ the back-end logic of game
 * 4.高性能 (High performance)
 
 
+### 目录结构说明
+* aop
+  - 面向切面的逻辑
+* business
+ - 业务逻辑
+* gre
+ - 运维，部署，工具等
 
 ### module 说明
 
