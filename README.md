@@ -13,20 +13,20 @@ the back-end logic of game
 
 
 每个模块包含
-* Model
+* data
   对应的数据存储
-* System
+* system
   该模块的管理，例如数据的CRUD，有System 的模块，其成员实例不具备 独立处理协程
-* Owner
+* owner
   定义从属模块需要实现的些方法
-* Handler
+* handler
   处理从属模块需要的业务逻辑
-* Abstract
+* abstract
   模块成员的抽象，接口定义
 * config
   配置,常量的定义等
-* Manager
-  有 Manager 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
+* manager
+  有 manager 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
 
 ### Player
 
