@@ -3,14 +3,14 @@ package family
 type Manager struct {
 	families map[uint32]*Family
 	Owner
-	HandlerParam chan interface{}
-	broadcastMsg chan interface{}
+	ChIn  chan ManagerHandlerParam
+	ChOut chan interface{}
 }
 
 func (m *Manager) Loop() {
 	for {
 		select {
-		case msg := <-m.broadcastMsg:
+		case msg := <-m.ChOut:
 			m.ForwardMsg(msg)
 		}
 	}
@@ -19,7 +19,7 @@ func (m *Manager) Loop() {
 func (m *Manager) Monitor() {
 	for {
 		select {
-		case param := <-m.HandlerParam:
+		case param := <-m.ChIn:
 			m.Handler(param)
 		}
 	}
@@ -30,5 +30,6 @@ func (m *Manager) Handler(param interface{}) {
 }
 
 func (m *Manager) ForwardMsg(msg interface{}) {
+	m.Owner.BroadcastMsg(nil, 0, nil)
 
 }
