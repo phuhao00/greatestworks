@@ -23,4 +23,14 @@ the back-end logic of game
   处理从属模块需要的业务逻辑
 * Abstract
   模块成员的抽象，接口定义
+* config
+  配置,常量的定义等
+
+### Player
+
+ 每个 Player 实例 拥有自己的协程
+
+
+  
+
 
