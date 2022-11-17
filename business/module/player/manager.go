@@ -1,5 +1,34 @@
 package player
 
+import "greatestworks/business/module/base"
+
+// Manager 维护在线玩家
+type Manager struct {
+	*base.MetricsBase
+	players map[uint64]*Player
+	addPCh  chan *Player
+}
+
+func (pm *Manager) OnStart() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (pm *Manager) AfterStart() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (pm *Manager) OnStop() {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (pm *Manager) AfterStop() {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewPlayerMgr() *Manager {
 	return &Manager{
 		players: make(map[uint64]*Player),
@@ -7,7 +36,7 @@ func NewPlayerMgr() *Manager {
 	}
 }
 
-//Add ...
+// Add ...
 func (pm *Manager) Add(p *Player) {
 	if pm.players[p.UId] != nil {
 		return
@@ -16,7 +45,7 @@ func (pm *Manager) Add(p *Player) {
 	go p.Start()
 }
 
-//Del ...
+// Del ...
 func (pm *Manager) Del(p Player) {
 	delete(pm.players, p.UId)
 }
