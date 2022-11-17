@@ -5,15 +5,15 @@ the back-end logic of game
 
 ![](frame.png)
 
-## 初衷
+## 初衷 （original intention）
 
-* 1.充分发挥 golang 并发的语言特性
+* 1.充分发挥 golang 语言特性 (Give full play to the features of golang language)
 
-* 2.微服务思想,低耦合
+* 2.微服务思想,低耦合 (Micro service idea, low coupling)
 
-* 3.面向对象+组合
+* 3.面向对象+组合 (Object oriented+combination)
 
-* 4.高性能
+* 4.高性能 (High performance)
 
 
 
