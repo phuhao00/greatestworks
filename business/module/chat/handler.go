@@ -16,9 +16,10 @@ type PrivateChatHandler struct {
 }
 
 var (
-	handlers                   []*PrivateChatHandler
-	onceInit                   sync.Once
-	MinMessageId, MaxMessageId messageId.MessageId
+	handlers     []*PrivateChatHandler
+	onceInit     sync.Once
+	MinMessageId messageId.MessageId
+	MaxMessageId messageId.MessageId
 )
 
 func init() {

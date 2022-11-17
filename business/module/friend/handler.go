@@ -16,9 +16,10 @@ type Handler struct {
 }
 
 var (
-	handlers                   []*Handler
-	onceInit                   sync.Once
-	MinMessageId, MaxMessageId messageId.MessageId //handle 的消息范围
+	handlers     []*Handler
+	onceInit     sync.Once
+	MinMessageId messageId.MessageId
+	MaxMessageId messageId.MessageId //handle 的消息范围
 )
 
 func GetHandler(id messageId.MessageId) (*Handler, error) {
