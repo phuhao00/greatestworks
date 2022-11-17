@@ -55,4 +55,15 @@
 
 
 
+### `idea` 
 
+  * 模块之间依赖的属性，借助 `redis` ,`mongo`,`consul`,`nsq`,`rabbitmq`
+  * 服务节点之间的依赖，借助 `redis` ,`mongo`,`consul`,`nsq`,`rabbitmq` 
+  * 服务节点之间的通讯，通过 `rpc`, `tcp`,`nsq`,`rabbitmq`
+  * 客户端与逻辑服务器之间的通讯，通过  `tcp` , `kcp` ,`quic` 
+  * 客户段与登录服之间的通讯，通过 `https`
+
+### `deployment`
+ 
+  * docker + k8s
+  
