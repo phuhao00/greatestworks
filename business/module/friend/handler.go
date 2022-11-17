@@ -18,7 +18,7 @@ type Handler struct {
 var (
 	handlers                   []*Handler
 	onceInit                   sync.Once
-	MinMessageId, MaxMessageId messageId.MessageId
+	MinMessageId, MaxMessageId messageId.MessageId //handle 的消息范围
 )
 
 func GetHandler(id messageId.MessageId) (*Handler, error) {
@@ -51,11 +51,11 @@ func HandlerFriendRegister() {
 	}
 }
 
-func GetFriendList(p Owner, s *System, packet *network.Message) {
+func GetFriendList(s *System, packet *network.Message) {
 
 }
 
-func GetFriendInfo(p Owner, s *System, packet *network.Message) {
+func GetFriendInfo(s *System, packet *network.Message) {
 
 }
 
@@ -85,14 +85,14 @@ func DelFriend(s *System, packet *network.Message) {
 	s.Owner.SendMsg(messageId.MessageId_SCDelFriend, &player.SCDelFriend{})
 }
 
-func GiveFriendItem(p Owner, s *System, packet *network.Message) {
+func GiveFriendItem(s *System, packet *network.Message) {
 
 }
 
-func AddApply(p Owner, s *System, packet *network.Message) {
+func AddApply(s *System, packet *network.Message) {
 
 }
 
-func ManagerApply(p Owner, s *System, packet *network.Message) {
+func ManagerApply(s *System, packet *network.Message) {
 
 }
