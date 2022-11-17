@@ -29,7 +29,7 @@ func (w *World) UserLogin(message *network.Packet) {
 	newPlayer := logicPlayer.NewPlayer()
 	newPlayer.UId = 111
 	newPlayer.Session = message.Conn
-	w.Pm.Add(newPlayer)
+	w.pm.Add(newPlayer)
 
 }
 

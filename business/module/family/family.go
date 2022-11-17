@@ -1,6 +1,9 @@
 package family
 
 type Family struct {
+	Id      uint64
+	Name    string
+	Desc    string
 	members map[uint64]*Member
 }
 

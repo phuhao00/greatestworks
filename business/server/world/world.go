@@ -4,6 +4,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/aop/logger"
 	"greatestworks/business/module/chat"
+	"greatestworks/business/module/family"
 	"greatestworks/business/module/player"
 	"os"
 	"syscall"
@@ -12,19 +13,19 @@ import (
 )
 
 type World struct {
-	Pm              *player.Manager
 	Server          *network.Server
 	Handlers        map[messageId.MessageId]func(message *network.Packet)
 	chSessionPacket chan *network.Packet
-	ChatSystem      chat.System
+	chatSystem      *chat.System
+	familyManager   *family.Manager
+	pm              *player.Manager
 }
 
 func NewWorld() *World {
-	m := &World{Pm: player.NewPlayerMgr()}
+	m := &World{pm: player.NewPlayerMgr()}
 	m.Server = network.NewServer(":8023", 100, 200, logger.Logger)
 	m.Server.MessageHandler = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
-	m.ChatSystem.SetOwner(m)
 	return m
 }
 
@@ -33,7 +34,7 @@ var Oasis *World
 func (w *World) Start() {
 	w.HandlerRegister()
 	go w.Server.Run()
-	go w.Pm.Run()
+	go w.pm.Run()
 }
 
 func (w *World) Stop() {
@@ -45,7 +46,7 @@ func (w *World) OnSessionPacket(packet *network.Packet) {
 		handler(packet)
 		return
 	}
-	if p := w.Pm.GetPlayer(uint64(packet.Conn.ConnID)); p != nil {
+	if p := w.pm.GetPlayer(uint64(packet.Conn.ConnID)); p != nil {
 		p.HandlerParamCh <- packet.Msg
 	}
 }
