@@ -6,7 +6,7 @@ type Family struct {
 	Desc     string
 	members  map[uint64]*Member
 	requests []interface{}
-	ChIn     chan MemberActionParam
+	ChIn     chan *MemberActionParam
 	ChOut    chan interface{}
 }
 

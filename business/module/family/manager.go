@@ -1,7 +1,7 @@
 package family
 
 type Manager struct {
-	families map[uint32]*Family
+	families map[uint64]*Family
 	Owner
 	ChIn  chan ManagerHandlerParam
 	ChOut chan interface{}
@@ -23,13 +23,4 @@ func (m *Manager) Monitor() {
 			m.Handler(param)
 		}
 	}
-}
-
-func (m *Manager) Handler(param interface{}) {
-
-}
-
-func (m *Manager) ForwardMsg(msg interface{}) {
-	m.Owner.BroadcastMsg(nil, 0, nil)
-
 }
