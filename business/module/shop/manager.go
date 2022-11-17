@@ -1,10 +1,10 @@
 package shop
 
-type System struct {
+type Manager struct {
 	Shops map[uint32]Shop
 	Owner
 }
 
-func (s *System) SetOwner(owner Owner) {
+func (s *Manager) SetOwner(owner Owner) {
 	s.Owner = owner
 }

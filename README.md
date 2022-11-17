@@ -25,7 +25,7 @@
 * `gre`
   - 运维，部署，工具等
 
-### module 说明
+### `module` 说明
 
 
 每个模块包含
@@ -43,13 +43,13 @@
   - 配置,常量的定义等
 
 * `manager`
-  - 有 `manage`r 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
+  - 有 `manager` 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
 
-### Player
+### `Player`
 
  每个 `Player` 实例 拥有自己的协程
 
-### Scene
+### `Scene`
 
  每个 `Scene` 实例 拥有自己的协程
 
