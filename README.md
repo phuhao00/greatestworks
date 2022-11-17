@@ -5,7 +5,15 @@ the back-end logic of game
 
 ![](frame.png)
 
+## 初衷
 
+* 1.充分发挥 golang 并发的语言特性
+
+* 2.微服务思想,低耦合
+
+* 3.面向对象+组合
+
+* 4.高性能
 
 
 
@@ -14,19 +22,20 @@ the back-end logic of game
 
 每个模块包含
 * data
-  对应的数据存储
+  - 对应的数据存储
 * system
-  该模块的管理，例如数据的CRUD，有System 的模块，其成员实例不具备 独立处理协程
+  - 该模块的管理，例如数据的CRUD，有System 的模块，其成员实例不具备 独立处理协程.
 * owner
-  定义从属模块需要实现的些方法
+  - 定义从属模块需要实现的些方法
 * handler
-  处理从属模块需要的业务逻辑
+  - 处理从属模块需要的业务逻辑
 * abstract
-  模块成员的抽象，接口定义
+  - 模块成员的抽象，接口定义
 * config
-  配置,常量的定义等
+  - 配置,常量的定义等
+
 * manager
-  有 manager 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
+  - 有 manager 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
 
 ### Player
 
@@ -37,6 +46,5 @@ the back-end logic of game
  每个 Scene 实例 拥有自己的协程
 
 
-  
 
 
