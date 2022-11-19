@@ -11,6 +11,7 @@ const (
 	ACCEPT Status = iota + 1
 	ING
 	FINISH
+	SUBMIT
 )
 
 const (
@@ -40,6 +41,10 @@ type Config struct {
 }
 
 type TargetConf struct {
+	Id            uint32
+	DropId        uint32
+	Name          string
+	CompleteParam string
 }
 
 type PlayerActionParam struct {
@@ -47,3 +52,9 @@ type PlayerActionParam struct {
 	Player    Player
 	Packet    *network.Message
 }
+
+type TargetCategory int
+
+const (
+	TargetCategoryNormal TargetCategory = iota + 1
+)

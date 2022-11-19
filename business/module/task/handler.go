@@ -9,7 +9,7 @@ import (
 
 type Handler struct {
 	Id messageId.MessageId
-	Fn func(s *Manager, player Player, packet *network.Message)
+	Fn func(player Player, packet *network.Message)
 }
 
 var (
@@ -49,22 +49,12 @@ func HandlerFriendRegister() {
 	}
 }
 
-func AcceptTask(m *Manager, player Player, packet *network.Message) {
-
+// AcceptTask accept task
+func AcceptTask(player Player, packet *network.Message) {
+	player.GetTaskData().GetTask(0).SetStatus(ACCEPT)
 }
 
-func Submit(m *Manager, player Player, packet *network.Message) {
-
-}
-
-func getCompleteCondition() {
-
-}
-
-func getReward(m *Manager) {
-
-}
-
-func checkUnlock(m *Manager) bool {
-	return false
+// Submit submit task
+func Submit(player Player, packet *network.Message) {
+	player.GetTaskData().GetTask(0).SetStatus(SUBMIT)
 }

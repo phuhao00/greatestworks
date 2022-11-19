@@ -20,13 +20,8 @@ func NewTTask(config *task2.Config) *TTask {
 
 }
 
-func (t *TTask) Accept(config *task2.Config) {
-	t.Status = task2.ACCEPT
-}
-
-func (t *TTask) Finish() {
-	t.Status = task2.FINISH
-
+func (t *TTask) SetStatus(status task2.Status) {
+	t.Status = status
 }
 
 func (t *TTask) TargetDoneCallBack() {
@@ -37,6 +32,6 @@ func (t *TTask) TargetDoneCallBack() {
 		}
 	}
 	if count == len(t.Targets) {
-		t.Finish()
+		t.SetStatus(task2.FINISH)
 	}
 }

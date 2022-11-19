@@ -53,8 +53,10 @@
 
  每个 `Scene` 实例 拥有自己的协程
 
-
-
+### `task`
+  - `Data` 存放 玩家任务实例数据
+  - `Manager` 支持配置多协程处理业务逻辑 
+  - `impl` 任务类型的实现
 ### `idea` 
 
   * 模块之间依赖的属性，借助 `redis` ,`mongo`,`consul`,`nsq`,`rabbitmq`

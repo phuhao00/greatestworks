@@ -4,6 +4,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/business/module/chat"
 	"greatestworks/business/module/friend"
+	"greatestworks/business/module/task"
 
 	"github.com/phuhao00/network"
 )
@@ -14,6 +15,7 @@ type Player struct {
 	Session        *network.TcpConnX
 	FriendSystem   *friend.System
 	PrivateChat    *chat.PrivateChat
+	taskData       *task.Data
 }
 
 func NewPlayer() *Player {
@@ -44,4 +46,8 @@ func (p *Player) OnLogin() {
 
 func (p *Player) OnLogout() {
 	//存db
+}
+
+func (p *Player) GetTaskData() *task.Data {
+	return p.taskData
 }

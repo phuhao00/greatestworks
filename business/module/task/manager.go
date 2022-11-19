@@ -84,5 +84,19 @@ func (m *Manager) Handle(param *PlayerActionParam) {
 	if err != nil {
 		//todo log
 	}
-	handler.Fn(m, param.Player, param.Packet)
+	handler.Fn(param.Player, param.Packet)
+}
+
+// getTaskConfig get task config
+func (m *Manager) getTaskConfig(taskConfigId uint32) (ret *Config) {
+	m.configs.Range(func(key, value any) bool {
+		if val, ok := value.(*Config); ok {
+			if val.Id == taskConfigId {
+				ret = val
+				return false
+			}
+		}
+		return true
+	})
+	return ret
 }
