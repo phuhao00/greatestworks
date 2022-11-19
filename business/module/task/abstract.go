@@ -6,16 +6,18 @@ type Abstract interface {
 type Task interface {
 	SetStatus(Status)
 	TargetDoneCallBack()
+	GetTargets() []Target
 }
 
 type Target interface {
 	GetCategory() TargetCategory
 	CheckDone() bool
-	OnEvent(event Event)
+	OnNotify(param interface{})
+	GetTargetConfigId() uint32
 }
 
 type Event interface {
-	Attach(target Target) error
+	Attach(targetId uint32) error
 	Detach(id uint64) error
-	Notify()
+	Notify(param interface{}, player Player)
 }

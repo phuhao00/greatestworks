@@ -35,3 +35,7 @@ func (t *TTask) TargetDoneCallBack() {
 		t.SetStatus(task2.FINISH)
 	}
 }
+
+func (t *TTask) GetTargets() []task2.Target {
+	return nil
+}

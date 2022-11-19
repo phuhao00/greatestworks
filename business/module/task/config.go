@@ -53,8 +53,21 @@ type PlayerActionParam struct {
 	Packet    *network.Message
 }
 
+type EventParam struct {
+	EventCategory
+	Player Player
+	Param  interface{}
+}
+
 type TargetCategory int
 
 const (
 	TargetCategoryNormal TargetCategory = iota + 1
+)
+
+type EventCategory int
+
+const (
+	NormalEvent EventCategory = iota + 1
+	BaseEvent
 )

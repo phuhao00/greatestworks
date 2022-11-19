@@ -11,8 +11,10 @@ type Manager struct {
 	configs    sync.Map
 	ChIn       chan *PlayerActionParam
 	ChOut      chan interface{}
+	ChEvent    chan *EventParam
 	LoopNum    int
 	MonitorNum int
+	events     sync.Map
 }
 
 func NewManager(conf *ManagerConfig) {
@@ -73,10 +75,17 @@ func (m *Manager) Loop() {
 func (m *Manager) Monitor() {
 	for {
 		select {
-		case <-m.ChIn:
-
+		case p := <-m.ChIn:
+			m.Handle(p)
+		case e := <-m.ChEvent:
+			m.HandleEvent(e)
 		}
 	}
+}
+
+func (m *Manager) HandleEvent(p *EventParam) {
+	e := m.getEvent(p.EventCategory)
+	e.Notify(p.Param, p.Player)
 }
 
 func (m *Manager) Handle(param *PlayerActionParam) {
@@ -99,4 +108,12 @@ func (m *Manager) getTaskConfig(taskConfigId uint32) (ret *Config) {
 		return true
 	})
 	return ret
+}
+
+func (m *Manager) getEvent(e EventCategory) Event {
+	value, ok := m.events.Load(e)
+	if ok {
+		return value.(Event)
+	}
+	return nil
 }
