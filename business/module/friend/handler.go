@@ -22,6 +22,10 @@ var (
 	MaxMessageId messageId.MessageId //handle 的消息范围
 )
 
+func IsBelongToHere(id messageId.MessageId) bool {
+	return id > MinMessageId && id < MaxMessageId
+}
+
 func GetHandler(id messageId.MessageId) (*Handler, error) {
 
 	if id > MinMessageId && id < MaxMessageId {

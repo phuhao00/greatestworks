@@ -6,6 +6,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"greatestworks/business/module/chat"
 	"greatestworks/business/module/friend"
+	"greatestworks/business/module/task"
 )
 
 func (p *Player) SendMsg(ID messageId.MessageId, message proto.Message) {
@@ -20,5 +21,11 @@ func (p *Player) Handler(id messageId.MessageId, msg *network.Message) {
 	if handler, _ := chat.GetHandler(id); handler != nil {
 		handler.Fn(p.PrivateChat, msg)
 	}
-
+	if task.IsBelongToHere(id) {
+		task.GetMe().ChIn <- &task.PlayerActionParam{
+			MessageId: id,
+			Player:    p,
+			Packet:    msg,
+		}
+	}
 }
