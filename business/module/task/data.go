@@ -8,7 +8,7 @@ type Data struct {
 	taskCache    sync.Map // map[EventCategory][]uint64
 }
 
-func NewData() *Data {
+func NewTaskData() *Data {
 	return &Data{
 		Tasks:        sync.Map{},
 		Achievements: sync.Map{},

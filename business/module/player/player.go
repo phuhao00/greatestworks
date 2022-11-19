@@ -20,7 +20,8 @@ type Player struct {
 
 func NewPlayer() *Player {
 	p := &Player{
-		UId: 0,
+		UId:      0,
+		taskData: task.NewTaskData(),
 	}
 	return p
 }
@@ -41,6 +42,7 @@ func (p *Player) Stop() {
 func (p *Player) OnLogin() {
 	//从db加载数据初始化
 	//同步数据给客户端
+	p.taskData.LoadFromDB()
 
 }
 
