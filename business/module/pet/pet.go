@@ -24,3 +24,7 @@ func (p *Pet) ToModel() *Model {
 		Name:     p.Name,
 	}
 }
+
+func (p *Pet) AddLevel(delta uint32) {
+	
+}

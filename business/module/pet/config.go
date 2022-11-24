@@ -7,6 +7,12 @@ type Config struct {
 	ComposeFragment []uint32 //合成需要的碎片
 }
 
+type LevelConfig struct {
+	Level     uint32
+	Cost      uint32 //消耗
+	Condition uint32
+}
+
 type State uint32
 
 const (

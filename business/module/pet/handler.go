@@ -74,7 +74,7 @@ func DelPet(player Player, message *network.Message) {
 }
 
 func UpdatePet(player Player, message *network.Message) {
-	//todo  升级，升星（进化），合成，成长等级
+	//todo  升级，升星（进化），合成，成长等级，设置状态
 
 }
 
