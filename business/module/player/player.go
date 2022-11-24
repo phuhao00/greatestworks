@@ -4,6 +4,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"greatestworks/business/module/chat"
 	"greatestworks/business/module/friend"
+	"greatestworks/business/module/pet"
 	"greatestworks/business/module/task"
 
 	"github.com/phuhao00/network"
@@ -16,6 +17,7 @@ type Player struct {
 	FriendSystem   *friend.System
 	PrivateChat    *chat.PrivateChat
 	taskData       *task.Data
+	petSystem      *pet.System
 }
 
 func NewPlayer() *Player {
@@ -52,4 +54,8 @@ func (p *Player) OnLogout() {
 
 func (p *Player) GetTaskData() *task.Data {
 	return p.taskData
+}
+
+func (p *Player) GetPetSystem() *pet.System {
+	return p.petSystem
 }

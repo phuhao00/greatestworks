@@ -9,7 +9,7 @@ import (
 
 type Handler struct {
 	Id messageId.MessageId
-	Fn func(s *System, packet *network.Message)
+	Fn func(p Player, packet *network.Message)
 }
 
 var (
@@ -41,10 +41,53 @@ func init() {
 func HandlerPetRegister() {
 	handlers[0] = &Handler{
 		0,
-		nil,
+		AddPet,
 	}
 	handlers[1] = &Handler{
 		0,
-		nil,
+		DelPet,
 	}
+	handlers[2] = &Handler{
+		0,
+		UpdatePet,
+	}
+	handlers[3] = &Handler{
+		0,
+		GetPetInfo,
+	}
+	handlers[4] = &Handler{
+		0,
+		UpdatePictorial,
+	}
+	handlers[5] = &Handler{
+		0,
+		GetPictorialInfo,
+	}
+}
+
+func AddPet(player Player, message *network.Message) {
+
+}
+
+func DelPet(player Player, message *network.Message) {
+
+}
+
+func UpdatePet(player Player, message *network.Message) {
+	//todo  升级，升星（进化），合成，成长等级
+
+}
+
+func GetPetInfo(player Player, message *network.Message) {
+	//todo  单个获取，批量获取
+}
+
+// UpdatePictorial 更新图鉴
+func UpdatePictorial(player Player, message *network.Message) {
+
+}
+
+// GetPictorialInfo 获取图鉴信息
+func GetPictorialInfo(player Player, message *network.Message) {
+
 }

@@ -1,14 +1,9 @@
 package pet
 
+// System pet system
 type System struct {
-	pets map[uint32]Abstract
-	Owner
-}
-
-func (s *System) AddPet() {
-
-}
-
-func (s *System) DelPet() {
-
+	pets       map[uint32]Abstract
+	Pictorials map[uint32]*Pictorial
+	Fragments  map[uint32]*Fragment
+	Skins      map[uint32]*Skin
 }
