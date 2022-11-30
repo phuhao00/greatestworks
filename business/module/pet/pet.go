@@ -26,5 +26,5 @@ func (p *Pet) ToModel() *Model {
 }
 
 func (p *Pet) AddLevel(delta uint32) {
-	
+
 }
