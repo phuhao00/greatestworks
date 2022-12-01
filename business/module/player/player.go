@@ -5,6 +5,7 @@ import (
 	"greatestworks/business/module/chat"
 	"greatestworks/business/module/friend"
 	"greatestworks/business/module/pet"
+	"greatestworks/business/module/shop"
 	"greatestworks/business/module/task"
 
 	"github.com/phuhao00/network"
@@ -18,6 +19,7 @@ type Player struct {
 	PrivateChat    *chat.PrivateChat
 	taskData       *task.Data
 	petSystem      *pet.System
+	shopData       *shop.Data
 }
 
 func NewPlayer() *Player {
@@ -58,4 +60,8 @@ func (p *Player) GetTaskData() *task.Data {
 
 func (p *Player) GetPetSystem() *pet.System {
 	return p.petSystem
+}
+
+func (p *Player) GetShopData() *shop.Data {
+	return p.shopData
 }
