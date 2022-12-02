@@ -1,5 +1,5 @@
 package shop
 
-type Owner interface {
+type Player interface {
 	GetShopData() *Data
 }

@@ -6,5 +6,4 @@ type Item struct {
 	TodayBuyCount   uint64
 	WeeklyBuyCount  uint64
 	MonthlyBuyCount uint64
-	Weight          uint32
 }
