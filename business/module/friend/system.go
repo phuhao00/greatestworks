@@ -7,11 +7,21 @@ type System struct {
 	friends    []Info
 	BlackList  []uint64
 	requests   []Request
-	Owner
+	Player
 }
 
-func (s *System) SetOwner(owner Owner) {
-	s.Owner = owner
+func NewSystem() *System {
+	return &System{
+		FriendList: nil,
+		friends:    nil,
+		BlackList:  nil,
+		requests:   nil,
+		Player:     nil,
+	}
+}
+
+func (s *System) SetOwner(owner Player) {
+	s.Player = owner
 }
 
 func (s *System) isFriend(uId uint64) (bool, int) {

@@ -11,6 +11,13 @@ type PrivateChat struct {
 	Owner
 }
 
+func NewPrivateChat() *PrivateChat {
+	return &PrivateChat{
+		Consumer: nsq.Consumer{},
+		Owner:    nil,
+	}
+}
+
 func (p *PrivateChat) ForwardPlayer(message proto.Message) {
 	//TODO implement me
 	panic("implement me")

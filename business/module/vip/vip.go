@@ -5,6 +5,13 @@ type Vip struct {
 	Exp   uint32
 }
 
+func NewVip() *Vip {
+	return &Vip{
+		Level: 0,
+		Exp:   0,
+	}
+}
+
 func (v *Vip) Load() {
 	//TODO implement me
 	panic("implement me")

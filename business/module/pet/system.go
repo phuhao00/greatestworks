@@ -7,3 +7,12 @@ type System struct {
 	Fragments  map[uint32]*Fragment  //碎片
 	Skins      map[uint32]*Skin      //皮肤
 }
+
+func NewSystem() *System {
+	return &System{
+		pets:       nil,
+		Pictorials: nil,
+		Fragments:  nil,
+		Skins:      nil,
+	}
+}

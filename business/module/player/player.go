@@ -2,12 +2,6 @@ package player
 
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
-	"greatestworks/business/module/chat"
-	"greatestworks/business/module/friend"
-	"greatestworks/business/module/pet"
-	"greatestworks/business/module/shop"
-	"greatestworks/business/module/task"
-
 	"github.com/phuhao00/network"
 )
 
@@ -15,17 +9,12 @@ type Player struct {
 	UId            uint64
 	HandlerParamCh chan *network.Message
 	Session        *network.TcpConnX
-	FriendSystem   *friend.System
-	PrivateChat    *chat.PrivateChat
-	taskData       *task.Data
-	petSystem      *pet.System
-	shopData       *shop.Data
+	*GamePlay
 }
 
 func NewPlayer() *Player {
 	p := &Player{
-		UId:      0,
-		taskData: task.NewTaskData(),
+		UId: 0,
 	}
 	return p
 }
@@ -52,16 +41,4 @@ func (p *Player) OnLogin() {
 
 func (p *Player) OnLogout() {
 	//存db
-}
-
-func (p *Player) GetTaskData() *task.Data {
-	return p.taskData
-}
-
-func (p *Player) GetPetSystem() *pet.System {
-	return p.petSystem
-}
-
-func (p *Player) GetShopData() *shop.Data {
-	return p.shopData
 }

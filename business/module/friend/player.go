@@ -5,7 +5,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Owner interface {
+type Player interface {
 	Start()
 	Stop()
 	SendMsg(ID messageId.MessageId, message proto.Message)
