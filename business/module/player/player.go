@@ -14,7 +14,8 @@ type Player struct {
 
 func NewPlayer() *Player {
 	p := &Player{
-		UId: 0,
+		UId:      0,
+		GamePlay: NewGamePlay(),
 	}
 	return p
 }
