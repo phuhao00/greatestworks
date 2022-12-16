@@ -6,15 +6,14 @@ import (
 )
 
 type Player struct {
-	UId            uint64
+	*GamePlay
+	*BaseInfo
 	HandlerParamCh chan *network.Message
 	Session        *network.TcpConnX
-	*GamePlay
 }
 
 func NewPlayer() *Player {
 	p := &Player{
-		UId:      0,
 		GamePlay: NewGamePlay(),
 	}
 	return p

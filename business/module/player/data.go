@@ -1,7 +1,16 @@
 package player
 
 type BaseInfo struct {
-	Name   string
-	Age    int
-	Gender int
+	UId    uint64 `json:"uid"`
+	Name   string `json:"name"`
+	Age    int    `json:"age"`
+	Gender int    `json:"gender"`
+}
+
+func (p *Player) Load() {
+
+}
+
+func (p *Player) Save() {
+	
 }
