@@ -1,0 +1,22 @@
+path: ""
+
+module:
+  building: ""
+  chat: ""
+  family: ""
+  task: ""
+  skill: ""
+  shop: ""
+  recharge: ""
+  pet: ""
+  npc: ""
+  email: ""
+  bag:
+    - item: ""
+    - equip: ""
+  rank: ""
+  battlePass: ""
+  activity: ""
+  condition: ""
+  plant: ""
+

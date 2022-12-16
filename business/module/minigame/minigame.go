@@ -36,10 +36,12 @@ func (g *MiniGame) DeleteGame(key GameKey) {
 	g.games.Delete(key)
 }
 
+// Load 加载
 func (g *MiniGame) Load() {
 
 }
 
+// Save 保存
 func (g *MiniGame) Save() {
 
 }

@@ -2,6 +2,7 @@ package player
 
 import (
 	"greatestworks/business/module/bag"
+	"greatestworks/business/module/building"
 	"greatestworks/business/module/chat"
 	"greatestworks/business/module/friend"
 	"greatestworks/business/module/pet"
@@ -11,24 +12,26 @@ import (
 )
 
 type GamePlay struct {
-	friendSystem *friend.System
-	privateChat  *chat.PrivateChat
-	taskData     *task.Data
-	petSystem    *pet.System
-	shopData     *shop.Data
-	bagSystem    *bag.System
-	vip          *vip.Vip
+	friendSystem   *friend.System
+	privateChat    *chat.PrivateChat
+	taskData       *task.Data
+	petSystem      *pet.System
+	shopData       *shop.Data
+	bagSystem      *bag.System
+	vip            *vip.Vip
+	buildingSystem *building.System
 }
 
 func InitGamePlay() GamePlay {
 	return GamePlay{
-		friendSystem: nil,
-		privateChat:  nil,
-		taskData:     nil,
-		petSystem:    nil,
-		shopData:     nil,
-		bagSystem:    nil,
-		vip:          nil,
+		friendSystem:   nil,
+		privateChat:    nil,
+		taskData:       nil,
+		petSystem:      nil,
+		shopData:       nil,
+		bagSystem:      nil,
+		vip:            nil,
+		buildingSystem: nil,
 	}
 }
 
@@ -50,4 +53,8 @@ func (p *GamePlay) GetBagSystem() *bag.System {
 
 func (p *GamePlay) GetVip() *vip.Vip {
 	return p.vip
+}
+
+func (p *GamePlay) GetSystem() *building.System {
+	return p.buildingSystem
 }
