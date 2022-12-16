@@ -3,7 +3,8 @@ package minigame
 import "sync"
 
 type MiniGame struct {
-	games sync.Map
+	configs sync.Map
+	games   sync.Map
 }
 
 type GameKey struct {
@@ -12,7 +13,8 @@ type GameKey struct {
 	Category       uint16 `json:"category"`
 }
 
-func (g *MiniGame) Load(key GameKey) Abstract {
+// GetGame 获取游戏
+func (g *MiniGame) GetGame(key GameKey) Abstract {
 	value, ok := g.games.Load(key)
 	if ok {
 		switch key.Category {
@@ -22,4 +24,22 @@ func (g *MiniGame) Load(key GameKey) Abstract {
 		}
 	}
 	return nil
+}
+
+// AddGame 添加游戏
+func (g *MiniGame) AddGame(key GameKey, game Abstract) {
+	g.games.Store(key, game)
+}
+
+// DeleteGame 删除游戏
+func (g *MiniGame) DeleteGame(key GameKey) {
+	g.games.Delete(key)
+}
+
+func (g *MiniGame) Load() {
+
+}
+
+func (g *MiniGame) Save() {
+
 }
