@@ -1,9 +1,9 @@
 package plant
 
 type Config struct {
-	Id   uint32
-	Name string
-	Desc string
+	Id   uint32 `json:"id"`
+	Name string `json:"name"`
+	Desc string `json:"desc"`
 }
 
 type Status uint16

@@ -11,6 +11,14 @@ type Weather struct {
 	openTime  time.Time
 }
 
+func NewWeather() *Weather {
+	return &Weather{
+		CurStatus: 0,
+		configs:   sync.Map{},
+		openTime:  time.Time{},
+	}
+}
+
 func (w *Weather) Update() {
 	ti := time.NewTicker(time.Second)
 	for {
@@ -21,7 +29,7 @@ func (w *Weather) Update() {
 	}
 }
 
-func (w *Weather) GetWeather() Category {
+func (w *Weather) GetWeatherStatus() Category {
 	return w.CurStatus
 }
 

@@ -55,7 +55,7 @@ func init() {
 
 // Water 浇水
 func water(player Player, packet *network.Message) {
-
+	player.GetPlantSystem()
 }
 
 // spreadManure 施肥
