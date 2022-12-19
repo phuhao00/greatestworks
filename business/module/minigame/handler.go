@@ -1,4 +1,4 @@
-package battlepass
+package minigame
 
 import (
 	"errors"
@@ -36,11 +36,19 @@ func init() {
 	onceInit.Do(func() {
 		handlers[0] = &Handler{
 			0,
-			Receive,
+			createGame,
+		}
+		handlers[1] = &Handler{
+			1,
+			leaveGame,
 		}
 	})
 }
 
-func Receive(player Player, message *network.Message) {
+func createGame(player Player, message *network.Message) {
+
+}
+
+func leaveGame(player Player, message *network.Message) {
 
 }

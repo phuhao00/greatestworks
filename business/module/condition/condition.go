@@ -27,7 +27,7 @@ func (t *Base) OnNotify(event event.Event) {
 
 }
 
-func (t Base) GetId() uint32 {
+func (t *Base) GetId() uint32 {
 	return 0
 }
 
