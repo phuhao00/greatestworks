@@ -1,5 +1,7 @@
 package email
 
+import "sync"
+
 type MailM struct {
 	Id     uint64 `bson:"id"`
 	ConfId uint32 `bson:"confId"`
@@ -14,3 +16,7 @@ const (
 	MailStatusRead
 	MailStatusDelete
 )
+
+type Data struct {
+	emails sync.Map
+}

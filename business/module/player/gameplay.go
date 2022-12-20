@@ -4,6 +4,7 @@ import (
 	"greatestworks/business/module/bag"
 	"greatestworks/business/module/building"
 	"greatestworks/business/module/chat"
+	"greatestworks/business/module/email"
 	"greatestworks/business/module/friend"
 	"greatestworks/business/module/pet"
 	"greatestworks/business/module/plant"
@@ -22,6 +23,7 @@ type GamePlay struct {
 	vip            *vip.Vip
 	buildingSystem *building.System
 	plantSystem    *plant.System
+	emailData      *email.Data
 }
 
 func InitGamePlay() GamePlay {
@@ -63,4 +65,8 @@ func (p *GamePlay) GetBuildingSystem() *building.System {
 
 func (p *GamePlay) GetPlantSystem() *plant.System {
 	return p.plantSystem
+}
+
+func (p *GamePlay) GetEmailData() *email.Data {
+	return p.emailData
 }
