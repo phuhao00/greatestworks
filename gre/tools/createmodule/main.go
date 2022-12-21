@@ -17,13 +17,13 @@ var (
 )
 
 func init() {
-	flag.StringVar(&moduleName, "module", "task", "please")
+	flag.StringVar(&moduleName, "module", "task", "please input like - module=task")
 	flag.StringVar(&src, "src", "../../template", "please")
 	flag.StringVar(&dst, "dst", "../../../business/module", "please")
 }
 
 func main() {
-	flag.Parse() // 解析参数
+	flag.Parse()
 	fmt.Printf("%s\n", moduleName)
 	src, _ = filepath.Abs(src)
 	dst, _ = filepath.Abs(dst)
