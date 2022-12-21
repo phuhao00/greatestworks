@@ -23,7 +23,7 @@
 * `business`
   - 业务逻辑
 * `gre`
-  - 运维，部署，工具等
+  - 运维，部署，工具(createmodule;exel2json)等
 
 ### `module` 说明
 
