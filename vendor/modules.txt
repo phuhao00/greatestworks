@@ -214,6 +214,9 @@ github.com/richardlehane/mscfb
 # github.com/richardlehane/msoleps v1.0.3
 ## explicit
 github.com/richardlehane/msoleps/types
+# github.com/robfig/cron/v3 v3.0.1
+## explicit; go 1.12
+github.com/robfig/cron/v3
 # github.com/sergi/go-diff v1.1.0
 ## explicit; go 1.12
 github.com/sergi/go-diff/diffmatchpatch

@@ -14,6 +14,7 @@ require (
 	github.com/phuhao00/network v1.0.4
 	github.com/phuhao00/spoor v1.0.2
 	github.com/phuhao00/sugar v1.0.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/sony/sonyflake v1.1.0
 	github.com/xuri/excelize/v2 v2.7.0
 	go.mongodb.org/mongo-driver v1.10.0

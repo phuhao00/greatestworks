@@ -12,6 +12,7 @@ func FuzzBrokenMethod(f *testing.F) {
 }
 
 func FuzzMod(f *testing.F) {
+	//f.Add(1, 0)
 	f.Fuzz(func(t *testing.T, a, b int) {
 		fmt.Println(a / b)
 	})
