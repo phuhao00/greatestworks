@@ -13,6 +13,17 @@ import (
 	"greatestworks/business/module/vip"
 )
 
+var (
+	_ pet.Player      = (*Player)(nil)
+	_ shop.Player     = (*Player)(nil)
+	_ task.Player     = (*Player)(nil)
+	_ bag.Player      = (*Player)(nil)
+	_ plant.Player    = (*Player)(nil)
+	_ building.Player = (*Player)(nil)
+	_ email.Player    = (*Player)(nil)
+	_ vip.Player      = (*Player)(nil)
+)
+
 type GamePlay struct {
 	friendSystem   *friend.System
 	privateChat    *chat.PrivateChat
