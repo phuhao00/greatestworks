@@ -14,11 +14,9 @@ require (
 	github.com/phuhao00/network v1.0.4
 	github.com/phuhao00/spoor v1.0.2
 	github.com/phuhao00/sugar v1.0.1
-	github.com/robfig/cron/v3 v3.0.1
 	github.com/sony/sonyflake v1.1.0
 	github.com/xuri/excelize/v2 v2.7.0
 	go.mongodb.org/mongo-driver v1.10.0
-	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 )
 
@@ -63,6 +61,5 @@ require (
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
-	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
