@@ -1,1 +1,8 @@
-dot  -Tpng te.dot  -o o1.png
+# 游戏内机器人
+
+
+```shell
+    dot  -Tpng te.dot  -o o1.png
+```
+
+
