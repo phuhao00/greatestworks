@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="56691c90-362e-40c1-9f68-f87746393791" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/aop/algorithm/sample.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gre/robot/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/gre/robot/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aop/algorithm/lru.go" beforeDir="false" afterPath="$PROJECT_DIR$/aop/algorithm/lru.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +55,7 @@
     "git-widget-placeholder": "main",
     "go.import.settings.migrated": "true",
     "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "D:/goproject/lo",
+    "last_opened_file_path": "D:/goproject/golang-lru",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
