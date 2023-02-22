@@ -1,3 +1,8 @@
 package impl
 
-//元气大作战
+// YuanQiDaZuoZhan
+// 元气大作战
+type YuanQiDaZuoZhan struct {
+	Id   uint32
+	Desc string
+}
