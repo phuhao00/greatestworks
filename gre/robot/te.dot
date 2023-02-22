@@ -1,0 +1,9 @@
+digraph fsm {
+    "closed" -> "open" [ label = "open" ];
+    "intermediate" -> "closed" [ label = "part-close" ];
+    "open" -> "closed" [ label = "close" ];
+
+    "closed" [color = "red"];
+    "intermediate";
+    "open";
+}
