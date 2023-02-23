@@ -192,6 +192,9 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.1
 ## explicit
 github.com/golang/snappy
+# github.com/google/btree v1.1.2
+## explicit; go 1.18
+github.com/google/btree
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid

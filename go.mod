@@ -6,6 +6,7 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-git/go-git/v5 v5.5.2
+	github.com/google/btree v1.1.2
 	github.com/google/wire v0.5.0
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.8.0
