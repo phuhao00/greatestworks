@@ -18,7 +18,10 @@ require (
 	github.com/phuhao00/spoor v1.0.2
 	github.com/phuhao00/sugar v1.0.1
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/samber/go-amqp-pubsub v1.3.1
+	github.com/samber/mo v1.8.0
 	github.com/sony/sonyflake v1.1.0
+	github.com/tealeg/xlsx v1.0.5
 	github.com/xuri/excelize/v2 v2.7.0
 	go.mongodb.org/mongo-driver v1.10.0
 	google.golang.org/grpc v1.53.0
@@ -45,6 +48,7 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -60,8 +64,10 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pjbgf/sha1cd v0.2.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rabbitmq/amqp091-go v1.5.0 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
+	github.com/samber/lo v1.35.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
