@@ -6,7 +6,7 @@ import "math/rand"
 func Samples[T any](collection []T, count int) []T {
 	size := len(collection)
 
-	copy := append([]T{}, collection...)
+	ts := append([]T{}, collection...)
 
 	results := []T{}
 
@@ -14,12 +14,12 @@ func Samples[T any](collection []T, count int) []T {
 		copyLength := size - i
 
 		index := rand.Intn(size - i)
-		results = append(results, copy[index])
+		results = append(results, ts[index])
 
 		// Removes element.
 		// It is faster to swap with last element and remove it.
-		copy[index] = copy[copyLength-1]
-		copy = copy[:copyLength-1]
+		ts[index] = ts[copyLength-1]
+		ts = ts[:copyLength-1]
 	}
 
 	return results
