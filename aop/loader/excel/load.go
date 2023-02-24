@@ -2,12 +2,12 @@ package excel
 
 import (
 	"errors"
+	"fmt"
 	"github.com/tealeg/xlsx"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 func LoadExcel(configManager interface{}, dir string) error {
@@ -15,16 +15,17 @@ func LoadExcel(configManager interface{}, dir string) error {
 	if len(infos) == 0 {
 		return nil
 	}
-	wg := sync.WaitGroup{}
+	var errCh = make(chan error)
 	for _, info := range infos {
-		wg.Add(1)
+		info := info
 		go func() {
 			err := LoadFile(configManager, dir, &info)
-			_ = err
-			wg.Done()
+			errCh <- err
 		}()
 	}
-	wg.Wait()
+	for err := range errCh {
+		fmt.Println(err)
+	}
 	return nil
 }
 
@@ -55,16 +56,16 @@ func LoadSheet(info *FileInfo, sheetInfo *SheetInfo,
 	if len(sheet.Rows) < beginRow || len(sheet.Cols) < beginClo {
 		return nil, nil
 	}
-	typeOf := reflect.TypeOf(sheetInfo.Object)
-	if typeOf.Kind() == reflect.Ptr {
-		typeOf = typeOf.Elem()
+	objectT := reflect.TypeOf(sheetInfo.Object)
+	if objectT.Kind() == reflect.Ptr {
+		objectT = objectT.Elem()
 	}
-	if typeOf.Kind() != reflect.Struct {
-		return nil, errors.New("")
+	if objectT.Kind() != reflect.Struct {
+		return nil, errors.New("object not a struct type")
 	}
-	cellInfos, err := GetCell(info, sheetInfo, typeOf, sheet.Row(0), beginClo)
+	cellInfos, err := GetCellInfos(objectT, sheet.Row(0), beginClo)
 	if err != nil {
-		return nil, errors.New("")
+		return nil, errors.New(fmt.Sprintf("get cell info err:%v", err.Error()))
 	}
 	var (
 		res   = make([]interface{}, 0)
@@ -72,15 +73,15 @@ func LoadSheet(info *FileInfo, sheetInfo *SheetInfo,
 			return nil
 		}
 		getCellString = func(cell *xlsx.Cell) (string, error) {
-			return "", nil
+
+			return cell.String(), nil
 		}
 	)
-loop:
 	for i, row := range sheet.Rows[beginRow:] {
 		if row == nil || len(row.Cells) == 0 {
 			break
 		}
-		elem := reflect.New(typeOf).Elem()
+		elem := reflect.New(objectT).Elem()
 		for i2, cellInfo := range cellInfos {
 			if cellInfo.CloIndex >= len(row.Cells) {
 				continue
@@ -92,23 +93,23 @@ loop:
 			}
 			if len(cellString) == 0 {
 				if i2 == 0 {
-					break loop
+					break
 				}
 				continue
 			}
 			field := elem.Field(cellInfo.FieldIndex)
 			if !field.CanSet() {
-				return nil, errFn(cellInfo.ColName, cellInfo.CloIndex, i, errors.New(""))
+				return nil, errFn(cellInfo.ColName, cellInfo.CloIndex, i, errors.New("can not set value "))
 			}
 			err = ReflectSetVal(field, cellString)
 			if err != nil {
-				return nil, errors.New("")
+				return nil, errors.New(fmt.Sprintf("set value fail:%v", err.Error()))
 			}
 		}
 		res = append(res, elem.Addr().Interface())
 	}
 
-	return nil, nil
+	return res, nil
 }
 
 type CellInfo struct {
@@ -119,7 +120,7 @@ type CellInfo struct {
 	ColName    string
 }
 
-func GetCell(info *FileInfo, sheetInfo *SheetInfo, p reflect.Type, row *xlsx.Row, startClo int) ([]*CellInfo, error) {
+func GetCellInfos(p reflect.Type, row *xlsx.Row, startClo int) ([]*CellInfo, error) {
 	startIndex := startClo - 1
 	getCloIndex := func(fieldName string) int {
 		for i, cell := range row.Cells {
