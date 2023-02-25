@@ -7,7 +7,7 @@ import (
 func GetLua() {
 	L := lua.NewState()
 	defer L.Close()
-	if err := L.DoFile("hello.lua"); err != nil {
+	if err := L.DoFile("coroutine.lua"); err != nil {
 		panic(err)
 	}
 }
