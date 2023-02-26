@@ -24,6 +24,7 @@ require (
 	github.com/sony/sonyflake v1.1.0
 	github.com/tealeg/xlsx v1.0.5
 	github.com/xuri/excelize/v2 v2.7.0
+	github.com/yuin/gopher-lua v1.1.0
 	go.mongodb.org/mongo-driver v1.10.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
