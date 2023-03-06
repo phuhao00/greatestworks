@@ -8,7 +8,7 @@
 print("Hello World！")
 
 function ForExample()
-    tab1 = { key1 = "val1", key2 = "val2", "val3" }
+    tab1 = { key1 = "val11", key2 = "val22", "val33" }
     for k, v in pairs(tab1) do
         print(k .. " - " .. v)
     end
@@ -20,5 +20,6 @@ function ForExample()
 end
 
 ForExample()
+
 
 
