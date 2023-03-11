@@ -1,4 +1,4 @@
-package business
+package server
 
 type Processor interface {
 	Start()

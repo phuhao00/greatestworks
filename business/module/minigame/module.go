@@ -1,4 +1,4 @@
-package template
+package minigame
 
 import (
 	"greatestworks/aop/event"

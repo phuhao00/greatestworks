@@ -1,6 +1,8 @@
 package event
 
-import "greatestworks/business/module/condition"
+import (
+	"greatestworks/aop/condition"
+)
 
 type Event interface {
 	Notify()

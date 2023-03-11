@@ -1,4 +1,4 @@
-package template
+package activity
 
 import (
 	"greatestworks/aop/event"

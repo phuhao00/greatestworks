@@ -1,4 +1,4 @@
-package template
+package scene
 
 import (
 	"greatestworks/aop/event"

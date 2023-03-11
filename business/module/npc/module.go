@@ -1,4 +1,4 @@
-package template
+package npc
 
 import (
 	"greatestworks/aop/event"

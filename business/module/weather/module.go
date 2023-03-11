@@ -1,4 +1,4 @@
-package template
+package weather
 
 import (
 	"greatestworks/aop/event"

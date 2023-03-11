@@ -12,11 +12,11 @@ type EventWrap struct {
 	event.IEvent
 }
 
-func (m *Manager) OnEvent(event *EventWrap) {
+func (m *Module) OnEvent(event *EventWrap) {
 	m.eventHandles[event](event)
 }
 
-func (m *Manager) HandleAddOrDelFriendEvent(eventWrap *EventWrap) {
+func (m *Module) HandleAddOrDelFriendEvent(eventWrap *EventWrap) {
 	e := eventWrap.IEvent.(*friend.AddOrDelFriendEvent)
 	player := eventWrap.Player
 	taskData := player.GetTaskData()

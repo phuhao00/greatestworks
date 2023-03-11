@@ -1,4 +1,4 @@
-package template
+package skill
 
 import (
 	"greatestworks/aop/event"

@@ -9,13 +9,13 @@ func GetName() string {
 	return ""
 }
 
-type Manager struct {
+type Module struct {
 }
 
-func (s *Manager) OnEvent(player module.Character, event event.IEvent) {
+func (s *Module) OnEvent(player module.Character, event event.IEvent) {
 
 }
 
-func (s *Manager) SetEventCategoryActive(eventCategory int) {
+func (s *Module) SetEventCategoryActive(eventCategory int) {
 
 }

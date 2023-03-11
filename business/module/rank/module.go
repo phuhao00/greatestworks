@@ -1,4 +1,4 @@
-package template
+package rank
 
 import (
 	"greatestworks/aop/event"

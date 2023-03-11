@@ -1,6 +1,8 @@
 package instance
 
-import "greatestworks/business/module/condition/event"
+import (
+	"greatestworks/aop/condition/event"
+)
 
 type GetItem struct {
 	event.Base

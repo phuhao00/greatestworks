@@ -1,4 +1,4 @@
-package template
+package chat
 
 import (
 	"greatestworks/aop/event"

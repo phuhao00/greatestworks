@@ -1,4 +1,4 @@
-package template
+package battlepass
 
 import (
 	"greatestworks/aop/event"

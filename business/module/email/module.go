@@ -1,4 +1,4 @@
-package template
+package email
 
 import (
 	"greatestworks/aop/event"

@@ -1,4 +1,4 @@
-package template
+package pet
 
 import (
 	"greatestworks/aop/event"

@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	manager        *Manager
+	manager        *Module
 	newManagerOnce sync.Once
 )
 
-type Manager struct {
+type Module struct {
 	configs      sync.Map
 	ChIn         chan *PlayerActionParam
 	ChOut        chan interface{}
@@ -21,7 +21,7 @@ type Manager struct {
 	eventHandles map[event.IEvent]EventHandle
 }
 
-func NewManager(conf *ManagerConfig) {
+func NewModule(conf *ManagerConfig) {
 
 	var (
 		loopNum    int
@@ -42,7 +42,7 @@ func NewManager(conf *ManagerConfig) {
 		chOutSize = defaultChanOutSize
 	}
 
-	manager = &Manager{
+	manager = &Module{
 		configs:    sync.Map{},
 		ChIn:       make(chan *PlayerActionParam, chInSize),
 		ChOut:      make(chan interface{}, chOutSize),
@@ -51,12 +51,12 @@ func NewManager(conf *ManagerConfig) {
 	}
 }
 
-func GetManager() *Manager {
+func GetManager() *Module {
 
 	return manager
 }
 
-func (m *Manager) Run() {
+func (m *Module) Run() {
 
 	for i := 0; i < m.LoopNum; i++ {
 		go m.Loop()
@@ -67,7 +67,7 @@ func (m *Manager) Run() {
 	}
 }
 
-func (m *Manager) Loop() {
+func (m *Module) Loop() {
 	for {
 		select {
 		case <-m.ChOut:
@@ -76,7 +76,7 @@ func (m *Manager) Loop() {
 	}
 }
 
-func (m *Manager) Monitor() {
+func (m *Module) Monitor() {
 	for {
 		select {
 		case p := <-m.ChIn:
@@ -87,7 +87,7 @@ func (m *Manager) Monitor() {
 	}
 }
 
-func (m *Manager) Handle(param *PlayerActionParam) {
+func (m *Module) Handle(param *PlayerActionParam) {
 	handler, err := GetHandler(param.MessageId)
 	if err != nil {
 		//todo log
@@ -96,7 +96,7 @@ func (m *Manager) Handle(param *PlayerActionParam) {
 }
 
 // getTaskConfig get task config
-func (m *Manager) getTaskConfig(confId uint32) (ret *Config) {
+func (m *Module) getTaskConfig(confId uint32) (ret *Config) {
 	m.configs.Range(func(key, value any) bool {
 		if val, ok := value.(*Config); ok {
 			if val.Id == confId {

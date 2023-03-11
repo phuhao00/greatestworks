@@ -1,4 +1,4 @@
-package template
+package shushu
 
 import (
 	"greatestworks/aop/event"

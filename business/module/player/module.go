@@ -1,4 +1,4 @@
-package template
+package player
 
 import (
 	"greatestworks/aop/event"

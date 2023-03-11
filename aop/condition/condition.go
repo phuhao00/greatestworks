@@ -1,7 +1,7 @@
 package condition
 
 import (
-	"greatestworks/business/module/condition/event"
+	"greatestworks/aop/condition/event"
 )
 
 type Condition interface {

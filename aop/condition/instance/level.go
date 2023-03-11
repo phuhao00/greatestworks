@@ -1,6 +1,8 @@
 package instance
 
-import "greatestworks/business/module/condition"
+import (
+	"greatestworks/aop/condition"
+)
 
 type Level struct {
 	condition.Base
