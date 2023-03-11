@@ -3,6 +3,7 @@ package player
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/network"
+	event2 "greatestworks/aop/event"
 )
 
 type Player struct {
@@ -41,4 +42,10 @@ func (p *Player) OnLogin() {
 
 func (p *Player) OnLogout() {
 	//存db
+}
+
+func (p *Player) OnEvent(iEvent event2.IEvent) {
+	//todo get module process event
+	//eg:
+	p.taskData.OnEvent(iEvent)
 }

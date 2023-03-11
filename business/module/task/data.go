@@ -1,6 +1,7 @@
 package task
 
 import (
+	"greatestworks/aop/event"
 	"greatestworks/business/module/base"
 	"sync"
 )
@@ -10,6 +11,7 @@ type Data struct {
 	Achievements sync.Map
 	taskCache    sync.Map // map[EventCategory][]uint64
 	base.DataAsSubscriber
+	eventHandles map[event.IEvent]EventHandle
 }
 
 func NewTaskData() *Data {

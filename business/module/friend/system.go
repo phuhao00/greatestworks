@@ -1,6 +1,9 @@
 package friend
 
-import "time"
+import (
+	"greatestworks/business/module/base"
+	"time"
+)
 
 type System struct {
 	FriendList []uint64 //朋友
@@ -8,6 +11,7 @@ type System struct {
 	BlackList  []uint64
 	requests   []Request
 	Player
+	base.DataAsPublisher
 }
 
 func NewSystem() *System {
@@ -55,6 +59,7 @@ func (s *System) delRequest(uId uint64) {
 	if ok, index := s.getRequest(uId); ok == true {
 		s.requests = append(s.requests[:index], s.requests[index+1:]...)
 	}
+	s.PublishAddOrDelFriend()
 }
 
 func (s *System) addRequest(uId uint64, addType int32) {
@@ -63,4 +68,5 @@ func (s *System) addRequest(uId uint64, addType int32) {
 		OpTime:  time.Now().Unix(),
 		AddType: addType,
 	})
+	s.PublishAddOrDelFriend()
 }
