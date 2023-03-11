@@ -3,17 +3,17 @@ package event
 import "sync"
 
 type Normal struct {
-	enum2OnEvent sync.Map
+	subscribers sync.Map
 }
 
-func (n *Normal) RegisterListener(e Enum, cb OnEvent) {
-	n.enum2OnEvent.LoadOrStore(e, cb)
+func (n *Normal) AddSubscriber(e IEvent, subscriber Subscriber) {
+	n.subscribers.LoadOrStore(e, subscriber)
 }
 
-func (n *Normal) Dispatch(e Enum, params ...interface{}) {
-	n.enum2OnEvent.Range(func(key, value any) bool {
-		cb := value.(OnEvent)
-		cb(params)
+func (n *Normal) Publish(e IEvent) {
+	n.subscribers.Range(func(key, value any) bool {
+		s := value.(Subscriber)
+		s.OnEvent(nil)
 		return true
 	})
 }

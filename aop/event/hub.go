@@ -1,8 +1,10 @@
 package event
 
-type OnEvent func(params ...interface{})
+type Publisher interface {
+	AddSubscriber(e IEvent, subscriber Subscriber)
+	Publish(e IEvent)
+}
 
-type Hub interface {
-	RegisterListener(e Enum, cb OnEvent)
-	Dispatch(e Enum, params ...interface{})
+type Subscriber interface {
+	OnEvent(e IEvent)
 }

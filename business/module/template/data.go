@@ -1,7 +1,9 @@
 package template
 
-import "greatestworks/business/module"
+import (
+	"greatestworks/business/module/base"
+)
 
 type Data struct {
-	module.DataBase
+	base.DataAsPublisher
 }
