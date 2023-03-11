@@ -2,6 +2,7 @@ package task
 
 import (
 	"greatestworks/aop/event"
+	"greatestworks/business/module"
 	"sync"
 )
 
@@ -9,6 +10,14 @@ var (
 	manager        *Module
 	newManagerOnce sync.Once
 )
+
+var (
+	Mod *Module
+)
+
+func init() {
+	module.MManager.RegisterModule("", Mod)
+}
 
 type Module struct {
 	configs      sync.Map
@@ -82,7 +91,7 @@ func (m *Module) Monitor() {
 		case p := <-m.ChIn:
 			m.Handle(p)
 		case e := <-m.ChEvent:
-			m.OnEvent(e)
+			m.OnEvent(nil, e)
 		}
 	}
 }

@@ -2,7 +2,8 @@ package task
 
 import (
 	"greatestworks/aop/event"
-	"greatestworks/business/module/friend"
+	"greatestworks/aop/event/friendevent"
+	"greatestworks/business/module"
 )
 
 type EventHandle func(iEvent event.IEvent)
@@ -12,16 +13,22 @@ type EventWrap struct {
 	event.IEvent
 }
 
-func (m *Module) OnEvent(event *EventWrap) {
-	m.eventHandles[event](event)
-}
-
 func (m *Module) HandleAddOrDelFriendEvent(eventWrap *EventWrap) {
-	e := eventWrap.IEvent.(*friend.AddOrDelFriendEvent)
+	e := eventWrap.IEvent.(*friendevent.AddOrDelFriendEvent)
 	player := eventWrap.Player
 	taskData := player.GetTaskData()
-	taskGroup := taskData.GetTaskGroup(e.GetModuleName(), e.GetCategory())
+	taskGroup := taskData.GetTaskGroup(e.GetFromModuleName(), e.GetCategory())
 	for _, task := range taskGroup {
 		task.OnEvent(e)
 	}
+}
+
+func (m *Module) OnEvent(c module.Character, event event.IEvent) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) SetEventCategoryActive(eventCategory int) {
+	//TODO implement me
+	panic("implement me")
 }

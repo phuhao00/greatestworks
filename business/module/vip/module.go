@@ -5,8 +5,15 @@ import (
 	"greatestworks/business/module"
 )
 
-type Module struct {
+var (
+	Mod Module
+)
 
+func init() {
+	module.MManager.RegisterModule("", Mod)
+}
+
+type Module struct {
 }
 
 func (m Module) OnEvent(c module.Character, event event.IEvent) {
@@ -18,4 +25,3 @@ func (m Module) SetEventCategoryActive(eventCategory int) {
 	//TODO implement me
 	panic("implement me")
 }
-
