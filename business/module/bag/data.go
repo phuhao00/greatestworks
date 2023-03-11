@@ -1,10 +1,10 @@
 package bag
 
 import (
-	"greatestworks/business/module/base"
+	"greatestworks/business/module/hub"
 )
 
-//Data 对应DB -> mongo
+// Data 对应DB -> mongo
 type Data struct {
-	base.DataAsPublisher
+	hub.DataAsPublisher
 }

@@ -1,12 +1,12 @@
 package activity
 
 import (
-	"greatestworks/business/module/base"
+	"greatestworks/business/module/hub"
 	"sync"
 )
 
 type ConfigManager struct {
-	base.ConfigManagerBase
+	hub.ConfigManagerBase
 	Configs sync.Map //策划配置
 
 }

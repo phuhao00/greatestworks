@@ -1,7 +1,7 @@
 package friend
 
 import (
-	"greatestworks/business/module/base"
+	"greatestworks/business/module/hub"
 	"time"
 )
 
@@ -11,7 +11,7 @@ type System struct {
 	BlackList  []uint64
 	requests   []Request
 	Player
-	base.DataAsPublisher
+	hub.DataAsPublisher
 }
 
 func NewSystem() *System {
@@ -22,6 +22,10 @@ func NewSystem() *System {
 		requests:   nil,
 		Player:     nil,
 	}
+}
+
+func GetModule() string {
+	return "friend"
 }
 
 func (s *System) SetOwner(owner Player) {

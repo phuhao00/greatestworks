@@ -1,13 +1,13 @@
 package activity
 
 import (
-	"greatestworks/business/module/base"
+	"greatestworks/business/module/hub"
 	"sync"
 )
 
 type Manager struct {
-	*base.MetricsBase
-	*base.DBActionBase
+	*hub.MetricsBase
+	*hub.DBActionBase
 }
 
 var (

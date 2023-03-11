@@ -51,10 +51,8 @@ func HandlerFriendRegister() {
 
 // AcceptTask accept task
 func AcceptTask(player Player, packet *network.Message) {
-	player.GetTaskData().GetTask(0).SetStatus(ACCEPT)
 }
 
 // Submit submit task
 func Submit(player Player, packet *network.Message) {
-	player.GetTaskData().GetTask(0).SetStatus(SUBMIT)
 }

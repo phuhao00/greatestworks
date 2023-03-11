@@ -4,6 +4,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/network"
 	event2 "greatestworks/aop/event"
+	"greatestworks/business/module/task"
 )
 
 type Player struct {
@@ -45,7 +46,10 @@ func (p *Player) OnLogout() {
 }
 
 func (p *Player) OnEvent(iEvent event2.IEvent) {
-	//todo get module process event
-	//eg:
-	p.taskData.OnEvent(iEvent)
+	go func() {
+		task.GetMe().ChEvent <- &task.EventWrap{
+			Player: p,
+			IEvent: iEvent,
+		}
+	}()
 }

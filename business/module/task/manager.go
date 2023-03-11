@@ -1,6 +1,9 @@
 package task
 
-import "sync"
+import (
+	"greatestworks/aop/event"
+	"sync"
+)
 
 var (
 	manager        *Manager
@@ -8,13 +11,14 @@ var (
 )
 
 type Manager struct {
-	configs    sync.Map
-	ChIn       chan *PlayerActionParam
-	ChOut      chan interface{}
-	ChEvent    chan *EventParam
-	LoopNum    int
-	MonitorNum int
-	events     sync.Map
+	configs      sync.Map
+	ChIn         chan *PlayerActionParam
+	ChOut        chan interface{}
+	ChEvent      chan *EventWrap
+	LoopNum      int
+	MonitorNum   int
+	events       sync.Map
+	eventHandles map[event.IEvent]EventHandle
 }
 
 func NewManager(conf *ManagerConfig) {
@@ -78,14 +82,9 @@ func (m *Manager) Monitor() {
 		case p := <-m.ChIn:
 			m.Handle(p)
 		case e := <-m.ChEvent:
-			m.HandleEvent(e)
+			m.OnEvent(e)
 		}
 	}
-}
-
-func (m *Manager) HandleEvent(p *EventParam) {
-	e := m.getEvent(p.EventCategory)
-	e.Notify(p.Param, p.Player)
 }
 
 func (m *Manager) Handle(param *PlayerActionParam) {
@@ -97,10 +96,10 @@ func (m *Manager) Handle(param *PlayerActionParam) {
 }
 
 // getTaskConfig get task config
-func (m *Manager) getTaskConfig(taskConfigId uint32) (ret *Config) {
+func (m *Manager) getTaskConfig(confId uint32) (ret *Config) {
 	m.configs.Range(func(key, value any) bool {
 		if val, ok := value.(*Config); ok {
-			if val.Id == taskConfigId {
+			if val.Id == confId {
 				ret = val
 				return false
 			}
@@ -108,12 +107,4 @@ func (m *Manager) getTaskConfig(taskConfigId uint32) (ret *Config) {
 		return true
 	})
 	return ret
-}
-
-func (m *Manager) getEvent(e EventCategory) Event {
-	value, ok := m.events.Load(e)
-	if ok {
-		return value.(Event)
-	}
-	return nil
 }

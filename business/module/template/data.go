@@ -1,9 +1,9 @@
 package template
 
 import (
-	"greatestworks/business/module/base"
+	"greatestworks/business/module/hub"
 )
 
 type Data struct {
-	base.DataAsPublisher
+	hub.DataAsPublisher
 }

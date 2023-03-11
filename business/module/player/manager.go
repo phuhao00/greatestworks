@@ -1,10 +1,12 @@
 package player
 
-import "greatestworks/business/module/base"
+import (
+	"greatestworks/business/module/hub"
+)
 
 // Manager 维护在线玩家
 type Manager struct {
-	*base.MetricsBase
+	*hub.MetricsBase
 	players map[uint64]*Player
 	addPCh  chan *Player
 }

@@ -1,24 +1,25 @@
 package task
 
 import (
-	"greatestworks/aop/event"
-	"greatestworks/business/module/base"
+	"greatestworks/business/module/hub"
 	"sync"
 )
 
 type Data struct {
 	Tasks        sync.Map
 	Achievements sync.Map
-	taskCache    sync.Map // map[EventCategory][]uint64
-	base.DataAsSubscriber
-	eventHandles map[event.IEvent]EventHandle
+	hub.DataAsSubscriber
+}
+
+type GroupKey struct {
+	ModuleName string
+	Category   int
 }
 
 func NewTaskData() *Data {
 	return &Data{
 		Tasks:        sync.Map{},
 		Achievements: sync.Map{},
-		taskCache:    sync.Map{},
 	}
 }
 
@@ -30,31 +31,14 @@ func (d *Data) LoadFromDB() {
 
 }
 
-func (d *Data) GetTask(id uint64) Task {
-	value, ok := d.Tasks.Load(id)
+func (d *Data) GetTaskGroup(moduleName string, category int) []ITask {
+	value, ok := d.Tasks.Load(GroupKey{ModuleName: moduleName, Category: category})
 	if ok {
-		return value.(Task)
+		return value.([]ITask)
 	}
 	return nil
 }
 
 func (d *Data) SyncAllTasks(player Player) {
 	//todo
-}
-
-func (d *Data) AddTaskCache(eNum EventCategory, taskId uint64) {
-	value, ok := d.taskCache.Load(eNum)
-	uint64s := make([]uint64, 0)
-	if ok {
-		uint64s = value.([]uint64)
-	}
-	uint64s = append(uint64s, taskId)
-	d.taskCache.Store(eNum, uint64s)
-}
-
-func (d *Data) GetTaskCache(eNum EventCategory) []uint64 {
-	if value, ok := d.taskCache.Load(eNum); ok {
-		return value.([]uint64)
-	}
-	return nil
 }

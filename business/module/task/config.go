@@ -3,6 +3,8 @@ package task
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/network"
+	"greatestworks/aop/event"
+	"greatestworks/business/module/hub"
 )
 
 type Status int
@@ -38,6 +40,7 @@ type Config struct {
 	AcceptType      int           `json:"acceptType"`
 	CompleteNtf     int           `json:"completeNtf"` //完成是否推送
 	UnlockCondition int           `json:"unlockCondition"`
+	Module          string        `json:"module"`
 }
 
 type TargetConf struct {
@@ -53,12 +56,6 @@ type PlayerActionParam struct {
 	Packet    *network.Message
 }
 
-type EventParam struct {
-	EventCategory
-	Player Player
-	Param  interface{}
-}
-
 type TargetCategory int
 
 const (
@@ -71,3 +68,8 @@ const (
 	NormalEvent EventCategory = iota + 1
 	BaseEvent
 )
+
+func (c Config) GetEvent() event.IEvent {
+	hub.MManager.GetEvent(c.Module, c.Category)
+	return nil
+}
