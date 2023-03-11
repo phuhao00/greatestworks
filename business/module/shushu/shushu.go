@@ -1,9 +1,9 @@
 package shushu
 
 import (
-	"greatestworks/business/module/hub"
+	"greatestworks/business/module"
 )
 
 type ShuShu struct {
-	hub.DataAsSubscriber
+	module.DataAsSubscriber
 }

@@ -1,7 +1,11 @@
 package module
 
-// MgrInterface 管理器接口定义
-type MgrInterface interface {
+import (
+	"greatestworks/aop/event"
+)
+
+// IManager 管理器接口定义
+type IManager interface {
 	OnStart()
 	AfterStart()
 	OnStop()
@@ -25,5 +29,7 @@ type ConfigMgrAction interface {
 	Get(id uint32) interface{}
 }
 
-type Abstract interface {
+type IModule interface {
+	OnEvent(c Character, event event.IEvent)
+	SetEventCategoryActive(eventCategory int)
 }

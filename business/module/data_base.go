@@ -1,4 +1,4 @@
-package hub
+package module
 
 import "greatestworks/aop/event"
 

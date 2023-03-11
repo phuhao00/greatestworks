@@ -4,7 +4,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/network"
 	"greatestworks/aop/event"
-	"greatestworks/business/module/hub"
+	"greatestworks/business/module"
 )
 
 type Status int
@@ -70,6 +70,6 @@ const (
 )
 
 func (c Config) GetEvent() event.IEvent {
-	hub.MManager.GetEvent(c.Module, c.Category)
+	module.MManager.GetEvent(c.Module, c.Category)
 	return nil
 }

@@ -1,14 +1,12 @@
 package task
 
 import (
-	"greatestworks/business/module/hub"
 	"sync"
 )
 
 type Data struct {
 	Tasks        sync.Map
 	Achievements sync.Map
-	hub.DataAsSubscriber
 }
 
 type GroupKey struct {

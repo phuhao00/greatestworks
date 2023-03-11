@@ -1,4 +1,4 @@
-package hub
+package module
 
 // MetricsBase  ...
 type MetricsBase struct {

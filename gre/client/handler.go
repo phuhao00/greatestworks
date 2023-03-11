@@ -79,7 +79,7 @@ func (c *Client) AddFriend(param *InputParam) {
 }
 
 func (c *Client) OnAddFriendRsp(packet *network.Packet) {
-	fmt.Println("add friend success !!")
+	fmt.Println("add friendevent success !!")
 }
 
 func (c *Client) DelFriend(param *InputParam) {
@@ -102,7 +102,7 @@ func (c *Client) DelFriend(param *InputParam) {
 }
 
 func (c *Client) OnDelFriendRsp(packet *network.Packet) {
-	fmt.Println("you have del friend success")
+	fmt.Println("you have del friendevent success")
 
 }
 

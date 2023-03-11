@@ -2,7 +2,8 @@ package event
 
 type IEvent interface {
 	GetDesc() string
-	GetModuleName() string
+	GetFromModuleName() string
+	GetToModuleName() string
 	GetCategory() int
 	SetName(name string)
 	SetCategory(category int)
@@ -18,7 +19,10 @@ func (b *Base) GetDesc() string {
 	panic("implement me")
 }
 
-func (b *Base) GetModuleName() string {
+func (b *Base) GetFromModuleName() string {
+	return b.Name
+}
+func (b *Base) GetToModuleName() string {
 	return b.Name
 }
 

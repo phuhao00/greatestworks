@@ -3,8 +3,6 @@ package player
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"github.com/phuhao00/network"
-	event2 "greatestworks/aop/event"
-	"greatestworks/business/module/task"
 )
 
 type Player struct {
@@ -45,11 +43,6 @@ func (p *Player) OnLogout() {
 	//存db
 }
 
-func (p *Player) OnEvent(iEvent event2.IEvent) {
-	go func() {
-		task.GetMe().ChEvent <- &task.EventWrap{
-			Player: p,
-			IEvent: iEvent,
-		}
-	}()
+func (p *Player) GetName() string {
+	return ""
 }

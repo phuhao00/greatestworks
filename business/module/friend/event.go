@@ -2,40 +2,44 @@ package friend
 
 import (
 	"greatestworks/aop/event"
-	manager2 "greatestworks/business/module/hub"
+	"greatestworks/aop/event/friendevent"
 )
 
-type EventCategory int
+type (
+	EventCategory int
+	CreateEventFn func(system *System) event.IEvent
+)
+
+var (
+	category2CreateEventFn map[EventCategory]CreateEventFn
+)
 
 const (
 	CountOfFriend EventCategory = iota + 1
 )
 
-var (
-	category2Event map[EventCategory]event.IEvent
-)
-
 func init() {
-	category2Event[CountOfFriend] = &AddOrDelFriendEvent{}
-
-	//
-	manager2.MManager.AddModuleName2ModuleGetEventFunc(GetModule(), GetEvent)
+	category2CreateEventFn[CountOfFriend] = CreateAddOrDelFriendEvent
 }
 
-func GetEvent(category int) event.IEvent {
-	return category2Event[EventCategory(category)]
+func CreateAddOrDelFriendEvent(system *System) event.IEvent {
+	//todo 使用原子模型做
+	return &friendevent.AddOrDelFriendEvent{
+		CurFriendCount: len(system.FriendList),
+		Base:           event.Base{},
+	}
 }
 
-type AddOrDelFriendEvent struct {
-	CurFriendCount int
-	event.Base
+func GetCreateEventFn(category EventCategory) CreateEventFn {
+	return category2CreateEventFn[category]
 }
 
-func (e *AddOrDelFriendEvent) GetDesc() string {
-	return ""
+func (s *System) Publish(e event.IEvent) {
+	s.Player.OnEvent(e)
 }
 
 func (s *System) PublishAddOrDelFriend() {
-	e := &AddOrDelFriendEvent{CurFriendCount: len(s.friends)}
-	s.DataAsPublisher.Publish(e)
+	if s.activeEventCategory[int(CountOfFriend)] {
+		s.Publish(GetCreateEventFn(CountOfFriend)(s))
+	}
 }

@@ -1,7 +1,6 @@
 package friend
 
 import (
-	"greatestworks/business/module/hub"
 	"time"
 )
 
@@ -11,7 +10,7 @@ type System struct {
 	BlackList  []uint64
 	requests   []Request
 	Player
-	hub.DataAsPublisher
+	activeEventCategory map[int]bool
 }
 
 func NewSystem() *System {
@@ -25,7 +24,7 @@ func NewSystem() *System {
 }
 
 func GetModule() string {
-	return "friend"
+	return "friendevent"
 }
 
 func (s *System) SetOwner(owner Player) {

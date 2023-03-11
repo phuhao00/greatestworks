@@ -51,7 +51,7 @@ func NewManager(conf *ManagerConfig) {
 	}
 }
 
-func GetMe() *Manager {
+func GetManager() *Manager {
 
 	return manager
 }

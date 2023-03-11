@@ -28,7 +28,7 @@ func (p *Player) Handler(id messageId.MessageId, msg *network.Message) {
 	}
 
 	if task.IsBelongToHere(id) {
-		task.GetMe().ChIn <- &task.PlayerActionParam{
+		task.GetManager().ChIn <- &task.PlayerActionParam{
 			MessageId: id,
 			Player:    p,
 			Packet:    msg,

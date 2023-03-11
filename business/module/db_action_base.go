@@ -1,4 +1,4 @@
-package hub
+package module
 
 type DBActionBase struct {
 }
