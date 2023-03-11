@@ -1,11 +1,15 @@
 package task
 
-import "sync"
+import (
+	"greatestworks/business/module/base"
+	"sync"
+)
 
 type Data struct {
 	Tasks        sync.Map
 	Achievements sync.Map
 	taskCache    sync.Map // map[EventCategory][]uint64
+	base.DataAsSubscriber
 }
 
 func NewTaskData() *Data {
