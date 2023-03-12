@@ -14,14 +14,14 @@ import (
 )
 
 var (
-	_ pet.Player      = (*Player)(nil)
-	_ shop.Player     = (*Player)(nil)
-	_ task.Player     = (*Player)(nil)
-	_ bag.Player      = (*Player)(nil)
-	_ plant.Player    = (*Player)(nil)
-	_ building.Player = (*Player)(nil)
-	_ email.Player    = (*Player)(nil)
-	_ vip.Player      = (*Player)(nil)
+	_ pet.Player       = (*Player)(nil)
+	_ shop.IPlayer     = (*Player)(nil)
+	_ task.Player      = (*Player)(nil)
+	_ bag.IPlayer      = (*Player)(nil)
+	_ plant.Player     = (*Player)(nil)
+	_ building.IPlayer = (*Player)(nil)
+	_ email.IPlayer    = (*Player)(nil)
+	_ vip.Player       = (*Player)(nil)
 )
 
 type GamePlay struct {

@@ -1,5 +1,5 @@
 package email
 
-type Player interface {
+type IPlayer interface {
 	GetEmailData() *Data
 }

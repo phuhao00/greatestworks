@@ -2,7 +2,6 @@ package rank
 
 import (
 	"fmt"
-	"greatestworks/aop/event"
 	"greatestworks/aop/redis"
 	"greatestworks/business/module"
 	"sync"
@@ -24,16 +23,6 @@ type Module struct {
 	cache             sync.Map
 	rankLastScoreList map[uint32]int64
 	blackList         map[uint32]*BlackList
-}
-
-func (m *Module) OnEvent(c module.Character, event event.IEvent) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Module) SetEventCategoryActive(eventCategory int) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (m *Module) Init() error {

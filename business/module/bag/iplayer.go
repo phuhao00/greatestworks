@@ -1,5 +1,5 @@
 package bag
 
-type Player interface {
+type IPlayer interface {
 	GetBagSystem() *System
 }

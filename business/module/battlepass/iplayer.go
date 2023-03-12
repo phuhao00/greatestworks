@@ -1,5 +1,5 @@
 package battlepass
 
-type Player interface {
+type IPlayer interface {
 	GetBattlePass() *BattlePass
 }

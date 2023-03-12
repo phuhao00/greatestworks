@@ -9,7 +9,7 @@ import (
 
 type Handler struct {
 	Id messageId.MessageId
-	Fn func(player Player, packet *network.Message)
+	Fn func(player IPlayer, packet *network.Message)
 }
 
 var (
@@ -49,14 +49,14 @@ func init() {
 	})
 }
 
-func GetBuilding(player Player, message *network.Message) {
+func GetBuilding(player IPlayer, message *network.Message) {
 
 }
 
-func DelBuilding(player Player, message *network.Message) {
+func DelBuilding(player IPlayer, message *network.Message) {
 
 }
 
-func UpdateBuilding(player Player, message *network.Message) {
+func UpdateBuilding(player IPlayer, message *network.Message) {
 
 }

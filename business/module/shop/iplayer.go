@@ -1,5 +1,5 @@
 package shop
 
-type Player interface {
+type IPlayer interface {
 	GetShopData() *Data
 }

@@ -9,7 +9,7 @@ import (
 
 type Handler struct {
 	Id messageId.MessageId
-	Fn func(player Player, packet *network.Message)
+	Fn func(player IPlayer, packet *network.Message)
 }
 
 var (
@@ -45,10 +45,10 @@ func init() {
 	})
 }
 
-func readMail(player Player, message *network.Message) {
+func readMail(player IPlayer, message *network.Message) {
 
 }
 
-func deleteMail(player Player, message *network.Message) {
+func deleteMail(player IPlayer, message *network.Message) {
 
 }

@@ -1,5 +1,5 @@
 package building
 
-type Player interface {
+type IPlayer interface {
 	GetBuildingSystem() *System
 }

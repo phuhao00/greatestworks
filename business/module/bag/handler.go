@@ -9,7 +9,7 @@ import (
 
 type Handler struct {
 	Id messageId.MessageId
-	Fn func(player Player, packet *network.Message)
+	Fn func(player IPlayer, packet *network.Message)
 }
 
 var (
@@ -48,10 +48,10 @@ func HandlerBagRegister() {
 		DelItem,
 	}
 }
-func AddItem(player Player, packet *network.Message) {
+func AddItem(player IPlayer, packet *network.Message) {
 
 }
 
-func DelItem(player Player, packet *network.Message) {
+func DelItem(player IPlayer, packet *network.Message) {
 
 }
