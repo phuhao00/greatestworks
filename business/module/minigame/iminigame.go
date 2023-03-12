@@ -1,6 +1,6 @@
 package minigame
 
-type Abstract interface {
+type IMinigame interface {
 	Start()
 	Stop()
 	End()

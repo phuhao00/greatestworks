@@ -14,7 +14,7 @@ type GameKey struct {
 }
 
 // GetGame 获取游戏
-func (g *MiniGame) GetGame(key GameKey) Abstract {
+func (g *MiniGame) GetGame(key GameKey) IMinigame {
 	value, ok := g.games.Load(key)
 	if ok {
 		switch key.Category {
@@ -27,7 +27,7 @@ func (g *MiniGame) GetGame(key GameKey) Abstract {
 }
 
 // AddGame 添加游戏
-func (g *MiniGame) AddGame(key GameKey, game Abstract) {
+func (g *MiniGame) AddGame(key GameKey, game IMinigame) {
 	g.games.Store(key, game)
 }
 

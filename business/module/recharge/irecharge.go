@@ -1,6 +1,6 @@
 package recharge
 
-type Abstract interface {
+type IRecharge interface {
 	CheckProductLimit(id uint32) bool
 	CreateBuyOrder(id uint32, channel string, useCoupon bool)
 	ProcOpenOrder(order *Order) bool
