@@ -17,8 +17,8 @@ type World struct {
 	Handlers        map[messageId.MessageId]func(message *network.Packet)
 	chSessionPacket chan *network.Packet
 	chatSystem      *chat.System
-	familyManager   *family.Manager
-	pm              *player.Manager
+	familyManager   *family.Module
+	pm              *player.Module
 }
 
 func NewWorld() *World {

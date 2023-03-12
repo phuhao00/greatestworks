@@ -1,5 +1,5 @@
 package battlepass
 
-type Abstract interface {
+type ibattlepass interface {
 	DailyRefresh()
 }

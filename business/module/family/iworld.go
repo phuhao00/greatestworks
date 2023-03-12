@@ -5,7 +5,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Owner interface {
+type IWorld interface {
 	Start()
 	Stop()
 	BroadcastMsg(ids []uint64, msgId messageId.MessageId, msg proto.Message)

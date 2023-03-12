@@ -1,6 +1,6 @@
 package email
 
-type Abstract interface {
+type IEmail interface {
 	SetStatus(status MailStatus)
 	GetID() uint64
 	ToPB()
