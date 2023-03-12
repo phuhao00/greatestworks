@@ -9,7 +9,7 @@ type System struct {
 	friends    []Info
 	BlackList  []uint64
 	requests   []Request
-	Player
+	IPlayer
 	activeEventCategory map[int]bool
 }
 
@@ -19,7 +19,7 @@ func NewSystem() *System {
 		friends:    nil,
 		BlackList:  nil,
 		requests:   nil,
-		Player:     nil,
+		IPlayer:    nil,
 	}
 }
 
@@ -27,8 +27,8 @@ func GetModule() string {
 	return "friendevent"
 }
 
-func (s *System) SetOwner(owner Player) {
-	s.Player = owner
+func (s *System) SetOwner(owner IPlayer) {
+	s.IPlayer = owner
 }
 
 func (s *System) isFriend(uId uint64) (bool, int) {
@@ -62,7 +62,6 @@ func (s *System) delRequest(uId uint64) {
 	if ok, index := s.getRequest(uId); ok == true {
 		s.requests = append(s.requests[:index], s.requests[index+1:]...)
 	}
-	s.PublishAddOrDelFriend()
 }
 
 func (s *System) addRequest(uId uint64, addType int32) {
@@ -71,5 +70,16 @@ func (s *System) addRequest(uId uint64, addType int32) {
 		OpTime:  time.Now().Unix(),
 		AddType: addType,
 	})
+}
+
+func (s *System) addFriend() {
+	//todo ...
 	s.PublishAddOrDelFriend()
+
+}
+
+func (s *System) delFriend() {
+	//todo ...
+	s.PublishAddOrDelFriend()
+
 }

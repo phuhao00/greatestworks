@@ -35,7 +35,7 @@ func GetCreateEventFn(category EventCategory) CreateEventFn {
 }
 
 func (s *System) Publish(e event.IEvent) {
-	s.Player.OnEvent(e)
+	s.IPlayer.OnEvent(e)
 }
 
 func (s *System) PublishAddOrDelFriend() {

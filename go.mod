@@ -3,8 +3,10 @@ module greatestworks
 go 1.18
 
 require (
+	github.com/RoaringBitmap/roaring v1.2.3
 	github.com/bits-and-blooms/bitset v1.5.0
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/eapache/queue v1.1.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/google/btree v1.1.2
@@ -64,6 +66,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
+	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pjbgf/sha1cd v0.2.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
