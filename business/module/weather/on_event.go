@@ -1,4 +1,4 @@
-package vip
+package weather
 
 import (
 	"greatestworks/aop/event"
@@ -8,7 +8,7 @@ import (
 type EventHandle func(iEvent event.IEvent)
 
 type EventWrap struct {
-	Player
+	IPlayer
 	event.IEvent
 }
 
