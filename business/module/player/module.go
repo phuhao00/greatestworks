@@ -1,52 +1,36 @@
 package player
 
 import (
-	"greatestworks/aop/event"
 	"greatestworks/business/module"
+	"sync"
+)
+
+const (
+	ModuleName = "player"
 )
 
 var (
-	Mod *Module
+	Mod         *Module
+	onceInitMod sync.Once
 )
 
 func init() {
-	module.MManager.RegisterModule("", Mod)
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
+	*module.BaseModule
 	*module.MetricsBase
 	players map[uint64]*Player
 	addPCh  chan *Player
 }
 
-func (m *Module) OnEvent(c module.Character, event event.IEvent) {
-	//TODO implement me
-	panic("implement me")
-}
+func GetMod() *Module {
+	onceInitMod.Do(func() {
+		Mod = &Module{BaseModule: module.NewBaseModule()}
+	})
 
-func (m *Module) SetEventCategoryActive(eventCategory int) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (pm *Module) OnStart() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (pm *Module) AfterStart() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (pm *Module) OnStop() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (pm *Module) AfterStop() {
-	//TODO implement me
-	panic("implement me")
+	return Mod
 }
 
 func NewPlayerMgr() *Module {

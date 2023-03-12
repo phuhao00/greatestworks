@@ -8,12 +8,17 @@ import (
 	"time"
 )
 
+const (
+	ModuleName = "rank"
+)
+
 var (
-	Mod *Module
+	Mod         *Module
+	onceInitMod sync.Once
 )
 
 func init() {
-	module.MManager.RegisterModule("", Mod)
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
@@ -23,6 +28,14 @@ type Module struct {
 	cache             sync.Map
 	rankLastScoreList map[uint32]int64
 	blackList         map[uint32]*BlackList
+	*module.BaseModule
+}
+
+func GetMod() *Module {
+	onceInitMod.Do(func() {
+		Mod = &Module{BaseModule: module.NewBaseModule()}
+	})
+	return Mod
 }
 
 func (m *Module) Init() error {

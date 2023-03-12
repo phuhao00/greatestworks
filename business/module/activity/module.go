@@ -5,43 +5,27 @@ import (
 	"sync"
 )
 
-func init() {
-	module.MManager.RegisterModule("", GetMe())
-}
-
-var (
-	onceInit sync.Once
-	Mod      *Module
+const (
+	ModuleName = "activity"
 )
 
-func GetMe() *Module {
-	onceInit.Do(func() {
-		Mod = &Module{}
-	})
-	return Mod
+var (
+	Mod         *Module
+	onceInitMod sync.Once
+)
+
+func init() {
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
+	*module.BaseModule
 	*module.MetricsBase
 	*module.DBActionBase
 }
 
-func (a *Module) OnStart() {
-	//TODO implement me
-	panic("implement me")
-}
+func GetMod() *Module {
+	Mod = &Module{BaseModule: module.NewBaseModule()}
 
-func (a *Module) AfterStart() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *Module) OnStop() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *Module) AfterStop() {
-	//TODO implement me
-	panic("implement me")
+	return Mod
 }

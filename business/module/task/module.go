@@ -6,17 +6,18 @@ import (
 	"sync"
 )
 
-var (
-	manager        *Module
-	newManagerOnce sync.Once
+const (
+	ModuleName = "task"
 )
 
 var (
-	Mod *Module
+	Mod         *Module
+	onceInitMod sync.Once
+	ModuleConf  *ModuleConfig
 )
 
 func init() {
-	module.MManager.RegisterModule("", Mod)
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
@@ -28,10 +29,17 @@ type Module struct {
 	MonitorNum   int
 	events       sync.Map
 	eventHandles map[event.IEvent]EventHandle
+	*module.BaseModule
 }
 
-func NewModule(conf *ManagerConfig) {
+func GetMod() *Module {
+	onceInit.Do(func() {
+		Mod = NewModule(ModuleConf)
+	})
+	return Mod
+}
 
+func NewModule(conf *ModuleConfig) *Module {
 	var (
 		loopNum    int
 		monitorNum int
@@ -51,18 +59,18 @@ func NewModule(conf *ManagerConfig) {
 		chOutSize = defaultChanOutSize
 	}
 
-	manager = &Module{
+	Mod = &Module{
 		configs:    sync.Map{},
 		ChIn:       make(chan *PlayerActionParam, chInSize),
 		ChOut:      make(chan interface{}, chOutSize),
 		LoopNum:    loopNum,
 		MonitorNum: monitorNum,
 	}
+	return Mod
 }
 
-func GetManager() *Module {
-
-	return manager
+func (m *Module) SetName(name string) {
+	m.BaseModule.SetName(name)
 }
 
 func (m *Module) Run() {

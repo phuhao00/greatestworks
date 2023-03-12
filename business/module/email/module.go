@@ -2,25 +2,28 @@ package email
 
 import (
 	"greatestworks/business/module"
+	"sync"
+)
+
+const (
+	ModuleName = "email"
 )
 
 var (
-	Mod *Module
+	Mod         *Module
+	onceInitMod sync.Once
 )
 
 func init() {
-	module.MManager.RegisterModule("", Mod)
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
+	*module.BaseModule
 }
 
-func (m *Module) Loop() {
-	//TODO implement me
-	panic("implement me")
-}
+func GetMod() *Module {
+	Mod = &Module{module.NewBaseModule()}
 
-func (m *Module) Monitor() {
-	//TODO implement me
-	panic("implement me")
+	return Mod
 }

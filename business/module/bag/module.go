@@ -5,21 +5,25 @@ import (
 	"sync"
 )
 
+const (
+	ModuleName = "bag"
+)
+
+var (
+	Mod         *Module
+	onceInitMod sync.Once
+)
+
 func init() {
-	module.MManager.RegisterModule("", GetMe())
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
+	*module.BaseModule
 }
 
-var (
-	onceInitMod sync.Once
-	Mod         *Module
-)
+func GetMod() *Module {
+	Mod = &Module{module.NewBaseModule()}
 
-func GetMe() *Module {
-	onceInitMod.Do(func() {
-		Mod = &Module{}
-	})
 	return Mod
 }
