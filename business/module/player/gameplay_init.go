@@ -41,4 +41,4 @@ func NewGamePlay() *GamePlay {
 
 // wire.go:
 
-var MegaSet = wire.NewSet(friend.NewSystem, chat.NewPrivateChat, task.NewTaskData, pet.NewSystem, shop.NewData, bag.NewSystem, vip.NewVip, wire.Struct(new(GamePlay), "friendSystem", "privateChat", "taskData", "petSystem", "shopData", "bagSystem", "vip"))
+var MegaSet = wire.NewSet(friend.NewSystem, chat.NewPrivateChat, task.NewTaskData, pet.NewSystem, shop.NewData, bag.NewSystem, vip.NewVip, wire.Struct(new(GamePlay), "friendSystem", "privateChat", "taskData", "petSystem", "shopData", "bagSystem", "vipevent"))

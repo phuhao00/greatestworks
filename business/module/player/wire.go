@@ -15,7 +15,7 @@ import (
 import "github.com/google/wire"
 
 var MegaSet = wire.NewSet(friend.NewSystem, chat.NewPrivateChat, task.NewTaskData, pet.NewSystem, shop.NewData, bag.NewSystem, vip.NewVip,
-	wire.Struct(new(GamePlay), "friendSystem", "privateChat", "taskData", "petSystem", "shopData", "bagSystem", "vip"))
+	wire.Struct(new(GamePlay), "friendSystem", "privateChat", "taskData", "petSystem", "shopData", "bagSystem", "vipevent"))
 
 func NewGamePlay() *GamePlay {
 	wire.Build(MegaSet)

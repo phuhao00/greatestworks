@@ -12,7 +12,7 @@ type Config struct {
 	Shop       string `yaml:"shop"`
 	Task       string `yaml:"task"`
 	Skill      string `yaml:"skill"`
-	Vip        string `yaml:"vip"`
+	Vip        string `yaml:"vipevent"`
 	Building   string `yaml:"building"`
 	Condition  string `yaml:"condition"`
 	Synthetise string `yaml:"synthetise"`
