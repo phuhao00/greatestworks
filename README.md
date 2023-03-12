@@ -16,6 +16,8 @@
 
 * 4.高性能 (High performance)
 
+* 5.事件驱动 (Event driven)
+
 
 ### 目录结构说明
 * `aop`
@@ -27,23 +29,25 @@
 
 ### `module` 说明
 
-
 每个模块包含
 * `data`
   - 对应的数据存储
 * `system`
   - 该模块的管理，例如数据的CRUD，有 `system` 的模块，其成员实例不具备 独立处理协程.
-* `owner`
-  - 定义从属模块需要实现的些方法
+* `iplayer`
+  - 定义player需要实现的些方法
 * `handler`
   - 处理从属模块需要的业务逻辑
-* `abstract`
-  - 模块成员的抽象，接口定义
+* `I*`
+  - 模块成员的抽象，接口定义,`eg:INpc`
 * `config`
   - 配置,常量的定义等
+* `module`
+  - 模块的管理与维护，例如 event (事件)的处理
+<br>
 
-* `manager`
-  - 有 `manager` 的模块，其成员实例独自拥有自己的处理协程,例如Player Manager , Scene Manager
+模块与模块之间的联系通过 `player` 为中介，以事件订阅，发布的形式处理 <br>
+每个模块会管理自己激活的事件
 
 ### `Player`
 
@@ -54,8 +58,8 @@
  每个 `Scene` 实例 拥有自己的协程
 
 ### `task`
+  * 支持配置多协程处理业务逻辑
   - `Data` 存放 玩家任务实例数据
-  - `Manager` 支持配置多协程处理业务逻辑 
   - `impl` 任务类型的实现
 ### `idea` 
 

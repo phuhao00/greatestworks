@@ -1,6 +1,6 @@
 package npc
 
-type Abstract interface {
+type INpc interface {
 	LoadCfgTableData()
 	LoadBehaviorTree(treeFile string)
 	SendToRangePlayers(msgId uint64, msg interface{})
