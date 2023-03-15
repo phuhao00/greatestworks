@@ -30,7 +30,7 @@ func (sch *sharedBufferChannel) Close() {
 //SharedBuffer implements the Buffer interface, and permits multiple SimpleChannel instances to "share" a single buffer.
 //Each channel spawned by NewChannel has its own internal queue (so values flowing through do not get mixed up with
 //other channels) but the total number of elements buffered by all spawned channels is limited to a single capacity. This
-//means *all* such channels block and unblock for writing together. The primary use case is for implementing pipeline-style
+//means *all* such channels block and unblock for writing together. The primary use impl is for implementing pipeline-style
 //parallelism with goroutines, limiting the total number of elements in the pipeline without limiting the number of elements
 //at any particular step.
 type SharedBuffer struct {

@@ -174,7 +174,7 @@ func TestFindGreaterOrEqual(t *testing.T) {
 
 	first := float64(list.GetSmallestNode().GetValue().(FloatElement))
 
-	// Find the very first element. This is a special case in the implementation that needs testing!
+	// Find the very first element. This is a special impl in the implementation that needs testing!
 	if v, ok := list.FindGreaterOrEqual(FloatElement(first - 2.0*eps)); ok {
 		// We found an element different to the first one!
 		if math.Abs(float64(v.GetValue().(FloatElement))-first) > eps {

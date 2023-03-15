@@ -4,7 +4,7 @@ import "github.com/eapache/queue"
 
 // OverflowingChannel implements the Channel interface in a way that never blocks the writer.
 // Specifically, if a value is written to an OverflowingChannel when its buffer is full
-// (or, in an unbuffered case, when the recipient is not ready) then that value is simply discarded.
+// (or, in an unbuffered impl, when the recipient is not ready) then that value is simply discarded.
 // Note that Go's scheduler can cause discarded values when they could be avoided, simply by scheduling
 // the writer before the reader, so caveat emptor.
 // For the opposite behaviour (discarding the oldest element, not the newest) see RingChannel.

@@ -10,7 +10,7 @@ func (s *Server) Loop() {
 
 	for {
 		select {
-		//case Message
+		//impl Message
 			
 		}
 	}

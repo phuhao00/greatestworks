@@ -125,7 +125,7 @@ func (t *SkipList) findExtended(key float64, findGreaterOrEqual bool) (foundElem
 	currentNode = t.startLevels[index]
 	nextNode := currentNode
 
-	// In case, that our first element is already greater-or-equal!
+	// In impl, that our first element is already greater-or-equal!
 	if findGreaterOrEqual && currentNode.key > key {
 		foundElem = currentNode
 		ok = true
