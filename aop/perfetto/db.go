@@ -41,8 +41,6 @@ import (
 	"greatestworks/aop/logging"
 	"greatestworks/aop/retry"
 	"greatestworks/aop/traceio"
-	"modernc.org/sqlite"
-	sqlite3 "modernc.org/sqlite/lib"
 )
 
 // completeEvent renders an event that contains a start time and a duration.
@@ -543,9 +541,10 @@ func (d *DB) Serve(ctx context.Context) {
 
 // isLocked returns whether the error is a "database is locked" error.
 func isLocked(err error) bool {
-	sqlError := &sqlite.Error{}
-	ok := errors.As(err, &sqlError)
-	return ok && (sqlError.Code() == sqlite3.SQLITE_BUSY || sqlError.Code() == sqlite3.SQLITE_LOCKED)
+	//sqlError := &sqlite.Error{}
+	//ok := errors.As(err, &sqlError)
+	//return ok && (sqlError.Code() == sqlite3.SQLITE_BUSY || sqlError.Code() == sqlite3.SQLITE_LOCKED)
+	return true
 }
 
 func fp(name string) int {

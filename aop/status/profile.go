@@ -24,7 +24,7 @@ import (
 	"time"
 
 	pprof "github.com/google/pprof/profile"
-	protos "greatestworks/aop/protos"
+	"greatestworks/aop/protos"
 	"greatestworks/aop/tool"
 )
 

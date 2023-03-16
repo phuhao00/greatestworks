@@ -22,9 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/runtime/colors"
-	"github.com/ServiceWeaver/weaver/runtime/protomsg"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/protomsg"
+	"greatestworks/aop/protos"
 )
 
 var (

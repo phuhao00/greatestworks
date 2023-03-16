@@ -36,7 +36,7 @@ import (
 	"greatestworks/aop/envelope"
 	"greatestworks/aop/logging"
 	"greatestworks/aop/logtype"
-	imetrics "greatestworks/aop/metrics"
+	"greatestworks/aop/metrics"
 	"greatestworks/aop/perfetto"
 	"greatestworks/aop/protomsg"
 	"greatestworks/aop/protos"
@@ -81,7 +81,7 @@ type Babysitter struct {
 	traceSaver func([]trace.ReadOnlySpan) error
 
 	// statsProcessor tracks and computes stats to be rendered on the /statusz page.
-	statsProcessor *imetrics.StatsProcessor
+	statsProcessor *metrics.StatsProcessor
 
 	mu           sync.RWMutex
 	managed      map[string][]*envelope.Envelope // replica envelopes, by group
@@ -123,7 +123,7 @@ func NewBabysitter(ctx context.Context, dep *protos.Deployment, logSaver func(*p
 		logger:         logger,
 		logSaver:       logSaver,
 		traceSaver:     traceSaver,
-		statsProcessor: imetrics.NewStatsProcessor(),
+		statsProcessor: metrics.NewStatsProcessor(),
 		opts:           envelope.Options{Restart: envelope.Never, Retry: retry.DefaultOptions},
 		dep:            dep,
 		managed:        map[string][]*envelope.Envelope{},

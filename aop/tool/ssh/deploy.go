@@ -20,7 +20,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/ServiceWeaver/weaver/runtime"
 	"greatestworks/aop"
 	"io"
 	"os"
@@ -183,7 +182,7 @@ func getLocations(app *protos.AppConfig) ([]string, error) {
 		LocationsFile string `toml:"locations_file"`
 	}
 	parsed := &sshConfigSchema{}
-	if err := runtime.ParseConfigSection(sshKey, shortSSHKey, app.Sections, parsed); err != nil {
+	if err := aop.ParseConfigSection(sshKey, shortSSHKey, app.Sections, parsed); err != nil {
 		return nil, fmt.Errorf("unable to parse ssh config: %w", err)
 	}
 

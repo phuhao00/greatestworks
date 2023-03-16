@@ -30,13 +30,13 @@ import (
 	"time"
 
 	"github.com/pkg/browser"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"greatestworks/aop/codegen"
 	"greatestworks/aop/logging"
 	"greatestworks/aop/metrics"
 	imetrics "greatestworks/aop/metrics"
 	"greatestworks/aop/perfetto"
-	protos "greatestworks/aop/protos"
+	"greatestworks/aop/protos"
 	dtool "greatestworks/aop/tool"
 )
 

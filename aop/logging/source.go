@@ -17,7 +17,7 @@ package logging
 import (
 	"context"
 
-	"github.com/ServiceWeaver/weaver/runtime/protos"
+	"greatestworks/aop/protos"
 )
 
 // Source is a log source. You can use a source to cat and follow logs,
