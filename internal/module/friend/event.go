@@ -1,8 +1,8 @@
 package friend
 
 import (
-	"greatestworks/aop/event"
-	"greatestworks/aop/event/friendevent"
+	"greatestworks/internal/event"
+	"greatestworks/internal/event/friendevent"
 )
 
 type (

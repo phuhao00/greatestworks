@@ -1,6 +1,8 @@
 package friendevent
 
-import "greatestworks/aop/event"
+import (
+	"greatestworks/internal/event"
+)
 
 type AddOrDelFriendEvent struct {
 	CurFriendCount int

@@ -1,7 +1,7 @@
 package weather
 
 import (
-	"greatestworks/aop/event"
+	"greatestworks/internal/event"
 	"greatestworks/internal/module"
 )
 

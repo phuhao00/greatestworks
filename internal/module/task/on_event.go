@@ -1,7 +1,7 @@
 package task
 
 import (
-	"greatestworks/aop/event"
+	"greatestworks/internal/event"
 )
 
 type EventHandle func(iEvent event.IEvent)

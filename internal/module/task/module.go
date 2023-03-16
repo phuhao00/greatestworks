@@ -1,7 +1,7 @@
 package task
 
 import (
-	"greatestworks/aop/event"
+	"greatestworks/internal/event"
 	module2 "greatestworks/internal/module"
 	"sync"
 )

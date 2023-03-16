@@ -1,6 +1,8 @@
 package module
 
-import "greatestworks/aop/event"
+import (
+	"greatestworks/internal/event"
+)
 
 type BaseModule struct {
 	ModuleName          string

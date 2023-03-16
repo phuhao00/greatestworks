@@ -1,6 +1,8 @@
 package module
 
-import "greatestworks/aop/event"
+import (
+	"greatestworks/internal/event"
+)
 
 type DataAsPublisher struct {
 	event.BasePublisher

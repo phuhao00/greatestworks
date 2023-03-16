@@ -1,7 +1,7 @@
 package module
 
 import (
-	"greatestworks/aop/event"
+	"greatestworks/internal/event"
 )
 
 // IManager 管理器接口定义

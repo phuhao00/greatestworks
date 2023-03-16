@@ -3,7 +3,7 @@ package friend
 import (
 	"github.com/phuhao00/greatestworks-proto/gen/messageId"
 	"google.golang.org/protobuf/proto"
-	"greatestworks/aop/event"
+	"greatestworks/internal/event"
 )
 
 type IPlayer interface {

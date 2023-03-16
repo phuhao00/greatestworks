@@ -1,6 +1,8 @@
 package task
 
-import "greatestworks/aop/event"
+import (
+	"greatestworks/internal/event"
+)
 
 type ITask interface {
 	SetStatus(Status)

@@ -22,8 +22,10 @@
 ### 目录结构说明
 * `aop`
   - 面向切面的逻辑
-* `business`
-  - 业务逻辑
+* `server`
+  - 各个节点服务,include login ,gateway ,world,battle
+* `internal`
+  - include module,event,record 
 * `gre`
   - 运维，部署，工具(createmodule;exel2json)等
 
