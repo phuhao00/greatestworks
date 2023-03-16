@@ -19,6 +19,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"greatestworks/aop"
 	"io"
 	"net"
 	"net/http"
@@ -64,7 +65,7 @@ func deploy(ctx context.Context, args []string) error {
 	if err != nil {
 		return fmt.Errorf("load config file %q: %w\n", cfgFile, err)
 	}
-	app, err := runtime.ParseConfig(cfgFile, string(cfg), codegen.ComponentConfigValidator)
+	app, err := aop.ParseConfig(cfgFile, string(cfg), codegen.ComponentConfigValidator)
 	if err != nil {
 		return fmt.Errorf("load config file %q: %w\n", cfgFile, err)
 	}

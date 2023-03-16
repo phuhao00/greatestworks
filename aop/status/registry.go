@@ -26,8 +26,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ServiceWeaver/weaver/internal/files"
-	"github.com/ServiceWeaver/weaver/runtime/colors"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/files"
 )
 
 // A Registry is a persistent collection of Service Weaver application metadata.

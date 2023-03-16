@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/runtime/colors"
-	"github.com/ServiceWeaver/weaver/runtime/logging"
-	dtool "github.com/ServiceWeaver/weaver/runtime/tool"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/logging"
+	dtool "greatestworks/aop/tool"
 )
 
 // StatusCommand returns a "status" subcommand that pretty prints the status of

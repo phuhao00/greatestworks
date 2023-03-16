@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/ServiceWeaver/weaver/internal/files"
-	"github.com/ServiceWeaver/weaver/internal/status"
-	"github.com/ServiceWeaver/weaver/runtime/tool"
+	"greatestworks/aop/files"
+	"greatestworks/aop/status"
+	"greatestworks/aop/tool"
 )
 
 var (

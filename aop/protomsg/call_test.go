@@ -17,7 +17,7 @@ package protomsg
 import (
 	"testing"
 
-	"github.com/ServiceWeaver/weaver/runtime/protos"
+	"greatestworks/aop/protos"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"

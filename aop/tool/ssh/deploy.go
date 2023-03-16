@@ -20,6 +20,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/ServiceWeaver/weaver/runtime"
+	"greatestworks/aop"
 	"io"
 	"os"
 	"os/exec"
@@ -30,13 +32,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ServiceWeaver/weaver/internal/tool/ssh/impl"
-	"github.com/ServiceWeaver/weaver/runtime"
-	"github.com/ServiceWeaver/weaver/runtime/codegen"
-	"github.com/ServiceWeaver/weaver/runtime/colors"
-	"github.com/ServiceWeaver/weaver/runtime/logging"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
-	"github.com/ServiceWeaver/weaver/runtime/tool"
+	"greatestworks/aop/codegen"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/logging"
+	"greatestworks/aop/protos"
+	"greatestworks/aop/tool"
+	"greatestworks/aop/tool/ssh/impl"
 )
 
 var deployCmd = tool.Command{
@@ -64,7 +65,7 @@ func deploy(ctx context.Context, args []string) error {
 	if err != nil {
 		return fmt.Errorf("load config file %q: %w", cfgFile, err)
 	}
-	app, err := runtime.ParseConfig(cfgFile, string(cfg), codegen.ComponentConfigValidator)
+	app, err := aop.ParseConfig(cfgFile, string(cfg), codegen.ComponentConfigValidator)
 	if err != nil {
 		return fmt.Errorf("load config file %q: %w", cfgFile, err)
 	}

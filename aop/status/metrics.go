@@ -23,12 +23,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ServiceWeaver/weaver/runtime/colors"
-	"github.com/ServiceWeaver/weaver/runtime/logging"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
-	dtool "github.com/ServiceWeaver/weaver/runtime/tool"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/logging"
+	"greatestworks/aop/protos"
+	dtool "greatestworks/aop/tool"
 )
 
 // MetricsCommand returns a "metrics" subcommand that pretty prints the metrics

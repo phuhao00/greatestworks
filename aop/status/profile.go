@@ -24,8 +24,8 @@ import (
 	"time"
 
 	pprof "github.com/google/pprof/profile"
-	protos "github.com/ServiceWeaver/weaver/runtime/protos"
-	"github.com/ServiceWeaver/weaver/runtime/tool"
+	protos "greatestworks/aop/protos"
+	"greatestworks/aop/tool"
 )
 
 // TODO(mwhittaker): Right now, a user has to (1) run `weaver profile` to get a

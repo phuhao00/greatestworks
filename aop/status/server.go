@@ -19,11 +19,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ServiceWeaver/weaver/internal/logtype"
-	imetrics "github.com/ServiceWeaver/weaver/internal/metrics"
-	"github.com/ServiceWeaver/weaver/runtime/metrics"
-	"github.com/ServiceWeaver/weaver/runtime/protomsg"
-	protos "github.com/ServiceWeaver/weaver/runtime/protos"
+	"greatestworks/aop/logtype"
+	"greatestworks/aop/metrics"
+	imetrics "greatestworks/aop/metrics"
+	"greatestworks/aop/protomsg"
+	protos "greatestworks/aop/protos"
 )
 
 const (

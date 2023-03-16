@@ -17,8 +17,8 @@ package ssh
 import (
 	"context"
 
-	"github.com/ServiceWeaver/weaver/runtime/logging"
-	"github.com/ServiceWeaver/weaver/runtime/tool"
+	"greatestworks/aop/logging"
+	"greatestworks/aop/tool"
 )
 
 var logsSpec = tool.LogsSpec{

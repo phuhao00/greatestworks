@@ -17,14 +17,14 @@ package conn
 import (
 	"bytes"
 	"fmt"
+	"greatestworks/aop"
 	"io"
 	"runtime/pprof"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/runtime"
-	"github.com/ServiceWeaver/weaver/runtime/metrics"
-	"github.com/ServiceWeaver/weaver/runtime/protomsg"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
+	"greatestworks/aop/metrics"
+	"greatestworks/aop/protomsg"
+	"greatestworks/aop/protos"
 )
 
 // WeaveletConn is the weavelet side of the connection between a weavelet
@@ -56,7 +56,7 @@ func NewWeaveletConn(r io.ReadCloser, w io.WriteCloser) (*WeaveletConn, error) {
 		d.conn.cleanup(err)
 		return nil, err
 	}
-	if err := runtime.CheckWeaveletInfo(d.wlet); err != nil {
+	if err := aop.CheckWeaveletInfo(d.wlet); err != nil {
 		d.conn.cleanup(err)
 		return nil, err
 	}

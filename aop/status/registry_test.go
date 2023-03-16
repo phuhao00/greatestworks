@@ -22,7 +22,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
-	protos "github.com/ServiceWeaver/weaver/runtime/protos"
+	protos "greatestworks/aop/protos"
 )
 
 // fakeClient is a fake Server that returns the provided status and error.

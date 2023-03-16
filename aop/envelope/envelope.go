@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"greatestworks/aop"
 	"io"
 	"os"
 	"strconv"
@@ -270,8 +271,8 @@ func (e *Envelope) runWeavelet(ctx context.Context) error {
 	}
 
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", runtime.ToWeaveletKey, strconv.Itoa(toWeaveletFd)))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", runtime.ToEnvelopeKey, strconv.Itoa(toEnvelopeFd)))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", aop.ToWeaveletKey, strconv.Itoa(toWeaveletFd)))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", aop.ToEnvelopeKey, strconv.Itoa(toEnvelopeFd)))
 	cmd.Env = append(cmd.Env, e.config.Env...)
 
 	// Different sources are read from by different go-routines.

@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/internal/logtype"
-	"github.com/ServiceWeaver/weaver/runtime/colors"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
 	"github.com/google/uuid"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/logtype"
+	"greatestworks/aop/protos"
 )
 
 // Options configures the log entries produced by a logger.

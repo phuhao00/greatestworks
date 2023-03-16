@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ServiceWeaver/weaver/internal/traceio"
-	"github.com/ServiceWeaver/weaver/runtime/metrics"
-	"github.com/ServiceWeaver/weaver/runtime/protomsg"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
 	"go.opentelemetry.io/otel/sdk/trace"
+	"greatestworks/aop/metrics"
+	"greatestworks/aop/protomsg"
+	"greatestworks/aop/protos"
+	"greatestworks/aop/traceio"
 )
 
 // EnvelopeHandler implements the envelope side processing of messages

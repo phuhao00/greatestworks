@@ -17,9 +17,9 @@ package ssh
 import (
 	"fmt"
 
-	"github.com/ServiceWeaver/weaver/internal/status"
-	"github.com/ServiceWeaver/weaver/internal/tool/ssh/impl"
-	"github.com/ServiceWeaver/weaver/runtime/logging"
+	"greatestworks/aop/logging"
+	"greatestworks/aop/status"
+	"greatestworks/aop/tool/ssh/impl"
 )
 
 var dashboardSpec = &status.DashboardSpec{
