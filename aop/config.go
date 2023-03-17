@@ -82,8 +82,8 @@ func ParseConfigSection(key, shortKey string, sections map[string]string, dst an
 }
 
 func extractApp(file string, config *protos.AppConfig) error {
-	const appKey = "github.com/ServiceWeaver/weaver"
-	const shortAppKey = "serviceweaver"
+	const appKey = ""
+	const shortAppKey = "greatestworks"
 
 	// appConfig holds the data from under appKey in the TOML config.
 	// It matches the contents of the Config proto.

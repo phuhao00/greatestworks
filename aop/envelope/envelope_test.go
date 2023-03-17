@@ -18,6 +18,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"greatestworks/aop"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -28,16 +29,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/internal/envelope/conn"
-	"github.com/ServiceWeaver/weaver/internal/traceio"
-	"github.com/ServiceWeaver/weaver/runtime"
-	"github.com/ServiceWeaver/weaver/runtime/colors"
-	"github.com/ServiceWeaver/weaver/runtime/logging"
-	"github.com/ServiceWeaver/weaver/runtime/protos"
-	"github.com/ServiceWeaver/weaver/runtime/retry"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"greatestworks/aop/colors"
+	"greatestworks/aop/envelope/conn"
+	"greatestworks/aop/logging"
+	"greatestworks/aop/protos"
+	"greatestworks/aop/retry"
+	"greatestworks/aop/traceio"
 )
 
 // The result of running os.Executable(). Populated by TestMain.
@@ -344,7 +344,7 @@ func TestCancel(t *testing.T) {
 }
 
 func createWeaveletConn() (*conn.WeaveletConn, error) {
-	bootstrap, err := runtime.GetBootstrap(context.Background())
+	bootstrap, err := aop.GetBootstrap(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("unable to get pipe info from env: %w", err)
 	}

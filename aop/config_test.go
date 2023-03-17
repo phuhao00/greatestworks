@@ -117,7 +117,7 @@ colocate = [["a", "main", "a"]]
 [serviceweaver]
 name = "foo"
 
-["github.com/ServiceWeaver/weaver"]
+["greatestworks"]
 binary = "/tmp/foo"
 `,
 			expectedError: "conflicting",

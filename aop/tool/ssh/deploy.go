@@ -161,7 +161,7 @@ func terminateDeployment(locs []string, dep *protos.Deployment) error {
 // getLocations returns the list of locations at which to deploy the application.
 func getLocations(app *protos.AppConfig) ([]string, error) {
 	// SSH config as found in TOML config file.
-	const sshKey = "github.com/ServiceWeaver/weaver/ssh"
+	const sshKey = "greatestworks/ssh"
 	const shortSSHKey = "ssh"
 
 	type sshConfigSchema struct {
