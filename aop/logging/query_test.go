@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/runtime/protos"
 	"github.com/google/cel-go/parser"
+	"greatestworks/aop/protos"
 )
 
 func TestValidQueries(t *testing.T) {

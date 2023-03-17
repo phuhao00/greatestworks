@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ServiceWeaver/weaver/runtime/protos"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/checker/decls"
 	"github.com/google/cel-go/common/operators"
 	exprpb "google.golang.org/genproto/googleapis/api/expr/v1alpha1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"greatestworks/aop/protos"
 )
 
 // Query is a filter for log entries.

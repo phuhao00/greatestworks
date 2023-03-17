@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ServiceWeaver/weaver/runtime/protos"
+	"greatestworks/aop/protos"
 )
 
 // exampleReader is a toy Reader implementation used by ExampleReader.
