@@ -1,1 +1,5 @@
-package login
+package main
+
+func main() {
+
+}
