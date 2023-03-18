@@ -18,7 +18,7 @@ type Metrics interface {
 	SetName(str string)
 }
 
-//DBAction 加载、 存储DB
+// DBAction 加载、 存储DB
 type DBAction interface {
 	Load()
 	Save()

@@ -1,12 +1,16 @@
 package module
 
 import (
+	"go.opentelemetry.io/otel/trace"
+	"greatestworks/aop/net/call"
 	"greatestworks/internal/event"
 )
 
 type BaseModule struct {
 	ModuleName          string
 	activeEventCategory map[int]bool
+	tracer              trace.Tracer
+	methods             []call.MethodKey
 }
 
 func (b *BaseModule) OnEvent(c Character, event event.IEvent) {
