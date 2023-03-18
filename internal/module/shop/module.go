@@ -1,7 +1,7 @@
 package shop
 
 import (
-	module2 "greatestworks/internal/module"
+	"greatestworks/internal/module"
 	"sync"
 )
 
@@ -15,15 +15,30 @@ var (
 )
 
 func init() {
-	module2.MManager.RegisterModule(ModuleName, Mod)
+	module.MManager.RegisterModule(ModuleName, Mod)
 }
 
 type Module struct {
-	*module2.BaseModule
+	*module.BaseModule
 }
 
 func GetMod() *Module {
-	Mod = &Module{module2.NewBaseModule()}
+	Mod = &Module{module.NewBaseModule()}
 
 	return Mod
+}
+
+// ResourceBuy eg:金币，钻石
+func (m *Module) ResourceBuy() {
+
+}
+
+// MoneyBuy 直购
+func (m *Module) MoneyBuy() {
+
+}
+
+// TokenMoneyBuy 代金券
+func (m *Module) TokenMoneyBuy() {
+
 }

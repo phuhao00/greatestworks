@@ -1,7 +1,7 @@
 package recharge
 
 import (
-	module2 "greatestworks/internal/module"
+	"greatestworks/internal/module"
 	"sync"
 )
 
@@ -15,15 +15,25 @@ var (
 )
 
 func init() {
-	module2.MManager.RegisterModule(ModuleName, GetMod())
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
-	*module2.BaseModule
+	*module.BaseModule
 }
 
 func GetMod() *Module {
-	Mod = &Module{module2.NewBaseModule()}
+	Mod = &Module{module.NewBaseModule()}
 
 	return Mod
+}
+
+// CreateOrder 创建支付订单
+func (m *Module) CreateOrder() {
+
+}
+
+// OnSdkOrderRsp sdk 订单返回逻辑
+func (m *Module) OnSdkOrderRsp() {
+
 }
