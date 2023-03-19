@@ -1,6 +1,6 @@
 package main
 
 func init() {
-	//load config
+	//todo load config
 
 }

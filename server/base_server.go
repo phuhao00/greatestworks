@@ -71,7 +71,7 @@ type stub struct {
 }
 
 // serveStatus runs and registers the weaver-single status server.
-func (e *BaseServer) serveStatus(ctx context.Context) error {
+func (e *BaseServer) serverStatus(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.Handle("/debug/pprof/", http.DefaultServeMux)
 	status.RegisterServer(mux, e, e.SystemLogger())

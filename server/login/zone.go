@@ -37,5 +37,5 @@ func (z *Zone) discoveryWorld() {
 }
 
 func (z *Zone) recommendZone() {
-	
+
 }
