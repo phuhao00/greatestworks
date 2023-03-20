@@ -1,7 +1,7 @@
 package vip
 
 import (
-	module2 "greatestworks/internal/module"
+	"greatestworks/internal/module"
 	"sync"
 )
 
@@ -15,17 +15,17 @@ var (
 )
 
 func init() {
-	module2.MManager.RegisterModule(ModuleName, GetMod())
+	module.MManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
-	*module2.BaseModule
+	*module.BaseModule
 }
 
 func GetMod() *Module {
 	onceInitMod.Do(func() {
 		Mod = &Module{
-			BaseModule: module2.NewBaseModule(),
+			BaseModule: module.NewBaseModule(),
 		}
 	})
 	return Mod
@@ -33,4 +33,12 @@ func GetMod() *Module {
 
 func (m *Module) SetName(name string) {
 	m.BaseModule.SetName(name)
+}
+
+func (m *Module) OnDailyReset() {
+	//
+}
+
+func (m *Module) OnRecharge() {
+	//add exp
 }

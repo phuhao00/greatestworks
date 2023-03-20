@@ -2,15 +2,15 @@ package main
 
 import (
 	"greatestworks/server/gateway/client"
-	"greatestworks/server/gateway/server"
+	"greatestworks/server/gateway/config"
 	"time"
 )
 
 type Gateway struct {
 	clientServer client.Server
-	serverServer server.Server
+	serverServer Server
 	Metrics      *MetricInfo
-	Config       Conf
+	Config       config.Config
 }
 
 type MetricInfo struct {

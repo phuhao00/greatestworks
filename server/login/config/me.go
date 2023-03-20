@@ -1,6 +1,7 @@
 package config
 
 type Me struct {
+	Name                 string
 	HTTPAddr             string  `json:"http_addr"`
 	HTTPPort             int     `json:"http_port"`
 	TLSCertFile          string  `json:"tls_cert_file"`

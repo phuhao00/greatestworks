@@ -1,9 +1,13 @@
-package server
+package main
 
-import "github.com/phuhao00/network"
+import (
+	"github.com/phuhao00/network"
+	"greatestworks/server"
+)
 
 type Server struct {
 	real *network.Server
+	*server.BaseServer
 }
 
 func (s *Server) Loop() {
@@ -11,7 +15,7 @@ func (s *Server) Loop() {
 	for {
 		select {
 		//impl Message
-			
+
 		}
 	}
 }

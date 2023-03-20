@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"greatestworks/server"
 	"greatestworks/server/login/config"
 	"sync"
@@ -28,13 +29,24 @@ func GetServer() *Server {
 			Timer:       nil,
 			OPenTime:    0,
 			Conf:        nil,
+			BaseServer:  nil,
+		}
+		serverLogin.Initialize()
+		var err error
+		serverLogin.BaseServer, err = server.NewBaseServer(serverLogin.Conf.Me.Name, "")
+		if err != nil {
+			panic(fmt.Sprintf("[GetServer-initOnce] err:%v", err))
 		}
 	})
+
 	return serverLogin
 }
 
-func (s *Server) Initialize(conf *config.Config) {
-
+func (s *Server) Initialize() {
+	//var consulInstance interface{}
+	//consul 获取配置json串
+	//todo load config
+	s.Conf = config.Deserialize("")
 }
 
 func (s *Server) RegisterTimer() {
