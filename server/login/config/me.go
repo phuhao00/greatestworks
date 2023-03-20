@@ -21,3 +21,21 @@ type Me struct {
 	PlayerNumHour        int32   `json:"player_num_hour"`
 	QueryGateWayRatio    int32   `json:"query_gate_way_ratio"`
 }
+
+type EndPoint struct {
+	ZoneId  int
+	ID      string
+	IP      string
+	Port    int
+	Name    string
+	Weights int
+	InnerIP string
+}
+
+const (
+	MAXHold = 1000
+	LEVEL0  = int(0.01 * float32(MAXHold))
+	LEVEL1  = int(0.2 * float32(MAXHold))
+	LEVEL2  = int(0.6 * float32(MAXHold))
+	LEVEL3  = int(1 * float32(MAXHold))
+)
