@@ -1,4 +1,4 @@
-package world
+package main
 
 func (w *World) Loop() {
 	//TODO implement me

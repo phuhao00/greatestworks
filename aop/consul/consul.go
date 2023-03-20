@@ -4,10 +4,13 @@ import (
 	"github.com/hashicorp/consul/api"
 	"path"
 	"strings"
+	"sync"
 )
 
 type Client struct {
-	client *api.KV
+	client   *api.Client
+	services *sync.Map
+	addrs    []string
 }
 
 func New(config *Config) (*Client, error) {
@@ -38,7 +41,23 @@ func New(config *Config) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{client.KV()}, nil
+	return &Client{client: client}, nil
+}
+
+func (c *Client) register(r *api.AgentServiceRegistration) error {
+	return c.client.Agent().ServiceRegister(r)
+}
+
+func (c *Client) deregister(svcID string) error {
+	return c.client.Agent().ServiceDeregister(svcID)
+}
+
+func (c *Client) KV() *api.KV {
+	return c.client.KV()
+}
+
+func (c *Client) service(service, tag string, passingOnly bool, queryOpts *api.QueryOptions) ([]*api.ServiceEntry, *api.QueryMeta, error) {
+	return c.client.Health().Service(service, tag, passingOnly, queryOpts)
 }
 
 // GetValues queries Consul for keys
@@ -46,7 +65,7 @@ func (c *Client) GetValues(keys []string) (map[string]string, error) {
 	vars := make(map[string]string)
 	for _, key := range keys {
 		key := strings.TrimPrefix(key, "/")
-		pairs, _, err := c.client.List(key, nil)
+		pairs, _, err := c.KV().List(key, nil)
 		if err != nil {
 			return vars, err
 		}
@@ -68,7 +87,7 @@ func (c *Client) WatchPrefix(prefix string, keys []string, waitIndex uint64, sto
 		opts := api.QueryOptions{
 			WaitIndex: waitIndex,
 		}
-		_, meta, err := c.client.List(prefix, &opts)
+		_, meta, err := c.KV().List(prefix, &opts)
 		if err != nil {
 			respChan <- watchResponse{waitIndex, err}
 			return

@@ -1,4 +1,4 @@
-package world
+package main
 
 import "github.com/phuhao00/greatestworks-proto/gen/messageId"
 

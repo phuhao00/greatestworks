@@ -1,4 +1,4 @@
-package world
+package main
 
 import (
 	"fmt"
