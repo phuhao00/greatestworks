@@ -53,12 +53,6 @@ func (s *Server) RegisterTimer() {
 
 }
 
-func (s *Server) Run() {
-	for {
-		select {}
-	}
-}
-
 func (s *Server) ServiceRegister() {
 	//consul register
 }

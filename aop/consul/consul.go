@@ -10,7 +10,7 @@ type Client struct {
 	client *api.KV
 }
 
-func New(config Config) (*Client, error) {
+func New(config *Config) (*Client, error) {
 	conf := api.DefaultConfig()
 
 	conf.Scheme = config.Scheme

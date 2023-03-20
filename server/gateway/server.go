@@ -10,16 +10,6 @@ type Server struct {
 	*server.BaseServer
 }
 
-func (s *Server) Loop() {
-
-	for {
-		select {
-		//impl Message
-
-		}
-	}
-}
-
 func (s *Server) KickUser() {
 
 }

@@ -31,16 +31,6 @@ func NewWorld() *World {
 
 var Oasis *World
 
-func (w *World) Start() {
-	w.HandlerRegister()
-	go w.Server.Run()
-	go w.pm.Run()
-}
-
-func (w *World) Stop() {
-
-}
-
 func (w *World) OnSessionPacket(packet *network.Packet) {
 	if handler, ok := w.Handlers[messageId.MessageId(packet.Msg.ID)]; ok {
 		handler(packet)
