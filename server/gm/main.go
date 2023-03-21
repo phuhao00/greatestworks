@@ -3,7 +3,7 @@ package main
 import "github.com/gorilla/mux"
 
 func main() {
-	h := Handler{
+	h := Router{
 		real: mux.NewRouter(),
 	}
 	h.Run()

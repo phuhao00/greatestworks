@@ -2,5 +2,5 @@ package main
 
 func main() {
 	server := GetServer()
-	server.Run()
+	server.Loop()
 }

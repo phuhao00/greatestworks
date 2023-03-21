@@ -236,3 +236,15 @@ func serveHTTP(ctx context.Context, lis net.Listener, handler http.Handler) erro
 		return server.Shutdown(ctx)
 	}
 }
+
+func (s *BaseServer) Start() {
+}
+
+func (s *BaseServer) Loop() {
+}
+
+func (s *BaseServer) Monitor() {
+}
+
+func (s *BaseServer) Stop() {
+}
