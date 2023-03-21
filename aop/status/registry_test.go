@@ -40,7 +40,7 @@ func TestRegister(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Register the deployments.
+	// AddHandler the deployments.
 	regs := []Registration{
 		{"0", "todo", "localhost:0"},
 		{"1", "todo", "localhost:1"},
@@ -71,7 +71,7 @@ func TestUnregister(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Register the deployments.
+	// AddHandler the deployments.
 	regs := []Registration{
 		{"0", "todo", "localhost:0"},
 		{"1", "todo", "localhost:1"},
@@ -129,7 +129,7 @@ func TestListAndGet(t *testing.T) {
 		}
 	}
 
-	// Register the deployments.
+	// AddHandler the deployments.
 	for _, reg := range regs {
 		if err := registry.Register(ctx, reg); err != nil {
 			t.Fatalf("%v: %v", reg, err)

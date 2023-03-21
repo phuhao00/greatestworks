@@ -110,7 +110,7 @@ func deploy(ctx context.Context, args []string) error {
 		fmt.Fprintf(os.Stderr, "status server %q unavailable: %#v\n", lis.Addr(), err)
 	}
 
-	// Register the deployment.
+	// AddHandler the deployment.
 	registry, err := defaultRegistry(ctx)
 	if err != nil {
 		return fmt.Errorf("create registry: %w", err)

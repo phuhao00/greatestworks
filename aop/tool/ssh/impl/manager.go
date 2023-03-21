@@ -237,7 +237,7 @@ func (m *manager) run() error {
 		m.logger.Error("Error starting status server", err, "address", lis.Addr())
 	}
 
-	// Register the deployment.
+	// AddHandler the deployment.
 	registry, err := DefaultRegistry(m.ctx)
 	if err != nil {
 		return fmt.Errorf("create registry: %w", err)

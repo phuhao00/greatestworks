@@ -53,7 +53,7 @@ type Registration struct {
 // previously called, Register will fail and return a non-nil error.
 func (r *registry) register(reg Registration) error {
 	if err := verifyRegistration(reg); err != nil {
-		return fmt.Errorf("Register(%q): %w", reg.Name, err)
+		return fmt.Errorf("AddHandler(%q): %w", reg.Name, err)
 	}
 
 	r.m.Lock()

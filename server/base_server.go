@@ -94,7 +94,7 @@ func (e *BaseServer) serverStatus(ctx context.Context) error {
 		e.SystemLogger().Error("status server unavailable", err, "address", lis.Addr())
 	}
 
-	// Register the deployment.
+	// AddHandler the deployment.
 	dir, err := files.DefaultDataDir()
 	if err != nil {
 		return err
