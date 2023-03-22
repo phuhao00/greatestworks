@@ -1,5 +1,7 @@
 package main
 
+import "net/http"
+
 func RandomName() {
 	//todo 随机名字
 }
@@ -18,7 +20,7 @@ func registerReward() {
 
 }
 
-func Login() {
+func Login(w http.ResponseWriter, r *http.Request) {
 	//todo check whitelist
 	//todo return token
 

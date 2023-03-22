@@ -57,10 +57,6 @@ func (l *GateWayList) addLevel(id string, lv int) {
 	})
 }
 
-func (l *GateWayList) name() {
-
-}
-
 func (l *GateWayList) removeEndPoint(id string) {
 	if len(id) == 0 {
 		return
