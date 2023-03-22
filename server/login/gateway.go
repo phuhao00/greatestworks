@@ -1,7 +1,10 @@
 package main
 
 import (
+	"github.com/hashicorp/consul/api"
+	"greatestworks/aop/logger"
 	"greatestworks/server/login/config"
+	"math/rand"
 	"sync"
 )
 
@@ -66,16 +69,50 @@ func (l *GateWayList) removeEndPoint(id string) {
 	l.endpoints.Delete(id)
 }
 
-func (l *GateWayList) clearInvalid() {
-
+func (l *GateWayList) clearInvalid(services []*api.ServiceEntry) {
+	totalCnt := 0
+	var del = make([]string, 0)
+	l.endpoints.Range(func(key, value any) bool {
+		e := value.(*config.EndPoint)
+		if e.ZoneId != l.ZoneId {
+			return true
+		}
+		totalCnt++
+		exist := false
+		for _, service := range services {
+			if len(e.ID) > 0 && e.ID == service.Service.ID {
+				exist = true
+			}
+		}
+		if !exist {
+			del = append(del, e.ID)
+		}
+		return true
+	})
+	delCnt := 0
+	for _, s := range del {
+		l.removeEndPoint(s)
+		delCnt++
+	}
 }
 
-func (l *GateWayList) updateLevel() {
-
-}
-
-func (l *GateWayList) update(ep config.EndPoint) {
-	if l == nil {
+func (l *GateWayList) update(ep *config.EndPoint) {
+	if l == nil || ep.ZoneId != l.ZoneId {
+		logger.Logger.ErrorF("GatewayList's zone id error.")
+		return
+	}
+	needUp := false
+	value, ok := l.endpoints.Load(ep.ID)
+	if value != nil && ok {
+		if value.(*config.EndPoint).Weights != ep.Weights {
+			needUp = true
+			value.(*config.EndPoint).Weights = ep.Weights
+		}
+	} else {
+		l.endpoints.Store(ep.ID, ep)
+		needUp = true
+	}
+	if !needUp {
 		return
 	}
 	if ep.Weights < config.LEVEL0 {
@@ -93,14 +130,52 @@ func (l *GateWayList) update(ep config.EndPoint) {
 	}
 }
 
-func (l *GateWayList) GetRecommend() {
-
+func (l *GateWayList) GetRecommend() *config.EndPoint {
+	r := rand.Int()
+	var ret *config.EndPoint
+	l.Levels.Range(func(key, value any) bool {
+		levelArr := value.([]string)
+		addr := levelArr[r%len(levelArr)]
+		endpoint, ok := l.endpoints.Load(addr)
+		if ok && endpoint != nil {
+			ret = endpoint.(*config.EndPoint)
+			return false
+		}
+		return true
+	})
+	if ret != nil {
+		return ret
+	}
+	return &config.EndPoint{IP: "127.0.0.1", Port: 10001}
 }
 
-func (l *GateWayList) exist() {
-
+func (l *GateWayList) GetEndPoint(addr string) *config.EndPoint {
+	var ret *config.EndPoint
+	value, ok := l.endpoints.Load(addr)
+	if ok && value != nil {
+		l.Levels.Range(func(key, value any) bool {
+			arr := value.([]string)
+			for _, s := range arr {
+				if addr == s {
+					ret = value.(*config.EndPoint)
+					return false
+				}
+			}
+			return true
+		})
+	}
+	return ret
 }
 
-func (l *GateWayList) UpdateLocalWeight() {
-
+func (l *GateWayList) UpdateLocalWeight(endPoint *config.EndPoint) {
+	if endPoint != nil {
+		value, ok := l.endpoints.Load(endPoint.ID)
+		if value != nil && ok {
+			if config.QueryToGateWayRatio < 1 {
+				config.QueryToGateWayRatio = 1
+			}
+			value.(*config.EndPoint).Weights += config.QueryToGateWayRatio
+			l.update(value.(*config.EndPoint))
+		}
+	}
 }

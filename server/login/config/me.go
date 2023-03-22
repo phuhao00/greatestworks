@@ -39,3 +39,5 @@ const (
 	LEVEL2  = int(0.6 * float32(MAXHold))
 	LEVEL3  = int(1 * float32(MAXHold))
 )
+
+var QueryToGateWayRatio = int(3)
