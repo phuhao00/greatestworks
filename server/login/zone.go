@@ -15,21 +15,22 @@ type ZoneManager struct {
 }
 
 var (
-	zone         *ZoneManager
+	zoneManager  *ZoneManager
 	zoneInitOnce sync.Once
 )
 
-func GetZone() *ZoneManager {
+func GetZoneManager() *ZoneManager {
 	zoneInitOnce.Do(func() {
-		zone = &ZoneManager{
+		zoneManager = &ZoneManager{
 			GateWays: sync.Map{},
 			Worlds:   sync.Map{},
 		}
 	})
-	zone.discovery()
-	return zone
+	zoneManager.discovery()
+	return zoneManager
 }
 
+// getGateWay ..
 func (z *ZoneManager) getGateWay(zoneId int) *GateWay {
 	value, ok := z.GateWays.Load(zoneId)
 	if ok && value != nil {
@@ -38,6 +39,7 @@ func (z *ZoneManager) getGateWay(zoneId int) *GateWay {
 	return nil
 }
 
+// getWorld ..
 func (z *ZoneManager) getWorld(zoneId int) *World {
 	value, ok := z.Worlds.Load(zoneId)
 	if ok && value != nil {
@@ -46,11 +48,13 @@ func (z *ZoneManager) getWorld(zoneId int) *World {
 	return nil
 }
 
+// discovery ..
 func (z *ZoneManager) discovery() {
 	z.discoveryGateWay()
 	z.discoveryWorld()
 }
 
+// discoveryGateWay discovery gateway
 func (z *ZoneManager) discoveryGateWay() {
 	services, _, err := consul.QueryServices(config.GateWayServiceName)
 	if err != nil {
@@ -60,6 +64,7 @@ func (z *ZoneManager) discoveryGateWay() {
 
 }
 
+// discoveryWorld discover world
 func (z *ZoneManager) discoveryWorld() {
 	services, _, err := consul.QueryServices(config.WorldServiceName)
 	if err != nil {
@@ -67,7 +72,6 @@ func (z *ZoneManager) discoveryWorld() {
 	}
 	z.clearInvalidWorld(services)
 
-	// 更新/添加online信息
 	for _, svcEntry := range services {
 		if len(svcEntry.Service.Tags) < 1 {
 			continue
@@ -88,14 +92,14 @@ func (z *ZoneManager) discoveryWorld() {
 			PlayerNum:     performance.PlayerNum,
 			PIdx:          uint32(performance.PIdx),
 			Max:           maxUserCnt,
-			fakeServerCnt: int(GetServer().Conf.Me.PlayersServerCnt), // UI排头前若干服，初始化虚的人数 - 避免开服瞬间撑死
+			fakeServerCnt: int(GetServer().Conf.Me.PlayersServerCnt),
 			BeginTM:       performance.BeginTM,
 		}
 		z.updateWorldEndPoint(endPoint)
 	}
 }
 
-// clearInvalidGateWay clear invalid
+// clearInvalidGateWay clear invalid gateway
 func (z *ZoneManager) clearInvalidGateWay(services []*api.ServiceEntry) {
 	z.GateWays.Range(func(key, value any) bool {
 		gateWay := value.(*GateWay)
@@ -107,6 +111,7 @@ func (z *ZoneManager) clearInvalidGateWay(services []*api.ServiceEntry) {
 	})
 }
 
+// clearInvalidWorld  clear invalid world
 func (z *ZoneManager) clearInvalidWorld(entries []*api.ServiceEntry) {
 	z.Worlds.Range(func(key, value any) bool {
 		world := value.(*World)
@@ -118,6 +123,7 @@ func (z *ZoneManager) clearInvalidWorld(entries []*api.ServiceEntry) {
 	})
 }
 
+// updateWorldEndPoint  update world endPoint
 func (z *ZoneManager) updateWorldEndPoint(endPoint *WorldEndpoint) {
 	w := z.getWorld(endPoint.ZoneId)
 	if w == nil {
@@ -132,6 +138,7 @@ func (z *ZoneManager) updateWorldEndPoint(endPoint *WorldEndpoint) {
 	}
 }
 
+// existGateway check exist gateway endPoint
 func (z *ZoneManager) existGateway(zoneId int, gatewayId string) (*config.EndPoint, bool) {
 	gList := z.getGateWay(zoneId)
 	if gList != nil {
@@ -142,7 +149,8 @@ func (z *ZoneManager) existGateway(zoneId int, gatewayId string) (*config.EndPoi
 	return nil, false
 }
 
-func (z *ZoneManager) processWorldStat(endPoint *WorldEndpoint) int32 {
+// worldMetrics world metrics
+func (z *ZoneManager) worldMetrics(endPoint *WorldEndpoint) int32 {
 	if endPoint == nil {
 		return config.CloseStatus
 	} else if endPoint.Max == 0 {
@@ -170,6 +178,7 @@ func (z *ZoneManager) processWorldStat(endPoint *WorldEndpoint) int32 {
 	}
 }
 
+// recommendZone recommend zoneManager
 func (z *ZoneManager) recommendZone() int {
 	recZoneId := 0
 	z.Worlds.Range(func(zoneId, value interface{}) bool {
@@ -178,7 +187,7 @@ func (z *ZoneManager) recommendZone() int {
 		w := value.(*World)
 		w.endPoints.Range(func(sid, value interface{}) bool {
 			endpoint := value.(*WorldEndpoint)
-			stat := z.processWorldStat(endpoint)
+			stat := z.worldMetrics(endpoint)
 			if stat == config.EmptyStatus {
 				emptyCnt++
 			} else if stat == config.OKStatus {
