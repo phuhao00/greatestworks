@@ -32,11 +32,17 @@ type Performance struct {
 	PlayerNum    int32  `json:"playerNum"`
 	MaxPlayerNum int32  `json:"maxPlayerNum"`
 	Mem          uint64 `json:"mem"`
-	StartTM      int64  `json:"startTM"`
+	BeginTM      int64  `json:"beginTM"`
 	SvrAddr      string `json:"svrAddr"`
 	SvrId        string `json:"svrId"`
 	SvrPath      string `json:"svrPath"`
 	InnerAddr    string `json:"innerAddr"`
+}
+
+func GetPerformanceData(data string) *Performance {
+	performance := &Performance{}
+	json.Unmarshal([]byte(data), performance)
+	return performance
 }
 
 func GetPerformance(performance *Performance) string {

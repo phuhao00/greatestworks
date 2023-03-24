@@ -20,6 +20,7 @@ type Me struct {
 	PlayersDeltaCnt      int32   `json:"players_delta_cnt"`
 	PlayerNumHour        int32   `json:"player_num_hour"`
 	QueryGateWayRatio    int32   `json:"query_gate_way_ratio"`
+	MaxWorldPlayerNum    uint32  `json:"max_world_player_num"`
 }
 
 type EndPoint struct {
@@ -35,9 +36,38 @@ type EndPoint struct {
 const (
 	MAXHold = 1000
 	LEVEL0  = int(0.01 * float32(MAXHold))
-	LEVEL1  = int(0.2 * float32(MAXHold))
-	LEVEL2  = int(0.6 * float32(MAXHold))
-	LEVEL3  = int(1 * float32(MAXHold))
+	LEVEL1  = int(0.3 * float32(MAXHold))
+	LEVEL2  = int(0.5 * float32(MAXHold))
+	LEVEL3  = int(0.9 * float32(MAXHold))
 )
 
 var QueryToGateWayRatio = int(3)
+
+const (
+	GateWayServiceName = "GateWay-Tcp"
+	WorldServiceName   = "World-http"
+)
+
+const (
+	HoursSeconds = 60 * 60
+
+	WorldMaxCoefficient = 0.7
+)
+
+const (
+	CloseStatus = int32(0)
+	EmptyStatus = int32(1)
+	OKStatus    = int32(2)
+	FullStatus  = int32(3)
+
+	RecommendWorldMaxCnt = 5
+)
+
+const (
+	LoginWindowSize      = int64(100)
+	EmptyRatio           = float32(0.2)
+	BusyRatio            = float32(0.7)
+	StartPreRegisterTime = int64(0)
+	EndPreRegisterTime   = int64(0)
+	ServerOpenTime       = int64(0)
+)

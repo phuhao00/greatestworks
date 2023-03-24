@@ -8,17 +8,17 @@ import (
 	"sync"
 )
 
-type GateWayList struct {
+type GateWay struct {
 	endpoints *sync.Map
 	ZoneId    int
 	Levels    sync.Map //Level0    []string
 }
 
-func NewGatewayList(zoneId int) *GateWayList {
-	return &GateWayList{endpoints: &sync.Map{}, ZoneId: zoneId}
+func NewGatewayList(zoneId int) *GateWay {
+	return &GateWay{endpoints: &sync.Map{}, ZoneId: zoneId}
 }
 
-func (l *GateWayList) removeLevel(id string) {
+func (l *GateWay) removeLevel(id string) {
 	if len(id) == 0 {
 		return
 	}
@@ -37,7 +37,7 @@ func (l *GateWayList) removeLevel(id string) {
 	})
 }
 
-func (l *GateWayList) addLevel(id string, lv int) {
+func (l *GateWay) addLevel(id string, lv int) {
 	if len(id) == 0 {
 		return
 	}
@@ -57,7 +57,7 @@ func (l *GateWayList) addLevel(id string, lv int) {
 	})
 }
 
-func (l *GateWayList) removeEndPoint(id string) {
+func (l *GateWay) removeEndPoint(id string) {
 	if len(id) == 0 {
 		return
 	}
@@ -65,7 +65,7 @@ func (l *GateWayList) removeEndPoint(id string) {
 	l.endpoints.Delete(id)
 }
 
-func (l *GateWayList) clearInvalid(services []*api.ServiceEntry) {
+func (l *GateWay) clearInvalid(services []*api.ServiceEntry) (zoneId int, isEmpty bool) {
 	totalCnt := 0
 	var del = make([]string, 0)
 	l.endpoints.Range(func(key, value any) bool {
@@ -90,9 +90,10 @@ func (l *GateWayList) clearInvalid(services []*api.ServiceEntry) {
 		l.removeEndPoint(s)
 		delCnt++
 	}
+	return l.ZoneId, delCnt == totalCnt
 }
 
-func (l *GateWayList) update(ep *config.EndPoint) {
+func (l *GateWay) update(ep *config.EndPoint) {
 	if l == nil || ep.ZoneId != l.ZoneId {
 		logger.Logger.ErrorF("GatewayList's zone id error.")
 		return
@@ -126,7 +127,7 @@ func (l *GateWayList) update(ep *config.EndPoint) {
 	}
 }
 
-func (l *GateWayList) GetRecommend() *config.EndPoint {
+func (l *GateWay) GetRecommend() *config.EndPoint {
 	r := rand.Int()
 	var ret *config.EndPoint
 	l.Levels.Range(func(key, value any) bool {
@@ -145,7 +146,7 @@ func (l *GateWayList) GetRecommend() *config.EndPoint {
 	return &config.EndPoint{IP: "127.0.0.1", Port: 10001}
 }
 
-func (l *GateWayList) GetEndPoint(addr string) *config.EndPoint {
+func (l *GateWay) GetEndPoint(addr string) *config.EndPoint {
 	var ret *config.EndPoint
 	value, ok := l.endpoints.Load(addr)
 	if ok && value != nil {
@@ -163,7 +164,7 @@ func (l *GateWayList) GetEndPoint(addr string) *config.EndPoint {
 	return ret
 }
 
-func (l *GateWayList) UpdateLocalWeight(endPoint *config.EndPoint) {
+func (l *GateWay) UpdateLocalWeight(endPoint *config.EndPoint) {
 	if endPoint != nil {
 		value, ok := l.endpoints.Load(endPoint.ID)
 		if value != nil && ok {
