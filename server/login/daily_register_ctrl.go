@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"greatestworks/aop/nsq"
 	"greatestworks/server/login/config"
+	"runtime"
 	"time"
 )
 
@@ -76,4 +77,18 @@ func sendMQ(command nsqpb.NsqCommand, data []byte) {
 	msg := nsqpb.ComplexMessage{Cmd: command, Data: data, Time: time.Now().Unix()}
 	sdata, _ := proto.Marshal(&msg)
 	nsq.PublishAsync(nsq.Logic, nsq.Complex, sdata, nil)
+}
+
+func checkSvrStat() int {
+	ret := 0
+	numGo := runtime.NumGoroutine()
+	if numGo > GetServer().Conf.Me.LimitGoroutinesNum*6/5 {
+		ret = 2
+	} else if numGo >= GetServer().Conf.Me.LimitGoroutinesNum {
+		ret = 1
+	} else if numGo > GetServer().Conf.Me.LimitGoroutinesNum*2/3 {
+		ret = 0
+	} else {
+	}
+	return ret
 }
