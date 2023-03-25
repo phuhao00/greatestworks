@@ -11,6 +11,8 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-git/go-git/v5 v5.5.2
+	github.com/go-redis/redis/v8 v8.11.5
+	github.com/golang/protobuf v1.5.2
 	github.com/google/btree v1.1.2
 	github.com/google/cel-go v0.13.0
 	github.com/google/go-cmp v0.5.9
@@ -25,7 +27,7 @@ require (
 	github.com/looplab/fsm v1.0.1
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/phuhao00/broker v1.0.3
-	github.com/phuhao00/greatestworks-proto v1.0.1
+	github.com/phuhao00/greatestworks-proto v1.0.5
 	github.com/phuhao00/network v1.0.4
 	github.com/phuhao00/spoor v1.0.2
 	github.com/phuhao00/sugar v1.0.1
@@ -70,9 +72,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
-	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
 	github.com/hashicorp/go-hclog v0.12.0 // indirect

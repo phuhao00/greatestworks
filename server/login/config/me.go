@@ -83,4 +83,6 @@ const (
 var (
 	QueueLength         int64 = 0       // 排队队列长度
 	MaxLoginQueueLength int64 = 1000000 // 排队的最大排队长度 100w
+
+	DailyLimitKey = "LoginDailyRegisterInfo"
 )

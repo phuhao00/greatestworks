@@ -1,6 +1,6 @@
 package main
 
-import "github.com/phuhao00/greatestworks-proto/gen/messageId"
+import "github.com/phuhao00/greatestworks-proto/messageId"
 
 func (c *Client) MessageHandlerRegister() {
 	c.messageHandlers[messageId.MessageId_SCCreatePlayer] = c.OnCreatePlayerRsp

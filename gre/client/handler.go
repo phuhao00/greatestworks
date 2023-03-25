@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/phuhao00/greatestworks-proto/gen/player"
+	"github.com/phuhao00/greatestworks-proto/player"
 	"github.com/phuhao00/network"
 	"strconv"
 
@@ -13,7 +13,7 @@ type MessageHandler func(packet *network.Packet)
 
 type InputHandler func(param *InputParam)
 
-//CreatePlayer 创建角色
+// CreatePlayer 创建角色
 func (c *Client) CreatePlayer(param *InputParam) {
 	id := c.GetMessageIdByCmd(param.Command)
 
