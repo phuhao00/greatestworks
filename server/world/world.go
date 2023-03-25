@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/phuhao00/greatestworks-proto/gen/messageId"
+	"github.com/phuhao00/greatestworks-proto/messageId"
 	"greatestworks/aop/logger"
 	"greatestworks/internal/module/chat"
 	"greatestworks/internal/module/family"

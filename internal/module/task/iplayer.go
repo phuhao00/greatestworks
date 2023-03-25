@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/phuhao00/greatestworks-proto/gen/messageId"
+	"github.com/phuhao00/greatestworks-proto/messageId"
 	"google.golang.org/protobuf/proto"
 )
 

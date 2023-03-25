@@ -2,8 +2,8 @@ package friend
 
 import (
 	"errors"
-	"github.com/phuhao00/greatestworks-proto/gen/messageId"
-	"github.com/phuhao00/greatestworks-proto/gen/player"
+	"github.com/phuhao00/greatestworks-proto/messageId"
+	"github.com/phuhao00/greatestworks-proto/player"
 	"github.com/phuhao00/network"
 	"github.com/phuhao00/sugar"
 	"google.golang.org/protobuf/proto"

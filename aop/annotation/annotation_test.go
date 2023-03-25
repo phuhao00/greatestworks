@@ -2,7 +2,7 @@ package annotation
 
 import (
 	"fmt"
-	"github.com/phuhao00/greatestworks-proto/gen/player"
+	"github.com/phuhao00/greatestworks-proto/player"
 	"google.golang.org/protobuf/proto"
 	"reflect"
 	"testing"

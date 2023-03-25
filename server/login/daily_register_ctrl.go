@@ -75,5 +75,5 @@ func (dc *DailyRegisterController) increaseDailyRegCnt(channel string, cnt int64
 func sendMQ(command nsqpb.NsqCommand, data []byte) {
 	msg := nsqpb.ComplexMessage{Cmd: command, Data: data, Time: time.Now().Unix()}
 	sdata, _ := proto.Marshal(&msg)
-	nsq.PublishAsync(nsq.Logic, "COMPLEX_TOPIC", sdata, nil)
+	nsq.PublishAsync(nsq.Logic, nsq.Complex, sdata, nil)
 }

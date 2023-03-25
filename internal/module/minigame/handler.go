@@ -2,7 +2,7 @@ package minigame
 
 import (
 	"errors"
-	"github.com/phuhao00/greatestworks-proto/gen/messageId"
+	"github.com/phuhao00/greatestworks-proto/messageId"
 	"github.com/phuhao00/network"
 	"sync"
 )
