@@ -11,7 +11,7 @@ type Me struct {
 	LoadBalanceRatio     int32   `json:"load_balance_ratio"`
 	WindowSize           int     `json:"window_size"`
 	RetryRatio           float64 `json:"retry_ratio"`
-	TimeSlice            int     `json:"time_slice"`
+	TimeStamp            int     `json:"time_stamp"`
 	EmptyRatioValue      float32 `json:"empty_ratio_value"`
 	BusyRatioValue       float32 `json:"busy_ratio_value"`
 	MaxLoginQueueLength  int64   `json:"max_login_queue_length"`
@@ -70,4 +70,17 @@ const (
 	StartPreRegisterTime = int64(0)
 	EndPreRegisterTime   = int64(0)
 	ServerOpenTime       = int64(0)
+
+	LoginTimeStampMcu = 60
+)
+
+const (
+	WaitTimeLimit    int64 = 10
+	WaitTimeBitLen   int   = 20
+	MaxRetryWaitTime int   = 30
+)
+
+var (
+	QueueLength         int64 = 0       // 排队队列长度
+	MaxLoginQueueLength int64 = 1000000 // 排队的最大排队长度 100w
 )
