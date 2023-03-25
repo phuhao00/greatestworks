@@ -19,7 +19,7 @@ type Me struct {
 	PlayersServerCnt     int32   `json:"players_server_cnt"`
 	PlayersDeltaCnt      int32   `json:"players_delta_cnt"`
 	PlayerNumHour        int32   `json:"player_num_hour"`
-	QueryGateWayRatio    int32   `json:"query_gate_way_ratio"`
+	QueryGateWayRatio    int     `json:"query_gate_way_ratio"`
 	MaxWorldPlayerNum    uint32  `json:"max_world_player_num"`
 }
 
