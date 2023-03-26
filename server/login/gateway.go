@@ -176,3 +176,20 @@ func (l *GateWay) UpdateLocalWeight(endPoint *config.EndPoint) {
 		}
 	}
 }
+
+func (l *GateWay) IsExist(addr string) (*config.EndPoint, bool) {
+	var ret *config.EndPoint
+	if endpoint, ok := l.endpoints.Load(addr); ok && endpoint != nil {
+		l.Levels.Range(func(key, value any) bool {
+			arr := value.([]string)
+			for _, s := range arr {
+				if addr == s {
+					ret = value.(*config.EndPoint)
+					return false
+				}
+			}
+			return true
+		})
+	}
+	return ret, false
+}

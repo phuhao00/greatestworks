@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Me struct {
 	Name                 string
 	HTTPAddr             string  `json:"http_addr"`
@@ -86,3 +88,47 @@ var (
 
 	DailyLimitKey = "LoginDailyRegisterInfo"
 )
+
+const (
+	Succ           = 0  //
+	DecodeErr      = 1  // josn
+	WhiteListErr   = 2  // 白名单
+	VerifyTokenErr = 3  // Token验证
+	BanUserErr     = 4  // 封号
+	UnknownErr     = 5  //
+	PassWdErr      = 6  //
+	LoginBusy      = 7  // 登录服繁忙，稍后再来
+	ZoneError      = 8  // 指定的Zone不存在
+	DailyIncrOver  = 9  // 日新增达到上限，不能注册
+	OnlineError    = 10 // 指定的online不存在
+	BanMacLoginErr = 11 // 封Mac登录
+	BanMacChatErr  = 12 // 封Mac聊天
+)
+const (
+	TokenExpireDuration = 24 * time.Hour
+)
+
+type AccountData struct {
+	ZoneId   int
+	Account  string
+	Password string
+	Sign     string
+	Sid      string
+	Token    string
+}
+
+type LimitInfo struct {
+	Cond      uint32 `bson:"con"` // 原因
+	InReason  string `bson:"ir"`  // 内部原因
+	OutReason string `bson:"or"`  // 内部原因
+	ExpTime   int64  `bson:"etm"` // 过期时间
+}
+
+func GetIdxByLimitInfo(source []LimitInfo, cond uint32) (bool, int) {
+	for idx, val := range source {
+		if val.Cond == cond {
+			return true, idx
+		}
+	}
+	return false, 0
+}

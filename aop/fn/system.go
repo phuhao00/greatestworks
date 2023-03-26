@@ -8,6 +8,15 @@ import (
 	"net/http"
 	"os/user"
 	"strings"
+	"time"
+)
+
+const (
+	SignKey      = "hh$m%s@y61*Qd@le"
+	ReadMemTime  = 2 * time.Minute
+	DayStartHour = 5
+	OneDaySec    = 24 * 60 * 60
+	StartHourSec = DayStartHour * 60 * 60
 )
 
 func GetUser() string {
@@ -44,4 +53,9 @@ func ClientIP(r *http.Request) string {
 		return ip
 	}
 	return ""
+}
+
+func CheckSign(data, sign string) bool {
+	token := md5.Sum([]byte(data + SignKey))
+	return hex.EncodeToString(token[:]) == sign
 }

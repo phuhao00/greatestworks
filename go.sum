@@ -215,10 +215,8 @@ github.com/pelletier/go-toml/v2 v2.0.6 h1:nrzqCb7j9cDFj2coyLNLaZuJTLjWjlaz6nvTvI
 github.com/pelletier/go-toml/v2 v2.0.6/go.mod h1:eumQOmlWiOPt5WriQQqoM5y18pDHwha2N+QD+EUNTek=
 github.com/phuhao00/broker v1.0.3 h1:Hot62wyZF2jFuau+v90InN92AjY5SN6yh5Zsw9qRvc0=
 github.com/phuhao00/broker v1.0.3/go.mod h1:z+GV1z22BjkjvGR6cxNIiVY79aPrLn0QLuwTZ2CmPOU=
-github.com/phuhao00/fuse v0.0.0-20221023132614-55adabc57988 h1:xF1Y06zwnuSdtV9NHvLhYeD74ymY9ON0s+AptiHRKGo=
-github.com/phuhao00/fuse v0.0.0-20221023132614-55adabc57988/go.mod h1:n9S5g5roOD0PLKaqJIVGQltv25ryYIPjlMnWgEVVXpo=
-github.com/phuhao00/greatestworks-proto v1.0.5 h1:aQ45b8NcqhIaPgHfbh2PQmwEP1uCU3cH669V6VTWlxQ=
-github.com/phuhao00/greatestworks-proto v1.0.5/go.mod h1:GTKTNZwdOHyg/Ts298VPWdLT+ieS+qrJcadZPh/0giY=
+github.com/phuhao00/greatestworks-proto v1.0.9 h1:+ChftSxsGv6FZdfM9VshIle2AFhj9XRGPvdOrljqgLc=
+github.com/phuhao00/greatestworks-proto v1.0.9/go.mod h1:GTKTNZwdOHyg/Ts298VPWdLT+ieS+qrJcadZPh/0giY=
 github.com/phuhao00/network v1.0.4 h1:OWiNXr3qTojwRZVVfWwy9xn1xsBVftQ758lKYJe8Nfk=
 github.com/phuhao00/network v1.0.4/go.mod h1:CqNfpNisnjjcNUVBIoG04ipSqr0WN647/chPs0YWhf0=
 github.com/phuhao00/spoor v1.0.2 h1:96g8ULF93KCQxWDPCu1yljjWSUGr0jI1HTgIpw1EqCs=
