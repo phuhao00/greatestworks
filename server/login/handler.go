@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	loginpb "github.com/phuhao00/greatestworks-proto/login"
 	"greatestworks/aop/fn"
-	"greatestworks/internal/rediskey"
+	"greatestworks/internal/note/rediskey"
 	"greatestworks/server/login/config"
 	"net/http"
 	"strings"

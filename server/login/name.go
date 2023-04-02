@@ -1,5 +1,7 @@
 package main
 
-import "greatestworks/internal/module/name"
+import (
+	"greatestworks/internal/communicate/name"
+)
 
 var NameSystem *name.System

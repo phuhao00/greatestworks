@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/phuhao00/greatestworks-proto/messageId"
 	"google.golang.org/protobuf/proto"
-	"greatestworks/internal/module/player"
+	"greatestworks/internal/communicate/player"
 )
 
 func (w *World) BroadcastMsg(ids []uint64, msgId messageId.MessageId, msg proto.Message) {

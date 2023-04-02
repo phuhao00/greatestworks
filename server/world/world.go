@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/phuhao00/greatestworks-proto/messageId"
 	"greatestworks/aop/logger"
-	"greatestworks/internal/module/chat"
-	"greatestworks/internal/module/family"
-	"greatestworks/internal/module/player"
+	"greatestworks/internal/communicate/chat"
+	"greatestworks/internal/communicate/family"
+	"greatestworks/internal/communicate/player"
 	"os"
 	"syscall"
 

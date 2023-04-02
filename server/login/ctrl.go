@@ -8,7 +8,7 @@ import (
 	nsqpb "github.com/phuhao00/greatestworks-proto/nsq"
 	"google.golang.org/protobuf/proto"
 	"greatestworks/aop/nsq"
-	"greatestworks/internal/rediskey"
+	rediskey2 "greatestworks/internal/note/rediskey"
 	"greatestworks/server/login/config"
 	"runtime"
 	"strconv"
@@ -101,7 +101,7 @@ func checkInCd(account string) bool {
 }
 
 func checkBanUser(userid uint64) bool {
-	banKey := rediskey.MakeBanUserKey(userid)
+	banKey := rediskey2.MakeBanUserKey(userid)
 	ret := redisCluster.Get(context.TODO(), banKey)
 	banUserID, err := ret.Uint64()
 	if err != nil {
@@ -121,12 +121,12 @@ func recommendGatewayForPlayer(zoneId int, userid uint64, inner bool, clientIP, 
 	if zoneId > 0 && GetZoneManager().getGateWay(zoneId) == nil {
 		return false, 0, "", 0
 	}
-	key := rediskey.MakeAccountKey(int64(userid))
+	key := rediskey2.MakeAccountKey(int64(userid))
 	prevZoneId, zErr := redisCluster.HGet(context.TODO(), key, "ZoneId").Int()
 	if zErr != nil {
 		prevZoneId = 0
 	}
-	if prevZoneId > 0 && zoneId > 0 && prevZoneId != zoneId && rediskey.CheckLive(redisCluster, userid) {
+	if prevZoneId > 0 && zoneId > 0 && prevZoneId != zoneId && rediskey2.CheckLive(redisCluster, userid) {
 		kickOutInfo := &loginpb.KickOutPlayer{UserID: userid, KickOutReason: loginpb.KickOutReason_RemoteLogin, Reason: "remote login"}
 		data, mErr := proto.Marshal(kickOutInfo)
 		if mErr == nil {
@@ -134,7 +134,7 @@ func recommendGatewayForPlayer(zoneId int, userid uint64, inner bool, clientIP, 
 		} else {
 		}
 
-		for sleepTimes := 1; prevZoneId > 0 && prevZoneId != zoneId && sleepTimes < 6 && rediskey.CheckLive(redisCluster, userid); sleepTimes++ {
+		for sleepTimes := 1; prevZoneId > 0 && prevZoneId != zoneId && sleepTimes < 6 && rediskey2.CheckLive(redisCluster, userid); sleepTimes++ {
 			time.Sleep(2 * time.Second)
 			prevZoneId, zErr = redisCluster.HGet(context.TODO(), key, "ZoneId").Int()
 			if zErr != nil {
@@ -152,7 +152,7 @@ func recommendGatewayForPlayer(zoneId int, userid uint64, inner bool, clientIP, 
 	var err error
 	var exist bool
 	if ret.Val() != "" {
-		srvID := rediskey.FetchServiceID("gateway-tcp", ret.Val())
+		srvID := rediskey2.FetchServiceID("gateway-tcp", ret.Val())
 		gatewayEndpoint, exist = GetZoneManager().IsExistGateway(zoneId, srvID)
 		if !exist {
 			gatewayEndpoint, err = GetZoneManager().RecommendGateway(zoneId)
