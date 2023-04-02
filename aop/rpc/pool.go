@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var nowFunc = time.Now // for testing
+var nowFn = time.Now // for testing
 
 var ErrPoolExhausted = errors.New("rpc: connection pool exhausted")
 
@@ -171,7 +171,7 @@ func (p *Pool) get(ctx interface {
 	// Prune stale connections at the back of the idle list.
 	if p.IdleTimeout > 0 {
 		n := p.idle.count
-		for i := 0; i < n && p.idle.back != nil && p.idle.back.t.Add(p.IdleTimeout).Before(nowFunc()); i++ {
+		for i := 0; i < n && p.idle.back != nil && p.idle.back.t.Add(p.IdleTimeout).Before(nowFn()); i++ {
 			pc := p.idle.back
 			p.idle.popBack()
 			p.mu.Unlock()
@@ -186,7 +186,7 @@ func (p *Pool) get(ctx interface {
 		pc := p.idle.front
 		p.idle.popFront()
 		p.mu.Unlock()
-		if p.MaxConnLifetime == 0 || nowFunc().Sub(pc.created) < p.MaxConnLifetime {
+		if p.MaxConnLifetime == 0 || nowFn().Sub(pc.created) < p.MaxConnLifetime {
 			return pc, nil
 		}
 		pc.c.Close()
@@ -218,13 +218,13 @@ func (p *Pool) get(ctx interface {
 		}
 		p.mu.Unlock()
 	}
-	return &poolClient{c: c, created: nowFunc()}, err
+	return &poolClient{c: c, created: nowFn()}, err
 }
 
 func (p *Pool) put(pc *poolClient, forceClose bool) error {
 	p.mu.Lock()
 	if !p.closed && !forceClose {
-		pc.t = nowFunc()
+		pc.t = nowFn()
 		p.idle.pushFront(pc)
 		if p.idle.count > p.MaxIdle {
 			pc = p.idle.back

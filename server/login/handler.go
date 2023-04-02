@@ -41,13 +41,13 @@ func returnHandler(w http.ResponseWriter, r *http.Request, data interface{}) {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	loginInfo := &loginpb.LoginData{Result: config.Succ}
+	defer returnHandler(w, r, loginInfo)
 	loginInfo.ServerTime = time.Now().Unix()
 	loginInfo.RegRegTimeStart = config.StartPreRegisterTime
 	loginInfo.RegRegTimeEnd = config.EndPreRegisterTime
 	loginInfo.ServerOpenTime = config.ServerOpenTime
 	loginInfo.IsIpInWhiteList = gm.IsIpInWhiteList(fn.ClientIP(r))
 	loginInfo.ShuShuGameID = ""
-	defer returnHandler(w, r, loginInfo)
 	if r.Body == nil {
 		loginInfo.Result = config.UnknownErr
 		return

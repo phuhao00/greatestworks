@@ -219,8 +219,8 @@ github.com/phuhao00/greatestworks-proto v1.0.9 h1:+ChftSxsGv6FZdfM9VshIle2AFhj9X
 github.com/phuhao00/greatestworks-proto v1.0.9/go.mod h1:GTKTNZwdOHyg/Ts298VPWdLT+ieS+qrJcadZPh/0giY=
 github.com/phuhao00/network v1.0.4 h1:OWiNXr3qTojwRZVVfWwy9xn1xsBVftQ758lKYJe8Nfk=
 github.com/phuhao00/network v1.0.4/go.mod h1:CqNfpNisnjjcNUVBIoG04ipSqr0WN647/chPs0YWhf0=
-github.com/phuhao00/spoor v1.0.2 h1:96g8ULF93KCQxWDPCu1yljjWSUGr0jI1HTgIpw1EqCs=
-github.com/phuhao00/spoor v1.0.2/go.mod h1:ngHgUs5EWhgqiyJW+aMMLH1ipNBP4uQNjX1DlBQukek=
+github.com/phuhao00/spoor v1.0.5 h1:CSGl3LDh849Q7YSX4k7IPvsBe0xQMvvMwFnEMc7kMmE=
+github.com/phuhao00/spoor v1.0.5/go.mod h1:ngHgUs5EWhgqiyJW+aMMLH1ipNBP4uQNjX1DlBQukek=
 github.com/phuhao00/sugar v1.0.1 h1:b42TQychB4Tfcor9/j/AfEmE9sqk5tMT5Z5CONtO+Ik=
 github.com/phuhao00/sugar v1.0.1/go.mod h1:9D1zN1owEzhGv6+z6x+TKifpPSLcdp5OB8QjcR9P858=
 github.com/pjbgf/sha1cd v0.2.3 h1:uKQP/7QOzNtKYH7UTohZLcjF5/55EnTw0jO/Ru4jZwI=

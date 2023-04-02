@@ -29,7 +29,7 @@ require (
 	github.com/phuhao00/broker v1.0.3
 	github.com/phuhao00/greatestworks-proto v1.0.9
 	github.com/phuhao00/network v1.0.4
-	github.com/phuhao00/spoor v1.0.2
+	github.com/phuhao00/spoor v1.0.5
 	github.com/phuhao00/sugar v1.0.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/robfig/cron/v3 v3.0.1

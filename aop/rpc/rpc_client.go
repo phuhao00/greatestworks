@@ -4,13 +4,13 @@ import (
 	"net/rpc"
 )
 
-type RpcClient struct {
+type Client struct {
 	pool *Pool
 	Addr string
 }
 
-func NewRpcClient(addr string) *RpcClient {
-	rpcClient := &RpcClient{
+func NewRpcClient(addr string) *Client {
+	rpcClient := &Client{
 		pool: &Pool{
 			MaxIdle:         1,
 			IdleTimeout:     0,
@@ -22,8 +22,7 @@ func NewRpcClient(addr string) *RpcClient {
 	return rpcClient
 }
 
-// Call 远程调用
-func (c *RpcClient) Call(method string, args interface{}, reply interface{}) error {
+func (c *Client) Call(method string, args interface{}, reply interface{}) error {
 	rpcClient, err := c.pool.Get()
 	if err != nil {
 		return err

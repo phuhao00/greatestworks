@@ -2,6 +2,7 @@ package main
 
 import (
 	"greatestworks/aop/consul"
+	"greatestworks/aop/logger"
 	"greatestworks/server/login/config"
 )
 
@@ -13,7 +14,7 @@ func main() {
 	}
 	cfg := &config.Config{}
 	consul.LoadJSONFromConsulKV(consul.GetConsulConfigName(), cfg)
-	//todo set log
+	logger.SetLogging(&logger.LoggingSetting{})
 	//init mongo
 	config.QueryToGateWayRatio = cfg.Me.QueryGateWayRatio
 	//todo name mod init

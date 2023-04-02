@@ -20,7 +20,7 @@ type LoggingSetting struct {
 	WriterOption spoor.Option
 }
 
-func SetLogging(setting LoggingSetting) {
+func SetLogging(setting *LoggingSetting) {
 	onceInitLogger.Do(func() {
 		var opt spoor.Option
 		if setting.WriterOption == nil {
