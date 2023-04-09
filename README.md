@@ -25,7 +25,7 @@
 * `server`
   - 各个节点服务,include login ,gateway ,world,battle
 * `internal`
-  - include module,event,record 
+  - include automation,event,record,communicate,note,purchase,gameplay 
 * `gre`
   - 运维，部署，工具(createmodule;exel2json)等
 
