@@ -2,7 +2,9 @@ package card
 
 import (
 	"errors"
+	"fmt"
 	"github.com/phuhao00/greatestworks-proto/messageId"
+	"github.com/phuhao00/greatestworks-proto/purchase"
 	"github.com/phuhao00/network"
 	"google.golang.org/protobuf/proto"
 	"sync"
@@ -45,43 +47,22 @@ func init() {
 
 func HandlerCardRegister() {
 	handlers[0] = &Handler{
-		messageId.MessageId_CSCardBuy,
-		Buy,
+		messageId.MessageId_CSCardAction,
+		Action,
 	}
-	handlers[1] = &Handler{
-		messageId.MessageId_CSCardRenew,
-		Renew,
-	}
-	handlers[1] = &Handler{
-		messageId.MessageId_CSCardDailyReceive,
-		Receive,
-	}
-
 }
 
-// Buy 购买
-func Buy(s *Data, packet *network.Message) {
-	var req proto.Message
+// Action  ...
+func Action(s *Data, packet *network.Message) {
+	var req *purchase.CSCardAction
+	var rsp = &purchase.SCCardAction{
+		CardId: req.CardId,
+		Action: req.Action,
+	}
 	err := proto.Unmarshal(packet.Data, req)
 	if err != nil {
 		return
 	}
-}
-
-// Renew   续费
-func Renew(s *Data, packet *network.Message) {
-	var req proto.Message
-	err := proto.Unmarshal(packet.Data, req)
-	if err != nil {
-		return
-	}
-}
-
-// Receive 领取每日奖励
-func Receive(s *Data, packet *network.Message) {
-	var req proto.Message
-	err := proto.Unmarshal(packet.Data, req)
-	if err != nil {
-		return
-	}
+	s.Execute(getCardCategory(req.CardId), req.Action)
+	fmt.Println(rsp)
 }

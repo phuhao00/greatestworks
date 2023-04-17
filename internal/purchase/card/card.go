@@ -14,8 +14,9 @@ type Data struct {
 type Category uint8
 
 const (
-	Weekly  Category = 1
-	Monthly Category = 2
+	NotDefine Category = 0
+	Weekly    Category = 1
+	Monthly   Category = 2
 )
 
 func (c Category) GetAddExpireTime() int64 {
