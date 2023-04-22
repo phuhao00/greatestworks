@@ -49,7 +49,7 @@ func HandlerPetRegister() {
 	}
 	handlers[2] = &Handler{
 		0,
-		UpdatePet,
+		UpgradePet,
 	}
 	handlers[3] = &Handler{
 		0,
@@ -57,7 +57,7 @@ func HandlerPetRegister() {
 	}
 	handlers[4] = &Handler{
 		0,
-		UpdatePictorial,
+		UpgradePictorial,
 	}
 	handlers[5] = &Handler{
 		0,
@@ -73,7 +73,7 @@ func DelPet(player Player, message *network.Message) {
 
 }
 
-func UpdatePet(player Player, message *network.Message) {
+func UpgradePet(player Player, message *network.Message) {
 	//todo  升级，升星（进化），合成，成长等级，设置状态
 
 }
@@ -82,8 +82,8 @@ func GetPetInfo(player Player, message *network.Message) {
 	//todo  单个获取，批量获取
 }
 
-// UpdatePictorial 更新图鉴
-func UpdatePictorial(player Player, message *network.Message) {
+// UpgradePictorial 更新图鉴
+func UpgradePictorial(player Player, message *network.Message) {
 
 }
 
