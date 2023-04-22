@@ -63,6 +63,9 @@ func Action(s *Data, packet *network.Message) {
 	if err != nil {
 		return
 	}
-	s.Execute(getCardCategory(req.CardId), req.Action)
+	err = s.Execute(Category(req.CardId), req.Action)
+	if err != nil {
+
+	}
 	fmt.Println(rsp)
 }

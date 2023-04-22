@@ -2,6 +2,7 @@ package card
 
 import (
 	"errors"
+	"fmt"
 	"github.com/phuhao00/greatestworks-proto/purchase"
 	"greatestworks/aop/fn"
 	"time"
@@ -46,55 +47,74 @@ func (d *Data) Execute(category Category, action purchase.CardAction) error {
 	card := d.Cards[category]
 	switch action {
 	case purchase.CardAction_DailyReceived:
-		card.DailyReceive()
+		return card.DailyReceive()
 	case purchase.CardAction_Renew:
-		card.Renew()
+		return card.Renew()
 	case purchase.CardAction_Buy:
-		return card.Buy()
+		return card.buy()
 	default:
 		return errors.New("action not exist")
 	}
-	return nil
 }
 
 func (c *Card) checkIsSameDay() bool {
 	return fn.IsSameDay(c.LastReceivedTime, time.Now().Unix())
 }
 
+// checkIsExpired check card is expired
 func (c *Card) checkIsExpired() bool {
-	return false
+	return time.Now().Unix() > c.ExpireTime
 }
 
+// DailyReceive  daily received reward
 func (c *Card) DailyReceive() error {
-	//todo check
-	if c.checkIsSameDay() && c.checkIsExpired() {
-
+	hadReceived := fn.IsSameDay(c.LastReceivedTime, time.Now().Unix())
+	if hadReceived || c.checkIsExpired() {
+		return errors.New("today had received")
 	}
-	//
 	c.LastReceivedTime = time.Now().Unix()
 
-	//todo
+	//give daily  reward
+	cardConf := getCardConf(c.Category)
+	fmt.Println(cardConf.DailyReward)
 	return nil
 }
 
 func (c *Card) Renew() error {
-	///todo 是否可以续费的检查
+	if !c.checkCanRenew() {
+		return errors.New("can not renew ")
+	}
 	c.BuyTime = time.Now().Unix()
 	c.ExpireTime = c.ExpireTime + c.Category.GetAddExpireTime()
 	return nil
 
 }
 
+// checkCanRenew check can renew
 func (c *Card) checkCanRenew() bool {
 	if c.CanReceivedTimes != 0 {
+		return false
+	}
+	cardConf := getCardConf(c.Category)
+	RenewInterval := int64(cardConf.RenewInterval * 24 * 60 * 60)
+	if c.ExpireTime-fn.GetTimeStampDay0Time(time.Now().Unix()) > RenewInterval {
 		return false
 	}
 	return true
 }
 
-func (c *Card) Buy() error {
+// buy ...
+func (c *Card) buy() error {
 	///todo 是否可以购买的检查
 	c.BuyTime = time.Now().Unix()
 	c.ExpireTime = time.Now().Unix() + c.Category.GetAddExpireTime()
 	return nil
+}
+
+// checkCanBuy  check can buy
+func (c *Card) checkCanBuy() bool {
+	if c.CanReceivedTimes != 0 || time.Now().Unix() < c.ExpireTime {
+		return false
+	}
+	return true
 }
