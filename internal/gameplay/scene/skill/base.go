@@ -9,5 +9,5 @@ type Base struct {
 	Desc   string
 	Cd     int64
 	Damage int64
-	Buffs  []buff.Abstract
+	Buffs  []buff.IBuff
 }

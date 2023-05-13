@@ -5,7 +5,7 @@ import (
 	"greatestworks/internal/gameplay/scene/actor"
 )
 
-type Abstract interface {
+type IScene interface {
 	OnCreate()
 	Run()
 	OnDestroy()
@@ -26,6 +26,6 @@ type Action interface {
 }
 
 type FightScene interface {
-	Abstract
+	IScene
 	Action
 }

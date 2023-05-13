@@ -1,6 +1,6 @@
 package buff
 
-type Abstract interface {
+type IBuff interface {
 	OnStart()
 	OnEnd()
 }
