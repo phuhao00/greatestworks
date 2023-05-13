@@ -16,3 +16,7 @@ func (b *Base) SetStatus(status task.Status) {
 func (b *Base) OnEvent(event event2.IEvent) {
 
 }
+
+func (b *Base) GetTaskData() task.ITaskData {
+	return nil
+}
