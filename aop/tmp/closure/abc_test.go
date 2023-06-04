@@ -15,3 +15,13 @@ func TestNN(t *testing.T) {
 	}
 
 }
+
+func TestNN1(t *testing.T) {
+	var prints []func()
+	for _, v := range []int{1, 2, 3} {
+		prints = append(prints, func() { fmt.Println(v) })
+	}
+	for _, print := range prints {
+		print()
+	}
+}
