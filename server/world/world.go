@@ -23,7 +23,7 @@ type World struct {
 
 func NewWorld() *World {
 	m := &World{pm: player.NewPlayerMgr()}
-	m.Server = network.NewServer(":8023", 100, 200, logger.Logger)
+	m.Server = network.NewServer(":8023", 100, 200, logger.GetLogger())
 	m.Server.MessageHandler = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
 	return m
@@ -42,14 +42,14 @@ func (w *World) OnSessionPacket(packet *network.Packet) {
 }
 
 func (w *World) OnSystemSignal(signal os.Signal) bool {
-	logger.Logger.DebugF("[World] 收到信号 %v \n", signal)
+	logger.DebugF("[World] 收到信号 %v \n", signal)
 	tag := true
 	switch signal {
 	case syscall.SIGHUP:
 		//todo
 	case syscall.SIGPIPE:
 	default:
-		logger.Logger.DebugF("[World] 收到信号准备退出...")
+		logger.DebugF("[World] 收到信号准备退出...")
 		tag = false
 
 	}

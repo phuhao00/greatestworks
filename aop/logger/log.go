@@ -13,6 +13,10 @@ var (
 	onceInitLogger sync.Once
 )
 
+func GetLogger() *spoor.Spoor {
+	return sp
+}
+
 type LoggingSetting struct {
 	Dir          string
 	Level        int
