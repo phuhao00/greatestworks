@@ -27,6 +27,7 @@ require (
 	github.com/looplab/fsm v1.0.1
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/phuhao00/broker v1.0.3
+	github.com/phuhao00/fuse v0.0.0-20221023132614-55adabc57988
 	github.com/phuhao00/greatestworks-proto v1.2.6
 	github.com/phuhao00/network v1.0.4
 	github.com/phuhao00/spoor v1.0.5
