@@ -8,6 +8,6 @@ import (
 func main() {
 	Oasis = NewWorld()
 	go Oasis.Start()
-	logger.Logger.InfoF("server start !!")
+	logger.InfoF("server start !!")
 	sugar.WaitSignal(Oasis.OnSystemSignal)
 }
