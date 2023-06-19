@@ -2,18 +2,19 @@ package task
 
 import (
 	"greatestworks/internal/gameplay/task"
-	event2 "greatestworks/internal/note/event"
+	"greatestworks/internal/note/event"
 )
 
 type Base struct {
 	Id       uint64
 	ConfigId uint32
+	Targets  []task.Target
 }
 
 func (b *Base) SetStatus(status task.Status) {
 }
 
-func (b *Base) OnEvent(event event2.IEvent) {
+func (b *Base) OnEvent(event event.IEvent) {
 
 }
 
