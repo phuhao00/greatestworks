@@ -10,7 +10,7 @@ type ITask interface {
 	GetTaskData() ITaskData
 }
 
-// ITaskData task data  save task data eg:target data or child task data
+// ITaskData task_category_group data  save task_category_group data eg:target data or child task_category_group data
 type ITaskData interface {
 	GetProgress()
 	GetTotalProgress()

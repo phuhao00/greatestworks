@@ -49,10 +49,10 @@ func HandlerFriendRegister() {
 	}
 }
 
-// AcceptTask accept task
+// AcceptTask accept task_category_group
 func AcceptTask(player Player, packet *network.Message) {
 }
 
-// Submit submit task
+// Submit submit task_category_group
 func Submit(player Player, packet *network.Message) {
 }

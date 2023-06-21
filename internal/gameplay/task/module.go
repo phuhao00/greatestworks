@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ModuleName = "task"
+	ModuleName = "task_category_group"
 )
 
 var (
@@ -112,7 +112,7 @@ func (m *Module) Handle(param *PlayerActionParam) {
 	handler.Fn(param.Player, param.Packet)
 }
 
-// getTaskConfig get task config
+// getTaskConfig get task_category_group config
 func (m *Module) getTaskConfig(confId uint32) (ret *Config) {
 	m.configs.Range(func(key, value any) bool {
 		if val, ok := value.(*Config); ok {

@@ -1,6 +1,6 @@
 package task
 
-type Target interface {
+type ITarget interface {
 	GetProgress()
 	GetTotalProgress()
 	CheckDone()
