@@ -1,12 +1,11 @@
 package main
 
-
 func (s *Server) Start() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Server) Monitor() {
+func (s *Server) Init() {
 	//TODO implement me
 	panic("implement me")
 }
@@ -16,7 +15,7 @@ func (s *Server) Stop() {
 	panic("implement me")
 }
 
-func (s *Server) Loop() {
+func (s *Server) Reload() {
 
 	for {
 		select {
@@ -25,4 +24,3 @@ func (s *Server) Loop() {
 		}
 	}
 }
-

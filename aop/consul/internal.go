@@ -62,7 +62,7 @@ func RegisterService(svcId, svcName, svcAddr, checkAddr, runPath string, process
 
 	host, port, err := net.SplitHostPort(svcAddr)
 	if err != nil {
-		logger.Logger.ErrorF("[RegisterService] error: %v", err.Error())
+		logger.Error("[RegisterService] error: %v", err.Error())
 		return err
 	}
 	r := new(api.AgentServiceRegistration)
@@ -106,7 +106,7 @@ func RegisterServiceEx(svcID, svcName, svcAddr, checkAddr, runPath string, proce
 
 	host, port, err := net.SplitHostPort(svcAddr)
 	if err != nil {
-		logger.Logger.ErrorF("[RegisterServiceEx] error:%v ", err.Error())
+		logger.Error("[RegisterServiceEx] error:%v ", err.Error())
 		return err
 	}
 	r := new(api.AgentServiceRegistration)
@@ -150,7 +150,7 @@ func UpdateService(svcID, svcName, svcAddr, checkAddr, weight, runPath string) e
 
 	host, port, err := net.SplitHostPort(svcAddr)
 	if err != nil {
-		logger.Logger.ErrorF("[UpdateService]  error:%v", err.Error())
+		logger.Error("[UpdateService]  error:%v", err.Error())
 		return err
 	}
 	r := new(api.AgentServiceRegistration)

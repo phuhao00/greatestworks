@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ModuleName = "shop"
+	ModuleName = "shop.proto"
 )
 
 var (

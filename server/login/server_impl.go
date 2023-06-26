@@ -4,7 +4,7 @@ func (s *Server) Start() {
 
 }
 
-func (s *Server) Monitor() {
+func (s *Server) Init() {
 
 }
 
@@ -12,7 +12,7 @@ func (s *Server) Stop() {
 
 }
 
-func (s *Server) Loop() {
+func (s *Server) Reload() {
 	for {
 		select {}
 	}

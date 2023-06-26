@@ -13,7 +13,7 @@ type Server struct {
 	Timer       interface{}
 	OPenTime    int64
 	Conf        *config.Config
-	*server.BaseServer
+	*server.BaseService
 }
 
 var (
@@ -29,11 +29,11 @@ func GetServer() *Server {
 			Timer:       nil,
 			OPenTime:    0,
 			Conf:        nil,
-			BaseServer:  nil,
+			BaseService: nil,
 		}
 		serverLogin.Initialize()
 		var err error
-		serverLogin.BaseServer, err = server.NewBaseServer(serverLogin.Conf.Me.Name, "")
+		serverLogin.BaseService, err = server.NewBaseService(serverLogin.Conf.Me.Name, "")
 		if err != nil {
 			panic(fmt.Sprintf("[GetServer-initOnce] err:%v", err))
 		}

@@ -26,11 +26,11 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/looplab/fsm v1.0.1
 	github.com/nsqio/go-nsq v1.1.0
-	github.com/phuhao00/broker v1.0.3
-	github.com/phuhao00/fuse v0.0.0-20221023132614-55adabc57988
-	github.com/phuhao00/greatestworks-proto v1.2.6
-	github.com/phuhao00/network v1.0.4
-	github.com/phuhao00/spoor v1.0.5
+	github.com/phuhao00/broker v1.0.6
+	github.com/phuhao00/fuse v1.0.4
+	github.com/phuhao00/greatestworks-proto v1.4.0
+	github.com/phuhao00/network v1.0.9
+	github.com/phuhao00/spoor v1.0.8
 	github.com/phuhao00/sugar v1.0.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/robfig/cron/v3 v3.0.1
@@ -40,12 +40,12 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	github.com/xuri/excelize/v2 v2.7.0
 	github.com/yuin/gopher-lua v1.1.0
-	go.mongodb.org/mongo-driver v1.10.0
+	go.mongodb.org/mongo-driver v1.12.0
 	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.14.0
 	go.opentelemetry.io/otel/sdk v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
-	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/term v0.5.0
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
 	google.golang.org/grpc v1.53.0
@@ -98,7 +98,6 @@ require (
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pjbgf/sha1cd v0.2.3 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.5.0 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
@@ -110,8 +109,8 @@ require (
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.1 // indirect
-	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xuri/efp v0.0.0-20220603152613-6918739fd470 // indirect
 	github.com/xuri/nfp v0.0.0-20220409054826-5e722a1d9e22 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect

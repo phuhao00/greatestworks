@@ -3,7 +3,7 @@ package main
 func (s *Server) Start() {
 }
 
-func (s *Server) Loop() {
+func (s *Server) Reload() {
 	for {
 		select {
 		case data := <-s.toGateWay:
@@ -12,8 +12,10 @@ func (s *Server) Loop() {
 	}
 }
 
-func (s *Server) Monitor() {
+func (s *Server) Init(config interface{}, processId int) {
+
 }
 
 func (s *Server) Stop() {
+
 }

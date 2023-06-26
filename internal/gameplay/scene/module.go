@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ModuleName = "scene"
+	ModuleName = "scene.proto"
 )
 
 var (

@@ -8,12 +8,12 @@ func (s *Server) Start() {
 	panic("implement me")
 }
 
-func (s *Server) Loop() {
+func (s *Server) Reload() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Server) Monitor() {
+func (s *Server) Init() {
 	//TODO implement me
 	panic("implement me")
 }

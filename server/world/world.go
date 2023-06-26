@@ -42,14 +42,14 @@ func (w *World) OnSessionPacket(packet *network.Packet) {
 }
 
 func (w *World) OnSystemSignal(signal os.Signal) bool {
-	logger.DebugF("[World] 收到信号 %v \n", signal)
+	logger.Debug("[World] 收到信号 %v \n", signal)
 	tag := true
 	switch signal {
 	case syscall.SIGHUP:
 		//todo
 	case syscall.SIGPIPE:
 	default:
-		logger.DebugF("[World] 收到信号准备退出...")
+		logger.Debug("[World] 收到信号准备退出...")
 		tag = false
 
 	}

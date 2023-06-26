@@ -31,7 +31,7 @@ func GetMod() *Module {
 	return Mod
 }
 
-func (m *Module) Loop() {
+func (m *Module) Reload() {
 	for {
 		select {
 		case msg := <-m.ChOut:
@@ -40,7 +40,7 @@ func (m *Module) Loop() {
 	}
 }
 
-func (m *Module) Monitor() {
+func (m *Module) Init() {
 	for {
 		select {
 		case param := <-m.ChIn:

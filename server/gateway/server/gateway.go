@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"greatestworks/server/gateway/client"
@@ -7,7 +7,7 @@ import (
 )
 
 type Gateway struct {
-	clientServer client.Server
+	clientServer client.Session
 	serverServer Server
 	Metrics      *MetricInfo
 	Config       config.Config

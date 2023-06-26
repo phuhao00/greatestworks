@@ -22,26 +22,26 @@ func (srv *Server) Init(addr string) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", srv.Addr)
 
 	if err != nil {
-		logger.ErrorF("[net] addr resolve error", tcpAddr, err)
+		logger.Error("[net] addr resolve error", tcpAddr, err)
 		return
 	}
 
 	ln, err := net.ListenTCP("tcp", tcpAddr)
 
 	if err != nil {
-		logger.ErrorF("%v", err)
+		logger.Error("%v", err)
 		return
 	}
 
 	srv.ln = ln
-	logger.InfoF("RpcServer Listen %s", srv.ln.Addr().String())
+	logger.Info("RpcServer Listen %s", srv.ln.Addr().String())
 }
 
 func (srv *Server) Run() {
 	// 捕获异常
 	defer func() {
 		if err := recover(); err != nil {
-			logger.ErrorF("[net] panic", err, "\n", string(debug.Stack()))
+			logger.Error("[net] panic", err, "\n", string(debug.Stack()))
 		}
 	}()
 
@@ -62,7 +62,7 @@ func (srv *Server) Run() {
 				if max := 1 * time.Second; tempDelay > max {
 					tempDelay = max
 				}
-				logger.InfoF("accept error: %v; retrying in %v", err, tempDelay)
+				logger.Info("accept error: %v; retrying in %v", err, tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -84,7 +84,7 @@ func (srv *Server) Run() {
 
 		go rpc.ServeConn(conn)
 
-		logger.DebugF("accept a rpc conn")
+		logger.Debug("accept a rpc conn")
 	}
 }
 

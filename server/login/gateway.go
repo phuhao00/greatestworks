@@ -95,7 +95,7 @@ func (l *GateWay) clearInvalid(services []*api.ServiceEntry) (zoneId int, isEmpt
 
 func (l *GateWay) update(ep *config.EndPoint) {
 	if l == nil || ep.ZoneId != l.ZoneId {
-		logger.ErrorF("GatewayList's zoneManager id error.")
+		logger.Error("GatewayList's zoneManager id error.")
 		return
 	}
 	needUp := false

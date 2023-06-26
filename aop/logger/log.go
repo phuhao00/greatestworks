@@ -38,29 +38,36 @@ func SetLogging(setting *LoggingSetting) {
 	})
 }
 
-// DebugF Log line format: [IWEF]mmdd hh:mm:sLogger.uuuuuu threadid file:line] msg
-func DebugF(f string, args ...interface{}) {
+// Debug Log line format: [IWEF]mmdd hh:mm:sLogger.uuuuuu threadid file:line] msg
+func Debug(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.DEBUG) {
 		return
 	}
 	sp.Output(2, fmt.Sprintf(spoor.DEBUG.String()+" "+f, args...))
 }
 
-func ErrorF(f string, args ...interface{}) {
+func Error(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.ERROR) {
 		return
 	}
 	sp.Output(2, fmt.Sprintf(spoor.ERROR.String()+" "+f, args...))
 }
 
-func InfoF(f string, args ...interface{}) {
+func Info(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.INFO) {
 		return
 	}
 	sp.Output(2, fmt.Sprintf(spoor.INFO.String()+" "+f, args...))
 }
 
-func FatalF(f string, args ...interface{}) {
+func Warn(f string, args ...interface{}) {
+	if sp.CheckLevel(spoor.WARN) {
+		return
+	}
+	sp.Output(2, fmt.Sprintf(spoor.WARN.String()+" "+f, args...))
+}
+
+func Fatal(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.FATAL) {
 		return
 	}

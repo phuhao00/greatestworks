@@ -1,11 +1,11 @@
 package main
 
-func (w *World) Loop() {
+func (w *World) Reload() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (w *World) Monitor() {
+func (w *World) Init() {
 	//TODO implement me
 	panic("implement me")
 }

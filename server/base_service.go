@@ -9,6 +9,7 @@ import (
 	"greatestworks/aop/colors"
 	"greatestworks/aop/envelope/conn"
 	"greatestworks/aop/files"
+	"greatestworks/aop/logger"
 	"greatestworks/aop/logging"
 	"greatestworks/aop/logtype"
 	imetrics "greatestworks/aop/metrics"
@@ -23,23 +24,26 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+	"runtime/debug"
 	"sync"
 	"syscall"
 	"time"
 )
 
-type BaseServer struct {
+type BaseService struct {
 	Id             string
+	Name           string
+	DeploymentId   string
 	submissionTime time.Time
 	statsProcessor *imetrics.StatsProcessor // tracks and computes stats to be rendered on the /statusz page.
 	traceSaver     func(spans *protos.Spans) error
-	Name           string
-	DeploymentId   string
 	Ctx            context.Context
 	mu             sync.Mutex
+	Inherit        IService
 }
 
-func NewBaseServer(Name, DeploymentId string) (*BaseServer, error) {
+func NewBaseService(Name, DeploymentId string) (*BaseService, error) {
 	ctx := context.Background()
 	traceDB, err := perfetto.Open(ctx)
 	if err != nil {
@@ -52,7 +56,7 @@ func NewBaseServer(Name, DeploymentId string) (*BaseServer, error) {
 		}
 		return traceDB.Store(ctx, Name, DeploymentId, traces)
 	}
-	bs := &BaseServer{
+	bs := &BaseService{
 		Ctx:            ctx,
 		submissionTime: time.Now(),
 		statsProcessor: imetrics.NewStatsProcessor(),
@@ -71,7 +75,7 @@ type stub struct {
 }
 
 // serveStatus runs and registers the weaver-single status server.
-func (e *BaseServer) serverStatus(ctx context.Context) error {
+func (e *BaseService) serverStatus(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.Handle("/debug/pprof/", http.DefaultServeMux)
 	status.RegisterServer(mux, e, e.SystemLogger())
@@ -129,7 +133,7 @@ func (e *BaseServer) serverStatus(ctx context.Context) error {
 }
 
 // Status implements the status.Server interface.
-func (e *BaseServer) Status(ctx context.Context) (*status.Status, error) {
+func (e *BaseService) Status(ctx context.Context) (*status.Status, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	pid := int64(os.Getpid())
@@ -179,7 +183,7 @@ func (e *BaseServer) Status(ctx context.Context) (*status.Status, error) {
 }
 
 // Metrics implements the status.Server interface.
-func (e *BaseServer) Metrics(context.Context) (*status.Metrics, error) {
+func (e *BaseService) Metrics(context.Context) (*status.Metrics, error) {
 	m := &status.Metrics{}
 	for _, snap := range imetrics.Snapshot() {
 		proto := snap.ToProto()
@@ -195,7 +199,7 @@ func (e *BaseServer) Metrics(context.Context) (*status.Metrics, error) {
 }
 
 // Profile implements the status.Server interface.
-func (e *BaseServer) Profile(_ context.Context, req *protos.RunProfiling) (*protos.Profile, error) {
+func (e *BaseService) Profile(_ context.Context, req *protos.RunProfiling) (*protos.Profile, error) {
 	data, err := conn.Profile(req)
 	profile := &protos.Profile{
 		AppName:   e.Name,
@@ -208,18 +212,18 @@ func (e *BaseServer) Profile(_ context.Context, req *protos.RunProfiling) (*prot
 	return profile, nil
 }
 
-func (e *BaseServer) CreateLogSaver(_ context.Context, component string) func(entry *protos.LogEntry) {
+func (e *BaseService) CreateLogSaver(_ context.Context, component string) func(entry *protos.LogEntry) {
 	pp := logging.NewPrettyPrinter(colors.Enabled())
 	return func(entry *protos.LogEntry) {
 		fmt.Fprintln(os.Stderr, pp.Format(entry))
 	}
 }
 
-func (e *BaseServer) CreateTraceExporter() (sdktrace.SpanExporter, error) {
+func (e *BaseService) CreateTraceExporter() (sdktrace.SpanExporter, error) {
 	return traceio.NewWriter(e.traceSaver), nil
 }
 
-func (e *BaseServer) SystemLogger() logtype.Logger {
+func (e *BaseService) SystemLogger() logtype.Logger {
 	return newAttrLogger(e.Name, e.DeploymentId, e.CreateLogSaver(e.Ctx, e.Name))
 }
 
@@ -237,14 +241,46 @@ func serveHTTP(ctx context.Context, lis net.Listener, handler http.Handler) erro
 	}
 }
 
-func (s *BaseServer) Start() {
+func (s *BaseService) Start() {
+
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("[Start] ", err, "\n", string(debug.Stack()))
+		}
+	}()
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	logger.Debug("CUP启用数量:", runtime.NumCPU())
+
+	s.Inherit.Start()
+
+	ch := make(chan os.Signal, 1)
+
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGTERM, syscall.SIGPIPE)
+
+	for sig := range ch {
+		logger.Info("[Start] 进程收到信号 %s", sig)
+		switch sig {
+		case syscall.SIGHUP:
+			s.Inherit.Reload()
+		case syscall.SIGPIPE:
+		default:
+			logger.Info("[Start] 进程收到信号准备退出...")
+			close(ch)
+			break
+		}
+	}
+
+	logger.Info("[Start] 进程退出前执行最后的操作...")
+
+	s.Inherit.Stop()
 }
 
-func (s *BaseServer) Loop() {
+func (s *BaseService) Reload() {
 }
 
-func (s *BaseServer) Monitor() {
+func (s *BaseService) Init(config interface{}, processId int) {
 }
 
-func (s *BaseServer) Stop() {
+func (s *BaseService) Stop() {
 }

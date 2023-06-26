@@ -9,7 +9,7 @@ type Config struct {
 	Pet        string `yaml:"pet"`
 	Npc        string `yaml:"npc"`
 	Plant      string `yaml:"plant"`
-	Shop       string `yaml:"shop"`
+	Shop       string `yaml:"shop.proto"`
 	Task       string `yaml:"task"`
 	Skill      string `yaml:"skill"`
 	Vip        string `yaml:"vipevent"`

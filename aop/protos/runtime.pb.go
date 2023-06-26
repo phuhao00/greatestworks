@@ -2580,7 +2580,7 @@ type LogEntry struct {
 	Node       string `protobuf:"bytes,4,opt,name=node,proto3" json:"node,omitempty"`                                 // weavelet id (e.g., uuid.New().String())
 	TimeMicros int64  `protobuf:"fixed64,5,opt,name=time_micros,json=timeMicros,proto3" json:"time_micros,omitempty"` // time when logged (microseconds since epoch)
 	Level      string `protobuf:"bytes,6,opt,name=level,proto3" json:"level,omitempty"`                               // log level (e.g., debug, info, warn, error, fatal)
-	File       string `protobuf:"bytes,7,opt,name=file,proto3" json:"file,omitempty"`                                 // source file (e.g., // /tmp/serviceweaver/server.go)
+	File       string `protobuf:"bytes,7,opt,name=file,proto3" json:"file,omitempty"`                                 // source file (e.g., // /tmp/serviceweaver/tcp_server.go)
 	Line       int32  `protobuf:"varint,8,opt,name=line,proto3" json:"line,omitempty"`                                // source line // (e.g., 80)
 	Msg        string `protobuf:"bytes,9,opt,name=msg,proto3" json:"msg,omitempty"`                                   // user provided msg (e.g., "Hello!")
 	// User-provided attributes and their associated values. The storage format

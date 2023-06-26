@@ -24,5 +24,5 @@ func main() {
 	//todo token load
 
 	server := GetServer()
-	server.Loop()
+	server.Reload()
 }

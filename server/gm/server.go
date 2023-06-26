@@ -6,7 +6,7 @@ import (
 )
 
 type Server struct {
-	*server.BaseServer
+	*server.BaseService
 	//todo gateway client
 	toGateWay chan proto.Message
 	//todo  mysql client 维护gm 账户
