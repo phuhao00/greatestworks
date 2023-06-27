@@ -51,18 +51,15 @@ func (b *Base) NotifyPlayer(playerId uint64, message proto.Message) {
 }
 
 func (b *Base) OnCreate() {
-	//TODO implement me
-	panic("implement me")
+
 }
 
 func (b *Base) Run() {
-	//TODO implement me
-	panic("implement me")
+
 }
 
 func (b *Base) OnDestroy() {
-	//TODO implement me
-	panic("implement me")
+
 }
 
 func (b *Base) loop() {
