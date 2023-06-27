@@ -7,6 +7,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/player"
 	"github.com/phuhao00/network"
 	"google.golang.org/protobuf/proto"
+	"greatestworks/aop/module_router"
 	"sync"
 )
 
@@ -21,6 +22,10 @@ var (
 	MinMessageId messageId.MessageId
 	MaxMessageId messageId.MessageId
 )
+
+func RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(0, 0, nil)
+}
 
 func init() {
 	onceInit.Do(func() {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/phuhao00/greatestworks-proto/messageId"
 	"github.com/phuhao00/network"
+	"greatestworks/aop/module_router"
 	"sync"
 )
 
@@ -36,6 +37,10 @@ func init() {
 	onceInit.Do(func() {
 		HandlerPetRegister()
 	})
+}
+
+func RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(0, 0, nil)
 }
 
 func HandlerPetRegister() {

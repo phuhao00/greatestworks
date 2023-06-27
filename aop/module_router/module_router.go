@@ -13,6 +13,9 @@ func RegisterModuleMessageHandler(moduleId uint16, messageId uint64, handler Mod
 	if Module2MessageId2Handler[moduleId] == nil {
 		Module2MessageId2Handler[moduleId] = make(map[uint64]ModuleMessageHandler)
 	}
+	if Module2MessageId2Handler[moduleId][messageId] != nil {
+		panic("[RegisterModuleMessageHandler] repeated register")
+	}
 	Module2MessageId2Handler[moduleId][messageId] = handler
 }
 
