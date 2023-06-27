@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/internal"
 	"sync"
 )
@@ -26,4 +27,8 @@ func GetMod() *Module {
 	Mod = &Module{internal.NewBaseModule()}
 
 	return Mod
+}
+
+func (m *Module) GetName() string {
+	return module.Module_Chat.String()
 }

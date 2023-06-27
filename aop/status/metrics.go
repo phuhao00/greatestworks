@@ -35,7 +35,7 @@ Description:
   "%s metrics" shows the latest value of every metric. You can filter
   metrics by providing a regular expression. Only the metrics with names that
   match the regular expression are shown. The command expects RE2 regular
-  expressions, the same used by the built-in regexp module. See "go doc
+  expressions, the same used by the built-in regexp module.proto. See "go doc
   regexp/syntax" for details.
 
 Examples:

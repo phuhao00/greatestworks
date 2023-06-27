@@ -27,3 +27,7 @@ func GetMod() *Module {
 
 	return Mod
 }
+
+func (m *Module) GetName() string {
+	return ""
+}

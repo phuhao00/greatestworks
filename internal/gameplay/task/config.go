@@ -38,7 +38,7 @@ type Config struct {
 	AcceptType      int           `json:"acceptType"`
 	CompleteNtf     int           `json:"completeNtf"` //完成是否推送
 	UnlockCondition int           `json:"unlockCondition"`
-	Module          string        `json:"module"`
+	Module          string        `json:"module.proto"`
 }
 
 type TargetConf struct {

@@ -1,6 +1,7 @@
 package task
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/internal"
 	"greatestworks/internal/note/event"
 	"sync"
@@ -124,4 +125,8 @@ func (m *Module) getTaskConfig(confId uint32) (ret *Config) {
 		return true
 	})
 	return ret
+}
+
+func (m *Module) GetName() string {
+	return module.Module_Task.String()
 }

@@ -17,9 +17,9 @@ var (
 )
 
 func init() {
-	flag.StringVar(&moduleName, "module", "task", "please input like - module=task")
+	flag.StringVar(&moduleName, "module.proto", "task", "please input like - module.proto=task")
 	flag.StringVar(&src, "src", "../../template", "please")
-	flag.StringVar(&dst, "dst", "../../../business/module", "please")
+	flag.StringVar(&dst, "dst", "../../../business/module.proto", "please")
 }
 
 func main() {

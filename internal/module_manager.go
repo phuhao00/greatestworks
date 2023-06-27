@@ -16,7 +16,7 @@ func (m *ManagerOfModule) GetModule(name string) IModule {
 
 func (m *ManagerOfModule) RegisterModule(moduleName string, module IModule) {
 	if _, exist := m.moduleName2Module[moduleName]; exist {
-		panic(fmt.Sprintf("repeat register module :%v", moduleName))
+		panic(fmt.Sprintf("repeat register module.proto :%v", moduleName))
 	}
 	m.moduleName2Module[moduleName] = module
 }

@@ -28,7 +28,7 @@ require (
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/phuhao00/broker v1.0.6
 	github.com/phuhao00/fuse v1.0.4
-	github.com/phuhao00/greatestworks-proto v1.4.6
+	github.com/phuhao00/greatestworks-proto v1.4.7
 	github.com/phuhao00/network v1.1.1
 	github.com/phuhao00/spoor v1.0.8
 	github.com/phuhao00/sugar v1.0.1

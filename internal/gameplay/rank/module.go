@@ -2,6 +2,7 @@ package rank
 
 import (
 	"fmt"
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/aop/redis"
 	"greatestworks/internal"
 	"sync"
@@ -93,4 +94,8 @@ func (m *Module) Clear(rankId uint32) {
 
 func (m *Module) Save() {
 
+}
+
+func (m *Module) GetName() string {
+	return module.Module_Rank.String()
 }

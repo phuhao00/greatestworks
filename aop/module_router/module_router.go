@@ -1,25 +1,30 @@
 package module_router
 
+import (
+	"github.com/phuhao00/greatestworks-proto/messageId"
+	"github.com/phuhao00/greatestworks-proto/module"
+)
+
 type ModuleMessageHandler func(messageId uint64, data []byte)
 
 var (
-	Module2MessageId2Handler map[uint16]map[uint64]ModuleMessageHandler
+	Module2MessageId2Handler map[module.Module]map[messageId.MessageId]ModuleMessageHandler
 )
 
-func RegisterModuleMessageHandler(moduleId uint16, messageId uint64, handler ModuleMessageHandler) {
+func RegisterModuleMessageHandler(moduleId module.Module, msgId messageId.MessageId, handler ModuleMessageHandler) {
 	if Module2MessageId2Handler == nil {
-		Module2MessageId2Handler = make(map[uint16]map[uint64]ModuleMessageHandler)
+		Module2MessageId2Handler = make(map[module.Module]map[messageId.MessageId]ModuleMessageHandler)
 	}
 	if Module2MessageId2Handler[moduleId] == nil {
-		Module2MessageId2Handler[moduleId] = make(map[uint64]ModuleMessageHandler)
+		Module2MessageId2Handler[moduleId] = make(map[messageId.MessageId]ModuleMessageHandler)
 	}
-	if Module2MessageId2Handler[moduleId][messageId] != nil {
+	if Module2MessageId2Handler[moduleId][msgId] != nil {
 		panic("[RegisterModuleMessageHandler] repeated register")
 	}
-	Module2MessageId2Handler[moduleId][messageId] = handler
+	Module2MessageId2Handler[moduleId][msgId] = handler
 }
 
-func GetModuleHandler(moduleId uint16, messageId uint64) ModuleMessageHandler {
+func GetModuleHandler(moduleId module.Module, messageId messageId.MessageId) ModuleMessageHandler {
 	message2Handler, ok := Module2MessageId2Handler[moduleId]
 	if !ok {
 		return nil

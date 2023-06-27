@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/internal"
 	"sync"
 )
@@ -41,4 +42,8 @@ func (m *Module) MoneyBuy() {
 // TokenMoneyBuy 代金券
 func (m *Module) TokenMoneyBuy() {
 
+}
+
+func (m *Module) GetName() string {
+	return module.Module_Shop.String()
 }

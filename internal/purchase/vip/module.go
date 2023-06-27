@@ -1,6 +1,7 @@
 package vip
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/internal"
 	"sync"
 )
@@ -41,4 +42,8 @@ func (m *Module) OnDailyReset() {
 
 func (m *Module) OnRecharge() {
 	//add exp
+}
+
+func (m *Module) GetName() string {
+	return module.Module_Vip.String()
 }
