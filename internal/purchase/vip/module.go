@@ -6,17 +6,13 @@ import (
 	"sync"
 )
 
-const (
-	ModuleName = "vip"
-)
-
 var (
 	Mod         *Module
 	onceInitMod sync.Once
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Vip.String(), GetMod())
 }
 
 type Module struct {

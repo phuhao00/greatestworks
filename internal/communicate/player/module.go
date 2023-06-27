@@ -1,6 +1,7 @@
 package player
 
 import (
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
 )
@@ -15,7 +16,7 @@ var (
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
@@ -73,4 +74,8 @@ func (pm *Module) GetPlayer(uId uint64) *Player {
 
 func (pm *Module) GetPlayerNum() int {
 	return len(pm.players)
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(0, 0, nil)
 }

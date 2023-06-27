@@ -6,17 +6,13 @@ import (
 	"sync"
 )
 
-const (
-	ModuleName = "shop.proto"
-)
-
 var (
 	Mod         *Module
 	onceInitMod sync.Once
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, Mod)
+	internal.ModuleManager.RegisterModule(module.Module_Shop.String(), Mod)
 }
 
 type Module struct {

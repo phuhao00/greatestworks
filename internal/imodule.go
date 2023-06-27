@@ -32,4 +32,9 @@ type ConfigMgrAction interface {
 type IModule interface {
 	OnEvent(c Character, event event.IEvent)
 	SetEventCategoryActive(eventCategory int)
+	RegisterHandler()
+	OnStart()
+	AfterStart()
+	OnStop()
+	AfterStop()
 }

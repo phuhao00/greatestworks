@@ -9,7 +9,7 @@ var (
 )
 
 func init() {
-	internal.MManager.RegisterModule("", Mod)
+	internal.ModuleManager.RegisterModule("", Mod)
 }
 
 type Module struct {

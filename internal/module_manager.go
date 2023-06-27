@@ -3,7 +3,7 @@ package internal
 import "fmt"
 
 var (
-	MManager ManagerOfModule
+	ModuleManager ManagerOfModule
 )
 
 type ManagerOfModule struct {
@@ -19,4 +19,12 @@ func (m *ManagerOfModule) RegisterModule(moduleName string, module IModule) {
 		panic(fmt.Sprintf("repeat register module.proto :%v", moduleName))
 	}
 	m.moduleName2Module[moduleName] = module
+}
+
+func (m *ManagerOfModule) OnStart() {
+
+}
+
+func (m *ManagerOfModule) OnStop() {
+
 }

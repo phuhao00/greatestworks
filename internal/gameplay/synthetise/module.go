@@ -1,6 +1,7 @@
 package synthetise
 
 import (
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
 )
@@ -15,7 +16,7 @@ var (
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
@@ -33,4 +34,8 @@ func GetMod() *Module {
 
 func (m *Module) SetName(name string) {
 	m.BaseModule.SetName(name)
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(0, 0, nil)
 }

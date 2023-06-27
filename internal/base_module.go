@@ -2,6 +2,7 @@ package internal
 
 import (
 	"go.opentelemetry.io/otel/trace"
+	"greatestworks/aop/module_router"
 	"greatestworks/aop/net/call"
 	"greatestworks/internal/note/event"
 )
@@ -63,4 +64,8 @@ func (b *BaseModule) OnStop() {
 
 func (b *BaseModule) AfterStop() {
 
+}
+
+func (b *BaseModule) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(0, 0, nil)
 }

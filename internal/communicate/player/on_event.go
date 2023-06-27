@@ -6,7 +6,7 @@ import (
 )
 
 func (p *Player) OnEvent(e event.IEvent) {
-	internal.MManager.GetModule(e.GetToModuleName()).OnEvent(p, e)
+	internal.ModuleManager.GetModule(e.GetToModuleName()).OnEvent(p, e)
 }
 
 func (m *Module) OnEvent(c internal.Character, event event.IEvent) {

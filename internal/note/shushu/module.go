@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, Mod)
+	internal.ModuleManager.RegisterModule(ModuleName, Mod)
 }
 
 type Module struct {

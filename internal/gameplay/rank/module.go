@@ -3,6 +3,7 @@ package rank
 import (
 	"fmt"
 	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/aop/redis"
 	"greatestworks/internal"
 	"sync"
@@ -19,7 +20,7 @@ var (
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
@@ -98,4 +99,8 @@ func (m *Module) Save() {
 
 func (m *Module) GetName() string {
 	return module.Module_Rank.String()
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(0, 0, nil)
 }

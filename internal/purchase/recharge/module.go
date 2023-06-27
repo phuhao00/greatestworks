@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	internal.MManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
 }
 
 type Module struct {
@@ -36,4 +36,8 @@ func (m *Module) CreateOrder() {
 // OnSdkOrderRsp sdk 订单返回逻辑
 func (m *Module) OnSdkOrderRsp() {
 
+}
+
+func (m *Module) GetName() string {
+	return ""
 }

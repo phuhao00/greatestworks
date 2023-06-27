@@ -7,7 +7,6 @@ import (
 	"github.com/phuhao00/network"
 	"github.com/phuhao00/sugar"
 	"google.golang.org/protobuf/proto"
-	"greatestworks/aop/module_router"
 	"sync"
 )
 
@@ -38,10 +37,6 @@ func GetHandler(id messageId.MessageId) (*Handler, error) {
 		}
 	}
 	return nil, errors.New("not exist")
-}
-
-func RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(0, 0, nil)
 }
 
 func init() {
