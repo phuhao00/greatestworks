@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
@@ -77,5 +78,9 @@ func (pm *Module) GetPlayerNum() int {
 }
 
 func (m *Module) RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(0, 0, nil)
+	module_router.RegisterModuleMessageHandler(module.Module_Player, 0, nil)
+}
+
+func (pm *Module) GetName() string {
+	return module.Module_Player.String()
 }

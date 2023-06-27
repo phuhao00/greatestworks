@@ -1,12 +1,10 @@
 package recharge
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
-)
-
-const (
-	ModuleName = "recharge"
 )
 
 var (
@@ -15,7 +13,7 @@ var (
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Recharge.String(), GetMod())
 }
 
 type Module struct {
@@ -40,4 +38,8 @@ func (m *Module) OnSdkOrderRsp() {
 
 func (m *Module) GetName() string {
 	return ""
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(module.Module_Recharge, 0, nil)
 }

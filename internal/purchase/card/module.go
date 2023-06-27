@@ -1,20 +1,20 @@
-package weather
+package card
 
 import (
 	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 )
 
-var (
-	Mod *Module
-)
-
-func init() {
-	internal.ModuleManager.RegisterModule("", Mod)
-}
-
 type Module struct {
 	*internal.BaseModule
+}
+
+func init() {
+	internal.ModuleManager.RegisterModule("", GetMod())
+}
+
+func GetMod() *Module {
+	return nil
 }
 
 func (m *Module) RegisterHandler() {

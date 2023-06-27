@@ -2,6 +2,7 @@ package shop
 
 import (
 	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
 )
@@ -42,4 +43,8 @@ func (m *Module) TokenMoneyBuy() {
 
 func (m *Module) GetName() string {
 	return module.Module_Shop.String()
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(module.Module_Shop, 0, nil)
 }

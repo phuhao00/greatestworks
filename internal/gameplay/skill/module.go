@@ -1,12 +1,10 @@
 package skill
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
-)
-
-const (
-	ModuleName = "skill"
 )
 
 var (
@@ -15,7 +13,7 @@ var (
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Skill.String(), GetMod())
 }
 
 type Module struct {
@@ -33,4 +31,8 @@ func GetMod() *Module {
 
 func (m *Module) SetName(name string) {
 	m.BaseModule.SetName(name)
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(module.Module_Skill, 0, nil)
 }

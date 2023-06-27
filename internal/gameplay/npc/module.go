@@ -1,13 +1,10 @@
 package npc
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
-)
-
-const (
-	ModuleName = "npc"
 )
 
 var (
@@ -16,7 +13,7 @@ var (
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Npc.String(), GetMod())
 }
 
 type Module struct {
@@ -30,5 +27,9 @@ func GetMod() *Module {
 }
 
 func (m *Module) RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(0, 0, nil)
+	module_router.RegisterModuleMessageHandler(module.Module_Npc, 0, nil)
+}
+
+func (m *Module) GetName() string {
+	return module.Module_Npc.String()
 }

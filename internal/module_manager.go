@@ -22,7 +22,9 @@ func (m *ManagerOfModule) RegisterModule(moduleName string, module IModule) {
 }
 
 func (m *ManagerOfModule) OnStart() {
-
+	for _, module := range m.moduleName2Module {
+		module.RegisterHandler()
+	}
 }
 
 func (m *ManagerOfModule) OnStop() {

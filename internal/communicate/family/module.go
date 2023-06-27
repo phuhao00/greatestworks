@@ -7,17 +7,13 @@ import (
 	"sync"
 )
 
-const (
-	ModuleName = "family"
-)
-
 var (
 	Mod         *Module
 	onceInitMod sync.Once
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Family.String(), GetMod())
 }
 
 type Module struct {
@@ -56,5 +52,5 @@ func (m *Module) GetName() string {
 }
 
 func (m *Module) RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(0, 0, nil)
+	module_router.RegisterModuleMessageHandler(module.Module_Family, 0, nil)
 }

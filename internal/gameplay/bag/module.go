@@ -1,12 +1,10 @@
 package bag
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
-)
-
-const (
-	ModuleName = "bag"
 )
 
 var (
@@ -15,7 +13,7 @@ var (
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Bag.String(), GetMod())
 }
 
 type Module struct {
@@ -28,6 +26,10 @@ func GetMod() *Module {
 	return Mod
 }
 
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(module.Module_Bag, 0, nil)
+}
+
 func (m *Module) GetName() string {
-	return ""
+	return module.Module_Bag.String()
 }

@@ -1,13 +1,10 @@
 package synthetise
 
 import (
+	"github.com/phuhao00/greatestworks-proto/module"
 	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
-)
-
-const (
-	ModuleName = "synthetise"
 )
 
 var (
@@ -16,7 +13,7 @@ var (
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Synthetise.String(), GetMod())
 }
 
 type Module struct {
@@ -37,5 +34,5 @@ func (m *Module) SetName(name string) {
 }
 
 func (m *Module) RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(0, 0, nil)
+	module_router.RegisterModuleMessageHandler(module.Module_Synthetise, 0, nil)
 }

@@ -2,13 +2,10 @@ package task
 
 import (
 	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"greatestworks/internal/note/event"
 	"sync"
-)
-
-const (
-	ModuleName = "task_category_group"
 )
 
 var (
@@ -18,7 +15,7 @@ var (
 )
 
 func init() {
-	internal.ModuleManager.RegisterModule(ModuleName, GetMod())
+	internal.ModuleManager.RegisterModule(module.Module_Task.String(), GetMod())
 }
 
 type Module struct {
@@ -129,4 +126,8 @@ func (m *Module) getTaskConfig(confId uint32) (ret *Config) {
 
 func (m *Module) GetName() string {
 	return module.Module_Task.String()
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(module.Module_Task, 0, nil)
 }

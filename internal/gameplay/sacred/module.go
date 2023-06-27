@@ -1,4 +1,4 @@
-package dressup
+package sacred
 
 import (
 	"github.com/phuhao00/greatestworks-proto/module"
@@ -12,12 +12,12 @@ var (
 	onceInitMod sync.Once
 )
 
-func init() {
-	internal.ModuleManager.RegisterModule(module.Module_DressUp.String(), GetMod())
-}
-
 type Module struct {
 	*internal.BaseModule
+}
+
+func init() {
+	internal.ModuleManager.RegisterModule(module.Module_Sacred.String(), GetMod())
 }
 
 func GetMod() *Module {
@@ -27,9 +27,5 @@ func GetMod() *Module {
 }
 
 func (m *Module) RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(module.Module_DressUp, 0, nil)
-}
-
-func (m *Module) GetName() string {
-	return module.Module_DressUp.String()
+	module_router.RegisterModuleMessageHandler(module.Module_Sacred, 0, nil)
 }

@@ -2,6 +2,7 @@ package vip
 
 import (
 	"github.com/phuhao00/greatestworks-proto/module"
+	"greatestworks/aop/module_router"
 	"greatestworks/internal"
 	"sync"
 )
@@ -42,4 +43,8 @@ func (m *Module) OnRecharge() {
 
 func (m *Module) GetName() string {
 	return module.Module_Vip.String()
+}
+
+func (m *Module) RegisterHandler() {
+	module_router.RegisterModuleMessageHandler(module.Module_Vip, 0, nil)
 }
