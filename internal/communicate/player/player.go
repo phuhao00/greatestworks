@@ -1,15 +1,29 @@
 package player
 
 import (
+	"github.com/phuhao00/fuse"
 	"github.com/phuhao00/greatestworks-proto/messageId"
+	"github.com/phuhao00/greatestworks-proto/player"
+	"github.com/phuhao00/greatestworks-proto/server_common"
 	"github.com/phuhao00/network"
+	"google.golang.org/protobuf/proto"
+	"greatestworks/aop/logger"
+	"greatestworks/internal/communicate/chat"
+	"greatestworks/internal/communicate/friend"
+	"greatestworks/internal/gameplay/bag"
+	"greatestworks/internal/gameplay/task"
 )
 
 type Player struct {
 	*GamePlay
 	*BaseInfo
 	HandlerParamCh chan *network.Message
-	Session        *network.TcpConnX
+	Session        *network.TcpSession
+	isOffline      bool
+	PlayerID       uint64
+	chanPlayerMsg  chan *player.PlayerMsgData
+	chanServerMsg  chan *server_common.ServerMsgData
+	LogicRouter    *fuse.LogicRouter
 }
 
 func NewPlayer() *Player {
@@ -44,5 +58,53 @@ func (p *Player) OnLogout() {
 }
 
 func (p *Player) GetName() string {
-	return ""
+	return p.Name
+}
+
+func (p *Player) HandleClientMsgPacket(msgData *player.PlayerMsgData) {
+	if p.isOffline {
+		return
+	}
+	select {
+	case p.chanPlayerMsg <- msgData:
+	default:
+		logger.Error("[消息] 转发消息到player goroutine错误 PlayerID:%v", p.PlayerID)
+	}
+}
+
+func (p *Player) HandleServerMsgPacket(serverMsgData *server_common.ServerMsgData) {
+	if p.isOffline {
+		return
+	}
+	select {
+	case p.chanServerMsg <- serverMsgData:
+	default:
+		logger.Error("[handleServerMsgPacket] PlayerID:%v", p.PlayerID)
+	}
+}
+
+func (p *Player) SendMsg(ID messageId.MessageId, message proto.Message) {
+	id := uint64(ID)
+	p.Session.AsyncSend(id, message)
+}
+
+func (p *Player) Handler(id messageId.MessageId, msg *network.Message) {
+	if handler, _ := friend.GetHandler(id); handler != nil {
+		handler.Fn(p.friendSystem, msg)
+	}
+	if handler, _ := chat.GetHandler(id); handler != nil {
+		handler.Fn(p.privateChat, msg)
+	}
+
+	if handler, _ := bag.GetHandler(id); handler != nil {
+		handler.Fn(p, msg)
+	}
+
+	if task.IsBelongToHere(id) {
+		task.GetMod().ChIn <- &task.PlayerActionParam{
+			MessageId: id,
+			Player:    p,
+			Packet:    msg,
+		}
+	}
 }

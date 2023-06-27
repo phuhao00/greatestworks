@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -29,10 +29,10 @@ func (w *World) UserLogin(message *network.Packet) {
 	newPlayer := logicPlayer.NewPlayer()
 	newPlayer.UId = 111
 	newPlayer.Session = message.Conn
-	w.pm.Add(newPlayer)
+	w.playerManager.Add(newPlayer)
 
 }
 
-func (w *World) SendMsg(id uint64, message proto.Message, session *network.TcpConnX) {
-	session.AsyncSend(uint16(id), message)
+func (w *World) SendMsg(id uint64, message proto.Message, session *network.TcpSession) {
+	session.AsyncSend(id, message)
 }

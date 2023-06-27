@@ -43,33 +43,48 @@ func Debug(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.DEBUG) {
 		return
 	}
-	sp.Output(2, fmt.Sprintf(spoor.DEBUG.String()+" "+f, args...))
+	err := sp.Output(2, fmt.Sprintf(spoor.DEBUG.String()+" "+f, args...))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func Error(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.ERROR) {
 		return
 	}
-	sp.Output(2, fmt.Sprintf(spoor.ERROR.String()+" "+f, args...))
+	err := sp.Output(2, fmt.Sprintf(spoor.ERROR.String()+" "+f, args...))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func Info(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.INFO) {
 		return
 	}
-	sp.Output(2, fmt.Sprintf(spoor.INFO.String()+" "+f, args...))
+	err := sp.Output(2, fmt.Sprintf(spoor.INFO.String()+" "+f, args...))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func Warn(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.WARN) {
 		return
 	}
-	sp.Output(2, fmt.Sprintf(spoor.WARN.String()+" "+f, args...))
+	err := sp.Output(2, fmt.Sprintf(spoor.WARN.String()+" "+f, args...))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func Fatal(f string, args ...interface{}) {
 	if sp.CheckLevel(spoor.FATAL) {
 		return
 	}
-	sp.Output(2, fmt.Sprintf(spoor.FATAL.String()+" "+f, args...))
+	err := sp.Output(2, fmt.Sprintf(spoor.FATAL.String()+" "+f, args...))
+	if err != nil {
+		fmt.Println(err)
+	}
 }

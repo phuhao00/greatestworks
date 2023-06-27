@@ -1,6 +1,8 @@
-package main
+package server
 
-import "google.golang.org/protobuf/proto"
+import (
+	"google.golang.org/protobuf/proto"
+)
 
 func (w *World) BroadcastSystemMsg(message proto.Message) {
 }

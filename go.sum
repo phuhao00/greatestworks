@@ -217,10 +217,10 @@ github.com/phuhao00/broker v1.0.6 h1:06xeMI5BlL1cnUDnFtEBODvpk6KV3J+ehFwoBS+jiQQ
 github.com/phuhao00/broker v1.0.6/go.mod h1:c/E0FAaESoza3ywReavLdpEcunolO5JqgR07L7f/BEA=
 github.com/phuhao00/fuse v1.0.4 h1:1MkYaOnc5rira6NfCRCSblVjbgPX2S0qzDVAtrd62qM=
 github.com/phuhao00/fuse v1.0.4/go.mod h1:Yj4sRr5sW6IAticTTcWKvZrwOjBaFL/N9GRdX3JnS+w=
-github.com/phuhao00/greatestworks-proto v1.4.0 h1:/ryAXdgUMULPv9U4jBQ0CRgVsO0VSnVprm2bJN6Vk70=
-github.com/phuhao00/greatestworks-proto v1.4.0/go.mod h1:GTKTNZwdOHyg/Ts298VPWdLT+ieS+qrJcadZPh/0giY=
-github.com/phuhao00/network v1.0.9 h1:z7ZdlpKoZxFpF5jXzbZuQZxbsaBsq67ksF/vadJa+44=
-github.com/phuhao00/network v1.0.9/go.mod h1:F3gv+AfCKSIYLi0j671tAGrHGz896G9rQFVVYoSVqgQ=
+github.com/phuhao00/greatestworks-proto v1.4.6 h1:y/7Bx2I/Gmi2g5emi3GlWugDCXUVnMXrxc7ZtNgFvls=
+github.com/phuhao00/greatestworks-proto v1.4.6/go.mod h1:GTKTNZwdOHyg/Ts298VPWdLT+ieS+qrJcadZPh/0giY=
+github.com/phuhao00/network v1.1.1 h1:UEckfmJIsvPs6rwTKXxcAVPudY6yspYgZnao2zi0zS0=
+github.com/phuhao00/network v1.1.1/go.mod h1:F3gv+AfCKSIYLi0j671tAGrHGz896G9rQFVVYoSVqgQ=
 github.com/phuhao00/spoor v1.0.8 h1:f9MMDId8KJqoD/4gaHuPAw23fZ6nJJvdPrkoJfmzJ4M=
 github.com/phuhao00/spoor v1.0.8/go.mod h1:ngHgUs5EWhgqiyJW+aMMLH1ipNBP4uQNjX1DlBQukek=
 github.com/phuhao00/sugar v1.0.1 h1:b42TQychB4Tfcor9/j/AfEmE9sqk5tMT5Z5CONtO+Ik=

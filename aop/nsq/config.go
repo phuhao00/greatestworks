@@ -14,3 +14,8 @@ var (
 	Complex     = "Complex" + "-" + osUserName
 	World       = "World" + "-" + osUserName
 )
+
+const (
+	ChatNSQ  uint32 = 0
+	LogicNSQ uint32 = 1
+)

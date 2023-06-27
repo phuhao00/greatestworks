@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"github.com/phuhao00/greatestworks-proto/messageId"
@@ -7,7 +7,7 @@ import (
 )
 
 func (w *World) GetPlayers(id uint64) *player.Player {
-	return w.pm.GetPlayer(id)
+	return w.playerManager.GetPlayer(id)
 }
 
 func (w *World) BroadcastMsg(ids []uint64, msgId messageId.MessageId, msg proto.Message) {

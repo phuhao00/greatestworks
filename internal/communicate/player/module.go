@@ -70,3 +70,7 @@ func (pm *Module) GetPlayer(uId uint64) *Player {
 	}
 	return nil
 }
+
+func (pm *Module) GetPlayerNum() int {
+	return len(pm.players)
+}

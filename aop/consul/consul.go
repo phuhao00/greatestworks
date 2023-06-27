@@ -10,7 +10,7 @@ import (
 type Client struct {
 	client   *api.Client
 	services *sync.Map
-	addrs    []string
+	address  []string
 }
 
 func New(config *Config) (*Client, error) {

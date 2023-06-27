@@ -25,7 +25,7 @@ func InitConsul(conf *Config) error {
 	config := api.DefaultConfig()
 	addrs := conf.Nodes
 	if len(addrs) <= 0 {
-		return errors.New("[InitConsul] addrs length is zero")
+		return errors.New("[InitConsul] address length is zero")
 	}
 
 	randSeed := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -38,7 +38,7 @@ func InitConsul(conf *Config) error {
 	consulClient = &Client{
 		client:   client,
 		services: &sync.Map{},
-		addrs:    addrs,
+		address:  addrs,
 	}
 	return nil
 }

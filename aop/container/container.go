@@ -8,8 +8,8 @@ type IDelegate interface {
 
 type IContainer interface {
 	IDelegate
-	Add(vals interface{})
-	Del(vals interface{})
+	Add(interface{})
+	Del(interface{})
 	GetItem(val interface{}) interface{}
 	SetItem(val interface{}, items interface{})
 }

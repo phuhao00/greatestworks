@@ -71,17 +71,27 @@ func (srv *Server) Run() {
 		tempDelay = 0
 
 		// Try to open keepalive for tcp.
-		conn.SetKeepAlive(true)
-
-		conn.SetKeepAlivePeriod(1 * time.Minute)
-
+		err = conn.SetKeepAlive(true)
+		if err != nil {
+			logger.Error("err:%v", err.Error())
+		}
+		err = conn.SetKeepAlivePeriod(1 * time.Minute)
+		if err != nil {
+			logger.Error("err:%v", err.Error())
+		}
 		// disable Nagle algorithm.
-		conn.SetNoDelay(true)
-
-		conn.SetWriteBuffer(128 * 1024)
-
-		conn.SetReadBuffer(128 * 1024)
-
+		err = conn.SetNoDelay(true)
+		if err != nil {
+			logger.Error("err:%v", err.Error())
+		}
+		err = conn.SetWriteBuffer(128 * 1024)
+		if err != nil {
+			logger.Error("err:%v", err.Error())
+		}
+		err = conn.SetReadBuffer(128 * 1024)
+		if err != nil {
+			logger.Error("err:%v", err.Error())
+		}
 		go rpc.ServeConn(conn)
 
 		logger.Debug("accept a rpc conn")

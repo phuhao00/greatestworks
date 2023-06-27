@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/phuhao00/sugar"
 	"greatestworks/aop/logger"
+	"greatestworks/server/world/server"
 )
 
 func main() {
-	Oasis = NewWorld()
-	go Oasis.Start()
+	server.Oasis = server.NewWorld()
+	go server.Oasis.Start()
 	logger.Info("server start !!")
-	sugar.WaitSignal(Oasis.OnSystemSignal)
+	sugar.WaitSignal(server.Oasis.OnSystemSignal)
 }

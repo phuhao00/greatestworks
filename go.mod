@@ -28,8 +28,8 @@ require (
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/phuhao00/broker v1.0.6
 	github.com/phuhao00/fuse v1.0.4
-	github.com/phuhao00/greatestworks-proto v1.4.0
-	github.com/phuhao00/network v1.0.9
+	github.com/phuhao00/greatestworks-proto v1.4.6
+	github.com/phuhao00/network v1.1.1
 	github.com/phuhao00/spoor v1.0.8
 	github.com/phuhao00/sugar v1.0.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
