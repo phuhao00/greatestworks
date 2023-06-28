@@ -26,6 +26,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/looplab/fsm v1.0.1
 	github.com/nsqio/go-nsq v1.1.0
+	github.com/orcaman/concurrent-map v1.0.0
 	github.com/phuhao00/broker v1.0.6
 	github.com/phuhao00/fuse v1.0.4
 	github.com/phuhao00/greatestworks-proto v1.4.8
