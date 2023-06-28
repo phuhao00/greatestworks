@@ -17,16 +17,10 @@ func NewBoss() *Boss {
 }
 
 func (b *Boss) OnDamage(delta int64) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (b *Boss) Attack() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (b *Boss) OnMove() {
-	//TODO implement me
-	panic("implement me")
 }

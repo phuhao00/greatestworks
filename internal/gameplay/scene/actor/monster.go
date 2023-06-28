@@ -21,11 +21,7 @@ func (m *Monster) OnDamage(delta int64) {
 }
 
 func (m *Monster) Attack() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (m *Monster) OnMove() {
-	//TODO implement me
-	panic("implement me")
 }

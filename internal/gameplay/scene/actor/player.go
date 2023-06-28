@@ -22,13 +22,9 @@ func (p *Player) OnDamage(delta int64) {
 }
 
 func (p *Player) OnAttack() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (p *Player) OnMove() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (p *Player) SendMsg(message proto.Message) {
