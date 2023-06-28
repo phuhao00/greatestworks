@@ -29,7 +29,7 @@ import (
 	"greatestworks/aop/proxy"
 	"greatestworks/aop/retry"
 	"greatestworks/aop/status"
-	"greatestworks/aop/versioned"
+	"greatestworks/aop/versioned_map"
 )
 
 const (
@@ -71,8 +71,8 @@ type Babysitter struct {
 
 	mu           sync.RWMutex
 	managed      map[string][]*envelope.Envelope // replica envelopes, by group
-	appState     *versioned.Map[*AppVersionState]
-	routingState *versioned.Map[*protos.RoutingInfo]
+	appState     *versioned_map.Map[*AppVersionState]
+	routingState *versioned_map.Map[*protos.RoutingInfo]
 	proxies      map[string]*proxyInfo // proxies, by listener name
 }
 
@@ -113,8 +113,8 @@ func NewBabysitter(ctx context.Context, dep *protos.Deployment, logSaver func(*p
 		opts:           envelope.Options{Restart: envelope.Never, Retry: retry.DefaultOptions},
 		dep:            dep,
 		managed:        map[string][]*envelope.Envelope{},
-		appState:       versioned.NewMap[*AppVersionState](),
-		routingState:   versioned.NewMap[*protos.RoutingInfo](),
+		appState:       versioned_map.NewMap[*AppVersionState](),
+		routingState:   versioned_map.NewMap[*protos.RoutingInfo](),
 		proxies:        map[string]*proxyInfo{},
 	}
 	go b.statsProcessor.CollectMetrics(b.ctx, b.readMetrics)

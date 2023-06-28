@@ -48,7 +48,7 @@ import (
 	"greatestworks/aop/retry"
 	"greatestworks/aop/status"
 	"greatestworks/aop/traceio"
-	"greatestworks/aop/versioned"
+	"greatestworks/aop/versioned_map"
 )
 
 const (
@@ -109,8 +109,8 @@ type manager struct {
 
 	mu           sync.Mutex
 	started      map[string]bool //  colocation groups started, by group name
-	appState     *versioned.Map[*AppVersionState]
-	routingState *versioned.Map[*protos.RoutingInfo]
+	appState     *versioned_map.Map[*AppVersionState]
+	routingState *versioned_map.Map[*protos.RoutingInfo]
 	proxies      map[string]*proxyInfo                         // proxies, by listener name
 	metrics      map[groupReplicaInfo][]*protos.MetricSnapshot // latest metrics, by group name and replica id
 }
@@ -168,8 +168,8 @@ func RunManager(ctx context.Context, dep *protos.Deployment, locations []string,
 		traceSaver:     traceSaver,
 		statsProcessor: imetrics.NewStatsProcessor(),
 		started:        map[string]bool{},
-		appState:       versioned.NewMap[*AppVersionState](),
-		routingState:   versioned.NewMap[*protos.RoutingInfo](),
+		appState:       versioned_map.NewMap[*AppVersionState](),
+		routingState:   versioned_map.NewMap[*protos.RoutingInfo](),
 		proxies:        map[string]*proxyInfo{},
 		metrics:        map[groupReplicaInfo][]*protos.MetricSnapshot{},
 	}

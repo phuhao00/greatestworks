@@ -1,4 +1,4 @@
-package versioned
+package versioned_map
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type versioned[T proto.Message] struct {
 	version string
 }
 
-// Map is a simple, versioned, map.
+// Map is a simple, versioned_map, map.
 type Map[T proto.Message] struct {
 	mu     sync.Mutex
 	global int
