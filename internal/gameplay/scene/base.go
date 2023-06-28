@@ -37,7 +37,7 @@ func (b *Base) NotifyAll(message proto.Message) {
 	})
 }
 
-func (b *Base) NotifyNearby(actor actor2.Actor, message proto.Message) {
+func (b *Base) NotifyNearby(actor IActor, message proto.Message) {
 	//TODO implement me
 	panic("implement me")
 }

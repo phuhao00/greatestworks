@@ -2,7 +2,6 @@ package scene
 
 import (
 	"google.golang.org/protobuf/proto"
-	"greatestworks/internal/gameplay/scene/actor"
 )
 
 type IScene interface {
@@ -15,7 +14,7 @@ type IScene interface {
 
 type Notify interface {
 	NotifyAll(message proto.Message)
-	NotifyNearby(actor actor.Actor, message proto.Message)
+	NotifyNearby(actor IActor, message proto.Message)
 	NotifyPlayer(playerId uint64, message proto.Message)
 }
 
