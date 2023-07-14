@@ -18,6 +18,8 @@
 
 * 5.事件驱动 (Event driven)
 
+## Server Frame
+![](svr.drawio.png)
 
 ### 目录结构说明
 * `aop`
