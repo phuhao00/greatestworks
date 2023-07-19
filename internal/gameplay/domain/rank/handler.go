@@ -2,7 +2,7 @@ package rank
 
 import (
 	"github.com/phuhao00/network"
-	"greatestworks/internal/communicate/player"
+	"greatestworks/internal/communicate/domain/player"
 )
 
 func init() {

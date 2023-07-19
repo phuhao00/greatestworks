@@ -9,9 +9,9 @@ import (
 	pbPLayer "github.com/phuhao00/greatestworks-proto/player"
 	"github.com/phuhao00/greatestworks-proto/server_common"
 	"greatestworks/aop/logger"
-	"greatestworks/internal/communicate/chat"
-	"greatestworks/internal/communicate/family"
-	"greatestworks/internal/communicate/player"
+	"greatestworks/internal/communicate/domain/chat"
+	"greatestworks/internal/communicate/domain/family"
+	player2 "greatestworks/internal/communicate/domain/player"
 	"greatestworks/server"
 	"greatestworks/server/world/config"
 	"os"
@@ -29,7 +29,7 @@ type World struct {
 	chSessionPacket   chan *network.Packet
 	chatSystem        *chat.System
 	familyManager     *family.Module
-	playerManager     *player.Module
+	playerManager     *player2.Module
 	timer             timerassistant.TimerAssistant
 	LogicRouter       *fuse.LogicRouter
 	ChanPlayerOffline chan *pbPLayer.PlayerData
@@ -46,7 +46,7 @@ type World struct {
 }
 
 func NewWorld() *World {
-	m := &World{playerManager: player.NewPlayerMgr()}
+	m := &World{playerManager: player2.NewPlayerMgr()}
 	m.Server = network.NewTcpServer(":8023", 100, 200, logger.GetLogger())
 	m.Server.MessageHandler = m.OnSessionPacket
 	m.Handlers = make(map[messageId.MessageId]func(message *network.Packet))
@@ -92,7 +92,7 @@ func (w *World) HandlePlayersMsgPacket(playerID uint64, data []byte) error {
 	return fmt.Errorf("[HandlePlayersMsgPacket] player not exist")
 }
 
-func (w *World) GetPlayer(playerID uint64) *player.Player {
+func (w *World) GetPlayer(playerID uint64) *player2.Player {
 	return w.playerManager.GetPlayer(playerID)
 }
 

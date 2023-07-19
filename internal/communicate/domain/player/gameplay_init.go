@@ -8,13 +8,13 @@ package player
 
 import (
 	"github.com/google/wire"
-	"greatestworks/internal/communicate/chat"
-	"greatestworks/internal/communicate/friend"
+	"greatestworks/internal/communicate/domain/chat"
+	"greatestworks/internal/communicate/domain/friend"
 	"greatestworks/internal/gameplay/bag"
 	"greatestworks/internal/gameplay/pet"
 	"greatestworks/internal/gameplay/task"
-	"greatestworks/internal/purchase/shop"
-	"greatestworks/internal/purchase/vip"
+	"greatestworks/internal/purchase/domain/shop"
+	"greatestworks/internal/purchase/domain/vip"
 )
 
 // Injectors from wire.go:

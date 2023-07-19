@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/phuhao00/greatestworks-proto/messageId"
 	"google.golang.org/protobuf/proto"
-	"greatestworks/internal/communicate/player"
+	"greatestworks/internal/communicate/domain/player"
 )
 
 func (w *World) GetPlayers(id uint64) *player.Player {

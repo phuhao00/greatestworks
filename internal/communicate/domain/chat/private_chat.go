@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"github.com/nsqio/go-nsq"
 	"github.com/phuhao00/greatestworks-proto/messageId"
 	"google.golang.org/protobuf/proto"
 )

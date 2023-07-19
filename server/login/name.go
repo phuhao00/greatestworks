@@ -1,7 +1,7 @@
 package main
 
 import (
-	"greatestworks/internal/communicate/name"
+	"greatestworks/internal/communicate/domain/name"
 )
 
 var NameSystem *name.System

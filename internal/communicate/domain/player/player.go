@@ -8,8 +8,8 @@ import (
 	"github.com/phuhao00/network"
 	"google.golang.org/protobuf/proto"
 	"greatestworks/aop/logger"
-	"greatestworks/internal/communicate/chat"
-	"greatestworks/internal/communicate/friend"
+	"greatestworks/internal/communicate/domain/chat"
+	"greatestworks/internal/communicate/domain/friend"
 	"greatestworks/internal/gameplay/bag"
 	"greatestworks/internal/gameplay/task"
 )
