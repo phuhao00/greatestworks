@@ -2,6 +2,11 @@ module greatestworks
 
 go 1.18
 
+replace (
+	github.com/phuhao00/greatestworks-proto v1.4.8 => ../greatestworks-proto
+	github.com/phuhao00/network v1.1.1 => ../network
+)
+
 require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/RoaringBitmap/roaring v1.2.3
@@ -25,6 +30,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.1
 	github.com/json-iterator/go v1.1.12
 	github.com/looplab/fsm v1.0.1
+	github.com/magicsea/behavior3go v0.0.1
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/phuhao00/broker v1.0.6
