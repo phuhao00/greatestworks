@@ -7,7 +7,7 @@ import (
 	"greatestworks/aop/container"
 	"greatestworks/aop/logger"
 	"greatestworks/aop/mongo"
-	"greatestworks/internal/communicate/domain/player"
+	"greatestworks/internal/communicate/player"
 	"time"
 )
 

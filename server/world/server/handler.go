@@ -6,7 +6,7 @@ import (
 	"github.com/phuhao00/greatestworks-proto/player"
 	"github.com/phuhao00/network"
 	"google.golang.org/protobuf/proto"
-	logicPlayer "greatestworks/internal/communicate/domain/player"
+	logicPlayer "greatestworks/internal/communicate/player"
 )
 
 func (w *World) CreatePlayer(message *network.Packet) {

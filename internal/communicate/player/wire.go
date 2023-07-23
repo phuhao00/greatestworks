@@ -4,13 +4,13 @@
 package player
 
 import (
-	"greatestworks/internal/communicate/domain/chat"
-	"greatestworks/internal/communicate/domain/friend"
+	"greatestworks/internal/communicate/chat"
+	"greatestworks/internal/communicate/friend"
 	"greatestworks/internal/gameplay/bag"
 	"greatestworks/internal/gameplay/pet"
 	"greatestworks/internal/gameplay/task"
-	"greatestworks/internal/purchase/domain/shop"
-	"greatestworks/internal/purchase/domain/vip"
+	"greatestworks/internal/purchase/shop"
+	"greatestworks/internal/purchase/vip"
 )
 import "github.com/google/wire"
 
