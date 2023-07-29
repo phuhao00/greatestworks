@@ -10,7 +10,6 @@ import (
 	"greatestworks/aop/redis"
 	"greatestworks/server/gateway/server"
 	"greatestworks/server/gateway/world"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -77,18 +76,7 @@ func (s *Session) registerForwardMsgHandler(msgID uint64, handler fuse.ForwardMe
 	s.LogicRouter.RegisterForwardHandler(msgID, handler)
 }
 
-func (s *Session) OnConnect() {
-	GetMe().addClient(s.ConnID, s)
-	logger.Info("[OnConnect]  local:%s remote:%s ConnID:%v", s.LocalAddr(), s.RemoteAddr(), s.ConnID)
-	info := strings.Split(s.RemoteAddr().String(), ":")
-	if len(info) > 0 {
-		s.RemoteIp = info[0]
-	} else {
-		s.RemoteIp = s.RemoteAddr().String()
-	}
-}
-
-func (s *Session) OnMessage(data []byte) {
+func (s *Session) HandleMessage(data []byte) {
 	now := time.Now().Unix()
 	delta := int(now - s.LastCheckTime)
 

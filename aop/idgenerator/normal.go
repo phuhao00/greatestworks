@@ -11,7 +11,7 @@ var (
 		"login":   1,
 		"gateway": 2,
 		"world":   3,
-		"game":    4,
+		"chat":    4,
 		"gm":      5,
 		"upload":  6,
 		"robot":   7,

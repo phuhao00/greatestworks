@@ -91,13 +91,13 @@ func deploy(ctx context.Context, args []string) error {
 		}
 	}()
 
-	// Deploy main.
-	group := &protos.ColocationGroup{Name: "main"}
+	// Deploy main.go.
+	group := &protos.ColocationGroup{Name: "main.go"}
 	if err := b.StartComponent(&protos.ComponentToStart{
 		ColocationGroup: group.Name,
-		Component:       "main",
+		Component:       "main.go",
 	}); err != nil {
-		return fmt.Errorf("start main process: %w", err)
+		return fmt.Errorf("start main.go process: %w", err)
 	}
 
 	// Wait for the status server to become active.

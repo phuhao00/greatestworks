@@ -3,8 +3,10 @@ package server
 import (
 	"greatestworks/aop/fn"
 	"greatestworks/aop/logger"
+	"greatestworks/server/gateway/client"
 	"greatestworks/server/gateway/config"
 	"greatestworks/server/gateway/gm"
+	"greatestworks/server/gateway/world"
 	"strconv"
 	"time"
 )
@@ -75,6 +77,7 @@ func (s *Server) Init(cfg interface{}, processIdx int) {
 	s.tcpServer.Addr = addr
 	s.tcpServer.MaxConnNum = s.Config.Server.MaxConnNum
 	s.tcpServer.Init()
+	s.tcpServer.NewSession = client.NewSession
 
 	s.innerPort = s.Config.Server.InnerPort + processIdx
 	innerAddr := s.Config.Server.PrivateIP + ":" + strconv.Itoa(s.innerPort)
@@ -82,6 +85,7 @@ func (s *Server) Init(cfg interface{}, processIdx int) {
 	s.innerServer.Addr = innerAddr
 	s.innerServer.MaxConnNum = s.Config.Server.MaxConnNum
 	s.innerServer.Init()
+	s.innerServer.NewSession = world.NewSession
 	s.startTM = time.Now().Unix()
 
 	s.httpPort = s.Config.HTTP.HTTPPort + processIdx

@@ -32,11 +32,7 @@ func (s *Session) Marshal(msgID uint16, msg interface{}) ([]byte, error) {
 	return s.Router.Marshal(msgID, msg)
 }
 
-func (s *Session) OnConnect() {
-	logger.Info("[OnConnect]  local:%s remote:%s ConnID:%v", s.LocalAddr(), s.RemoteAddr(), s.ConnID)
-}
-
-func (s *Session) OnMessage(data []byte) {
+func (s *Session) HandleMessage(data []byte) {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("[OnMessage] panic ", err, "\n", string(debug.Stack()))

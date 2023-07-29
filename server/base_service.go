@@ -138,10 +138,10 @@ func (e *BaseService) Status(ctx context.Context) (*status.Status, error) {
 	defer e.mu.Unlock()
 	pid := int64(os.Getpid())
 	stats := e.statsProcessor.GetStatsStatusz()
-	components := []*status.Component{{Name: "main", Pids: []int64{pid}}}
+	components := []*status.Component{{Name: "main.go", Pids: []int64{pid}}}
 	c := &status.Component{
 		Name:  e.Name,
-		Group: "main",
+		Group: "main.go",
 		Pids:  []int64{pid},
 	}
 	components = append(components, c)

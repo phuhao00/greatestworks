@@ -27,7 +27,7 @@ func TestValidQueries(t *testing.T) {
 		    !(node == "123") &&
 		    time < timestamp("1972-01-01T10:00:20.021-05:00") &&
 		    level.contains("e") &&
-		    (source.matches("^main.go") || source.matches("^foo.go")) &&
+		    (source.matches("^main.go.go") || source.matches("^foo.go")) &&
 		    msg.matches("error") &&
 			"foo" in attrs &&
 			attrs["foo"] == "bar"`,

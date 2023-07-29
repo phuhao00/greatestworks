@@ -23,14 +23,14 @@ func main() {
 
 	err := consul.InitConsul(config.GetInitConsul())
 	if err != nil {
-		logger.Error("[main] Consul初始化失败error:%v", err)
+		logger.Error("[main.go] Consul初始化失败error:%v", err)
 		return
 	}
 
 	privateIP, err := fn.GetPrivateIPv4()
 
 	if err != nil {
-		logger.Error("[main] Get local ip error ", err)
+		logger.Error("[main.go] Get local ip error ", err)
 		return
 	}
 
@@ -41,7 +41,7 @@ func main() {
 	consul.LoadJSONFromConsulKV(confName, &cfg)
 
 	if cfg == nil {
-		logger.Error("[main]load config fail!!!")
+		logger.Error("[main.go]load config fail!!!")
 		return
 	}
 	logLevel, err := spoor.ParseLogLevel(cfg.Log.LogLevel)
@@ -55,12 +55,12 @@ func main() {
 	}
 	logger.SetLogging(logSetting)
 	if err := redis.InitRedisInstance(context.TODO(), cfg.Global.RedisInfo); err != nil {
-		logger.Error("[main] redis init fail err:%v", err)
+		logger.Error("[main.go] redis init fail err:%v", err)
 		return
 	}
 	serverInstance := server.GetServer()
 	serverInstance.Init(cfg, *pid)
 	serverInstance.BaseService.Start()
 
-	logger.Info("[main] server close...")
+	logger.Info("[main.go] server close...")
 }

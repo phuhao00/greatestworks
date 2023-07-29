@@ -215,11 +215,11 @@ func (m *manager) run() error {
 		}
 	}()
 
-	// Start the main process.
-	group := &protos.ColocationGroup{Name: "main"}
+	// Start the main.go process.
+	group := &protos.ColocationGroup{Name: "main.go"}
 	if err := m.startComponent(m.ctx, &protos.ComponentToStart{
 		ColocationGroup: group.Name,
-		Component:       "main",
+		Component:       "main.go",
 	}); err != nil {
 		return err
 	}
@@ -487,7 +487,7 @@ func (m *manager) startColocationGroup(_ context.Context, group *protos.Colocati
 		return nil
 	}
 
-	// Start the main colocation group. Right now, the number of replicas for
+	// Start the main.go colocation group. Right now, the number of replicas for
 	// each colocation group is equal with the number of locations.
 	//
 	// TODO(rgrandl): Implement some smarter logic to determine the number of

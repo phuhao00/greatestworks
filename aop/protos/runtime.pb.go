@@ -828,7 +828,7 @@ type AppConfig struct {
 	//	"github.com/my/project/package/ComponentName"
 	//
 	// , with the exception of the component associated with the application
-	// main(), which is identified using the name "main".
+	// main.go(), which is identified using the name "main.go".
 	//
 	// TODO(spetrovic): Rename to colocate.
 	SameProcess []*ComponentGroup `protobuf:"bytes,20,rep,name=same_process,json=sameProcess,proto3" json:"same_process,omitempty"`

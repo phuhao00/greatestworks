@@ -1,6 +1,6 @@
 /*
 Package channels provides a collection of helper functions, interfaces and implementations for
-working with and extending the capabilities of golang's existing channels. The main interface of
+working with and extending the capabilities of golang's existing channels. The main.go interface of
 interest is Channel, though sub-interfaces are also provided for cases where the full Channel interface
 cannot be met (for example, InChannel for write-only channels).
 

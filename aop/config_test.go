@@ -99,7 +99,7 @@ func TestConfigErrors(t *testing.T) {
 			name: "same-process-inter-group-conflict",
 			cfg: `
 [serviceweaver]
-colocate = [["a", "main"], ["a", "c"]]
+colocate = [["a", "main.go"], ["a", "c"]]
 `,
 			expectedError: "placed multiple times",
 		},
@@ -107,7 +107,7 @@ colocate = [["a", "main"], ["a", "c"]]
 			name: "same-process-intra-group-conflict",
 			cfg: `
 [serviceweaver]
-colocate = [["a", "main", "a"]]
+colocate = [["a", "main.go", "a"]]
 `,
 			expectedError: "placed multiple times",
 		},
