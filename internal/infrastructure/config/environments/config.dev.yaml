@@ -1,0 +1,171 @@
+# 开发环境配置
+# Author: MMO Server Team
+# Created: 2024
+
+# 服务器配置
+server:
+  gateway:
+    port: 8080
+    host: "0.0.0.0"
+    max_connections: 1000
+    read_timeout: 30s
+    write_timeout: 30s
+    heartbeat_time: 30s
+    idle_timeout: 300s
+    tls_enabled: false
+    cert_file: ""
+    key_file: ""
+  
+  scene:
+    port: 8081
+    host: "0.0.0.0"
+    max_players: 500
+    tick_rate: 20
+    sync_interval: 100ms
+    view_distance: 100.0
+  
+  battle:
+    port: 8082
+    host: "0.0.0.0"
+    max_battles: 50
+    tick_rate: 30
+    battle_time: 10m
+    match_timeout: 30s
+  
+  activity:
+    port: 8083
+    host: "0.0.0.0"
+    max_activities: 20
+    update_interval: 1m
+    cache_timeout: 5m
+
+# 数据库配置
+database:
+  mongodb:
+    uri: "${MONGODB_URI:-mongodb://localhost:27017}"
+    database: "${MONGODB_DATABASE:-mmo_game_dev}"
+    max_pool_size: 50
+    min_pool_size: 5
+    max_idle_time: 10m
+    connect_timeout: 10s
+    socket_timeout: 30s
+    retry_writes: true
+    read_preference: "primary"
+  
+  redis:
+    addr: "${REDIS_ADDR:-localhost:6379}"
+    password: "${REDIS_PASSWORD:-}"
+    db: 0
+    pool_size: 10
+    min_idle_conns: 2
+    max_idle_conns: 5
+    conn_max_age: 30m
+    dial_timeout: 5s
+    read_timeout: 3s
+    write_timeout: 3s
+    cluster:
+      enabled: false
+      addresses: []
+
+# 缓存配置
+cache:
+  default_ttl: 1h
+  cleanup_time: 10m
+  max_size: 104857600  # 100MB
+  eviction_policy: "lru"
+
+# 安全配置
+security:
+  jwt:
+    secret_key: "${JWT_SECRET_KEY:-dev-secret-key-change-in-production-32chars-minimum}"
+    token_duration: 24h
+    refresh_time: 168h  # 7 days
+    issuer: "mmo-server-dev"
+    audience: "mmo-client"
+  
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_size: 32
+    salt: "${ENCRYPTION_SALT:-dev-salt-change-in-production}"
+  
+  rate_limit:
+    enabled: false  # 开发环境关闭限流
+    rps: 100
+    burst: 200
+    window_size: 1m
+
+# 日志配置
+logging:
+  level: "debug"
+  format: "console"
+  output: "stdout"
+  dir: "./logs"
+  max_size: 100
+  max_backups: 7
+  max_age: 30
+  compress: false
+  prefix: "mmo-dev"
+
+# 游戏配置
+game:
+  max_level: 100
+  exp_multiplier: 2.0  # 开发环境加速升级
+  gold_multiplier: 2.0  # 开发环境加速金币获取
+  drop_rate: 0.5  # 开发环境提高掉落率
+  pk_enabled: true
+  guild_enabled: true
+  trade_enabled: true
+  maintenance_mode: false
+
+# 网络配置
+network:
+  protocol: "tcp"
+  buffer_size: 4096
+  max_packet_size: 65536
+  compression_type: "none"  # 开发环境关闭压缩
+  encryption_type: "none"   # 开发环境关闭加密
+  keep_alive: true
+  no_delay: true
+
+# 消息队列配置
+messaging:
+  nsq:
+    enabled: false  # 开发环境可选
+    nsqd_address: "${NSQD_ADDRESS:-localhost:4150}"
+    lookupd_http:
+      - "${NSQD_LOOKUPD:-localhost:4161}"
+    max_in_flight: 200
+  
+  rabbitmq:
+    enabled: false  # 开发环境可选
+    url: "${RABBITMQ_URL:-amqp://guest:guest@localhost:5672/}"
+    exchange: "mmo_exchange_dev"
+    queue: "mmo_queue_dev"
+
+# 监控配置
+monitoring:
+  enabled: true
+  port: 9090
+  path: "/metrics"
+  prometheus:
+    enabled: true
+    namespace: "mmo_dev"
+    subsystem: "server"
+
+# Excel配置
+excel:
+  path: "./excel"
+  activity: "activity.xlsx"
+  battle_pass: "battlepass.xlsx"
+  pet: "pet.xlsx"
+  npc: "npc.xlsx"
+  plant: "plant.xlsx"
+  shop: "shop.xlsx"
+  task: "task.xlsx"
+  skill: "skill.xlsx"
+  vip: "vip.xlsx"
+  building: "building.xlsx"
+  condition: "condition.xlsx"
+  synthetise: "synthetise.xlsx"
+  mini_game: "minigame.xlsx"
+  email: "email.xlsx"

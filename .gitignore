@@ -1,4 +1,167 @@
 
+# Trae AI工作文件
+.trae/
+
+# 构建产物
 dist/
-.idea
-log
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 测试覆盖率
+*.out
+coverage.html
+coverage.xml
+
+# 日志文件
+log/
+logs/
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE文件
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 环境配置
+.env
+.env.local
+.env.*.local
+config/local.yaml
+config/dev.yaml
+config/prod.yaml
+
+# 依赖目录
+node_modules/
+vendor/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 证书和密钥
+*.pem
+*.key
+*.crt
+*.p12
+
+# 备份文件
+*.bak
+*.backup
+
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go相关
+# 如果你有vendor目录，取消下面的注释
+# vendor/
+
+# 测试二进制文件，使用go test -c构建
+*.test
+
+# 输出的二进制文件（可执行文件）
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 测试覆盖率文件
+*.out
+
+# 依赖分析文件
+go.sum
+
+# 本地环境文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 编辑器和IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志
+*.log
+logs/
+
+# 运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 目录用于仪器化的libs生成的覆盖率报告
+lib-cov
+
+# 覆盖率目录，由诸如istanbul这样的工具使用
+coverage/
+
+# nyc测试覆盖率
+.nyc_output
+
+# Grunt中间存储（https://gruntjs.com/creating-plugins#storing-task-files）
+.grunt
+
+# Bower依赖目录（https://bower.io/）
+bower_components
+
+# node-waf配置
+.lock-wscript
+
+# 编译的二进制插件（https://nodejs.org/api/addons.html）
+build/Release
+
+# 依赖目录
+node_modules/
+jspm_packages/
+
+# TypeScript v1声明文件
+typings/
+
+# TypeScript缓存
+*.tsbuildinfo
+
+# 可选的npm缓存目录
+.npm
+
+# 可选的eslint缓存
+.eslintcache
+
+# Microbundle缓存
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# 可选的REPL历史
+.node_repl_history
+
+# yarn v2的输出
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*

@@ -7,10 +7,10 @@ import (
 	bag2 "greatestworks/internal/gameplay/bag"
 	building2 "greatestworks/internal/gameplay/building"
 	pet2 "greatestworks/internal/gameplay/pet"
-	plant2 "greatestworks/internal/gameplay/plant"
 	task2 "greatestworks/internal/gameplay/task"
 	shop2 "greatestworks/internal/purchase/shop"
 	vip2 "greatestworks/internal/purchase/vip"
+	// Note: plant system has been migrated to domain/scene/plant
 )
 
 var (
@@ -18,10 +18,10 @@ var (
 	_ shop2.IPlayer     = (*Player)(nil)
 	_ task2.Player      = (*Player)(nil)
 	_ bag2.IPlayer      = (*Player)(nil)
-	_ plant2.Player     = (*Player)(nil)
 	_ building2.IPlayer = (*Player)(nil)
 	_ email2.IPlayer    = (*Player)(nil)
 	_ vip2.Player       = (*Player)(nil)
+	// Note: plant2.Player interface removed - system migrated to DDD
 )
 
 type GamePlay struct {
@@ -33,8 +33,8 @@ type GamePlay struct {
 	bagSystem      *bag2.System
 	vip            *vip2.Vip
 	buildingSystem *building2.System
-	plantSystem    *plant2.System
 	emailData      *email2.Data
+	// Note: plantSystem removed - migrated to domain/scene/plant
 }
 
 func InitGamePlay() GamePlay {
@@ -74,9 +74,8 @@ func (p *GamePlay) GetBuildingSystem() *building2.System {
 	return p.buildingSystem
 }
 
-func (p *GamePlay) GetPlantSystem() *plant2.System {
-	return p.plantSystem
-}
+// GetPlantSystem has been removed - plant system migrated to domain/scene/plant
+// Use application services to interact with the new plant domain
 
 func (p *GamePlay) GetEmailData() *email2.Data {
 	return p.emailData

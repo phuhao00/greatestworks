@@ -1,0 +1,166 @@
+{
+  "environment": "development",
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "read_timeout": "60s",
+    "write_timeout": "60s",
+    "max_conns": 10000
+  },
+  "database": {
+    "host": "localhost",
+    "port": 27017,
+    "username": "dev_user",
+    "password": "dev_password",
+    "database": "mmo_game_dev",
+    "max_open_conns": 100,
+    "max_idle_conns": 10,
+    "max_lifetime": "3600s",
+    "ssl": false,
+    "timeout": "10s"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": "",
+    "db": 0,
+    "pool_size": 10,
+    "min_idle_conn": 5,
+    "max_retries": 3,
+    "dial_timeout": "5s",
+    "read_timeout": "3s",
+    "write_timeout": "3s"
+  },
+  "nats": {
+    "url": "nats://localhost:4222",
+    "cluster_id": "mmo-dev-cluster",
+    "client_id": "mmo-dev-server",
+    "max_reconnect": 10,
+    "reconnect_wait": "2s",
+    "timeout": "5s"
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "max_connections": 10000,
+    "servers": [
+      "localhost:8001",
+      "localhost:8002",
+      "localhost:8003",
+      "localhost:8004"
+    ],
+    "load_balancer": "round_robin",
+    "health_check": {
+      "enabled": true,
+      "interval": "30s",
+      "timeout": "5s",
+      "path": "/health"
+    }
+  },
+  "scene": {
+    "scene_id": "dev_scene_001",
+    "host": "0.0.0.0",
+    "port": 8001,
+    "gateway_addr": "localhost:8000",
+    "max_players": 1000,
+    "tick_rate": 20,
+    "aoi": {
+      "enabled": true,
+      "radius": 100.0,
+      "update_rate": 10
+    }
+  },
+  "battle": {
+    "server_id": "dev_battle_001",
+    "host": "0.0.0.0",
+    "port": 8002,
+    "gateway_addr": "localhost:8000",
+    "max_battles": 100,
+    "tick_rate": 30
+  },
+  "activity": {
+    "server_id": "dev_activity_001",
+    "host": "0.0.0.0",
+    "port": 8003,
+    "gateway_addr": "localhost:8000"
+  },
+  "login": {
+    "server_id": "dev_login_001",
+    "host": "0.0.0.0",
+    "port": 8004,
+    "gateway_addr": "localhost:8000",
+    "jwt_secret": "dev_jwt_secret_key_change_in_production",
+    "token_expiry": "24h"
+  },
+  "log": {
+    "level": "debug",
+    "format": "text",
+    "output": "stdout",
+    "max_size": 100,
+    "max_backups": 5,
+    "max_age": 7,
+    "compress": true
+  },
+  "game": {
+    "max_level": 100,
+    "exp_table": [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250],
+    "inventory_size": 50,
+    "max_skill_points": 1000,
+    "daily_quest_limit": 10,
+    "weekly_quest_limit": 5,
+    "features": {
+      "pvp": true,
+      "guild": true,
+      "trade": true,
+      "auction": true,
+      "chat": true,
+      "mail": true,
+      "friend": true,
+      "achievement": true,
+      "pet": true,
+      "building": true,
+      "minigame": true,
+      "ranking": true
+    },
+    "constants": {
+      "base_exp": 100,
+      "exp_multiplier": 1.5,
+      "gold_drop_rate": 0.1,
+      "item_drop_rate": 0.05,
+      "skill_point_per_level": 2,
+      "max_friends": 100,
+      "max_guild_members": 50,
+      "trade_tax_rate": 0.05,
+      "auction_fee_rate": 0.1
+    }
+  },
+  "security": {
+    "encryption": {
+      "enabled": false,
+      "algorithm": "AES-256",
+      "key": "dev_encryption_key_32_characters"
+    },
+    "rate_limit": {
+      "enabled": true,
+      "rate": 100,
+      "burst": 200,
+      "window": "1m"
+    },
+    "anti_cheat": {
+      "enabled": true,
+      "speed_check_enabled": true,
+      "max_speed": 10.0,
+      "position_check": true,
+      "action_validation": true
+    },
+    "whitelist": [],
+    "blacklist": []
+  },
+  "metrics": {
+    "enabled": true,
+    "port": 9090,
+    "path": "/metrics",
+    "namespace": "mmo_game",
+    "subsystem": "server"
+  }
+}

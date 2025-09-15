@@ -1,0 +1,175 @@
+# 生产环境配置
+# Author: MMO Server Team
+# Created: 2024
+
+# 服务器配置
+server:
+  gateway:
+    port: 8080
+    host: "0.0.0.0"
+    max_connections: 10000
+    read_timeout: 30s
+    write_timeout: 30s
+    heartbeat_time: 30s
+    idle_timeout: 300s
+    tls_enabled: true
+    cert_file: "${TLS_CERT_FILE:/etc/ssl/certs/server.crt}"
+    key_file: "${TLS_KEY_FILE:/etc/ssl/private/server.key}"
+  
+  scene:
+    port: 8081
+    host: "0.0.0.0"
+    max_players: 2000
+    tick_rate: 20
+    sync_interval: 50ms
+    view_distance: 150.0
+  
+  battle:
+    port: 8082
+    host: "0.0.0.0"
+    max_battles: 200
+    tick_rate: 30
+    battle_time: 10m
+    match_timeout: 30s
+  
+  activity:
+    port: 8083
+    host: "0.0.0.0"
+    max_activities: 100
+    update_interval: 30s
+    cache_timeout: 2m
+
+# 数据库配置
+database:
+  mongodb:
+    uri: "${MONGODB_URI}"
+    database: "${MONGODB_DATABASE}"
+    max_pool_size: 200
+    min_pool_size: 20
+    max_idle_time: 5m
+    connect_timeout: 10s
+    socket_timeout: 30s
+    retry_writes: true
+    read_preference: "primaryPreferred"
+  
+  redis:
+    addr: "${REDIS_ADDR}"
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    pool_size: 50
+    min_idle_conns: 10
+    max_idle_conns: 20
+    conn_max_age: 10m
+    dial_timeout: 5s
+    read_timeout: 3s
+    write_timeout: 3s
+    cluster:
+      enabled: ${REDIS_CLUSTER_ENABLED:false}
+      addresses:
+        - "${REDIS_CLUSTER_ADDR1}"
+        - "${REDIS_CLUSTER_ADDR2}"
+        - "${REDIS_CLUSTER_ADDR3}"
+
+# 缓存配置
+cache:
+  default_ttl: 30m
+  cleanup_time: 5m
+  max_size: 1073741824  # 1GB
+  eviction_policy: "lru"
+
+# 安全配置
+security:
+  jwt:
+    secret_key: "${JWT_SECRET_KEY}"
+    token_duration: 2h
+    refresh_time: 24h
+    issuer: "mmo-server-prod"
+    audience: "mmo-client"
+  
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_size: 32
+    salt: "${ENCRYPTION_SALT}"
+  
+  rate_limit:
+    enabled: true
+    rps: 1000
+    burst: 2000
+    window_size: 1m
+
+# 日志配置
+logging:
+  level: "info"
+  format: "json"
+  output: "file"
+  dir: "${LOG_DIR:/var/log/mmo}"
+  max_size: 500
+  max_backups: 30
+  max_age: 90
+  compress: true
+  prefix: "mmo-prod"
+
+# 游戏配置
+game:
+  max_level: 100
+  exp_multiplier: 1.0
+  gold_multiplier: 1.0
+  drop_rate: 0.1
+  pk_enabled: true
+  guild_enabled: true
+  trade_enabled: true
+  maintenance_mode: ${MAINTENANCE_MODE:false}
+
+# 网络配置
+network:
+  protocol: "tcp"
+  buffer_size: 8192
+  max_packet_size: 65536
+  compression_type: "gzip"
+  encryption_type: "aes"
+  keep_alive: true
+  no_delay: true
+
+# 消息队列配置
+messaging:
+  nsq:
+    enabled: ${NSQ_ENABLED:true}
+    nsqd_address: "${NSQD_ADDRESS}"
+    lookupd_http:
+      - "${NSQD_LOOKUPD1}"
+      - "${NSQD_LOOKUPD2}"
+    max_in_flight: 500
+  
+  rabbitmq:
+    enabled: ${RABBITMQ_ENABLED:false}
+    url: "${RABBITMQ_URL}"
+    exchange: "mmo_exchange_prod"
+    queue: "mmo_queue_prod"
+
+# 监控配置
+monitoring:
+  enabled: true
+  port: 9090
+  path: "/metrics"
+  prometheus:
+    enabled: true
+    namespace: "mmo_prod"
+    subsystem: "server"
+
+# Excel配置
+excel:
+  path: "${EXCEL_PATH:/opt/mmo/excel}"
+  activity: "activity.xlsx"
+  battle_pass: "battlepass.xlsx"
+  pet: "pet.xlsx"
+  npc: "npc.xlsx"
+  plant: "plant.xlsx"
+  shop: "shop.xlsx"
+  task: "task.xlsx"
+  skill: "skill.xlsx"
+  vip: "vip.xlsx"
+  building: "building.xlsx"
+  condition: "condition.xlsx"
+  synthetise: "synthetise.xlsx"
+  mini_game: "minigame.xlsx"
+  email: "email.xlsx"

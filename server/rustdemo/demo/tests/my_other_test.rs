@@ -1,4 +1,0 @@
-#![allow(unused)]
-fn main() {
-
-}

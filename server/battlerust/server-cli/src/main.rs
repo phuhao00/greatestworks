@@ -1,6 +1,0 @@
-
-pub  mod
-fn main(){
-
-}
-

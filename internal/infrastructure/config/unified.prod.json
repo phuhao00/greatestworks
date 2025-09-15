@@ -1,0 +1,180 @@
+{
+  "environment": "production",
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "read_timeout": "60s",
+    "write_timeout": "60s",
+    "max_conns": 50000,
+    "tls": {
+      "enabled": true,
+      "cert_file": "/etc/ssl/certs/server.crt",
+      "key_file": "/etc/ssl/private/server.key"
+    }
+  },
+  "database": {
+    "host": "mongodb-cluster.example.com",
+    "port": 27017,
+    "username": "prod_user",
+    "password": "prod_secure_password",
+    "database": "mmo_game_prod",
+    "max_open_conns": 500,
+    "max_idle_conns": 50,
+    "max_lifetime": "7200s",
+    "ssl": true,
+    "timeout": "10s"
+  },
+  "redis": {
+    "host": "redis-cluster.example.com",
+    "port": 6379,
+    "password": "redis_secure_password",
+    "db": 0,
+    "pool_size": 50,
+    "min_idle_conn": 20,
+    "max_retries": 5,
+    "dial_timeout": "5s",
+    "read_timeout": "3s",
+    "write_timeout": "3s"
+  },
+  "nats": {
+    "url": "nats://nats-cluster.example.com:4222",
+    "cluster_id": "mmo-prod-cluster",
+    "client_id": "mmo-prod-server",
+    "max_reconnect": 20,
+    "reconnect_wait": "2s",
+    "timeout": "10s"
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "max_connections": 50000,
+    "servers": [
+      "scene-server-1.example.com:8001",
+      "scene-server-2.example.com:8001",
+      "battle-server-1.example.com:8002",
+      "battle-server-2.example.com:8002",
+      "activity-server.example.com:8003",
+      "login-server.example.com:8004"
+    ],
+    "load_balancer": "weighted_round_robin",
+    "health_check": {
+      "enabled": true,
+      "interval": "15s",
+      "timeout": "3s",
+      "path": "/health"
+    }
+  },
+  "scene": {
+    "scene_id": "prod_scene_001",
+    "host": "0.0.0.0",
+    "port": 8001,
+    "gateway_addr": "gateway.example.com:8000",
+    "max_players": 5000,
+    "tick_rate": 30,
+    "aoi": {
+      "enabled": true,
+      "radius": 150.0,
+      "update_rate": 15
+    }
+  },
+  "battle": {
+    "server_id": "prod_battle_001",
+    "host": "0.0.0.0",
+    "port": 8002,
+    "gateway_addr": "gateway.example.com:8000",
+    "max_battles": 1000,
+    "tick_rate": 60
+  },
+  "activity": {
+    "server_id": "prod_activity_001",
+    "host": "0.0.0.0",
+    "port": 8003,
+    "gateway_addr": "gateway.example.com:8000"
+  },
+  "login": {
+    "server_id": "prod_login_001",
+    "host": "0.0.0.0",
+    "port": 8004,
+    "gateway_addr": "gateway.example.com:8000",
+    "jwt_secret": "prod_jwt_ultra_secure_key_2024_change_me",
+    "token_expiry": "12h"
+  },
+  "log": {
+    "level": "warn",
+    "format": "json",
+    "output": "/var/log/mmo-server/app.log",
+    "max_size": 500,
+    "max_backups": 10,
+    "max_age": 30,
+    "compress": true
+  },
+  "game": {
+    "max_level": 120,
+    "exp_table": [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250, 3850, 4500, 5200, 5950, 6750, 7600, 8500, 9450, 10450, 11500],
+    "inventory_size": 100,
+    "max_skill_points": 2000,
+    "daily_quest_limit": 20,
+    "weekly_quest_limit": 10,
+    "features": {
+      "pvp": true,
+      "guild": true,
+      "trade": true,
+      "auction": true,
+      "chat": true,
+      "mail": true,
+      "friend": true,
+      "achievement": true,
+      "pet": true,
+      "building": true,
+      "minigame": true,
+      "ranking": true,
+      "world_boss": true,
+      "cross_server": true
+    },
+    "constants": {
+      "base_exp": 100,
+      "exp_multiplier": 1.2,
+      "gold_drop_rate": 0.08,
+      "item_drop_rate": 0.03,
+      "skill_point_per_level": 3,
+      "max_friends": 200,
+      "max_guild_members": 100,
+      "trade_tax_rate": 0.03,
+      "auction_fee_rate": 0.08,
+      "world_boss_spawn_interval": 3600,
+      "cross_server_battle_cooldown": 86400
+    }
+  },
+  "security": {
+    "encryption": {
+      "enabled": true,
+      "algorithm": "AES-256-GCM",
+      "key": "prod_encryption_key_32_chars_here"
+    },
+    "rate_limit": {
+      "enabled": true,
+      "rate": 200,
+      "burst": 500,
+      "window": "1m"
+    },
+    "anti_cheat": {
+      "enabled": true,
+      "speed_check_enabled": true,
+      "max_speed": 8.0,
+      "position_check": true,
+      "action_validation": true
+    },
+    "whitelist": [
+      "admin.example.com",
+      "monitoring.example.com"
+    ],
+    "blacklist": []
+  },
+  "metrics": {
+    "enabled": true,
+    "port": 9090,
+    "path": "/metrics",
+    "namespace": "mmo_game",
+    "subsystem": "server"
+  }
+}

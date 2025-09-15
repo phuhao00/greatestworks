@@ -1,0 +1,171 @@
+# 测试环境配置
+# Author: MMO Server Team
+# Created: 2024
+
+# 服务器配置
+server:
+  gateway:
+    port: 18080
+    host: "127.0.0.1"
+    max_connections: 100
+    read_timeout: 10s
+    write_timeout: 10s
+    heartbeat_time: 10s
+    idle_timeout: 60s
+    tls_enabled: false
+    cert_file: ""
+    key_file: ""
+  
+  scene:
+    port: 18081
+    host: "127.0.0.1"
+    max_players: 50
+    tick_rate: 10
+    sync_interval: 200ms
+    view_distance: 50.0
+  
+  battle:
+    port: 18082
+    host: "127.0.0.1"
+    max_battles: 10
+    tick_rate: 10
+    battle_time: 1m
+    match_timeout: 5s
+  
+  activity:
+    port: 18083
+    host: "127.0.0.1"
+    max_activities: 5
+    update_interval: 10s
+    cache_timeout: 30s
+
+# 数据库配置
+database:
+  mongodb:
+    uri: "${MONGODB_URI:-mongodb://localhost:27017}"
+    database: "${MONGODB_DATABASE:-mmo_game_test}"
+    max_pool_size: 10
+    min_pool_size: 1
+    max_idle_time: 1m
+    connect_timeout: 5s
+    socket_timeout: 10s
+    retry_writes: false
+    read_preference: "primary"
+  
+  redis:
+    addr: "${REDIS_ADDR:-localhost:6379}"
+    password: "${REDIS_PASSWORD:-}"
+    db: 1  # 使用不同的数据库
+    pool_size: 5
+    min_idle_conns: 1
+    max_idle_conns: 2
+    conn_max_age: 5m
+    dial_timeout: 2s
+    read_timeout: 1s
+    write_timeout: 1s
+    cluster:
+      enabled: false
+      addresses: []
+
+# 缓存配置
+cache:
+  default_ttl: 5m
+  cleanup_time: 1m
+  max_size: 10485760  # 10MB
+  eviction_policy: "lru"
+
+# 安全配置
+security:
+  jwt:
+    secret_key: "${JWT_SECRET_KEY:-test-secret-key-for-testing-only-32chars}"
+    token_duration: 1h
+    refresh_time: 2h
+    issuer: "mmo-server-test"
+    audience: "mmo-client-test"
+  
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_size: 32
+    salt: "${ENCRYPTION_SALT:-test-salt-for-testing-only}"
+  
+  rate_limit:
+    enabled: false  # 测试环境关闭限流
+    rps: 1000
+    burst: 2000
+    window_size: 1m
+
+# 日志配置
+logging:
+  level: "debug"
+  format: "console"
+  output: "stdout"
+  dir: "./test_logs"
+  max_size: 10
+  max_backups: 3
+  max_age: 7
+  compress: false
+  prefix: "mmo-test"
+
+# 游戏配置
+game:
+  max_level: 10  # 测试环境降低等级上限
+  exp_multiplier: 10.0  # 测试环境快速升级
+  gold_multiplier: 10.0  # 测试环境快速获得金币
+  drop_rate: 1.0  # 测试环境100%掉落
+  pk_enabled: true
+  guild_enabled: true
+  trade_enabled: true
+  maintenance_mode: false
+
+# 网络配置
+network:
+  protocol: "tcp"
+  buffer_size: 1024
+  max_packet_size: 8192
+  compression_type: "none"
+  encryption_type: "none"
+  keep_alive: false
+  no_delay: true
+
+# 消息队列配置
+messaging:
+  nsq:
+    enabled: false  # 测试环境关闭消息队列
+    nsqd_address: "localhost:4150"
+    lookupd_http:
+      - "localhost:4161"
+    max_in_flight: 10
+  
+  rabbitmq:
+    enabled: false  # 测试环境关闭消息队列
+    url: "amqp://guest:guest@localhost:5672/"
+    exchange: "mmo_exchange_test"
+    queue: "mmo_queue_test"
+
+# 监控配置
+monitoring:
+  enabled: false  # 测试环境关闭监控
+  port: 19090
+  path: "/metrics"
+  prometheus:
+    enabled: false
+    namespace: "mmo_test"
+    subsystem: "server"
+
+# Excel配置
+excel:
+  path: "./test_excel"
+  activity: "test_activity.xlsx"
+  battle_pass: "test_battlepass.xlsx"
+  pet: "test_pet.xlsx"
+  npc: "test_npc.xlsx"
+  plant: "test_plant.xlsx"
+  shop: "test_shop.xlsx"
+  task: "test_task.xlsx"
+  skill: "test_skill.xlsx"
+  vip: "test_vip.xlsx"
+  building: "test_building.xlsx"
+  condition: "test_condition.xlsx"
+  synthetise: "test_synthetise.xlsx"
+  mini_game: "test_minigame.xlsx"
+  email: "test_email.xlsx"
