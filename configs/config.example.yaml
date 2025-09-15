@@ -1,0 +1,274 @@
+# =============================================================================
+# GreatestWorks MMO 游戏服务器配置模板
+# 复制此文件为 config.yaml 并根据环境修改相应配置
+# =============================================================================
+
+# 应用基础配置
+app:
+  name: "GreatestWorks MMO Server"
+  version: "1.0.0"
+  environment: "development"  # development, staging, production
+  debug: true
+  
+# 服务器配置
+server:
+  # HTTP 服务器
+  http:
+    host: "0.0.0.0"
+    port: 8080
+    read_timeout: "30s"
+    write_timeout: "30s"
+    idle_timeout: "60s"
+    max_header_bytes: 1048576  # 1MB
+  
+  # WebSocket 服务器
+  websocket:
+    host: "0.0.0.0"
+    port: 8081
+    read_buffer_size: 4096
+    write_buffer_size: 4096
+    check_origin: false
+    
+  # TCP 游戏服务器
+  tcp:
+    host: "0.0.0.0"
+    port: 8082
+    max_connections: 10000
+    read_timeout: "30s"
+    write_timeout: "30s"
+    
+  # 指标服务器
+  metrics:
+    host: "0.0.0.0"
+    port: 9090
+    path: "/metrics"
+
+# 数据库配置
+database:
+  # MongoDB 主数据库
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "mmo_game"
+    username: "admin"
+    password: "admin123"
+    auth_source: "admin"
+    max_pool_size: 100
+    min_pool_size: 10
+    max_idle_time: "10m"
+    connect_timeout: "10s"
+    socket_timeout: "30s"
+    
+  # Redis 缓存
+  redis:
+    addr: "localhost:6379"
+    password: "redis123"
+    db: 0
+    pool_size: 100
+    min_idle_conns: 10
+    max_retries: 3
+    dial_timeout: "5s"
+    read_timeout: "3s"
+    write_timeout: "3s"
+    pool_timeout: "4s"
+    idle_timeout: "5m"
+
+# 消息队列配置
+messaging:
+  # NATS 配置
+  nats:
+    url: "nats://localhost:4222"
+    cluster_id: "mmo-cluster"
+    client_id: "mmo-server-1"
+    max_reconnect: 10
+    reconnect_wait: "2s"
+    timeout: "5s"
+    
+    # JetStream 配置
+    jetstream:
+      enabled: true
+      domain: "mmo"
+      
+    # 主题配置
+    subjects:
+      player_events: "player.events.>"
+      game_events: "game.events.>"
+      system_events: "system.events.>"
+
+# 认证和安全配置
+security:
+  # JWT 配置
+  jwt:
+    secret: "your-super-secret-jwt-key-change-in-production"
+    issuer: "greatestworks-mmo"
+    audience: "mmo-players"
+    access_token_ttl: "1h"
+    refresh_token_ttl: "24h"
+    
+  # 加密配置
+  encryption:
+    key: "32-character-encryption-key-here"
+    algorithm: "AES-256-GCM"
+    
+  # CORS 配置
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "https://yourdomain.com"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+      - "X-Requested-With"
+    expose_headers:
+      - "X-Total-Count"
+    allow_credentials: true
+    max_age: 86400
+
+# 日志配置
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json"  # json, text
+  output: "stdout"  # stdout, stderr, file
+  
+  # 文件日志配置（当 output 为 file 时）
+  file:
+    path: "/var/log/mmo-server/app.log"
+    max_size: 100  # MB
+    max_backups: 10
+    max_age: 30  # days
+    compress: true
+    
+  # 日志字段
+  fields:
+    service: "mmo-server"
+    version: "1.0.0"
+
+# 游戏配置
+game:
+  # 玩家配置
+  player:
+    max_level: 100
+    initial_gold: 1000
+    initial_experience: 0
+    max_inventory_slots: 100
+    
+  # 战斗配置
+  battle:
+    max_battle_time: "10m"
+    damage_variance: 0.1  # 10% 伤害浮动
+    critical_rate_base: 0.05  # 5% 基础暴击率
+    critical_damage_base: 1.5  # 150% 暴击伤害
+    
+  # 经验配置
+  experience:
+    base_exp_per_level: 100
+    exp_multiplier: 1.2
+    max_exp_bonus: 2.0
+    
+  # 聊天配置
+  chat:
+    max_message_length: 500
+    rate_limit: 10  # 每分钟最大消息数
+    banned_words:
+      - "spam"
+      - "cheat"
+
+# 性能配置
+performance:
+  # 工作池配置
+  worker_pool:
+    size: 100
+    queue_size: 1000
+    
+  # 缓存配置
+  cache:
+    default_ttl: "1h"
+    max_entries: 10000
+    cleanup_interval: "10m"
+    
+  # 限流配置
+  rate_limit:
+    enabled: true
+    requests_per_minute: 1000
+    burst: 100
+    
+  # 连接池配置
+  connection_pool:
+    max_idle: 100
+    max_open: 200
+    max_lifetime: "1h"
+
+# 监控配置
+monitoring:
+  # 健康检查
+  health:
+    enabled: true
+    path: "/health"
+    
+  # 指标收集
+  metrics:
+    enabled: true
+    namespace: "mmo_server"
+    
+  # 链路追踪
+  tracing:
+    enabled: false
+    jaeger_endpoint: "http://localhost:14268/api/traces"
+    sample_rate: 0.1
+    
+  # 性能分析
+  profiling:
+    enabled: false
+    host: "localhost"
+    port: 6060
+
+# 第三方服务配置
+third_party:
+  # 邮件服务
+  email:
+    provider: "smtp"  # smtp, sendgrid, ses
+    smtp:
+      host: "smtp.gmail.com"
+      port: 587
+      username: "your-email@gmail.com"
+      password: "your-app-password"
+      
+  # 推送通知
+  push:
+    provider: "fcm"  # fcm, apns
+    fcm:
+      server_key: "your-fcm-server-key"
+      
+  # 支付服务
+  payment:
+    provider: "stripe"  # stripe, paypal
+    stripe:
+      public_key: "pk_test_..."
+      secret_key: "sk_test_..."
+      webhook_secret: "whsec_..."
+
+# 开发工具配置
+development:
+  # 热重载
+  hot_reload:
+    enabled: true
+    watch_dirs:
+      - "./internal"
+      - "./cmd"
+      - "./configs"
+      
+  # 调试工具
+  debug:
+    pprof_enabled: true
+    race_detector: true
+    
+  # 测试数据
+  test_data:
+    enabled: true
+    auto_create_users: 10
+    auto_create_items: 100

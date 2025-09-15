@@ -1,0 +1,323 @@
+# =============================================================================
+# 生产环境配置模板
+# 用于生产环境部署
+# 注意：所有敏感信息应通过环境变量或密钥管理系统提供
+# =============================================================================
+
+# 应用基础配置
+app:
+  name: "GreatestWorks MMO Server"
+  version: "1.0.0"
+  environment: "production"
+  debug: false
+  
+# 服务器配置
+server:
+  http:
+    host: "0.0.0.0"
+    port: 8080
+    read_timeout: "30s"
+    write_timeout: "30s"
+    idle_timeout: "120s"
+    max_header_bytes: 1048576
+  
+  websocket:
+    host: "0.0.0.0"
+    port: 8081
+    read_buffer_size: 8192
+    write_buffer_size: 8192
+    check_origin: true  # 生产环境严格检查来源
+    
+  tcp:
+    host: "0.0.0.0"
+    port: 8082
+    max_connections: 50000  # 生产环境支持更多连接
+    read_timeout: "60s"
+    write_timeout: "60s"
+    
+  metrics:
+    host: "0.0.0.0"
+    port: 9090
+
+# 数据库配置
+database:
+  mongodb:
+    # 生产环境使用环境变量
+    uri: "${MONGODB_URI}"
+    database: "${MONGODB_DATABASE}"
+    username: "${MONGODB_USERNAME}"
+    password: "${MONGODB_PASSWORD}"
+    auth_source: "admin"
+    max_pool_size: 200
+    min_pool_size: 20
+    max_idle_time: "30m"
+    connect_timeout: "10s"
+    socket_timeout: "60s"
+    
+    # 生产环境额外配置
+    replica_set: "${MONGODB_REPLICA_SET}"
+    read_preference: "secondaryPreferred"
+    write_concern:
+      w: "majority"
+      j: true
+      wtimeout: "5s"
+    
+  redis:
+    addr: "${REDIS_ADDR}"
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    pool_size: 200
+    min_idle_conns: 20
+    max_retries: 5
+    dial_timeout: "10s"
+    read_timeout: "5s"
+    write_timeout: "5s"
+    pool_timeout: "10s"
+    idle_timeout: "10m"
+    
+    # Redis 集群配置（如果使用）
+    cluster:
+      enabled: false
+      addrs:
+        - "${REDIS_CLUSTER_ADDR_1}"
+        - "${REDIS_CLUSTER_ADDR_2}"
+        - "${REDIS_CLUSTER_ADDR_3}"
+
+# 消息队列配置
+messaging:
+  nats:
+    url: "${NATS_URL}"
+    cluster_id: "${NATS_CLUSTER_ID}"
+    client_id: "${HOSTNAME}-${POD_NAME}"
+    max_reconnect: 50
+    reconnect_wait: "5s"
+    timeout: "10s"
+    
+    # 生产环境 TLS 配置
+    tls:
+      enabled: true
+      cert_file: "/etc/ssl/certs/nats-client.crt"
+      key_file: "/etc/ssl/private/nats-client.key"
+      ca_file: "/etc/ssl/certs/ca.crt"
+      
+    jetstream:
+      enabled: true
+      domain: "mmo-prod"
+      
+    subjects:
+      player_events: "prod.player.events.>"
+      game_events: "prod.game.events.>"
+      system_events: "prod.system.events.>"
+
+# 安全配置
+security:
+  jwt:
+    secret: "${JWT_SECRET}"  # 必须通过环境变量提供
+    issuer: "greatestworks-mmo-prod"
+    audience: "mmo-players"
+    access_token_ttl: "1h"
+    refresh_token_ttl: "24h"
+    
+  encryption:
+    key: "${ENCRYPTION_KEY}"  # 必须通过环境变量提供
+    algorithm: "AES-256-GCM"
+    
+  cors:
+    allowed_origins:
+      - "https://yourdomain.com"
+      - "https://www.yourdomain.com"
+      - "https://game.yourdomain.com"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+      - "X-Requested-With"
+    expose_headers:
+      - "X-Total-Count"
+      - "X-Rate-Limit-Remaining"
+    allow_credentials: true
+    max_age: 86400
+    
+  # TLS 配置
+  tls:
+    enabled: true
+    cert_file: "/etc/ssl/certs/server.crt"
+    key_file: "/etc/ssl/private/server.key"
+    min_version: "1.2"
+    
+  # 安全头配置
+  security_headers:
+    enabled: true
+    hsts_max_age: 31536000
+    content_type_nosniff: true
+    frame_deny: true
+    xss_protection: true
+
+# 日志配置
+logging:
+  level: "info"  # 生产环境使用 info 级别
+  format: "json"  # 生产环境使用 JSON 格式便于解析
+  output: "stdout"  # 容器环境输出到标准输出
+  
+  # 结构化日志字段
+  fields:
+    service: "mmo-server"
+    version: "1.0.0"
+    environment: "production"
+    datacenter: "${DATACENTER}"
+    region: "${REGION}"
+    
+  # 敏感信息过滤
+  sensitive_fields:
+    - "password"
+    - "token"
+    - "secret"
+    - "key"
+
+# 游戏配置
+game:
+  player:
+    max_level: 100
+    initial_gold: 1000
+    initial_experience: 0
+    max_inventory_slots: 100
+    
+  battle:
+    max_battle_time: "10m"
+    damage_variance: 0.1
+    critical_rate_base: 0.05
+    critical_damage_base: 1.5
+    
+  experience:
+    base_exp_per_level: 100
+    exp_multiplier: 1.2
+    max_exp_bonus: 2.0
+    
+  chat:
+    max_message_length: 500
+    rate_limit: 10
+    profanity_filter: true
+    banned_words:
+      - "spam"
+      - "cheat"
+      - "hack"
+
+# 性能配置
+performance:
+  worker_pool:
+    size: 500  # 生产环境更大的工作池
+    queue_size: 10000
+    
+  cache:
+    default_ttl: "1h"
+    max_entries: 100000
+    cleanup_interval: "5m"
+    
+  rate_limit:
+    enabled: true
+    requests_per_minute: 1000
+    burst: 200
+    
+  connection_pool:
+    max_idle: 200
+    max_open: 500
+    max_lifetime: "1h"
+    
+  # 内存管理
+  memory:
+    gc_percent: 100
+    max_heap_size: "2GB"
+    
+  # CPU 配置
+  cpu:
+    max_procs: 0  # 使用所有可用 CPU
+
+# 监控配置
+monitoring:
+  health:
+    enabled: true
+    path: "/health"
+    
+  metrics:
+    enabled: true
+    namespace: "mmo_server"
+    
+  tracing:
+    enabled: true
+    jaeger_endpoint: "${JAEGER_ENDPOINT}"
+    sample_rate: 0.01  # 生产环境低采样率
+    
+  profiling:
+    enabled: false  # 生产环境默认禁用
+    
+  # 告警配置
+  alerting:
+    enabled: true
+    webhook_url: "${ALERT_WEBHOOK_URL}"
+    
+  # 审计日志
+  audit:
+    enabled: true
+    log_file: "/var/log/audit/mmo-server.log"
+
+# 第三方服务配置
+third_party:
+  email:
+    provider: "${EMAIL_PROVIDER}"
+    smtp:
+      host: "${SMTP_HOST}"
+      port: 587
+      username: "${SMTP_USERNAME}"
+      password: "${SMTP_PASSWORD}"
+      
+  push:
+    provider: "${PUSH_PROVIDER}"
+    fcm:
+      server_key: "${FCM_SERVER_KEY}"
+      
+  payment:
+    provider: "${PAYMENT_PROVIDER}"
+    stripe:
+      public_key: "${STRIPE_PUBLIC_KEY}"
+      secret_key: "${STRIPE_SECRET_KEY}"
+      webhook_secret: "${STRIPE_WEBHOOK_SECRET}"
+
+# 备份配置
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # 每天凌晨 2 点
+  retention_days: 30
+  storage:
+    type: "s3"
+    bucket: "${BACKUP_BUCKET}"
+    region: "${BACKUP_REGION}"
+    access_key: "${BACKUP_ACCESS_KEY}"
+    secret_key: "${BACKUP_SECRET_KEY}"
+
+# 灾难恢复配置
+disaster_recovery:
+  enabled: true
+  backup_region: "${DR_REGION}"
+  rto: "1h"  # 恢复时间目标
+  rpo: "15m"  # 恢复点目标
+
+# 合规配置
+compliance:
+  gdpr:
+    enabled: true
+    data_retention_days: 365
+    
+  audit_log:
+    enabled: true
+    retention_days: 2555  # 7 年
+    
+  encryption_at_rest:
+    enabled: true
+    
+  encryption_in_transit:
+    enabled: true

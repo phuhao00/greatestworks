@@ -3,14 +3,23 @@ module greatestworks
 go 1.21
 
 require (
-	github.com/phuhao00/ai-behavior v0.1.0
 	github.com/phuhao00/netcore-go v0.1.0
-	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/netcore-go/core v1.0.0
+	github.com/netcore-go/tcp v1.0.0
+	github.com/netcore-go/netcore v1.0.0
+	github.com/netcore-go/rpc v1.0.0
+	github.com/netcore-go/pool v1.0.0
+	github.com/netcore-go/loadbalancer v1.0.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/nats-io/nats.go v1.37.0
-	github.com/redis/go-redis/v9 v9.3.0
-	go.mongodb.org/mongo-driver v1.12.0
+	github.com/redis/go-redis/v9 v9.6.1
+	go.mongodb.org/mongo-driver v1.17.1
 	gopkg.in/yaml.v3 v3.0.1
-	google.golang.org/protobuf v1.31.0
+	github.com/google/uuid v1.6.0
+	github.com/fsnotify/fsnotify v1.7.0
+	github.com/shirou/gopsutil/v3 v3.24.5
+	github.com/prometheus/client_golang v1.20.5
+	google.golang.org/protobuf v1.35.2
 )
 
 replace (

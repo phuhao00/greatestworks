@@ -1,0 +1,154 @@
+# =============================================================================
+# 开发环境配置模板
+# 用于本地开发和测试
+# =============================================================================
+
+# 应用基础配置
+app:
+  name: "GreatestWorks MMO Server (Dev)"
+  version: "1.0.0-dev"
+  environment: "development"
+  debug: true
+  
+# 服务器配置
+server:
+  http:
+    host: "localhost"
+    port: 8080
+    read_timeout: "30s"
+    write_timeout: "30s"
+    idle_timeout: "60s"
+  
+  websocket:
+    host: "localhost"
+    port: 8081
+    check_origin: false  # 开发环境允许跨域
+    
+  tcp:
+    host: "localhost"
+    port: 8082
+    max_connections: 1000  # 开发环境限制连接数
+    
+  metrics:
+    host: "localhost"
+    port: 9090
+
+# 数据库配置
+database:
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "mmo_game_dev"
+    username: "admin"
+    password: "admin123"
+    auth_source: "admin"
+    max_pool_size: 10  # 开发环境较小的连接池
+    min_pool_size: 2
+    
+  redis:
+    addr: "localhost:6379"
+    password: "redis123"
+    db: 1  # 使用不同的数据库
+    pool_size: 10
+    min_idle_conns: 2
+
+# 消息队列配置
+messaging:
+  nats:
+    url: "nats://localhost:4222"
+    cluster_id: "mmo-cluster-dev"
+    client_id: "mmo-server-dev-1"
+
+# 安全配置（开发环境使用简单配置）
+security:
+  jwt:
+    secret: "dev-jwt-secret-not-for-production"
+    access_token_ttl: "24h"  # 开发环境更长的过期时间
+    refresh_token_ttl: "7d"
+    
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:3001"
+      - "http://127.0.0.1:3000"
+    allow_credentials: true
+
+# 日志配置
+logging:
+  level: "debug"  # 开发环境使用 debug 级别
+  format: "text"  # 开发环境使用易读的文本格式
+  output: "stdout"
+  
+  fields:
+    service: "mmo-server-dev"
+    version: "1.0.0-dev"
+
+# 游戏配置（开发环境调整）
+game:
+  player:
+    max_level: 100
+    initial_gold: 10000  # 开发环境给更多初始金币
+    initial_experience: 1000
+    
+  battle:
+    max_battle_time: "1m"  # 开发环境缩短战斗时间
+    
+  chat:
+    rate_limit: 100  # 开发环境放宽限制
+
+# 性能配置（开发环境优化）
+performance:
+  worker_pool:
+    size: 10  # 较小的工作池
+    queue_size: 100
+    
+  cache:
+    default_ttl: "10m"  # 较短的缓存时间
+    max_entries: 1000
+    
+  rate_limit:
+    enabled: false  # 开发环境禁用限流
+
+# 监控配置
+monitoring:
+  health:
+    enabled: true
+    
+  metrics:
+    enabled: true
+    
+  tracing:
+    enabled: false  # 开发环境可选启用
+    
+  profiling:
+    enabled: true  # 开发环境启用性能分析
+    host: "localhost"
+    port: 6060
+
+# 开发工具配置
+development:
+  hot_reload:
+    enabled: true
+    watch_dirs:
+      - "./internal"
+      - "./cmd"
+      - "./configs"
+      
+  debug:
+    pprof_enabled: true
+    race_detector: true
+    
+  test_data:
+    enabled: true
+    auto_create_users: 5
+    auto_create_items: 50
+
+# 第三方服务（开发环境使用测试配置）
+third_party:
+  email:
+    provider: "mock"  # 使用模拟邮件服务
+    
+  push:
+    provider: "mock"  # 使用模拟推送服务
+    
+  payment:
+    provider: "mock"

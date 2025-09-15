@@ -1,36 +1,99 @@
+# =============================================================================
+# GreatestWorks MMO 游戏服务器 - 优化版 Docker Compose
+# =============================================================================
 version: '3.8'
 
+# 全局配置
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
 services:
-  # MMO游戏服务器
+  # =============================================================================
+  # MMO 游戏服务器 - 主应用
+  # =============================================================================
   mmo-server:
     build:
       context: .
       dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-final}
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
+        BUILD_TIME: ${BUILD_TIME}
+        GIT_COMMIT: ${GIT_COMMIT}
+    image: greatestworks/mmo-server:${IMAGE_TAG:-latest}
+    container_name: mmo-server
     ports:
-      - "8080:8080"
+      - "${SERVER_HTTP_PORT:-8080}:8080"
+      - "${SERVER_WS_PORT:-8081}:8081"
+      - "${SERVER_METRICS_PORT:-9090}:9090"
     environment:
-      - ENV=production
-      - MONGODB_URI=mongodb://mongodb:27017/mmo_game
+      # 应用配置
+      - APP_ENV=${APP_ENV:-production}
+      - GIN_MODE=${GIN_MODE:-release}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      
+      # 数据库配置
+      - MONGODB_URI=mongodb://${MONGODB_USER:-admin}:${MONGODB_PASSWORD:-admin123}@mongodb:27017/${MONGODB_DATABASE:-mmo_game}?authSource=admin
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+      
+      # 消息队列配置
       - NATS_URL=nats://nats:4222
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
-      - LOG_LEVEL=info
+      - NATS_CLUSTER_ID=${NATS_CLUSTER_ID:-mmo-cluster}
+      
+      # 安全配置
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-32-char-encryption-key-change-me}
+      
+      # 性能配置
+      - MAX_CONNECTIONS=${MAX_CONNECTIONS:-10000}
+      - WORKER_POOL_SIZE=${WORKER_POOL_SIZE:-100}
+      - CACHE_TTL=${CACHE_TTL:-3600}
+    env_file:
+      - .env
     depends_on:
-      - mongodb
-      - nats
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     volumes:
-      - ./logs:/var/log/mmo-server
-      - ./config:/root/config
-    restart: unless-stopped
+      - ./logs:/var/log/mmo-server:rw
+      - ./configs:/configs:ro
+      - /etc/localtime:/etc/localtime:ro
+    <<: *restart-policy
+    logging: *default-logging
     networks:
       - mmo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '${SERVER_CPU_LIMIT:-2.0}'
+          memory: ${SERVER_MEMORY_LIMIT:-2G}
+        reservations:
+          cpus: '${SERVER_CPU_RESERVATION:-0.5}'
+          memory: ${SERVER_MEMORY_RESERVATION:-512M}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: [
+        "CMD-SHELL",
+        "wget --no-verbose --tries=1 --spider --timeout=5 http://localhost:8080/health || exit 1"
+      ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
 
   # MongoDB数据库
   mongodb:

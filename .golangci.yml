@@ -1,0 +1,284 @@
+# =============================================================================
+# golangci-lint 配置文件
+# 用于 Go 代码质量检查和静态分析
+# =============================================================================
+
+# 运行配置
+run:
+  # 超时时间
+  timeout: 5m
+  
+  # 要检查的 Go 版本
+  go: '1.21'
+  
+  # 并发数
+  concurrency: 4
+  
+  # 跳过的目录
+  skip-dirs:
+    - vendor
+    - .git
+    - bin
+    - tmp
+    - _output
+  
+  # 跳过的文件
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+    - ".*_test\\.go$"  # 可选：跳过测试文件
+  
+  # 构建标签
+  build-tags:
+    - integration
+    - e2e
+
+# 输出配置
+output:
+  # 输出格式: colored-line-number|line-number|json|tab|checkstyle|code-climate
+  format: colored-line-number
+  
+  # 打印 linter 名称
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true
+
+# Linters 配置
+linters:
+  # 启用的 linters
+  enable:
+    # 默认启用
+    - errcheck      # 检查未处理的错误
+    - gosimple      # 简化代码建议
+    - govet         # Go 官方 vet 工具
+    - ineffassign   # 检查无效赋值
+    - staticcheck   # 静态分析
+    - typecheck     # 类型检查
+    - unused        # 检查未使用的代码
+    
+    # 代码风格
+    - gofmt         # 格式化检查
+    - goimports     # import 排序和格式化
+    - gocyclo       # 圈复杂度检查
+    - goconst       # 重复字符串检查
+    - gocritic      # 代码批评
+    - gofumpt       # 更严格的格式化
+    
+    # 性能相关
+    - prealloc      # 预分配切片
+    - bodyclose     # HTTP body 关闭检查
+    
+    # 安全相关
+    - gosec         # 安全检查
+    
+    # 错误处理
+    - errorlint     # 错误处理最佳实践
+    - wrapcheck     # 错误包装检查
+    
+    # 命名规范
+    - stylecheck    # 风格检查
+    - revive        # 替代 golint
+    
+    # 其他有用的
+    - misspell      # 拼写检查
+    - unconvert     # 不必要的类型转换
+    - unparam       # 未使用的参数
+    - whitespace    # 空白字符检查
+    - exportloopref # 循环变量引用检查
+    - nolintlint    # nolint 指令检查
+  
+  # 禁用的 linters
+  disable:
+    - deadcode      # 已废弃，使用 unused 替代
+    - varcheck      # 已废弃，使用 unused 替代
+    - structcheck   # 已废弃，使用 unused 替代
+    - maligned      # 已废弃
+    - interfacer    # 已废弃
+    - scopelint     # 已废弃，使用 exportloopref 替代
+    - golint        # 已废弃，使用 revive 替代
+  
+  # 快速模式，只运行快速的 linters
+  fast: false
+
+# Linters 设置
+linters-settings:
+  # errcheck 配置
+  errcheck:
+    # 检查类型断言
+    check-type-assertions: true
+    # 检查空白标识符
+    check-blank: true
+    # 忽略的函数
+    ignore: fmt:.*,io/ioutil:^Read.*
+  
+  # govet 配置
+  govet:
+    # 检查影子变量
+    check-shadowing: true
+    # 启用所有检查
+    enable-all: true
+    # 禁用特定检查
+    disable:
+      - fieldalignment  # 字段对齐检查可能过于严格
+  
+  # gocyclo 配置
+  gocyclo:
+    # 圈复杂度阈值
+    min-complexity: 15
+  
+  # goconst 配置
+  goconst:
+    # 最小字符串长度
+    min-len: 3
+    # 最小出现次数
+    min-occurrences: 3
+    # 忽略测试文件
+    ignore-tests: true
+  
+  # gocritic 配置
+  gocritic:
+    # 启用的检查
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+    # 禁用的检查
+    disabled-checks:
+      - commentedOutCode
+      - whyNoLint
+  
+  # gosec 配置
+  gosec:
+    # 严重性级别
+    severity: medium
+    # 置信度级别
+    confidence: medium
+    # 排除的规则
+    excludes:
+      - G104  # 审计错误未检查
+  
+  # revive 配置
+  revive:
+    # 最小置信度
+    min-confidence: 0.8
+    # 规则配置
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+  
+  # stylecheck 配置
+  stylecheck:
+    # 检查所有内容
+    checks: ["all"]
+  
+  # misspell 配置
+  misspell:
+    # 语言
+    locale: US
+    # 忽略的单词
+    ignore-words:
+      - greatestworks
+      - mmo
+      - gameplay
+  
+  # whitespace 配置
+  whitespace:
+    multi-if: true
+    multi-func: true
+  
+  # wrapcheck 配置
+  wrapcheck:
+    # 忽略的包
+    ignoreSigs:
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - .Wrap(
+      - .Wrapf(
+
+# Issues 配置
+issues:
+  # 排除默认的排除规则
+  exclude-use-default: false
+  
+  # 最大 issues 数量，0 表示无限制
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  # 新代码检查
+  new: false
+  
+  # 排除的规则
+  exclude-rules:
+    # 排除测试文件的某些检查
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - goconst
+    
+    # 排除生成的文件
+    - path: \.pb\.go
+      linters:
+        - all
+    
+    # 排除 main 函数的某些检查
+    - path: cmd/
+      text: "main function"
+      linters:
+        - revive
+    
+    # 排除特定的错误消息
+    - text: "Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked"
+      linters:
+        - errcheck
+    
+    # 排除 G104: Errors unhandled
+    - text: "G104:"
+      linters:
+        - gosec
+    
+    # 排除包注释检查（对于 main 包）
+    - text: "package-comments"
+      path: cmd/
+      linters:
+        - revive
+  
+  # 包含的文件模式
+  include:
+    - EXC0002  # disable excluding of issues about comments from golint
+
+# 严重性配置
+severity:
+  # 默认严重性
+  default-severity: error
+  
+  # 规则严重性
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - goconst
+      severity: warning

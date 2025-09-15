@@ -1,51 +1,122 @@
-# 多阶段构建 - 构建阶段
+# =============================================================================
+# 多阶段构建优化版 Dockerfile
+# =============================================================================
+
+# 构建阶段 - 使用官方 Go 镜像
 FROM golang:1.21-alpine AS builder
 
+# 设置构建参数
+ARG BUILD_VERSION=dev
+ARG BUILD_TIME
+ARG GIT_COMMIT
+
+# 安装构建依赖
+RUN apk add --no-cache \
+    git \
+    ca-certificates \
+    tzdata \
+    upx
+
 # 设置工作目录
-WORKDIR /app
+WORKDIR /build
 
-# 安装必要的包
-RUN apk add --no-cache git ca-certificates tzdata
-
-# 复制go mod文件
+# 优化 Go 模块缓存
 COPY go.mod go.sum ./
-
-# 下载依赖
-RUN go mod download
+RUN go mod download && go mod verify
 
 # 复制源代码
 COPY . .
 
-# 构建应用
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
+# 构建优化的二进制文件
+RUN CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    go build \
+    -a \
+    -installsuffix cgo \
+    -ldflags="-s -w -X main.version=${BUILD_VERSION} -X main.buildTime=${BUILD_TIME} -X main.gitCommit=${GIT_COMMIT}" \
+    -o server \
+    ./cmd/server
 
-# 运行阶段
-FROM alpine:latest
+# 使用 UPX 压缩二进制文件（可选）
+RUN upx --best --lzma server
 
-# 安装ca-certificates和tzdata
-RUN apk --no-cache add ca-certificates tzdata
+# =============================================================================
+# 运行阶段 - 使用 scratch 最小化镜像
+# =============================================================================
+FROM scratch AS runtime
 
-# 设置工作目录
-WORKDIR /root/
+# 从构建阶段复制必要文件
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /build/server /server
 
-# 从构建阶段复制二进制文件
-COPY --from=builder /app/main .
+# 复制配置文件（如果存在）
+COPY --from=builder /build/configs/ /configs/
 
-# 复制配置文件
-COPY --from=builder /app/config ./config
-
-# 创建日志目录
-RUN mkdir -p /var/log/mmo-server
-
-# 设置时区
+# 设置环境变量
 ENV TZ=Asia/Shanghai
+ENV GIN_MODE=release
+ENV LOG_LEVEL=info
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 8080 8081 9090
 
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+# 添加健康检查用户
+USER 65534:65534
 
 # 运行应用
-CMD ["./main"]
+ENTRYPOINT ["/server"]
+
+# =============================================================================
+# 开发阶段 - 包含调试工具
+# =============================================================================
+FROM alpine:latest AS development
+
+# 安装开发工具
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    curl \
+    wget \
+    netcat-openbsd \
+    htop \
+    strace
+
+# 创建非root用户
+RUN addgroup -g 1000 appgroup && \
+    adduser -D -s /bin/sh -u 1000 -G appgroup appuser
+
+# 设置工作目录
+WORKDIR /app
+
+# 从构建阶段复制文件
+COPY --from=builder /build/server .
+COPY --from=builder /build/configs/ ./configs/
+
+# 创建必要目录
+RUN mkdir -p /var/log/mmo-server && \
+    chown -R appuser:appgroup /app /var/log/mmo-server
+
+# 切换到非root用户
+USER appuser
+
+# 设置环境变量
+ENV TZ=Asia/Shanghai
+ENV GIN_MODE=debug
+ENV LOG_LEVEL=debug
+
+# 暴露端口
+EXPOSE 8080 8081 9090
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider --timeout=5 http://localhost:8080/health || exit 1
+
+# 运行应用
+CMD ["./server"]
+
+# =============================================================================
+# 默认目标为生产环境
+# =============================================================================
+FROM runtime AS final
