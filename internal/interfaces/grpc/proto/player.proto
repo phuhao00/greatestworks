@@ -1,0 +1,370 @@
+syntax = "proto3";
+
+package greatestworks.grpc;
+
+import "common.proto";
+
+option go_package = "greatestworks/internal/interfaces/grpc/proto";
+
+// 玩家信息
+message PlayerInfo {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  int32 level = 4;
+  int64 exp = 5;
+  string status = 6; // online, offline, busy, away
+  Position position = 7;
+  Stats stats = 8;
+  int64 created_at = 9;
+  int64 updated_at = 10;
+  int64 last_login = 11;
+  map<string, string> metadata = 12;
+}
+
+// 玩家创建请求
+message CreatePlayerRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  map<string, string> initial_data = 4;
+}
+
+// 玩家创建响应
+message CreatePlayerResponse {
+  BaseResponse base = 1;
+  PlayerInfo player = 2;
+}
+
+// 获取玩家请求
+message GetPlayerRequest {
+  string player_id = 1;
+  bool include_stats = 2;
+  bool include_metadata = 3;
+}
+
+// 获取玩家响应
+message GetPlayerResponse {
+  BaseResponse base = 1;
+  PlayerInfo player = 2;
+  bool found = 3;
+}
+
+// 更新玩家请求
+message UpdatePlayerRequest {
+  string player_id = 1;
+  optional string name = 2;
+  optional string email = 3;
+  optional int32 level = 4;
+  optional int64 exp = 5;
+  optional string status = 6;
+  optional Position position = 7;
+  optional Stats stats = 8;
+  map<string, string> metadata = 9;
+}
+
+// 更新玩家响应
+message UpdatePlayerResponse {
+  BaseResponse base = 1;
+  PlayerInfo player = 2;
+}
+
+// 删除玩家请求
+message DeletePlayerRequest {
+  string player_id = 1;
+  bool soft_delete = 2;
+  string reason = 3;
+}
+
+// 删除玩家响应
+message DeletePlayerResponse {
+  BaseResponse base = 1;
+}
+
+// 查询玩家请求
+message QueryPlayersRequest {
+  QueryCondition condition = 1;
+  bool include_stats = 2;
+  bool include_metadata = 3;
+}
+
+// 查询玩家响应
+message QueryPlayersResponse {
+  BaseResponse base = 1;
+  repeated PlayerInfo players = 2;
+  PaginationInfo pagination = 3;
+}
+
+// 玩家登录请求
+message PlayerLoginRequest {
+  string player_id = 1;
+  string session_id = 2;
+  string client_ip = 3;
+  string user_agent = 4;
+  map<string, string> login_data = 5;
+}
+
+// 玩家登录响应
+message PlayerLoginResponse {
+  BaseResponse base = 1;
+  PlayerInfo player = 2;
+  string session_token = 3;
+  int64 expires_at = 4;
+}
+
+// 玩家登出请求
+message PlayerLogoutRequest {
+  string player_id = 1;
+  string session_id = 2;
+  string reason = 3;
+}
+
+// 玩家登出响应
+message PlayerLogoutResponse {
+  BaseResponse base = 1;
+}
+
+// 玩家移动请求
+message PlayerMoveRequest {
+  string player_id = 1;
+  Position from_position = 2;
+  Position to_position = 3;
+  float speed = 4;
+  int64 timestamp = 5;
+}
+
+// 玩家移动响应
+message PlayerMoveResponse {
+  BaseResponse base = 1;
+  Position old_position = 2;
+  Position new_position = 3;
+  bool success = 4;
+  string reason = 5;
+}
+
+// 玩家状态更新请求
+message UpdatePlayerStatusRequest {
+  string player_id = 1;
+  string status = 2;
+  map<string, string> status_data = 3;
+}
+
+// 玩家状态更新响应
+message UpdatePlayerStatusResponse {
+  BaseResponse base = 1;
+  string old_status = 2;
+  string new_status = 3;
+}
+
+// 玩家统计更新请求
+message UpdatePlayerStatsRequest {
+  string player_id = 1;
+  Stats stats = 2;
+  bool is_delta = 3; // true表示增量更新，false表示绝对值更新
+}
+
+// 玩家统计更新响应
+message UpdatePlayerStatsResponse {
+  BaseResponse base = 1;
+  Stats old_stats = 2;
+  Stats new_stats = 3;
+}
+
+// 获取在线玩家请求
+message GetOnlinePlayersRequest {
+  PaginationRequest pagination = 1;
+  string status_filter = 2; // 状态过滤
+  bool include_stats = 3;
+}
+
+// 获取在线玩家响应
+message GetOnlinePlayersResponse {
+  BaseResponse base = 1;
+  repeated PlayerInfo players = 2;
+  PaginationInfo pagination = 3;
+  int32 total_online = 4;
+}
+
+// 玩家经验更新请求
+message UpdatePlayerExpRequest {
+  string player_id = 1;
+  int64 exp_delta = 2;
+  string source = 3; // 经验来源：battle, quest, daily等
+  map<string, string> metadata = 4;
+}
+
+// 玩家经验更新响应
+message UpdatePlayerExpResponse {
+  BaseResponse base = 1;
+  int64 old_exp = 2;
+  int64 new_exp = 3;
+  int32 old_level = 4;
+  int32 new_level = 5;
+  bool level_up = 6;
+}
+
+// 玩家等级更新请求
+message UpdatePlayerLevelRequest {
+  string player_id = 1;
+  int32 new_level = 2;
+  bool auto_adjust_exp = 3;
+  string reason = 4;
+}
+
+// 玩家等级更新响应
+message UpdatePlayerLevelResponse {
+  BaseResponse base = 1;
+  int32 old_level = 2;
+  int32 new_level = 3;
+  int64 old_exp = 4;
+  int64 new_exp = 5;
+}
+
+// 批量获取玩家请求
+message BatchGetPlayersRequest {
+  repeated string player_ids = 1;
+  bool include_stats = 2;
+  bool include_metadata = 3;
+}
+
+// 批量获取玩家响应
+message BatchGetPlayersResponse {
+  BaseResponse base = 1;
+  repeated PlayerInfo players = 2;
+  repeated string not_found_ids = 3;
+}
+
+// 玩家搜索请求
+message SearchPlayersRequest {
+  string keyword = 1;
+  repeated string search_fields = 2; // name, email等
+  QueryCondition condition = 3;
+}
+
+// 玩家搜索响应
+message SearchPlayersResponse {
+  BaseResponse base = 1;
+  repeated PlayerInfo players = 2;
+  PaginationInfo pagination = 3;
+  string search_keyword = 4;
+}
+
+// 玩家排行榜请求
+message GetPlayerRankingRequest {
+  string ranking_type = 1; // level, exp, battle_score等
+  PaginationRequest pagination = 2;
+  TimeRange time_range = 3;
+}
+
+// 玩家排行榜条目
+message PlayerRankingEntry {
+  int32 rank = 1;
+  PlayerInfo player = 2;
+  int64 score = 3;
+  map<string, string> ranking_data = 4;
+}
+
+// 玩家排行榜响应
+message GetPlayerRankingResponse {
+  BaseResponse base = 1;
+  repeated PlayerRankingEntry entries = 2;
+  PaginationInfo pagination = 3;
+  string ranking_type = 4;
+  int64 last_updated = 5;
+}
+
+// 玩家活动记录
+message PlayerActivityRecord {
+  string id = 1;
+  string player_id = 2;
+  string activity_type = 3; // login, logout, move, battle等
+  string description = 4;
+  map<string, string> data = 5;
+  int64 timestamp = 6;
+}
+
+// 获取玩家活动记录请求
+message GetPlayerActivityRequest {
+  string player_id = 1;
+  repeated string activity_types = 2;
+  TimeRange time_range = 3;
+  PaginationRequest pagination = 4;
+}
+
+// 获取玩家活动记录响应
+message GetPlayerActivityResponse {
+  BaseResponse base = 1;
+  repeated PlayerActivityRecord activities = 2;
+  PaginationInfo pagination = 3;
+}
+
+// 记录玩家活动请求
+message RecordPlayerActivityRequest {
+  string player_id = 1;
+  string activity_type = 2;
+  string description = 3;
+  map<string, string> data = 4;
+}
+
+// 记录玩家活动响应
+message RecordPlayerActivityResponse {
+  BaseResponse base = 1;
+  string activity_id = 2;
+}
+
+// 玩家服务接口
+service PlayerService {
+  // 创建玩家
+  rpc CreatePlayer(CreatePlayerRequest) returns (CreatePlayerResponse);
+  
+  // 获取玩家信息
+  rpc GetPlayer(GetPlayerRequest) returns (GetPlayerResponse);
+  
+  // 更新玩家信息
+  rpc UpdatePlayer(UpdatePlayerRequest) returns (UpdatePlayerResponse);
+  
+  // 删除玩家
+  rpc DeletePlayer(DeletePlayerRequest) returns (DeletePlayerResponse);
+  
+  // 查询玩家
+  rpc QueryPlayers(QueryPlayersRequest) returns (QueryPlayersResponse);
+  
+  // 玩家登录
+  rpc PlayerLogin(PlayerLoginRequest) returns (PlayerLoginResponse);
+  
+  // 玩家登出
+  rpc PlayerLogout(PlayerLogoutRequest) returns (PlayerLogoutResponse);
+  
+  // 玩家移动
+  rpc PlayerMove(PlayerMoveRequest) returns (PlayerMoveResponse);
+  
+  // 更新玩家状态
+  rpc UpdatePlayerStatus(UpdatePlayerStatusRequest) returns (UpdatePlayerStatusResponse);
+  
+  // 更新玩家统计
+  rpc UpdatePlayerStats(UpdatePlayerStatsRequest) returns (UpdatePlayerStatsResponse);
+  
+  // 获取在线玩家
+  rpc GetOnlinePlayers(GetOnlinePlayersRequest) returns (GetOnlinePlayersResponse);
+  
+  // 更新玩家经验
+  rpc UpdatePlayerExp(UpdatePlayerExpRequest) returns (UpdatePlayerExpResponse);
+  
+  // 更新玩家等级
+  rpc UpdatePlayerLevel(UpdatePlayerLevelRequest) returns (UpdatePlayerLevelResponse);
+  
+  // 批量获取玩家
+  rpc BatchGetPlayers(BatchGetPlayersRequest) returns (BatchGetPlayersResponse);
+  
+  // 搜索玩家
+  rpc SearchPlayers(SearchPlayersRequest) returns (SearchPlayersResponse);
+  
+  // 获取玩家排行榜
+  rpc GetPlayerRanking(GetPlayerRankingRequest) returns (GetPlayerRankingResponse);
+  
+  // 获取玩家活动记录
+  rpc GetPlayerActivity(GetPlayerActivityRequest) returns (GetPlayerActivityResponse);
+  
+  // 记录玩家活动
+  rpc RecordPlayerActivity(RecordPlayerActivityRequest) returns (RecordPlayerActivityResponse);
+}

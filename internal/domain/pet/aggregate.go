@@ -571,3 +571,44 @@ func CalculateRequiredExperience(level uint32) uint64 {
 	// 简化的经验计算公式
 	return uint64(level * level * 100)
 }
+
+// ReconstructPetAggregate 从持久化数据重建宠物聚合根
+func ReconstructPetAggregate(
+	id string,
+	playerID string,
+	configID uint32,
+	name string,
+	category PetCategory,
+	star uint32,
+	level uint32,
+	experience uint64,
+	state PetState,
+	attributes *PetAttributes,
+	skills []*PetSkill,
+	bonds *PetBonds,
+	skins []*PetSkin,
+	reviveTime time.Time,
+	createdAt time.Time,
+	updatedAt time.Time,
+	version int,
+) *PetAggregate {
+	return &PetAggregate{
+		id:         id,
+		playerID:   playerID,
+		configID:   configID,
+		name:       name,
+		category:   category,
+		star:       star,
+		level:      level,
+		experience: experience,
+		state:      state,
+		attributes: attributes,
+		skills:     skills,
+		bonds:      bonds,
+		skins:      skins,
+		reviveTime: reviveTime,
+		createdAt:  createdAt,
+		updatedAt:  updatedAt,
+		version:    version,
+	}
+}

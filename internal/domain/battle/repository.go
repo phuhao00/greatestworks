@@ -19,8 +19,8 @@ type Repository interface {
 	// Delete 删除战斗
 	Delete(ctx context.Context, id BattleID) error
 	
-	// FindByPlayerID 查找玩家参与的战斗
-	FindByPlayerID(ctx context.Context, playerID player.PlayerID) ([]*Battle, error)
+	// FindByPlayerID 根据玩家ID查找战斗
+	FindByPlayerID(ctx context.Context, playerID player.PlayerID, limit int) ([]*Battle, error)
 	
 	// FindActiveBattles 查找进行中的战斗
 	FindActiveBattles(ctx context.Context, limit int) ([]*Battle, error)
@@ -30,4 +30,7 @@ type Repository interface {
 	
 	// FindByType 根据类型查找战斗
 	FindByType(ctx context.Context, battleType BattleType, limit int) ([]*Battle, error)
+	
+	// CountByPlayerID 统计玩家参与的战斗数量
+	CountByPlayerID(ctx context.Context, playerID player.PlayerID) (int64, error)
 }

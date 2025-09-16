@@ -1,564 +1,524 @@
-// Package monitoring 统一监控系统
-// Author: MMO Server Team
-// Created: 2024
-
 package monitoring
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // MetricType 指标类型
 type MetricType string
 
 const (
-	// CounterType 计数器类型
-	CounterType MetricType = "counter"
-	// GaugeType 仪表盘类型
-	GaugeType MetricType = "gauge"
-	// HistogramType 直方图类型
-	HistogramType MetricType = "histogram"
-	// SummaryType 摘要类型
-	SummaryType MetricType = "summary"
+	MetricTypeCounter   MetricType = "counter"
+	MetricTypeGauge     MetricType = "gauge"
+	MetricTypeHistogram MetricType = "histogram"
+	MetricTypeSummary   MetricType = "summary"
 )
-
-// Labels 标签映射
-type Labels map[string]string
 
 // Metric 指标接口
 type Metric interface {
-	// Name 获取指标名称
-	Name() string
-	// Type 获取指标类型
-	Type() MetricType
-	// Help 获取帮助信息
-	Help() string
-	// Labels 获取标签
-	Labels() Labels
-	// Value 获取当前值
-	Value() interface{}
-	// Reset 重置指标
-	Reset()
-	// String 字符串表示
-	String() string
+	GetName() string
+	GetType() MetricType
+	GetValue() interface{}
+	GetLabels() map[string]string
+	GetTimestamp() time.Time
 }
 
-// Counter 计数器接口
-type Counter interface {
-	Metric
-	// Inc 增加计数（默认增加1）
-	Inc()
-	// Add 增加指定值
-	Add(value float64)
-	// Get 获取当前计数
-	Get() float64
+// Counter 计数器指标
+type Counter struct {
+	name      string
+	value     int64
+	labels    map[string]string
+	timestamp time.Time
+	mutex     sync.RWMutex
 }
-
-// Gauge 仪表盘接口
-type Gauge interface {
-	Metric
-	// Set 设置值
-	Set(value float64)
-	// Inc 增加值（默认增加1）
-	Inc()
-	// Dec 减少值（默认减少1）
-	Dec()
-	// Add 增加指定值
-	Add(value float64)
-	// Sub 减少指定值
-	Sub(value float64)
-	// Get 获取当前值
-	Get() float64
-}
-
-// Histogram 直方图接口
-type Histogram interface {
-	Metric
-	// Observe 观察值
-	Observe(value float64)
-	// ObserveWithLabels 带标签观察值
-	ObserveWithLabels(value float64, labels Labels)
-	// GetBuckets 获取桶信息
-	GetBuckets() []float64
-	// GetCounts 获取计数信息
-	GetCounts() []uint64
-	// GetSum 获取总和
-	GetSum() float64
-	// GetCount 获取总计数
-	GetCount() uint64
-}
-
-// Summary 摘要接口
-type Summary interface {
-	Metric
-	// Observe 观察值
-	Observe(value float64)
-	// ObserveWithLabels 带标签观察值
-	ObserveWithLabels(value float64, labels Labels)
-	// GetQuantiles 获取分位数
-	GetQuantiles() map[float64]float64
-	// GetSum 获取总和
-	GetSum() float64
-	// GetCount 获取总计数
-	GetCount() uint64
-}
-
-// Timer 计时器接口
-type Timer interface {
-	// Start 开始计时
-	Start() TimerContext
-	// Time 计时函数执行时间
-	Time(fn func())
-	// TimeContext 计时函数执行时间（带上下文）
-	TimeContext(ctx context.Context, fn func(context.Context))
-	// ObserveDuration 观察持续时间
-	ObserveDuration(duration time.Duration)
-}
-
-// TimerContext 计时器上下文
-type TimerContext interface {
-	// Stop 停止计时并记录
-	Stop()
-	// Duration 获取已经过的时间
-	Duration() time.Duration
-}
-
-// Registry 指标注册表接口
-type Registry interface {
-	// Register 注册指标
-	Register(metric Metric) error
-	// Unregister 注销指标
-	Unregister(name string) error
-	// Get 获取指标
-	Get(name string) (Metric, bool)
-	// GetAll 获取所有指标
-	GetAll() map[string]Metric
-	// Clear 清空所有指标
-	Clear()
-	// Gather 收集指标数据
-	Gather() ([]*MetricFamily, error)
-}
-
-// MetricFamily 指标族
-type MetricFamily struct {
-	Name    string      `json:"name"`
-	Help    string      `json:"help"`
-	Type    MetricType  `json:"type"`
-	Metrics []*Sample   `json:"metrics"`
-}
-
-// Sample 指标样本
-type Sample struct {
-	Labels    Labels      `json:"labels"`
-	Value     float64     `json:"value"`
-	Timestamp time.Time   `json:"timestamp"`
-	Buckets   []Bucket    `json:"buckets,omitempty"`
-	Quantiles []Quantile  `json:"quantiles,omitempty"`
-}
-
-// Bucket 直方图桶
-type Bucket struct {
-	UpperBound float64 `json:"upper_bound"`
-	Count      uint64  `json:"count"`
-}
-
-// Quantile 分位数
-type Quantile struct {
-	Quantile float64 `json:"quantile"`
-	Value    float64 `json:"value"`
-}
-
-// Factory 指标工厂接口
-type Factory interface {
-	// NewCounter 创建计数器
-	NewCounter(name, help string, labels Labels) Counter
-	// NewGauge 创建仪表盘
-	NewGauge(name, help string, labels Labels) Gauge
-	// NewHistogram 创建直方图
-	NewHistogram(name, help string, labels Labels, buckets []float64) Histogram
-	// NewSummary 创建摘要
-	NewSummary(name, help string, labels Labels, quantiles map[float64]float64) Summary
-	// NewTimer 创建计时器
-	NewTimer(name, help string, labels Labels) Timer
-}
-
-// Collector 收集器接口
-type Collector interface {
-	// Describe 描述指标
-	Describe(ch chan<- *MetricDesc)
-	// Collect 收集指标
-	Collect(ch chan<- Metric)
-}
-
-// MetricDesc 指标描述
-type MetricDesc struct {
-	Name      string
-	Help      string
-	Type      MetricType
-	Labels    []string
-	ConstLabels Labels
-}
-
-// Exporter 导出器接口
-type Exporter interface {
-	// Export 导出指标
-	Export(ctx context.Context, metrics []*MetricFamily) error
-	// Format 获取导出格式
-	Format() string
-}
-
-// Server 监控服务器接口
-type Server interface {
-	// Start 启动服务器
-	Start(ctx context.Context) error
-	// Stop 停止服务器
-	Stop(ctx context.Context) error
-	// RegisterHandler 注册处理器
-	RegisterHandler(path string, handler func() ([]byte, error))
-	// GetAddr 获取监听地址
-	GetAddr() string
-}
-
-// Config 监控配置
-type Config struct {
-	// 是否启用监控
-	Enabled bool `yaml:"enabled" json:"enabled"`
-	// 监听端口
-	Port int `yaml:"port" json:"port"`
-	// 监听地址
-	Host string `yaml:"host" json:"host"`
-	// 指标路径
-	Path string `yaml:"path" json:"path"`
-	// 命名空间
-	Namespace string `yaml:"namespace" json:"namespace"`
-	// 子系统
-	Subsystem string `yaml:"subsystem" json:"subsystem"`
-	// 标签
-	Labels map[string]string `yaml:"labels" json:"labels"`
-	// 收集间隔
-	CollectInterval time.Duration `yaml:"collect_interval" json:"collect_interval"`
-	// 是否启用运行时指标
-	EnableRuntimeMetrics bool `yaml:"enable_runtime_metrics" json:"enable_runtime_metrics"`
-	// 是否启用进程指标
-	EnableProcessMetrics bool `yaml:"enable_process_metrics" json:"enable_process_metrics"`
-	// 是否启用Go指标
-	EnableGoMetrics bool `yaml:"enable_go_metrics" json:"enable_go_metrics"`
-	// 自定义收集器
-	CustomCollectors []string `yaml:"custom_collectors" json:"custom_collectors"`
-}
-
-// DefaultConfig 默认配置
-func DefaultConfig() *Config {
-	return &Config{
-		Enabled:              true,
-		Port:                 9090,
-		Host:                 "0.0.0.0",
-		Path:                 "/metrics",
-		Namespace:            "mmo",
-		Subsystem:            "server",
-		Labels:               make(map[string]string),
-		CollectInterval:      15 * time.Second,
-		EnableRuntimeMetrics: true,
-		EnableProcessMetrics: true,
-		EnableGoMetrics:      true,
-		CustomCollectors:     make([]string, 0),
-	}
-}
-
-// Manager 监控管理器接口
-type Manager interface {
-	// GetRegistry 获取注册表
-	GetRegistry() Registry
-	// GetFactory 获取工厂
-	GetFactory() Factory
-	// RegisterCollector 注册收集器
-	RegisterCollector(collector Collector) error
-	// UnregisterCollector 注销收集器
-	UnregisterCollector(collector Collector) error
-	// StartServer 启动监控服务器
-	StartServer(ctx context.Context) error
-	// StopServer 停止监控服务器
-	StopServer(ctx context.Context) error
-	// Export 导出指标
-	Export(ctx context.Context, format string) ([]byte, error)
-	// GetMetrics 获取指标
-	GetMetrics() ([]*MetricFamily, error)
-}
-
-// 预定义指标名称
-const (
-	// HTTP相关指标
-	HTTPRequestsTotal     = "http_requests_total"
-	HTTPRequestDuration   = "http_request_duration_seconds"
-	HTTPRequestSize       = "http_request_size_bytes"
-	HTTPResponseSize      = "http_response_size_bytes"
-	HTTPRequestsInFlight  = "http_requests_in_flight"
-
-	// 数据库相关指标
-	DBConnectionsOpen     = "db_connections_open"
-	DBConnectionsIdle     = "db_connections_idle"
-	DBConnectionsInUse    = "db_connections_in_use"
-	DBQueryDuration       = "db_query_duration_seconds"
-	DBQueriesTotal        = "db_queries_total"
-
-	// 缓存相关指标
-	CacheHitsTotal        = "cache_hits_total"
-	CacheMissesTotal      = "cache_misses_total"
-	CacheOperationDuration = "cache_operation_duration_seconds"
-	CacheSize             = "cache_size_bytes"
-	CacheEntries          = "cache_entries"
-
-	// 游戏相关指标
-	PlayersOnline         = "players_online"
-	PlayerActions         = "player_actions_total"
-	GameEvents            = "game_events_total"
-	BattlesActive         = "battles_active"
-	GuildMembers          = "guild_members_total"
-
-	// 系统相关指标
-	CPUUsage              = "cpu_usage_percent"
-	MemoryUsage           = "memory_usage_bytes"
-	DiskUsage             = "disk_usage_bytes"
-	NetworkBytesReceived  = "network_bytes_received_total"
-	NetworkBytesSent      = "network_bytes_sent_total"
-
-	// 错误相关指标
-	ErrorsTotal           = "errors_total"
-	PanicsTotal           = "panics_total"
-	TimeoutsTotal         = "timeouts_total"
-)
-
-// 预定义标签名称
-const (
-	// HTTP标签
-	LabelMethod     = "method"
-	LabelPath       = "path"
-	LabelStatusCode = "status_code"
-	LabelHandler    = "handler"
-
-	// 数据库标签
-	LabelDatabase   = "database"
-	LabelTable      = "table"
-	LabelOperation  = "operation"
-	LabelQuery      = "query"
-
-	// 缓存标签
-	LabelCacheType  = "cache_type"
-	LabelCacheKey   = "cache_key"
-
-	// 游戏标签
-	LabelPlayerID   = "player_id"
-	LabelAction     = "action"
-	LabelEventType  = "event_type"
-	LabelBattleType = "battle_type"
-	LabelGuildID    = "guild_id"
-
-	// 系统标签
-	LabelComponent  = "component"
-	LabelModule     = "module"
-	LabelService    = "service"
-	LabelInstance   = "instance"
-	LabelVersion    = "version"
-
-	// 错误标签
-	LabelErrorType  = "error_type"
-	LabelErrorCode  = "error_code"
-)
-
-// 预定义错误
-var (
-	ErrMetricNotFound     = fmt.Errorf("metric not found")
-	ErrMetricExists       = fmt.Errorf("metric already exists")
-	ErrInvalidMetricType  = fmt.Errorf("invalid metric type")
-	ErrInvalidMetricName  = fmt.Errorf("invalid metric name")
-	ErrCollectorExists    = fmt.Errorf("collector already exists")
-	ErrCollectorNotFound  = fmt.Errorf("collector not found")
-	ErrServerNotStarted   = fmt.Errorf("server not started")
-	ErrServerAlreadyStarted = fmt.Errorf("server already started")
-)
-
-// MetricOptions 指标选项
-type MetricOptions struct {
-	Name        string
-	Help        string
-	Labels      Labels
-	ConstLabels Labels
-	Buckets     []float64
-	Quantiles   map[float64]float64
-	MaxAge      time.Duration
-	AgeBuckets  int
-	BufCap      int
-}
-
-// NewMetricOptions 创建指标选项
-func NewMetricOptions(name, help string) *MetricOptions {
-	return &MetricOptions{
-		Name:   name,
-		Help:   help,
-		Labels: make(Labels),
-		ConstLabels: make(Labels),
-	}
-}
-
-// WithLabels 添加标签
-func (mo *MetricOptions) WithLabels(labels Labels) *MetricOptions {
-	for k, v := range labels {
-		mo.Labels[k] = v
-	}
-	return mo
-}
-
-// WithConstLabels 添加常量标签
-func (mo *MetricOptions) WithConstLabels(labels Labels) *MetricOptions {
-	for k, v := range labels {
-		mo.ConstLabels[k] = v
-	}
-	return mo
-}
-
-// WithBuckets 设置直方图桶
-func (mo *MetricOptions) WithBuckets(buckets []float64) *MetricOptions {
-	mo.Buckets = buckets
-	return mo
-}
-
-// WithQuantiles 设置摘要分位数
-func (mo *MetricOptions) WithQuantiles(quantiles map[float64]float64) *MetricOptions {
-	mo.Quantiles = quantiles
-	return mo
-}
-
-// 全局变量
-var (
-	defaultRegistry Registry
-	defaultFactory  Factory
-	defaultManager  Manager
-	registryMutex   sync.RWMutex
-)
-
-// SetDefaultRegistry 设置默认注册表
-func SetDefaultRegistry(registry Registry) {
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	defaultRegistry = registry
-}
-
-// GetDefaultRegistry 获取默认注册表
-func GetDefaultRegistry() Registry {
-	registryMutex.RLock()
-	defer registryMutex.RUnlock()
-	return defaultRegistry
-}
-
-// SetDefaultFactory 设置默认工厂
-func SetDefaultFactory(factory Factory) {
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	defaultFactory = factory
-}
-
-// GetDefaultFactory 获取默认工厂
-func GetDefaultFactory() Factory {
-	registryMutex.RLock()
-	defer registryMutex.RUnlock()
-	return defaultFactory
-}
-
-// SetDefaultManager 设置默认管理器
-func SetDefaultManager(manager Manager) {
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	defaultManager = manager
-}
-
-// GetDefaultManager 获取默认管理器
-func GetDefaultManager() Manager {
-	registryMutex.RLock()
-	defer registryMutex.RUnlock()
-	return defaultManager
-}
-
-// 便捷函数
 
 // NewCounter 创建计数器
-func NewCounter(name, help string, labels Labels) Counter {
-	if defaultFactory != nil {
-		return defaultFactory.NewCounter(name, help, labels)
+func NewCounter(name string, labels map[string]string) *Counter {
+	return &Counter{
+		name:      name,
+		value:     0,
+		labels:    labels,
+		timestamp: time.Now(),
 	}
-	return nil
 }
 
-// NewGauge 创建仪表盘
-func NewGauge(name, help string, labels Labels) Gauge {
-	if defaultFactory != nil {
-		return defaultFactory.NewGauge(name, help, labels)
+// Inc 增加计数
+func (c *Counter) Inc() {
+	c.Add(1)
+}
+
+// Add 增加指定值
+func (c *Counter) Add(value int64) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.value += value
+	c.timestamp = time.Now()
+}
+
+// GetName 获取名称
+func (c *Counter) GetName() string {
+	return c.name
+}
+
+// GetType 获取类型
+func (c *Counter) GetType() MetricType {
+	return MetricTypeCounter
+}
+
+// GetValue 获取值
+func (c *Counter) GetValue() interface{} {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.value
+}
+
+// GetLabels 获取标签
+func (c *Counter) GetLabels() map[string]string {
+	return c.labels
+}
+
+// GetTimestamp 获取时间戳
+func (c *Counter) GetTimestamp() time.Time {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.timestamp
+}
+
+// Gauge 仪表指标
+type Gauge struct {
+	name      string
+	value     float64
+	labels    map[string]string
+	timestamp time.Time
+	mutex     sync.RWMutex
+}
+
+// NewGauge 创建仪表
+func NewGauge(name string, labels map[string]string) *Gauge {
+	return &Gauge{
+		name:      name,
+		value:     0,
+		labels:    labels,
+		timestamp: time.Now(),
 	}
-	return nil
+}
+
+// Set 设置值
+func (g *Gauge) Set(value float64) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	g.value = value
+	g.timestamp = time.Now()
+}
+
+// Inc 增加1
+func (g *Gauge) Inc() {
+	g.Add(1)
+}
+
+// Dec 减少1
+func (g *Gauge) Dec() {
+	g.Add(-1)
+}
+
+// Add 增加指定值
+func (g *Gauge) Add(value float64) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	g.value += value
+	g.timestamp = time.Now()
+}
+
+// GetName 获取名称
+func (g *Gauge) GetName() string {
+	return g.name
+}
+
+// GetType 获取类型
+func (g *Gauge) GetType() MetricType {
+	return MetricTypeGauge
+}
+
+// GetValue 获取值
+func (g *Gauge) GetValue() interface{} {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	return g.value
+}
+
+// GetLabels 获取标签
+func (g *Gauge) GetLabels() map[string]string {
+	return g.labels
+}
+
+// GetTimestamp 获取时间戳
+func (g *Gauge) GetTimestamp() time.Time {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
+	return g.timestamp
+}
+
+// Histogram 直方图指标
+type Histogram struct {
+	name      string
+	buckets   []float64
+	counts    []int64
+	sum       float64
+	total     int64
+	labels    map[string]string
+	timestamp time.Time
+	mutex     sync.RWMutex
 }
 
 // NewHistogram 创建直方图
-func NewHistogram(name, help string, labels Labels, buckets []float64) Histogram {
-	if defaultFactory != nil {
-		return defaultFactory.NewHistogram(name, help, labels, buckets)
+func NewHistogram(name string, buckets []float64, labels map[string]string) *Histogram {
+	if buckets == nil {
+		buckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
 	}
-	return nil
+
+	return &Histogram{
+		name:      name,
+		buckets:   buckets,
+		counts:    make([]int64, len(buckets)+1), // +1 for +Inf bucket
+		sum:       0,
+		total:     0,
+		labels:    labels,
+		timestamp: time.Now(),
+	}
 }
 
-// NewSummary 创建摘要
-func NewSummary(name, help string, labels Labels, quantiles map[float64]float64) Summary {
-	if defaultFactory != nil {
-		return defaultFactory.NewSummary(name, help, labels, quantiles)
+// Observe 观察值
+func (h *Histogram) Observe(value float64) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	h.sum += value
+	h.total++
+	h.timestamp = time.Now()
+
+	// 找到对应的桶
+	for i, bucket := range h.buckets {
+		if value <= bucket {
+			h.counts[i]++
+			return
+		}
 	}
-	return nil
+	// +Inf bucket
+	h.counts[len(h.buckets)]++
 }
 
-// NewTimer 创建计时器
-func NewTimer(name, help string, labels Labels) Timer {
-	if defaultFactory != nil {
-		return defaultFactory.NewTimer(name, help, labels)
+// GetName 获取名称
+func (h *Histogram) GetName() string {
+	return h.name
+}
+
+// GetType 获取类型
+func (h *Histogram) GetType() MetricType {
+	return MetricTypeHistogram
+}
+
+// GetValue 获取值
+func (h *Histogram) GetValue() interface{} {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
+	return map[string]interface{}{
+		"buckets": h.buckets,
+		"counts":  h.counts,
+		"sum":     h.sum,
+		"count":   h.total,
 	}
-	return nil
+}
+
+// GetLabels 获取标签
+func (h *Histogram) GetLabels() map[string]string {
+	return h.labels
+}
+
+// GetTimestamp 获取时间戳
+func (h *Histogram) GetTimestamp() time.Time {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+	return h.timestamp
+}
+
+// MetricsRegistry 指标注册表
+type MetricsRegistry struct {
+	metrics map[string]Metric
+	mutex   sync.RWMutex
+	logger  logger.Logger
+}
+
+// NewMetricsRegistry 创建指标注册表
+func NewMetricsRegistry(logger logger.Logger) *MetricsRegistry {
+	return &MetricsRegistry{
+		metrics: make(map[string]Metric),
+		logger:  logger,
+	}
 }
 
 // Register 注册指标
-func Register(metric Metric) error {
-	if defaultRegistry != nil {
-		return defaultRegistry.Register(metric)
+func (r *MetricsRegistry) Register(metric Metric) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	name := metric.GetName()
+	if _, exists := r.metrics[name]; exists {
+		return fmt.Errorf("metric %s already registered", name)
 	}
-	return ErrMetricNotFound
+
+	r.metrics[name] = metric
+	r.logger.Debug("Metric registered", "name", name, "type", metric.GetType())
+	return nil
 }
 
 // Unregister 注销指标
-func Unregister(name string) error {
-	if defaultRegistry != nil {
-		return defaultRegistry.Unregister(name)
-	}
-	return ErrMetricNotFound
+func (r *MetricsRegistry) Unregister(name string) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	delete(r.metrics, name)
+	r.logger.Debug("Metric unregistered", "name", name)
 }
 
-// Get 获取指标
-func Get(name string) (Metric, bool) {
-	if defaultRegistry != nil {
-		return defaultRegistry.Get(name)
-	}
-	return nil, false
+// GetMetric 获取指标
+func (r *MetricsRegistry) GetMetric(name string) (Metric, bool) {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	metric, exists := r.metrics[name]
+	return metric, exists
 }
 
-// GetAll 获取所有指标
-func GetAll() map[string]Metric {
-	if defaultRegistry != nil {
-		return defaultRegistry.GetAll()
+// GetAllMetrics 获取所有指标
+func (r *MetricsRegistry) GetAllMetrics() map[string]Metric {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	result := make(map[string]Metric)
+	for name, metric := range r.metrics {
+		result[name] = metric
 	}
-	return make(map[string]Metric)
+	return result
 }
 
-// Gather 收集指标数据
-func Gather() ([]*MetricFamily, error) {
-	if defaultRegistry != nil {
-		return defaultRegistry.Gather()
+// GetMetricsData 获取指标数据
+func (r *MetricsRegistry) GetMetricsData() map[string]interface{} {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	data := make(map[string]interface{})
+	for name, metric := range r.metrics {
+		data[name] = map[string]interface{}{
+			"name":      metric.GetName(),
+			"type":      metric.GetType(),
+			"value":     metric.GetValue(),
+			"labels":    metric.GetLabels(),
+			"timestamp": metric.GetTimestamp().Unix(),
+		}
 	}
-	return nil, ErrMetricNotFound
+	return data
+}
+
+// MonitoringService 监控服务
+type MonitoringService struct {
+	registry *MetricsRegistry
+	logger   logger.Logger
+
+	// 预定义指标
+	httpRequestsTotal    *Counter
+	httpRequestDuration  *Histogram
+	httpActiveConnections *Gauge
+	tcpConnectionsTotal   *Counter
+	tcpActiveConnections  *Gauge
+	grpcRequestsTotal     *Counter
+	grpcRequestDuration   *Histogram
+	systemMemoryUsage     *Gauge
+	systemCPUUsage        *Gauge
+	databaseConnections   *Gauge
+	errorCount            *Counter
+}
+
+// NewMonitoringService 创建监控服务
+func NewMonitoringService(logger logger.Logger) *MonitoringService {
+	registry := NewMetricsRegistry(logger)
+
+	service := &MonitoringService{
+		registry: registry,
+		logger:   logger,
+	}
+
+	// 初始化预定义指标
+	service.initPredefinedMetrics()
+
+	return service
+}
+
+// initPredefinedMetrics 初始化预定义指标
+func (s *MonitoringService) initPredefinedMetrics() {
+	// HTTP指标
+	s.httpRequestsTotal = NewCounter("http_requests_total", map[string]string{"service": "greatestworks"})
+	s.httpRequestDuration = NewHistogram("http_request_duration_seconds", nil, map[string]string{"service": "greatestworks"})
+	s.httpActiveConnections = NewGauge("http_active_connections", map[string]string{"service": "greatestworks"})
+
+	// TCP指标
+	s.tcpConnectionsTotal = NewCounter("tcp_connections_total", map[string]string{"service": "greatestworks"})
+	s.tcpActiveConnections = NewGauge("tcp_active_connections", map[string]string{"service": "greatestworks"})
+
+	// gRPC指标
+	s.grpcRequestsTotal = NewCounter("grpc_requests_total", map[string]string{"service": "greatestworks"})
+	s.grpcRequestDuration = NewHistogram("grpc_request_duration_seconds", nil, map[string]string{"service": "greatestworks"})
+
+	// 系统指标
+	s.systemMemoryUsage = NewGauge("system_memory_usage_bytes", map[string]string{"service": "greatestworks"})
+	s.systemCPUUsage = NewGauge("system_cpu_usage_percent", map[string]string{"service": "greatestworks"})
+	s.databaseConnections = NewGauge("database_connections", map[string]string{"service": "greatestworks"})
+	s.errorCount = NewCounter("errors_total", map[string]string{"service": "greatestworks"})
+
+	// 注册指标
+	s.registry.Register(s.httpRequestsTotal)
+	s.registry.Register(s.httpRequestDuration)
+	s.registry.Register(s.httpActiveConnections)
+	s.registry.Register(s.tcpConnectionsTotal)
+	s.registry.Register(s.tcpActiveConnections)
+	s.registry.Register(s.grpcRequestsTotal)
+	s.registry.Register(s.grpcRequestDuration)
+	s.registry.Register(s.systemMemoryUsage)
+	s.registry.Register(s.systemCPUUsage)
+	s.registry.Register(s.databaseConnections)
+	s.registry.Register(s.errorCount)
+
+	s.logger.Info("Predefined metrics initialized")
+}
+
+// RecordHTTPRequest 记录HTTP请求
+func (s *MonitoringService) RecordHTTPRequest(duration time.Duration) {
+	s.httpRequestsTotal.Inc()
+	s.httpRequestDuration.Observe(duration.Seconds())
+}
+
+// RecordTCPConnection 记录TCP连接
+func (s *MonitoringService) RecordTCPConnection() {
+	s.tcpConnectionsTotal.Inc()
+	s.tcpActiveConnections.Inc()
+}
+
+// RecordTCPDisconnection 记录TCP断开连接
+func (s *MonitoringService) RecordTCPDisconnection() {
+	s.tcpActiveConnections.Dec()
+}
+
+// RecordGRPCRequest 记录gRPC请求
+func (s *MonitoringService) RecordGRPCRequest(duration time.Duration) {
+	s.grpcRequestsTotal.Inc()
+	s.grpcRequestDuration.Observe(duration.Seconds())
+}
+
+// RecordError 记录错误
+func (s *MonitoringService) RecordError() {
+	s.errorCount.Inc()
+}
+
+// UpdateSystemMetrics 更新系统指标
+func (s *MonitoringService) UpdateSystemMetrics(memoryUsage, cpuUsage float64, dbConnections int) {
+	s.systemMemoryUsage.Set(memoryUsage)
+	s.systemCPUUsage.Set(cpuUsage)
+	s.databaseConnections.Set(float64(dbConnections))
+}
+
+// GetRegistry 获取指标注册表
+func (s *MonitoringService) GetRegistry() *MetricsRegistry {
+	return s.registry
+}
+
+// GetMetricsHandler 获取指标HTTP处理器
+func (s *MonitoringService) GetMetricsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		data := s.registry.GetMetricsData()
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    data,
+			"timestamp": time.Now().Unix(),
+		})
+	}
+}
+
+// HTTPMetricsMiddleware HTTP指标中间件
+func (s *MonitoringService) HTTPMetricsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+
+		// 增加活跃连接数
+		s.httpActiveConnections.Inc()
+		defer s.httpActiveConnections.Dec()
+
+		// 处理请求
+		c.Next()
+
+		// 记录指标
+		duration := time.Since(start)
+		s.RecordHTTPRequest(duration)
+
+		// 如果有错误，记录错误指标
+		if len(c.Errors) > 0 {
+			s.RecordError()
+		}
+	}
+}
+
+// StartSystemMetricsCollection 启动系统指标收集
+func (s *MonitoringService) StartSystemMetricsCollection(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info("System metrics collection stopped")
+			return
+		case <-ticker.C:
+			s.collectSystemMetrics()
+		}
+	}
+}
+
+// collectSystemMetrics 收集系统指标
+func (s *MonitoringService) collectSystemMetrics() {
+	// TODO: 实现实际的系统指标收集
+	// 这里应该使用系统调用或第三方库来获取实际的系统指标
+	// 例如：内存使用量、CPU使用率、磁盘使用量等
+
+	// 示例数据
+	memoryUsage := float64(1024 * 1024 * 512) // 512MB
+	cpuUsage := float64(25.5)                 // 25.5%
+	dbConnections := 10
+
+	s.UpdateSystemMetrics(memoryUsage, cpuUsage, dbConnections)
+	s.logger.Debug("System metrics collected", 
+		"memory_usage", memoryUsage,
+		"cpu_usage", cpuUsage,
+		"db_connections", dbConnections)
+}
+
+// GetStats 获取监控统计信息
+func (s *MonitoringService) GetStats() map[string]interface{} {
+	return map[string]interface{}{
+		"metrics_count":      len(s.registry.GetAllMetrics()),
+		"http_requests":      s.httpRequestsTotal.GetValue(),
+		"tcp_connections":    s.tcpConnectionsTotal.GetValue(),
+		"grpc_requests":      s.grpcRequestsTotal.GetValue(),
+		"error_count":        s.errorCount.GetValue(),
+		"active_http_conns":  s.httpActiveConnections.GetValue(),
+		"active_tcp_conns":   s.tcpActiveConnections.GetValue(),
+		"memory_usage":       s.systemMemoryUsage.GetValue(),
+		"cpu_usage":          s.systemCPUUsage.GetValue(),
+		"db_connections":     s.databaseConnections.GetValue(),
+	}
 }

@@ -892,6 +892,65 @@ const (
 
 // 验证函数
 
+// ReconstructBuildingAggregate 从持久化数据重建建筑聚合根
+func ReconstructBuildingAggregate(
+	id string,
+	playerID uint64,
+	buildingTypeID string,
+	name string,
+	description string,
+	level int32,
+	maxLevel int32,
+	status BuildingStatus,
+	category BuildingCategory,
+	position *Position,
+	size *Size,
+	orientation Orientation,
+	health int32,
+	maxHealth int32,
+	durability int32,
+	maxDurability int32,
+	effects []*BuildingEffect,
+	requirements []*Requirement,
+	upgradeCosts []*ResourceCost,
+	maintenanceCosts []*ResourceCost,
+	tags []string,
+	metadata map[string]interface{},
+	lastActiveAt time.Time,
+	createdAt time.Time,
+	updatedAt time.Time,
+) *BuildingAggregate {
+	return &BuildingAggregate{
+		ID:               id,
+		PlayerID:         playerID,
+		BuildingTypeID:   buildingTypeID,
+		Name:             name,
+		Description:      description,
+		Level:            level,
+		MaxLevel:         maxLevel,
+		Status:           status,
+		Category:         category,
+		Position:         position,
+		Size:             size,
+		Orientation:      orientation,
+		Health:           health,
+		MaxHealth:        maxHealth,
+		Durability:       durability,
+		MaxDurability:    maxDurability,
+		Effects:          effects,
+		Requirements:     requirements,
+		UpgradeCosts:     upgradeCosts,
+		MaintenanceCosts: maintenanceCosts,
+		Workers:          make([]*WorkerInfo, 0),
+		Visitors:         make([]*VisitorInfo, 0),
+		Tags:             tags,
+		Metadata:         metadata,
+		LastActiveAt:     lastActiveAt,
+		CreatedAt:        createdAt,
+		UpdatedAt:        updatedAt,
+	}
+}
+
 // Validate 验证建筑聚合
 func (b *BuildingAggregate) Validate() error {
 	if b.ID == "" {

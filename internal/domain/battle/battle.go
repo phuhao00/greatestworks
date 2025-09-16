@@ -371,3 +371,28 @@ func (b *Battle) IsFinished() bool {
 func (b *Battle) Version() int64 {
 	return b.version
 }
+
+// StartTime 获取开始时间
+func (b *Battle) StartTime() time.Time {
+	return b.startTime
+}
+
+// EndTime 获取结束时间
+func (b *Battle) EndTime() *time.Time {
+	return b.endTime
+}
+
+// CreatedAt 获取创建时间
+func (b *Battle) CreatedAt() time.Time {
+	return b.createdAt
+}
+
+// UpdatedAt 获取更新时间
+func (b *Battle) UpdatedAt() time.Time {
+	return b.updatedAt
+}
+
+// Rounds 获取回合列表
+func (b *Battle) Rounds() []*BattleRound {
+	return b.rounds
+}

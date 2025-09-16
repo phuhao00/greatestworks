@@ -21,6 +21,11 @@ func (id PlayerID) String() string {
 	return id.value
 }
 
+// PlayerIDFromString 从字符串创建PlayerID
+func PlayerIDFromString(value string) PlayerID {
+	return PlayerID{value: value}
+}
+
 // PlayerStatus 玩家状态枚举
 type PlayerStatus int
 
@@ -200,7 +205,38 @@ func (p *Player) IsAlive() bool {
 	return p.stats.HP > 0
 }
 
+// CreatedAt 获取创建时间
+func (p *Player) CreatedAt() time.Time {
+	return p.createdAt
+}
+
+// UpdatedAt 获取更新时间
+func (p *Player) UpdatedAt() time.Time {
+	return p.updatedAt
+}
+
 // Version 获取版本号
 func (p *Player) Version() int64 {
 	return p.version
+}
+
+// Exp 获取经验值
+func (p *Player) Exp() int64 {
+	return p.exp
+}
+
+// ReconstructPlayer 从持久化数据重建玩家聚合根
+func ReconstructPlayer(id PlayerID, name string, level int, exp int64, status PlayerStatus, position Position, stats PlayerStats, createdAt, updatedAt time.Time, version int64) *Player {
+	return &Player{
+		id:        id,
+		name:      name,
+		level:     level,
+		exp:       exp,
+		status:    status,
+		position:  position,
+		stats:     stats,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+		version:   version,
+	}
 }

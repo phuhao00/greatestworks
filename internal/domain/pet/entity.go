@@ -248,7 +248,7 @@ type SkillEffect struct {
 }
 
 // NewPetSkill 创建新的宠物技能
-func NewPetSkill(skillID, name string, skillType SkillType, damage int64, cooldown time.Duration) *PetSkill {
+func NewPetSkill(skillID, name string, skillType SkillType, cooldown time.Duration, damage int64, description string) *PetSkill {
 	now := time.Now()
 	return &PetSkill{
 		id:        fmt.Sprintf("skill_%d", now.UnixNano()),
@@ -263,6 +263,16 @@ func NewPetSkill(skillID, name string, skillType SkillType, damage int64, cooldo
 		createdAt: now,
 		updatedAt: now,
 	}
+}
+
+// GetDescription 获取技能描述
+func (ps *PetSkill) GetDescription() string {
+	return fmt.Sprintf("%s - Level %d", ps.name, ps.level)
+}
+
+// GetType 获取技能类型（为了兼容性）
+func (ps *PetSkill) GetType() SkillType {
+	return ps.skillType
 }
 
 // GetID 获取技能实体ID
@@ -402,10 +412,56 @@ func (ps *PetSkill) GetUpdatedAt() time.Time {
 // PetBonds 宠物羁绊实体
 type PetBonds struct {
 	id          string
-	activeBonds []string
+	activeBonds []*ActiveBond
+	bondPoints  int64
 	bondEffects map[string]*BondEffect
 	createdAt   time.Time
 	updatedAt   time.Time
+}
+
+// ActiveBond 激活的羁绊
+type ActiveBond struct {
+	bondID      string
+	name        string
+	level       uint32
+	effect      string
+	activatedAt time.Time
+}
+
+// NewActiveBond 创建新的激活羁绊
+func NewActiveBond(bondID, name string, level uint32, effect string) *ActiveBond {
+	return &ActiveBond{
+		bondID:      bondID,
+		name:        name,
+		level:       level,
+		effect:      effect,
+		activatedAt: time.Now(),
+	}
+}
+
+// GetBondID 获取羁绊ID
+func (ab *ActiveBond) GetBondID() string {
+	return ab.bondID
+}
+
+// GetName 获取羁绊名称
+func (ab *ActiveBond) GetName() string {
+	return ab.name
+}
+
+// GetLevel 获取羁绊等级
+func (ab *ActiveBond) GetLevel() uint32 {
+	return ab.level
+}
+
+// GetEffect 获取羁绊效果
+func (ab *ActiveBond) GetEffect() string {
+	return ab.effect
+}
+
+// GetActivatedAt 获取激活时间
+func (ab *ActiveBond) GetActivatedAt() time.Time {
+	return ab.activatedAt
 }
 
 // BondEffect 羁绊效果
@@ -424,7 +480,8 @@ func NewPetBonds() *PetBonds {
 	now := time.Now()
 	return &PetBonds{
 		id:          fmt.Sprintf("bonds_%d", now.UnixNano()),
-		activeBonds: make([]string, 0),
+		activeBonds: make([]*ActiveBond, 0),
+		bondPoints:  0,
 		bondEffects: make(map[string]*BondEffect),
 		createdAt:   now,
 		updatedAt:   now,
@@ -437,8 +494,25 @@ func (pb *PetBonds) GetID() string {
 }
 
 // GetActiveBonds 获取激活的羁绊
-func (pb *PetBonds) GetActiveBonds() []string {
+func (pb *PetBonds) GetActiveBonds() []*ActiveBond {
 	return pb.activeBonds
+}
+
+// GetBondPoints 获取羁绊点数
+func (pb *PetBonds) GetBondPoints() int64 {
+	return pb.bondPoints
+}
+
+// AddBondPoints 增加羁绊点数
+func (pb *PetBonds) AddBondPoints(points int64) {
+	pb.bondPoints += points
+	pb.updatedAt = time.Now()
+}
+
+// AddActiveBond 添加激活羁绊
+func (pb *PetBonds) AddActiveBond(bond *ActiveBond) {
+	pb.activeBonds = append(pb.activeBonds, bond)
+	pb.updatedAt = time.Now()
 }
 
 // GetBondEffects 获取羁绊效果
@@ -450,7 +524,7 @@ func (pb *PetBonds) GetBondEffects() map[string]*BondEffect {
 func (pb *PetBonds) ActivateBond(bondID string) error {
 	// 检查是否已激活
 	for _, activeBond := range pb.activeBonds {
-		if activeBond == bondID {
+		if activeBond.GetBondID() == bondID {
 			return ErrBondAlreadyActive
 		}
 	}
@@ -460,7 +534,9 @@ func (pb *PetBonds) ActivateBond(bondID string) error {
 		return ErrMaxActiveBondsReached
 	}
 	
-	pb.activeBonds = append(pb.activeBonds, bondID)
+	// 创建新的激活羁绊
+	bond := NewActiveBond(bondID, "Bond", 1, "Effect")
+	pb.activeBonds = append(pb.activeBonds, bond)
 	
 	// 激活羁绊效果
 	if effect, exists := pb.bondEffects[bondID]; exists {
@@ -476,7 +552,7 @@ func (pb *PetBonds) ActivateBond(bondID string) error {
 func (pb *PetBonds) DeactivateBond(bondID string) error {
 	// 查找并移除激活的羁绊
 	for i, activeBond := range pb.activeBonds {
-		if activeBond == bondID {
+		if activeBond.GetBondID() == bondID {
 			pb.activeBonds = append(pb.activeBonds[:i], pb.activeBonds[i+1:]...)
 			
 			// 取消羁绊效果
@@ -527,7 +603,7 @@ func (pb *PetBonds) GetAttributeBonus() map[string]float64 {
 // IsBondActive 检查羁绊是否激活
 func (pb *PetBonds) IsBondActive(bondID string) bool {
 	for _, activeBond := range pb.activeBonds {
-		if activeBond == bondID {
+		if activeBond.GetBondID() == bondID {
 			return true
 		}
 	}

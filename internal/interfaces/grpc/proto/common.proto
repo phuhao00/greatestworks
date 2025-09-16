@@ -1,0 +1,239 @@
+syntax = "proto3";
+
+package greatestworks.grpc;
+
+option go_package = "greatestworks/internal/interfaces/grpc/proto";
+
+// 通用响应
+message BaseResponse {
+  bool success = 1;
+  string message = 2;
+  int32 code = 3;
+  int64 timestamp = 4;
+}
+
+// 分页信息
+message PaginationInfo {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+}
+
+// 分页请求
+message PaginationRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+// 位置信息
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// 属性统计
+message Stats {
+  int32 hp = 1;
+  int32 max_hp = 2;
+  int32 mp = 3;
+  int32 max_mp = 4;
+  int32 attack = 5;
+  int32 defense = 6;
+  int32 speed = 7;
+}
+
+// 时间范围
+message TimeRange {
+  int64 start_time = 1;
+  int64 end_time = 2;
+}
+
+// 过滤条件
+message FilterCondition {
+  string field = 1;
+  string operator = 2; // eq, ne, gt, gte, lt, lte, in, like
+  repeated string values = 3;
+}
+
+// 排序条件
+message SortCondition {
+  string field = 1;
+  string direction = 2; // asc, desc
+}
+
+// 查询条件
+message QueryCondition {
+  repeated FilterCondition filters = 1;
+  repeated SortCondition sorts = 2;
+  PaginationRequest pagination = 3;
+}
+
+// 错误详情
+message ErrorDetail {
+  string code = 1;
+  string message = 2;
+  map<string, string> metadata = 3;
+}
+
+// 操作结果
+message OperationResult {
+  bool success = 1;
+  string message = 2;
+  repeated ErrorDetail errors = 3;
+  map<string, string> metadata = 4;
+}
+
+// 健康检查
+message HealthCheckRequest {
+  string service = 1;
+}
+
+message HealthCheckResponse {
+  enum ServingStatus {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+    SERVICE_UNKNOWN = 3;
+  }
+  ServingStatus status = 1;
+  string message = 2;
+  int64 timestamp = 3;
+}
+
+// 服务信息
+message ServiceInfo {
+  string name = 1;
+  string version = 2;
+  string build_time = 3;
+  string git_commit = 4;
+  map<string, string> metadata = 5;
+}
+
+// 指标信息
+message MetricInfo {
+  string name = 1;
+  string type = 2; // counter, gauge, histogram, summary
+  double value = 3;
+  map<string, string> labels = 4;
+  int64 timestamp = 5;
+}
+
+// 批量操作请求
+message BatchRequest {
+  repeated string ids = 1;
+  map<string, string> options = 2;
+}
+
+// 批量操作响应
+message BatchResponse {
+  int32 total = 1;
+  int32 success_count = 2;
+  int32 failed_count = 3;
+  repeated string failed_ids = 4;
+  repeated ErrorDetail errors = 5;
+}
+
+// 文件信息
+message FileInfo {
+  string name = 1;
+  string path = 2;
+  int64 size = 3;
+  string mime_type = 4;
+  string hash = 5;
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+// 上传文件请求
+message UploadFileRequest {
+  string filename = 1;
+  bytes content = 2;
+  string content_type = 3;
+  map<string, string> metadata = 4;
+}
+
+// 上传文件响应
+message UploadFileResponse {
+  BaseResponse base = 1;
+  FileInfo file_info = 2;
+  string upload_url = 3;
+}
+
+// 配置项
+message ConfigItem {
+  string key = 1;
+  string value = 2;
+  string type = 3; // string, int, bool, json
+  string description = 4;
+  bool is_secret = 5;
+  int64 updated_at = 6;
+}
+
+// 日志级别
+enum LogLevel {
+  LOG_LEVEL_UNKNOWN = 0;
+  LOG_LEVEL_TRACE = 1;
+  LOG_LEVEL_DEBUG = 2;
+  LOG_LEVEL_INFO = 3;
+  LOG_LEVEL_WARN = 4;
+  LOG_LEVEL_ERROR = 5;
+  LOG_LEVEL_FATAL = 6;
+}
+
+// 日志条目
+message LogEntry {
+  int64 timestamp = 1;
+  LogLevel level = 2;
+  string message = 3;
+  string service = 4;
+  string module = 5;
+  map<string, string> fields = 6;
+  string trace_id = 7;
+  string span_id = 8;
+}
+
+// 事件类型
+enum EventType {
+  EVENT_TYPE_UNKNOWN = 0;
+  EVENT_TYPE_USER_ACTION = 1;
+  EVENT_TYPE_SYSTEM_EVENT = 2;
+  EVENT_TYPE_ERROR = 3;
+  EVENT_TYPE_AUDIT = 4;
+}
+
+// 事件信息
+message EventInfo {
+  string id = 1;
+  EventType type = 2;
+  string source = 3;
+  string action = 4;
+  string resource = 5;
+  string user_id = 6;
+  map<string, string> data = 7;
+  int64 timestamp = 8;
+}
+
+// 通知类型
+enum NotificationType {
+  NOTIFICATION_TYPE_UNKNOWN = 0;
+  NOTIFICATION_TYPE_INFO = 1;
+  NOTIFICATION_TYPE_WARNING = 2;
+  NOTIFICATION_TYPE_ERROR = 3;
+  NOTIFICATION_TYPE_SUCCESS = 4;
+}
+
+// 通知信息
+message NotificationInfo {
+  string id = 1;
+  NotificationType type = 2;
+  string title = 3;
+  string content = 4;
+  string recipient = 5;
+  string channel = 6; // email, sms, push, websocket
+  map<string, string> metadata = 7;
+  int64 created_at = 8;
+  int64 sent_at = 9;
+  bool is_read = 10;
+}
