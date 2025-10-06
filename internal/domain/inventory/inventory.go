@@ -3,7 +3,6 @@ package inventory
 
 import (
 	"errors"
-	"fmt"
 	"greatestworks/internal/domain/player"
 	"time"
 
@@ -204,18 +203,28 @@ func (inv *Inventory) Capacity() int {
 
 // UsedSlots 获取已使用槽位
 func (inv *Inventory) UsedSlots() int {
-	return inv.usedSlots
+	return len(inv.slots)
 }
 
 // Items 获取所有物品
 func (inv *Inventory) Items() map[string]*Item {
-	return inv.items
+	items := make(map[string]*Item)
+	for _, slot := range inv.slots {
+		if slot.Item != nil {
+			items[slot.Item.ID] = slot.Item
+		}
+	}
+	return items
 }
 
 // GetItem 获取指定物品
 func (inv *Inventory) GetItem(itemID string) (*Item, bool) {
-	item, exists := inv.items[itemID]
-	return item, exists
+	for _, slot := range inv.slots {
+		if slot.Item != nil && slot.Item.ID == itemID {
+			return slot.Item, true
+		}
+	}
+	return nil, false
 }
 
 // Slots 获取所有槽位

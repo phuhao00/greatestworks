@@ -447,14 +447,14 @@ func (r *MongoNPCRepository) aggregateToDocument(npcAggregate *npc.NPCAggregate)
 			Region: location.GetRegion(),
 			Zone:   location.GetZone(),
 		},
-		Attributes: AttributesDoc{
+		Attributes: NPCAttributesDoc{
 			Level:        attributes.GetLevel(),
 			Health:       attributes.GetHealth(),
-			MaxHealth:    attributes.GetMaxHealth(),
+			MaxHealth:    int64(attributes.GetMaxHealth()),
 			Attack:       attributes.GetAttack(),
 			Defense:      attributes.GetDefense(),
 			Speed:        attributes.GetSpeed(),
-			Intelligence: attributes.GetIntelligence(),
+			Intelligence: int64(attributes.GetIntelligence()),
 			Charisma:     attributes.GetCharisma(),
 		},
 		Behavior: BehaviorDoc{

@@ -576,17 +576,17 @@ func (s *MinigameApplicationService) parseGameType(gameTypeStr string) (minigame
 }
 
 // parseDifficulty 解析难度
-func (s *MinigameApplicationService) parseDifficulty(difficultyStr string) (minigame.Difficulty, error) {
+func (s *MinigameApplicationService) parseDifficulty(difficultyStr string) (minigame.GameDifficulty, error) {
 	switch difficultyStr {
 	case "easy":
-		return minigame.DifficultyEasy, nil
+		return minigame.GameDifficultyEasy, nil
 	case "normal":
-		return minigame.DifficultyNormal, nil
+		return minigame.GameDifficultyNormal, nil
 	case "hard":
-		return minigame.DifficultyHard, nil
+		return minigame.GameDifficultyHard, nil
 	case "expert":
-		return minigame.DifficultyExpert, nil
+		return minigame.GameDifficultyExpert, nil
 	default:
-		return minigame.DifficultyNormal, fmt.Errorf("unknown difficulty: %s", difficultyStr)
+		return minigame.GameDifficultyNormal, fmt.Errorf("unknown difficulty: %s", difficultyStr)
 	}
 }

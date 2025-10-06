@@ -403,7 +403,7 @@ func (s *PlantService) buildFarmDTO(farm *plant.FarmAggregate) *FarmDTO {
 }
 
 // buildCropDTO 构建作物DTO
-func (s *PlantService) buildCropDTO(crop *plant.CropAggregate) *CropDTO {
+func (s *PlantService) buildCropDTO(crop *plant.Crop) *CropDTO {
 	return &CropDTO{
 		ID:                   crop.GetID(),
 		PlayerID:             crop.GetPlayerID(),
@@ -425,7 +425,7 @@ func (s *PlantService) buildCropDTO(crop *plant.CropAggregate) *CropDTO {
 }
 
 // buildCropDTOs 构建作物DTO列表
-func (s *PlantService) buildCropDTOs(crops []*plant.CropAggregate) []*CropDTO {
+func (s *PlantService) buildCropDTOs(crops []*plant.Crop) []*CropDTO {
 	dtos := make([]*CropDTO, len(crops))
 	for i, crop := range crops {
 		dtos[i] = s.buildCropDTO(crop)
@@ -434,7 +434,7 @@ func (s *PlantService) buildCropDTOs(crops []*plant.CropAggregate) []*CropDTO {
 }
 
 // buildSeedDTOs 构建种子DTO列表
-func (s *PlantService) buildSeedDTOs(seeds []*plant.Seed) []*SeedDTO {
+func (s *PlantService) buildSeedDTOs(seeds []plant.SeedType) []*SeedDTO {
 	dtos := make([]*SeedDTO, len(seeds))
 	for i, seed := range seeds {
 		dtos[i] = &SeedDTO{
@@ -482,7 +482,7 @@ func (s *PlantService) buildHarvestHistoryDTOs(history []*plant.HarvestResult) [
 }
 
 // buildStatisticsDTO 构建统计DTO
-func (s *PlantService) buildStatisticsDTO(stats *plant.PlantingStatistics) *PlantingStatisticsDTO {
+func (s *PlantService) buildStatisticsDTO(stats *plant.FarmStatistics) *PlantingStatisticsDTO {
 	return &PlantingStatisticsDTO{
 		PlayerID:        stats.GetPlayerID(),
 		TotalPlanted:    stats.GetTotalPlanted(),

@@ -80,7 +80,7 @@ func (h *GameHandler) HandleMessage(conn *connection.Connection, msg *protocol.M
 
 	default:
 		h.logger.Warn("Unknown message type", "message_type", msg.Header.MessageType, "conn_id", conn.ID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrInvalidMessage, "Unknown message type")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeInvalidMessage, "Unknown message type")
 	}
 }
 
@@ -90,13 +90,13 @@ func (h *GameHandler) handleAuth(ctx context.Context, conn *connection.Connectio
 	var req protocol.AuthRequest
 	if err := h.unmarshalPayload(msg.Payload, &req); err != nil {
 		h.logger.Error("Failed to unmarshal auth request", "error", err, "conn_id", conn.ID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrInvalidMessage, "Invalid request format")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeInvalidMessage, "Invalid request format")
 	}
 
 	// 验证Token（这里简化处理，实际应该验证JWT）
 	if req.Token == "" || req.PlayerID == "" {
 		h.logger.Warn("Invalid auth request", "conn_id", conn.ID, "player_id", req.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrAuthFailed, "Invalid token or player ID")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeAuthFailed, "Invalid token or player ID")
 	}
 
 	// 查询玩家信息
@@ -104,17 +104,17 @@ func (h *GameHandler) handleAuth(ctx context.Context, conn *connection.Connectio
 	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player info", "error", err, "player_id", req.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Player not found")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodePlayerNotFound, "Player not found")
 	}
 
 	if !result.Found {
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Player not found")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodePlayerNotFound, "Player not found")
 	}
 
 	// 绑定玩家到连接
 	if err := h.connMgr.BindPlayerToConnection(conn.ID, req.PlayerID); err != nil {
 		h.logger.Error("Failed to bind player to connection", "error", err, "conn_id", conn.ID, "player_id", req.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrServerBusy, "Failed to bind player")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeServerBusy, "Failed to bind player")
 	}
 
 	// 生成会话ID

@@ -507,7 +507,7 @@ func (s *NPCService) buildDialogueResponseDTO(response *npc.DialogueResponse) *D
 }
 
 // buildDialogueChoiceDTOs 构建对话选择DTO列表
-func (s *NPCService) buildDialogueChoiceDTOs(choices []*npc.DialogueChoice) []*DialogueChoiceDTO {
+func (s *NPCService) buildDialogueChoiceDTOs(choices []*npc.DialogueOption) []*DialogueChoiceDTO {
 	dtos := make([]*DialogueChoiceDTO, len(choices))
 	for i, choice := range choices {
 		dtos[i] = &DialogueChoiceDTO{

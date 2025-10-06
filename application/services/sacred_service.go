@@ -260,7 +260,7 @@ func (s *SacredService) GetChallengeHistory(ctx context.Context, playerID string
 // 私有方法
 
 // updateChallengeStatistics 更新挑战统计
-func (s *SacredService) updateChallengeStatistics(ctx context.Context, playerID string, instance *sacred.ChallengeInstance, reward *sacred.ChallengeReward) error {
+func (s *SacredService) updateChallengeStatistics(ctx context.Context, playerID string, instance *sacred.Challenge, reward *sacred.ChallengeReward) error {
 	stats, err := s.statisticsRepo.FindByPlayer(playerID)
 	if err != nil && !sacred.IsNotFoundError(err) {
 		return err
@@ -307,7 +307,7 @@ func (s *SacredService) buildSacredPlaceDTOs(sacredPlaces []*sacred.SacredPlaceA
 }
 
 // buildChallengeInstanceDTO 构建挑战实例DTO
-func (s *SacredService) buildChallengeInstanceDTO(instance *sacred.ChallengeInstance) *ChallengeInstanceDTO {
+func (s *SacredService) buildChallengeInstanceDTO(instance *sacred.Challenge) *ChallengeInstanceDTO {
 	return &ChallengeInstanceDTO{
 		ID:          instance.GetID(),
 		PlayerID:    instance.GetPlayerID(),
@@ -382,7 +382,7 @@ func (s *SacredService) buildArtifactEffectDTO(effect *sacred.ArtifactEffect) *A
 }
 
 // buildChallengeHistoryDTOs 构建挑战历史DTO列表
-func (s *SacredService) buildChallengeHistoryDTOs(history []*sacred.ChallengeInstance) []*ChallengeHistoryDTO {
+func (s *SacredService) buildChallengeHistoryDTOs(history []*sacred.Challenge) []*ChallengeHistoryDTO {
 	dtos := make([]*ChallengeHistoryDTO, len(history))
 	for i, instance := range history {
 		dtos[i] = &ChallengeHistoryDTO{

@@ -475,20 +475,20 @@ func (s *PetApplicationService) parseRarity(rarityStr string) (pet.PetRarity, er
 }
 
 // parseSource 解析来源
-func (s *PetApplicationService) parseSource(sourceStr string) (pet.PetSource, error) {
+func (s *PetApplicationService) parseSource(sourceStr string) (string, error) {
 	switch sourceStr {
 	case "shop":
-		return pet.SourceShop, nil
+		return "shop", nil
 	case "wild":
-		return pet.SourceWild, nil
+		return "wild", nil
 	case "breed":
-		return pet.SourceBreed, nil
+		return "breed", nil
 	case "event":
-		return pet.SourceEvent, nil
+		return "event", nil
 	case "gift":
-		return pet.SourceGift, nil
+		return "gift", nil
 	default:
-		return pet.SourceShop, fmt.Errorf("unknown source: %s", sourceStr)
+		return "shop", fmt.Errorf("unknown source: %s", sourceStr)
 	}
 }
 

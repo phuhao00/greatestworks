@@ -527,19 +527,19 @@ func (s *RankingApplicationService) parseRankType(rankTypeStr string) (ranking.R
 }
 
 // parsePeriodType 解析周期类型
-func (s *RankingApplicationService) parsePeriodType(periodTypeStr string) (ranking.PeriodType, error) {
+func (s *RankingApplicationService) parsePeriodType(periodTypeStr string) (ranking.RankPeriod, error) {
 	switch periodTypeStr {
 	case "permanent":
-		return ranking.PeriodTypePermanent, nil
+		return ranking.RankPeriodPermanent, nil
 	case "daily":
-		return ranking.PeriodTypeDaily, nil
+		return ranking.RankPeriodDaily, nil
 	case "weekly":
-		return ranking.PeriodTypeWeekly, nil
+		return ranking.RankPeriodWeekly, nil
 	case "monthly":
-		return ranking.PeriodTypeMonthly, nil
+		return ranking.RankPeriodMonthly, nil
 	case "seasonal":
-		return ranking.PeriodTypeSeasonal, nil
+		return ranking.RankPeriodSeasonal, nil
 	default:
-		return ranking.PeriodTypePermanent, fmt.Errorf("unknown period type: %s", periodTypeStr)
+		return ranking.RankPeriodPermanent, fmt.Errorf("unknown period type: %s", periodTypeStr)
 	}
 }
