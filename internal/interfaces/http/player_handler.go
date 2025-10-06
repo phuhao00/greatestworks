@@ -10,6 +10,7 @@ import (
 	playerCmd "greatestworks/application/commands/player"
 	playerQuery "greatestworks/application/queries/player"
 	"greatestworks/application/handlers"
+	"greatestworks/internal/domain/player"
 	"greatestworks/internal/infrastructure/logger"
 )
 
@@ -230,7 +231,7 @@ func (h *PlayerHandler) UpdatePlayer(c *gin.Context) {
 
 // DeletePlayer 删除玩家
 func (h *PlayerHandler) DeletePlayer(c *gin.Context) {
-	playerID, ok := ValidateID(c, "id")
+	playerIDStr, ok := ValidateID(c, "id")
 	if !ok {
 		return
 	}
@@ -238,7 +239,7 @@ func (h *PlayerHandler) DeletePlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行删除玩家命令
-	cmd := &playerCmd.DeletePlayerCommand{PlayerID: playerID}
+	cmd := &playerCmd.DeletePlayerCommand{PlayerID: player.PlayerIDFromString(playerIDStr)}
 	_, err := handlers.ExecuteTyped[*playerCmd.DeletePlayerCommand, *playerCmd.DeletePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to delete player", "error", err, "player_id", playerID)
@@ -309,7 +310,7 @@ func (h *PlayerHandler) ListPlayers(c *gin.Context) {
 
 // MovePlayer 移动玩家
 func (h *PlayerHandler) MovePlayer(c *gin.Context) {
-	playerID, ok := ValidateID(c, "id")
+	playerIDStr, ok := ValidateID(c, "id")
 	if !ok {
 		return
 	}
@@ -323,7 +324,7 @@ func (h *PlayerHandler) MovePlayer(c *gin.Context) {
 	
 	// 执行移动玩家命令
 	cmd := &playerCmd.MovePlayerCommand{
-		PlayerID: playerID,
+		PlayerID: player.PlayerIDFromString(playerIDStr),
 		Position: playerCmd.Position{
 			X: req.X,
 			Y: req.Y,
@@ -359,7 +360,7 @@ func (h *PlayerHandler) MovePlayer(c *gin.Context) {
 
 // LevelUpPlayer 玩家升级
 func (h *PlayerHandler) LevelUpPlayer(c *gin.Context) {
-	playerID, ok := ValidateID(c, "id")
+	playerIDStr, ok := ValidateID(c, "id")
 	if !ok {
 		return
 	}
@@ -367,7 +368,7 @@ func (h *PlayerHandler) LevelUpPlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行玩家升级命令
-	cmd := &playerCmd.LevelUpPlayerCommand{PlayerID: playerID}
+	cmd := &playerCmd.LevelUpPlayerCommand{PlayerID: player.PlayerIDFromString(playerIDStr)}
 	result, err := handlers.ExecuteTyped[*playerCmd.LevelUpPlayerCommand, *playerCmd.LevelUpPlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to level up player", "error", err, "player_id", playerID)
@@ -389,7 +390,7 @@ func (h *PlayerHandler) LevelUpPlayer(c *gin.Context) {
 
 // GetPlayerStats 获取玩家统计信息
 func (h *PlayerHandler) GetPlayerStats(c *gin.Context) {
-	playerID, ok := ValidateID(c, "id")
+	playerIDStr, ok := ValidateID(c, "id")
 	if !ok {
 		return
 	}
@@ -397,7 +398,7 @@ func (h *PlayerHandler) GetPlayerStats(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 查询玩家统计信息
-	query := &playerQuery.GetPlayerStatsQuery{PlayerID: playerID}
+	query := &playerQuery.GetPlayerStatsQuery{PlayerID: player.PlayerIDFromString(playerIDStr)}
 	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerStatsQuery, *playerQuery.GetPlayerStatsResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player stats", "error", err, "player_id", playerID)

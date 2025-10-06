@@ -84,11 +84,15 @@ type TimerContext interface {
 
 // Config 监控配置
 type Config struct {
-	Enabled    bool   `json:"enabled"`
-	Port       int    `json:"port"`
-	Path       string `json:"path"`
-	Namespace  string `json:"namespace"`
-	Subsystem  string `json:"subsystem"`
+	Enabled              bool              `json:"enabled"`
+	Port                 int               `json:"port"`
+	Path                 string            `json:"path"`
+	Namespace            string            `json:"namespace"`
+	Subsystem            string            `json:"subsystem"`
+	Host                 string            `json:"host"`
+	Labels               map[string]string `json:"labels"`
+	EnableRuntimeMetrics bool              `json:"enable_runtime_metrics"`
+	EnableProcessMetrics bool              `json:"enable_process_metrics"`
 }
 
 // Factory 指标工厂接口
@@ -118,6 +122,12 @@ type Registry interface {
 type Collector interface {
 	Describe(chan<- *MetricDesc)
 	Collect(chan<- Metric)
+}
+
+// PrometheusCollector Prometheus收集器接口
+type PrometheusCollector interface {
+	Describe(chan<- *prometheus.Desc)
+	Collect(chan<- prometheus.Metric)
 }
 
 // Labels 标签类型
@@ -609,8 +619,6 @@ type MonitoringService struct {
 	httpActiveConnections *Gauge
 	tcpConnectionsTotal   *Counter
 	tcpActiveConnections  *Gauge
-	grpcRequestsTotal     *Counter
-	grpcRequestDuration   *Histogram
 	systemMemoryUsage     *Gauge
 	systemCPUUsage        *Gauge
 	databaseConnections   *Gauge
@@ -643,9 +651,7 @@ func (s *MonitoringService) initPredefinedMetrics() {
 	s.tcpConnectionsTotal = NewCounter("tcp_connections_total", map[string]string{"service": "greatestworks"})
 	s.tcpActiveConnections = NewGauge("tcp_active_connections", map[string]string{"service": "greatestworks"})
 
-	// gRPC指标
-	s.grpcRequestsTotal = NewCounter("grpc_requests_total", map[string]string{"service": "greatestworks"})
-	s.grpcRequestDuration = NewHistogram("grpc_request_duration_seconds", nil, map[string]string{"service": "greatestworks"})
+
 
 	// 系统指标
 	s.systemMemoryUsage = NewGauge("system_memory_usage_bytes", map[string]string{"service": "greatestworks"})
@@ -659,8 +665,7 @@ func (s *MonitoringService) initPredefinedMetrics() {
 	s.registry.Register(s.httpActiveConnections)
 	s.registry.Register(s.tcpConnectionsTotal)
 	s.registry.Register(s.tcpActiveConnections)
-	s.registry.Register(s.grpcRequestsTotal)
-	s.registry.Register(s.grpcRequestDuration)
+
 	s.registry.Register(s.systemMemoryUsage)
 	s.registry.Register(s.systemCPUUsage)
 	s.registry.Register(s.databaseConnections)
@@ -686,11 +691,7 @@ func (s *MonitoringService) RecordTCPDisconnection() {
 	s.tcpActiveConnections.Dec()
 }
 
-// RecordGRPCRequest 记录gRPC请求
-func (s *MonitoringService) RecordGRPCRequest(duration time.Duration) {
-	s.grpcRequestsTotal.Inc()
-	s.grpcRequestDuration.Observe(duration.Seconds())
-}
+
 
 // RecordError 记录错误
 func (s *MonitoringService) RecordError() {
@@ -784,7 +785,7 @@ func (s *MonitoringService) GetStats() map[string]interface{} {
 		"metrics_count":      len(s.registry.GetAllMetrics()),
 		"http_requests":      s.httpRequestsTotal.GetValue(),
 		"tcp_connections":    s.tcpConnectionsTotal.GetValue(),
-		"grpc_requests":      s.grpcRequestsTotal.GetValue(),
+
 		"error_count":        s.errorCount.GetValue(),
 		"active_http_conns":  s.httpActiveConnections.GetValue(),
 		"active_tcp_conns":   s.tcpActiveConnections.GetValue(),

@@ -5,12 +5,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"sync"
 	"time"
 
-	"greatestworks/internal/infrastructure/monitoring"
 	"greatestworks/internal/interfaces/tcp/protocol"
+	"greatestworks/internal/network"
 	"greatestworks/internal/network/session"
 )
 
@@ -43,13 +42,14 @@ func (f MessageHandlerFunc) Handle(ctx context.Context, session *session.Session
 
 // Server TCP服务器
 type Server struct {
-	config   *ServerConfig
-	server   *network.TCPServer
-	handlers map[uint32]MessageHandler
-	sessions map[string]*session.Session
-	mu       sync.RWMutex
-	ctx      context.Context
-	cancel   context.CancelFunc
+	config    *ServerConfig
+	server    networkInfra.TCPServerInterface
+	handlers  map[uint32]MessageHandler
+	sessions  map[string]*session.Session
+	processor *network.MessageProcessor
+	mu        sync.RWMutex
+	ctx       context.Context
+	cancel    context.CancelFunc
 }
 
 // NewServer 创建新的TCP服务器
@@ -57,11 +57,12 @@ func NewServer(config *ServerConfig) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &Server{
-		config:   config,
-		handlers: make(map[uint32]MessageHandler),
-		sessions: make(map[string]*session.Session),
-		ctx:      ctx,
-		cancel:   cancel,
+		config:    config,
+		handlers:  make(map[uint32]MessageHandler),
+		sessions:  make(map[string]*session.Session),
+		processor: network.NewMessageProcessor(),
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 }
 
@@ -82,7 +83,7 @@ func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 
 	// 创建netcore-go TCP服务器
-	s.server = network.NewTCPServer(addr)
+	s.server = networkInfra.NewTCPServer(addr)
 
 	// 设置连接处理器
 	s.server.SetOnConnect(s.onConnect)
@@ -131,7 +132,8 @@ func (s *Server) onDisconnect(sess *session.Session) {
 // onMessage 消息处理
 func (s *Server) onMessage(sess *session.Session, data []byte) {
 	// 解析消息
-	msg, err := protocol.DecodeMessage(data)
+	msg := &network.Message{}
+	err := s.processor.DecodeMessage(msg, data, "")
 	if err != nil {
 		log.Printf("消息解析失败: %v", err)
 		return
@@ -142,11 +144,11 @@ func (s *Server) onMessage(sess *session.Session, data []byte) {
 
 	// 查找处理器
 	s.mu.RLock()
-	handler, exists := s.handlers[msg.Type]
+	handler, exists := s.handlers[uint32(msg.Header.Type)]
 	s.mu.RUnlock()
 
 	if !exists {
-		log.Printf("未找到消息类型 %d 的处理器", msg.Type)
+		log.Printf("未找到消息类型 %d 的处理器", msg.Header.Type)
 		return
 	}
 
@@ -162,14 +164,15 @@ func (s *Server) onMessage(sess *session.Session, data []byte) {
 }
 
 // Broadcast 广播消息给所有连接
-func (s *Server) Broadcast(msg *protocol.Message) error {
+func (s *Server) Broadcast(msg *network.Message) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	data, err := protocol.EncodeMessage(msg)
+	encodedMsg, err := s.processor.EncodeMessage(msg.Header.Type, msg, "")
 	if err != nil {
 		return fmt.Errorf("消息编码失败: %w", err)
 	}
+	data := encodedMsg.Body
 
 	for _, sess := range s.sessions {
 		if err := sess.Send(data); err != nil {
@@ -181,7 +184,7 @@ func (s *Server) Broadcast(msg *protocol.Message) error {
 }
 
 // SendToSession 发送消息给指定会话
-func (s *Server) SendToSession(sessionID string, msg *protocol.Message) error {
+func (s *Server) SendToSession(sessionID string, msg *network.Message) error {
 	s.mu.RLock()
 	sess, exists := s.sessions[sessionID]
 	s.mu.RUnlock()
@@ -190,10 +193,11 @@ func (s *Server) SendToSession(sessionID string, msg *protocol.Message) error {
 		return fmt.Errorf("会话 %s 不存在", sessionID)
 	}
 
-	data, err := protocol.EncodeMessage(msg)
+	encodedMsg, err := s.processor.EncodeMessage(msg.Header.Type, msg, "")
 	if err != nil {
 		return fmt.Errorf("消息编码失败: %w", err)
 	}
+	data := encodedMsg.Body
 
 	return sess.Send(data)
 }

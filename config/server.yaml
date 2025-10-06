@@ -54,26 +54,7 @@ tcp:
     keep_alive_period: 30s
     no_delay: true
 
-# gRPC服务器配置
-grpc:
-  enabled: true
-  addr: ":9091"
-  max_connections: 1000
-  connection_timeout: 10s
-  keepalive_time: 30s
-  keepalive_timeout: 5s
-  max_connection_idle: 15m
-  max_connection_age: 30m
-  max_connection_age_grace: 5s
-  enable_reflection: true
-  enable_health_check: true
-  enable_metrics: true
-  enable_auth: true
-  tls:
-    enabled: false
-    cert_file: ""
-    key_file: ""
-    ca_file: ""
+
 
 # 数据库配置
 database:

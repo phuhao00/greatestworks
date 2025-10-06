@@ -14,7 +14,7 @@ import (
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 
-	// "greatestworks/internal/interfaces/grpc" // TODO: 实现gRPC接口
+
 	"greatestworks/internal/interfaces/http"
 	"greatestworks/internal/interfaces/tcp"
 )
@@ -23,7 +23,7 @@ import (
 type ServerConfig struct {
 	HTTP *http.ServerConfig `yaml:"http" json:"http"`
 	TCP  *tcp.ServerConfig  `yaml:"tcp" json:"tcp"`
-	GRPC *grpc.ServerConfig `yaml:"grpc" json:"grpc"`
+
 }
 
 // MultiProtocolServer 多协议服务器
@@ -31,7 +31,7 @@ type MultiProtocolServer struct {
 	config       *ServerConfig
 	httpServer   *http.HTTPServer
 	tcpServer    *tcp.TCPServer
-	grpcServer   *grpc.GRPCServer
+
 	commandBus   *handlers.CommandBus
 	queryBus     *handlers.QueryBus
 	logger       logger.Logger
@@ -52,13 +52,13 @@ func NewMultiProtocolServer(config *ServerConfig, logger logger.Logger) *MultiPr
 	// 创建各协议服务器
 	httpServer := http.NewHTTPServer(config.HTTP, commandBus, queryBus, logger)
 	tcpServer := tcp.NewTCPServer(config.TCP, commandBus, queryBus, logger)
-	grpcServer := grpc.NewGRPCServer(config.GRPC, commandBus, queryBus, logger)
+
 
 	return &MultiProtocolServer{
 		config:       config,
 		httpServer:   httpServer,
 		tcpServer:    tcpServer,
-		grpcServer:   grpcServer,
+
 		commandBus:   commandBus,
 		queryBus:     queryBus,
 		logger:       logger,
@@ -96,17 +96,7 @@ func (s *MultiProtocolServer) Start() error {
 		s.logger.Info("TCP server started", "address", s.config.TCP.Addr)
 	}
 
-	// 启动gRPC服务器
-	if s.config.GRPC != nil {
-		s.wg.Add(1)
-		go func() {
-			defer s.wg.Done()
-			if err := s.grpcServer.Start(); err != nil {
-				s.logger.Error("gRPC server failed", "error", err)
-			}
-		}()
-		s.logger.Info("gRPC server started", "address", s.config.GRPC.Addr)
-	}
+
 
 	// 等待一段时间确保所有服务器启动
 	time.Sleep(1 * time.Second)
@@ -139,12 +129,7 @@ func (s *MultiProtocolServer) Stop() error {
 		}
 	}
 
-	if s.grpcServer != nil {
-		if err := s.grpcServer.Stop(); err != nil {
-			s.logger.Error("Failed to stop gRPC server", "error", err)
-			stopErrors = append(stopErrors, err)
-		}
-	}
+
 
 	// 等待所有协程结束
 	s.wg.Wait()
@@ -183,9 +168,7 @@ func (s *MultiProtocolServer) GetStats() map[string]interface{} {
 		stats["tcp"] = s.tcpServer.GetStats()
 	}
 
-	if s.grpcServer != nil {
-		stats["grpc"] = s.grpcServer.GetStats()
-	}
+
 
 	return stats
 }
@@ -213,20 +196,7 @@ func loadConfig() (*ServerConfig, error) {
 			EnableCompression: false,
 			BufferSize:        4096,
 		},
-		GRPC: &grpc.ServerConfig{
-			Addr:                  ":9091",
-			MaxConnections:        1000,
-			ConnectionTimeout:     10 * time.Second,
-			KeepaliveTime:         30 * time.Second,
-			KeepaliveTimeout:      5 * time.Second,
-			MaxConnectionIdle:     15 * time.Minute,
-			MaxConnectionAge:      30 * time.Minute,
-			MaxConnectionAgeGrace: 5 * time.Second,
-			EnableReflection:      true,
-			EnableHealthCheck:     true,
-			EnableMetrics:         true,
-			EnableAuth:            true,
-		},
+
 	}
 
 	// TODO: 从配置文件或环境变量加载配置
@@ -274,8 +244,7 @@ func main() {
 	// 打印服务器信息
 	logger.Info("Server startup completed",
 		"http_addr", config.HTTP.Addr,
-		"tcp_addr", config.TCP.Addr,
-		"grpc_addr", config.GRPC.Addr)
+		"tcp_addr", config.TCP.Addr)
 
 	// 等待关闭信号
 	server.Wait()

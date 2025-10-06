@@ -29,6 +29,7 @@ type CreatePlayerHandler struct {
 type PlayerService interface {
 	CreatePlayer(ctx context.Context, name string) (*CreatePlayerResult, error)
 	MovePlayer(ctx context.Context, playerID string, position Position) error
+	LevelUpPlayer(ctx context.Context, cmd *LevelUpPlayerCommand) (*LevelUpPlayerResult, error)
 }
 
 // NewCreatePlayerHandler 创建命令处理器

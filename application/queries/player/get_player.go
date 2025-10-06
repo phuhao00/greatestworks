@@ -58,6 +58,7 @@ type PlayerQueryService interface {
 	GetPlayerByName(ctx context.Context, name string) (*PlayerDTO, error)
 	GetOnlinePlayers(ctx context.Context, limit int) ([]*PlayerDTO, error)
 	GetPlayersByLevel(ctx context.Context, minLevel, maxLevel int) ([]*PlayerDTO, error)
+	ListPlayers(ctx context.Context, query *ListPlayersQuery) ([]*PlayerDTO, int64, error)
 }
 
 // NewGetPlayerHandler 创建查询处理器
@@ -76,7 +77,7 @@ func (h *GetPlayerHandler) Handle(ctx context.Context, query *GetPlayerQuery) (*
 		}
 		return nil, err
 	}
-	
+
 	return &GetPlayerResult{Player: player, Found: true}, nil
 }
 

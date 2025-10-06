@@ -11,16 +11,16 @@ import (
 type GameType int32
 
 const (
-	GameTypeSaveDog   GameType = iota + 1 // 拯救小狗
-	GameTypePuzzle                        // 拼图游戏
-	GameTypeRacing                        // 赛车游戏
-	GameTypeMemory                        // 记忆游戏
-	GameTypeMatch                         // 消除游戏
-	GameTypeJump                          // 跳跃游戏
-	GameTypeShoot                         // 射击游戏
-	GameTypeStrategy                      // 策略游戏
-	GameTypeCard                          // 卡牌游戏
-	GameTypeCustom                        // 自定义游戏
+	GameTypeSaveDog  GameType = iota + 1 // 拯救小狗
+	GameTypePuzzle                       // 拼图游戏
+	GameTypeRacing                       // 赛车游戏
+	GameTypeMemory                       // 记忆游戏
+	GameTypeMatch                        // 消除游戏
+	GameTypeJump                         // 跳跃游戏
+	GameTypeShoot                        // 射击游戏
+	GameTypeStrategy                     // 策略游戏
+	GameTypeCard                         // 卡牌游戏
+	GameTypeCustom                       // 自定义游戏
 )
 
 // String 返回游戏类型的字符串表示
@@ -56,45 +56,19 @@ func (gt GameType) IsValid() bool {
 	return gt >= GameTypeSaveDog && gt <= GameTypeCustom
 }
 
-// GameCategory 游戏分类
-type GameCategory int32
-
-const (
-	GameCategoryAction   GameCategory = iota + 1 // 动作类
-	GameCategoryPuzzle                           // 益智类
-	GameCategoryStrategy                         // 策略类
-	GameCategoryRacing                           // 竞速类
-	GameCategoryCard                             // 卡牌类
-	GameCategoryCasual                           // 休闲类
-	GameCategoryEducation                        // 教育类
-	GameCategoryAdventure                        // 冒险类
-	GameCategorySimulation                       // 模拟类
-	GameCategorySports                           // 体育类
-)
+// 注意：GameCategory已经在types.go中定义，这里删除重复定义
 
 // String 返回游戏分类的字符串表示
 func (gc GameCategory) String() string {
 	switch gc {
-	case GameCategoryAction:
-		return "action"
-	case GameCategoryPuzzle:
-		return "puzzle"
-	case GameCategoryStrategy:
-		return "strategy"
-	case GameCategoryRacing:
-		return "racing"
-	case GameCategoryCard:
-		return "card"
+	case GameCategoryNormal:
+		return "normal"
+	case GameCategoryCompetitive:
+		return "competitive"
 	case GameCategoryCasual:
 		return "casual"
-	case GameCategoryEducation:
-		return "education"
-	case GameCategoryAdventure:
-		return "adventure"
-	case GameCategorySimulation:
-		return "simulation"
-	case GameCategorySports:
-		return "sports"
+	case GameCategoryRanked:
+		return "ranked"
 	default:
 		return "unknown"
 	}
@@ -102,19 +76,24 @@ func (gc GameCategory) String() string {
 
 // IsValid 检查游戏分类是否有效
 func (gc GameCategory) IsValid() bool {
-	return gc >= GameCategoryAction && gc <= GameCategorySports
+	switch gc {
+	case GameCategoryNormal, GameCategoryCompetitive, GameCategoryCasual, GameCategoryRanked:
+		return true
+	default:
+		return false
+	}
 }
 
 // GameStatus 游戏状态
 type GameStatus int32
 
 const (
-	GameStatusWaiting  GameStatus = iota + 1 // 等待开始
-	GameStatusRunning                        // 进行中
-	GameStatusPaused                         // 暂停
-	GameStatusFinished                       // 已结束
-	GameStatusCancelled                      // 已取消
-	GameStatusError                          // 错误状态
+	GameStatusWaiting   GameStatus = iota + 1 // 等待开始
+	GameStatusRunning                         // 进行中
+	GameStatusPaused                          // 暂停
+	GameStatusFinished                        // 已结束
+	GameStatusCancelled                       // 已取消
+	GameStatusError                           // 错误状态
 )
 
 // String 返回游戏状态的字符串表示
@@ -162,12 +141,12 @@ func (gs GameStatus) CanTransitionTo(target GameStatus) bool {
 type GamePhase int32
 
 const (
-	GamePhaseWaiting    GamePhase = iota + 1 // 等待阶段
-	GamePhaseStarting                        // 开始阶段
-	GamePhaseRunning                         // 运行阶段
-	GamePhasePaused                          // 暂停阶段
-	GamePhaseEnding                          // 结束阶段
-	GamePhaseFinished                        // 完成阶段
+	GamePhaseWaiting  GamePhase = iota + 1 // 等待阶段
+	GamePhaseStarting                      // 开始阶段
+	GamePhaseRunning                       // 运行阶段
+	GamePhasePaused                        // 暂停阶段
+	GamePhaseEnding                        // 结束阶段
+	GamePhaseFinished                      // 完成阶段
 )
 
 // String 返回游戏阶段的字符串表示
@@ -200,13 +179,13 @@ type GameEndReason int32
 
 const (
 	GameEndReasonCompleted           GameEndReason = iota + 1 // 正常完成
-	GameEndReasonTimeout                                       // 超时
-	GameEndReasonCancelled                                     // 取消
+	GameEndReasonTimeout                                      // 超时
+	GameEndReasonCancelled                                    // 取消
 	GameEndReasonInsufficientPlayers                          // 玩家不足
-	GameEndReasonError                                         // 错误
-	GameEndReasonForceQuit                                     // 强制退出
-	GameEndReasonNetworkError                                  // 网络错误
-	GameEndReasonSystemMaintenance                             // 系统维护
+	GameEndReasonError                                        // 错误
+	GameEndReasonForceQuit                                    // 强制退出
+	GameEndReasonNetworkError                                 // 网络错误
+	GameEndReasonSystemMaintenance                            // 系统维护
 )
 
 // String 返回游戏结束原因的字符串表示
@@ -242,14 +221,14 @@ func (ger GameEndReason) IsValid() bool {
 type PlayerStatus int32
 
 const (
-	PlayerStatusWaiting    PlayerStatus = iota + 1 // 等待中
-	PlayerStatusReady                              // 准备就绪
-	PlayerStatusPlaying                            // 游戏中
-	PlayerStatusPaused                             // 暂停
-	PlayerStatusFinished                           // 已完成
-	PlayerStatusLeft                               // 已离开
-	PlayerStatusDisconnected                       // 断线
-	PlayerStatusKicked                             // 被踢出
+	PlayerStatusWaiting      PlayerStatus = iota + 1 // 等待中
+	PlayerStatusReady                                // 准备就绪
+	PlayerStatusPlaying                              // 游戏中
+	PlayerStatusPaused                               // 暂停
+	PlayerStatusFinished                             // 已完成
+	PlayerStatusLeft                                 // 已离开
+	PlayerStatusDisconnected                         // 断线
+	PlayerStatusKicked                               // 被踢出
 )
 
 // String 返回玩家状态的字符串表示
@@ -286,11 +265,11 @@ type PlayerLeaveReason int32
 
 const (
 	PlayerLeaveReasonVoluntary    PlayerLeaveReason = iota + 1 // 主动离开
-	PlayerLeaveReasonKicked                                     // 被踢出
-	PlayerLeaveReasonDisconnected                               // 断线
-	PlayerLeaveReasonTimeout                                    // 超时
-	PlayerLeaveReasonError                                      // 错误
-	PlayerLeaveReasonGameEnded                                  // 游戏结束
+	PlayerLeaveReasonKicked                                    // 被踢出
+	PlayerLeaveReasonDisconnected                              // 断线
+	PlayerLeaveReasonTimeout                                   // 超时
+	PlayerLeaveReasonError                                     // 错误
+	PlayerLeaveReasonGameEnded                                 // 游戏结束
 )
 
 // String 返回玩家离开原因的字符串表示
@@ -322,14 +301,14 @@ func (plr PlayerLeaveReason) IsValid() bool {
 type ScoreType int32
 
 const (
-	ScoreTypePoints      ScoreType = iota + 1 // 积分
-	ScoreTypeTime                             // 时间
-	ScoreTypeDistance                         // 距离
-	ScoreTypeAccuracy                         // 准确度
-	ScoreTypeCombo                            // 连击
-	ScoreTypeLevel                            // 等级
-	ScoreTypeProgress                         // 进度
-	ScoreTypeCustom                           // 自定义
+	ScoreTypePoints   ScoreType = iota + 1 // 积分
+	ScoreTypeTime                          // 时间
+	ScoreTypeDistance                      // 距离
+	ScoreTypeAccuracy                      // 准确度
+	ScoreTypeCombo                         // 连击
+	ScoreTypeLevel                         // 等级
+	ScoreTypeProgress                      // 进度
+	ScoreTypeCustom                        // 自定义
 )
 
 // String 返回分数类型的字符串表示
@@ -361,39 +340,19 @@ func (st ScoreType) IsValid() bool {
 	return st >= ScoreTypePoints && st <= ScoreTypeCustom
 }
 
-// RewardType 奖励类型
-type RewardType int32
-
-const (
-	RewardTypeCoins      RewardType = iota + 1 // 金币
-	RewardTypeGems                             // 宝石
-	RewardTypeItems                            // 道具
-	RewardTypeExperience                       // 经验
-	RewardTypeTrophies                         // 奖杯
-	RewardTypeBadges                           // 徽章
-	RewardTypeUnlocks                          // 解锁内容
-	RewardTypeCustom                           // 自定义奖励
-)
+// 注意：RewardType已经在entity.go中定义，这里删除重复定义
 
 // String 返回奖励类型的字符串表示
 func (rt RewardType) String() string {
 	switch rt {
-	case RewardTypeCoins:
-		return "coins"
-	case RewardTypeGems:
-		return "gems"
-	case RewardTypeItems:
-		return "items"
-	case RewardTypeExperience:
-		return "experience"
-	case RewardTypeTrophies:
-		return "trophies"
-	case RewardTypeBadges:
-		return "badges"
-	case RewardTypeUnlocks:
-		return "unlocks"
-	case RewardTypeCustom:
-		return "custom"
+	case RewardTypeCoin:
+		return "coin"
+	case RewardTypeExp:
+		return "exp"
+	case RewardTypeItem:
+		return "item"
+	case RewardTypeCurrency:
+		return "currency"
 	default:
 		return "unknown"
 	}
@@ -401,24 +360,29 @@ func (rt RewardType) String() string {
 
 // IsValid 检查奖励类型是否有效
 func (rt RewardType) IsValid() bool {
-	return rt >= RewardTypeCoins && rt <= RewardTypeCustom
+	switch rt {
+	case RewardTypeCoin, RewardTypeExp, RewardTypeItem, RewardTypeCurrency:
+		return true
+	default:
+		return false
+	}
 }
 
 // 游戏配置相关值对象
 
 // GameConfig 游戏配置
 type GameConfig struct {
-	MaxPlayers      int32         `json:"max_players" bson:"max_players"`
-	MinPlayers      int32         `json:"min_players" bson:"min_players"`
-	MaxDuration     time.Duration `json:"max_duration" bson:"max_duration"`
-	MinDuration     time.Duration `json:"min_duration" bson:"min_duration"`
-	AutoStart       bool          `json:"auto_start" bson:"auto_start"`
-	AutoEnd         bool          `json:"auto_end" bson:"auto_end"`
-	AllowSpectators bool          `json:"allow_spectators" bson:"allow_spectators"`
-	AllowReconnect  bool          `json:"allow_reconnect" bson:"allow_reconnect"`
+	MaxPlayers      int32          `json:"max_players" bson:"max_players"`
+	MinPlayers      int32          `json:"min_players" bson:"min_players"`
+	MaxDuration     time.Duration  `json:"max_duration" bson:"max_duration"`
+	MinDuration     time.Duration  `json:"min_duration" bson:"min_duration"`
+	AutoStart       bool           `json:"auto_start" bson:"auto_start"`
+	AutoEnd         bool           `json:"auto_end" bson:"auto_end"`
+	AllowSpectators bool           `json:"allow_spectators" bson:"allow_spectators"`
+	AllowReconnect  bool           `json:"allow_reconnect" bson:"allow_reconnect"`
 	Difficulty      GameDifficulty `json:"difficulty" bson:"difficulty"`
-	CreatedAt       time.Time     `json:"created_at" bson:"created_at"`
-	UpdatedAt       time.Time     `json:"updated_at" bson:"updated_at"`
+	CreatedAt       time.Time      `json:"created_at" bson:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at" bson:"updated_at"`
 }
 
 // NewGameConfig 创建新的游戏配置
@@ -510,16 +474,16 @@ func (gd GameDifficulty) GetScoreMultiplier() float64 {
 
 // GameRules 游戏规则
 type GameRules struct {
-	WinConditions   []WinCondition    `json:"win_conditions" bson:"win_conditions"`
-	LoseConditions  []LoseCondition   `json:"lose_conditions" bson:"lose_conditions"`
-	ScoringRules    []ScoringRule     `json:"scoring_rules" bson:"scoring_rules"`
-	TimeLimit       *time.Duration    `json:"time_limit,omitempty" bson:"time_limit,omitempty"`
-	MoveLimit       *int32            `json:"move_limit,omitempty" bson:"move_limit,omitempty"`
-	SpecialRules    map[string]interface{} `json:"special_rules" bson:"special_rules"`
-	Penalties       []Penalty         `json:"penalties" bson:"penalties"`
-	Bonuses         []Bonus           `json:"bonuses" bson:"bonuses"`
-	CreatedAt       time.Time         `json:"created_at" bson:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at" bson:"updated_at"`
+	WinConditions  []WinCondition         `json:"win_conditions" bson:"win_conditions"`
+	LoseConditions []LoseCondition        `json:"lose_conditions" bson:"lose_conditions"`
+	ScoringRules   []ScoringRule          `json:"scoring_rules" bson:"scoring_rules"`
+	TimeLimit      *time.Duration         `json:"time_limit,omitempty" bson:"time_limit,omitempty"`
+	MoveLimit      *int32                 `json:"move_limit,omitempty" bson:"move_limit,omitempty"`
+	SpecialRules   map[string]interface{} `json:"special_rules" bson:"special_rules"`
+	Penalties      []Penalty              `json:"penalties" bson:"penalties"`
+	Bonuses        []Bonus                `json:"bonuses" bson:"bonuses"`
+	CreatedAt      time.Time              `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
 // NewGameRules 创建新的游戏规则
@@ -549,19 +513,19 @@ func (gr *GameRules) Clone() *GameRules {
 		CreatedAt:      gr.CreatedAt,
 		UpdatedAt:      gr.UpdatedAt,
 	}
-	
+
 	// 深拷贝切片
 	copy(clone.WinConditions, gr.WinConditions)
 	copy(clone.LoseConditions, gr.LoseConditions)
 	copy(clone.ScoringRules, gr.ScoringRules)
 	copy(clone.Penalties, gr.Penalties)
 	copy(clone.Bonuses, gr.Bonuses)
-	
+
 	// 深拷贝map
 	for k, v := range gr.SpecialRules {
 		clone.SpecialRules[k] = v
 	}
-	
+
 	// 深拷贝指针
 	if gr.TimeLimit != nil {
 		timeLimit := *gr.TimeLimit
@@ -571,7 +535,7 @@ func (gr *GameRules) Clone() *GameRules {
 		moveLimit := *gr.MoveLimit
 		clone.MoveLimit = &moveLimit
 	}
-	
+
 	return clone
 }
 
@@ -603,9 +567,9 @@ type ScoringRule struct {
 
 // Penalty 惩罚
 type Penalty struct {
-	Trigger     string  `json:"trigger" bson:"trigger"`
-	Penalty     int64   `json:"penalty" bson:"penalty"`
-	Description string  `json:"description" bson:"description"`
+	Trigger     string `json:"trigger" bson:"trigger"`
+	Penalty     int64  `json:"penalty" bson:"penalty"`
+	Description string `json:"description" bson:"description"`
 }
 
 // Bonus 奖励
@@ -618,16 +582,16 @@ type Bonus struct {
 
 // GameSettings 游戏设置
 type GameSettings struct {
-	SoundEnabled    bool                   `json:"sound_enabled" bson:"sound_enabled"`
-	MusicEnabled    bool                   `json:"music_enabled" bson:"music_enabled"`
-	EffectsEnabled  bool                   `json:"effects_enabled" bson:"effects_enabled"`
-	Language        string                 `json:"language" bson:"language"`
-	Theme           string                 `json:"theme" bson:"theme"`
-	Quality         GameQuality            `json:"quality" bson:"quality"`
-	Controls        map[string]interface{} `json:"controls" bson:"controls"`
-	CustomSettings  map[string]interface{} `json:"custom_settings" bson:"custom_settings"`
-	CreatedAt       time.Time              `json:"created_at" bson:"created_at"`
-	UpdatedAt       time.Time              `json:"updated_at" bson:"updated_at"`
+	SoundEnabled   bool                   `json:"sound_enabled" bson:"sound_enabled"`
+	MusicEnabled   bool                   `json:"music_enabled" bson:"music_enabled"`
+	EffectsEnabled bool                   `json:"effects_enabled" bson:"effects_enabled"`
+	Language       string                 `json:"language" bson:"language"`
+	Theme          string                 `json:"theme" bson:"theme"`
+	Quality        GameQuality            `json:"quality" bson:"quality"`
+	Controls       map[string]interface{} `json:"controls" bson:"controls"`
+	CustomSettings map[string]interface{} `json:"custom_settings" bson:"custom_settings"`
+	CreatedAt      time.Time              `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
 // NewGameSettings 创建新的游戏设置
@@ -661,7 +625,7 @@ func (gs *GameSettings) Clone() *GameSettings {
 		CreatedAt:      gs.CreatedAt,
 		UpdatedAt:      gs.UpdatedAt,
 	}
-	
+
 	// 深拷贝map
 	for k, v := range gs.Controls {
 		clone.Controls[k] = v
@@ -669,7 +633,7 @@ func (gs *GameSettings) Clone() *GameSettings {
 	for k, v := range gs.CustomSettings {
 		clone.CustomSettings[k] = v
 	}
-	
+
 	return clone
 }
 
@@ -708,42 +672,42 @@ func (gq GameQuality) IsValid() bool {
 
 // GameQuery 游戏查询条件
 type GameQuery struct {
-	GameID       *string       `json:"game_id,omitempty"`
-	GameType     *GameType     `json:"game_type,omitempty"`
-	Category     *GameCategory `json:"category,omitempty"`
-	Status       *GameStatus   `json:"status,omitempty"`
-	CreatorID    *uint64       `json:"creator_id,omitempty"`
-	PlayerID     *uint64       `json:"player_id,omitempty"`
-	MinPlayers   *int32        `json:"min_players,omitempty"`
-	MaxPlayers   *int32        `json:"max_players,omitempty"`
-	MinDuration  *time.Duration `json:"min_duration,omitempty"`
-	MaxDuration  *time.Duration `json:"max_duration,omitempty"`
-	StartedAfter *time.Time    `json:"started_after,omitempty"`
-	StartedBefore *time.Time   `json:"started_before,omitempty"`
-	EndedAfter   *time.Time    `json:"ended_after,omitempty"`
-	EndedBefore  *time.Time    `json:"ended_before,omitempty"`
-	CreatedAfter *time.Time    `json:"created_after,omitempty"`
-	CreatedBefore *time.Time   `json:"created_before,omitempty"`
-	Keywords     []string      `json:"keywords,omitempty"`
-	Tags         []string      `json:"tags,omitempty"`
-	OrderBy      string        `json:"order_by,omitempty"`
-	OrderDesc    bool          `json:"order_desc,omitempty"`
-	Offset       int           `json:"offset,omitempty"`
-	Limit        int           `json:"limit,omitempty"`
+	GameID        *string        `json:"game_id,omitempty"`
+	GameType      *GameType      `json:"game_type,omitempty"`
+	Category      *GameCategory  `json:"category,omitempty"`
+	Status        *GameStatus    `json:"status,omitempty"`
+	CreatorID     *uint64        `json:"creator_id,omitempty"`
+	PlayerID      *uint64        `json:"player_id,omitempty"`
+	MinPlayers    *int32         `json:"min_players,omitempty"`
+	MaxPlayers    *int32         `json:"max_players,omitempty"`
+	MinDuration   *time.Duration `json:"min_duration,omitempty"`
+	MaxDuration   *time.Duration `json:"max_duration,omitempty"`
+	StartedAfter  *time.Time     `json:"started_after,omitempty"`
+	StartedBefore *time.Time     `json:"started_before,omitempty"`
+	EndedAfter    *time.Time     `json:"ended_after,omitempty"`
+	EndedBefore   *time.Time     `json:"ended_before,omitempty"`
+	CreatedAfter  *time.Time     `json:"created_after,omitempty"`
+	CreatedBefore *time.Time     `json:"created_before,omitempty"`
+	Keywords      []string       `json:"keywords,omitempty"`
+	Tags          []string       `json:"tags,omitempty"`
+	OrderBy       string         `json:"order_by,omitempty"`
+	OrderDesc     bool           `json:"order_desc,omitempty"`
+	Offset        int            `json:"offset,omitempty"`
+	Limit         int            `json:"limit,omitempty"`
 }
 
 // GameFilter 游戏过滤器
 type GameFilter struct {
-	IncludeFinished bool     `json:"include_finished"`
-	IncludeCancelled bool    `json:"include_cancelled"`
-	OnlyActive      bool     `json:"only_active"`
-	OnlyJoinable    bool     `json:"only_joinable"`
-	ExcludeGameIDs  []string `json:"exclude_game_ids,omitempty"`
-	ExcludePlayerIDs []uint64 `json:"exclude_player_ids,omitempty"`
-	MinScore        *int64   `json:"min_score,omitempty"`
-	MaxScore        *int64   `json:"max_score,omitempty"`
-	Difficulties    []GameDifficulty `json:"difficulties,omitempty"`
-	CustomFilters   map[string]interface{} `json:"custom_filters,omitempty"`
+	IncludeFinished  bool                   `json:"include_finished"`
+	IncludeCancelled bool                   `json:"include_cancelled"`
+	OnlyActive       bool                   `json:"only_active"`
+	OnlyJoinable     bool                   `json:"only_joinable"`
+	ExcludeGameIDs   []string               `json:"exclude_game_ids,omitempty"`
+	ExcludePlayerIDs []uint64               `json:"exclude_player_ids,omitempty"`
+	MinScore         *int64                 `json:"min_score,omitempty"`
+	MaxScore         *int64                 `json:"max_score,omitempty"`
+	Difficulties     []GameDifficulty       `json:"difficulties,omitempty"`
+	CustomFilters    map[string]interface{} `json:"custom_filters,omitempty"`
 }
 
 // NewGameFilter 创建新的游戏过滤器
@@ -812,7 +776,7 @@ func (go_ GameOperation) IsValid() bool {
 func (go_ GameOperation) RequiresPermission() bool {
 	switch go_ {
 	case GameOperationStart, GameOperationPause, GameOperationResume,
-		 GameOperationEnd, GameOperationCancel, GameOperationReset, GameOperationKick:
+		GameOperationEnd, GameOperationCancel, GameOperationReset, GameOperationKick:
 		return true
 	default:
 		return false
@@ -888,39 +852,39 @@ func ValidateGameQuery(query *GameQuery) error {
 	if query == nil {
 		return fmt.Errorf("query cannot be nil")
 	}
-	
-	if query.Limit != nil && *query.Limit <= 0 {
+
+	if query.Limit <= 0 {
 		return fmt.Errorf("limit must be positive")
 	}
-	
-	if query.Limit != nil && *query.Limit > 1000 {
+
+	if query.Limit > 1000 {
 		return fmt.Errorf("limit cannot exceed 1000")
 	}
-	
-	if query.Offset != nil && *query.Offset < 0 {
+
+	if query.Offset < 0 {
 		return fmt.Errorf("offset cannot be negative")
 	}
-	
+
 	if query.MinPlayers != nil && query.MaxPlayers != nil && *query.MinPlayers > *query.MaxPlayers {
 		return fmt.Errorf("min_players cannot be greater than max_players")
 	}
-	
+
 	if query.MinDuration != nil && query.MaxDuration != nil && *query.MinDuration > *query.MaxDuration {
 		return fmt.Errorf("min_duration cannot be greater than max_duration")
 	}
-	
+
 	if query.StartedAfter != nil && query.StartedBefore != nil && query.StartedAfter.After(*query.StartedBefore) {
 		return fmt.Errorf("started_after cannot be after started_before")
 	}
-	
+
 	if query.EndedAfter != nil && query.EndedBefore != nil && query.EndedAfter.After(*query.EndedBefore) {
 		return fmt.Errorf("ended_after cannot be after ended_before")
 	}
-	
+
 	if query.CreatedAfter != nil && query.CreatedBefore != nil && query.CreatedAfter.After(*query.CreatedBefore) {
 		return fmt.Errorf("created_after cannot be after created_before")
 	}
-	
+
 	return nil
 }
 
@@ -957,28 +921,16 @@ func GetGameTypeByString(s string) (GameType, error) {
 // GetGameCategoryByString 根据字符串获取游戏分类
 func GetGameCategoryByString(s string) (GameCategory, error) {
 	switch s {
-	case "action":
-		return GameCategoryAction, nil
-	case "puzzle":
-		return GameCategoryPuzzle, nil
-	case "strategy":
-		return GameCategoryStrategy, nil
-	case "racing":
-		return GameCategoryRacing, nil
-	case "card":
-		return GameCategoryCard, nil
+	case "normal":
+		return GameCategoryNormal, nil
+	case "competitive":
+		return GameCategoryCompetitive, nil
 	case "casual":
 		return GameCategoryCasual, nil
-	case "education":
-		return GameCategoryEducation, nil
-	case "adventure":
-		return GameCategoryAdventure, nil
-	case "simulation":
-		return GameCategorySimulation, nil
-	case "sports":
-		return GameCategorySports, nil
+	case "ranked":
+		return GameCategoryRanked, nil
 	default:
-		return 0, fmt.Errorf("unknown game category: %s", s)
+		return "", fmt.Errorf("unknown game category: %s", s)
 	}
 }
 

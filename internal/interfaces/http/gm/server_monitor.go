@@ -89,7 +89,6 @@ type Performance struct {
 type Connections struct {
 	HTTPConnections  int `json:"http_connections"`
 	TCPConnections   int `json:"tcp_connections"`
-	GRPCConnections  int `json:"grpc_connections"`
 	WebSocketConns   int `json:"websocket_connections"`
 	TotalConnections int `json:"total_connections"`
 	MaxConnections   int `json:"max_connections"`
@@ -216,7 +215,6 @@ func (h *ServerMonitorHandler) GetServerStatus(c *gin.Context) {
 		Connections: Connections{
 			HTTPConnections:  result.Connections.HTTPConnections,
 			TCPConnections:   result.Connections.TCPConnections,
-			GRPCConnections:  result.Connections.GRPCConnections,
 			WebSocketConns:   result.Connections.WebSocketConns,
 			TotalConnections: result.Connections.TotalConnections,
 			MaxConnections:   result.Connections.MaxConnections,

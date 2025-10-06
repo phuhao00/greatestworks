@@ -23,11 +23,10 @@ check-protoc:
 # 检查Go插件
 check-go-plugins:
 	@which protoc-gen-go > /dev/null || (echo "安装Go插件..." && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest)
-	@which protoc-gen-go-grpc > /dev/null || (echo "安装Go gRPC插件..." && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest)
 
 # 生成Go Proto文件
 proto-go: check-protoc check-go-plugins
-	@echo "生成Go Proto文件（只生成消息定义，不生成gRPC服务）..."
+	@echo "生成Go Proto文件..."
 	@mkdir -p internal/proto/player
 	@mkdir -p internal/proto/battle
 	@mkdir -p internal/proto/pet
@@ -41,7 +40,7 @@ proto-go: check-protoc check-go-plugins
 	@mv proto/player.pb.go internal/proto/player/ 2>/dev/null || true
 	@mv proto/battle.pb.go internal/proto/battle/ 2>/dev/null || true
 	@mv proto/pet.pb.go internal/proto/pet/ 2>/dev/null || true
-	@rm -f proto/*_grpc.pb.go
+
 	@echo "Go Proto文件生成完成"
 
 # 生成C# Proto文件
@@ -87,7 +86,6 @@ install-deps:
 	@echo "安装Go依赖..."
 	@go mod download
 	@go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	@echo "依赖安装完成"
 
 # 开发环境设置

@@ -55,7 +55,7 @@ func (query *GetPlayerStatsQuery) QueryType() string {
 
 // Validate 验证查询参数
 func (query *GetPlayerStatsQuery) Validate() error {
-	if query.PlayerID == "" {
+	if query.PlayerID.String() == "" {
 		return ErrInvalidPlayerID
 	}
 	return nil

@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+// GameCategory 游戏分类
+type GameCategory string
+
+const (
+	GameCategoryNormal      GameCategory = "normal"
+	GameCategoryCompetitive GameCategory = "competitive"
+	GameCategoryCasual      GameCategory = "casual"
+	GameCategoryRanked      GameCategory = "ranked"
+)
+
 // GamePlayer 游戏玩家
 type GamePlayer struct {
 	PlayerID string    `json:"player_id"`
@@ -182,16 +192,16 @@ func (rp *RewardPool) CalculateRewards(rank int, score int64, isWinner bool) []R
 	if isWinner {
 		// 获胜者获得基础奖励
 		rewards = append(rewards, Reward{
-			Type:   "experience",
-			Amount: int64(100 * rank),
+			RewardType: "experience",
+			Amount:     int64(100 * rank),
 		})
 	}
 
 	// 根据分数给予额外奖励
 	if score > 1000 {
 		rewards = append(rewards, Reward{
-			Type:   "coin",
-			Amount: score / 10,
+			RewardType: "coin",
+			Amount:     score / 10,
 		})
 	}
 

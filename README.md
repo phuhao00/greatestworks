@@ -25,7 +25,7 @@
 
 ### 架构分层
 
-- **接口层 (Interfaces)**: 处理外部请求，包括TCP、HTTP、gRPC接口
+- **接口层 (Interfaces)**: 处理外部请求，包括TCP、HTTP接口
 - **应用层 (Application)**: 协调领域对象，处理业务用例
 - **领域层 (Domain)**: 核心业务逻辑和领域模型
 - **基础设施层 (Infrastructure)**: 技术实现，如数据库、缓存、消息队列
@@ -71,8 +71,7 @@ greatestworks/
 │   │   └── logging/          # 日志服务
 │   └── interfaces/            # 接口层
 │       ├── tcp/              # TCP接口
-│       ├── http/             # HTTP接口
-│       └── grpc/             # gRPC接口
+│       └── http/             # HTTP接口
 ├── scripts/                    # 开发脚本
 │   ├── build.sh              # 构建脚本
 │   ├── deploy.sh             # 部署脚本
@@ -89,11 +88,11 @@ greatestworks/
 ### 核心技术
 - **语言**: Go 1.21+
 - **架构模式**: 领域驱动设计 (DDD)
-- **网络框架**: netcore-go (TCP) + HTTP + gRPC
+- **网络框架**: netcore-go (TCP) + HTTP
 - **数据库**: MongoDB (主数据库) + Redis (缓存)
 - **消息队列**: NATS
 - **认证**: JWT + 自定义认证
-- **协议**: 自定义二进制协议 + JSON + Protobuf
+- **协议**: 自定义二进制协议 + JSON
 
 ### 开发工具
 - **构建工具**: Make + Go Modules
@@ -290,7 +289,6 @@ docker run -d -p 8080:8080 \
 ### 多协议支持
 - **TCP**: 主要游戏协议，低延迟、高可靠性
 - **HTTP**: RESTful API，用于管理后台和第三方集成
-- **gRPC**: 微服务间通信，高性能RPC调用
 - **WebSocket**: Web客户端支持，实时双向通信
 
 ### TCP协议格式
