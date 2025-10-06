@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Proto文件生成脚本
-# 支持Go和C#代码生成，只生成消息定义，不生成gRPC服务
+# 支持Go和C#代码生成
 
 set -e
 
@@ -27,7 +27,6 @@ fi
 if ! command -v protoc-gen-go &> /dev/null; then
     echo -e "${YELLOW}安装Go插件...${NC}"
     go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 fi
 
 # 检查C#插件
@@ -47,9 +46,9 @@ mkdir -p csharp/GreatestWorks/Battle
 mkdir -p csharp/GreatestWorks/Pet
 mkdir -p csharp/GreatestWorks/Common
 
-echo -e "${GREEN}生成Go代码（只生成消息定义，不生成gRPC服务）...${NC}"
+echo -e "${GREEN}生成Go代码...${NC}"
 
-# 生成Go代码 - 只生成消息定义，不生成gRPC服务
+# 生成Go代码
 protoc \
     --go_out=. \
     --go_opt=paths=source_relative \
@@ -78,8 +77,7 @@ mv proto/player.pb.go internal/proto/player/ 2>/dev/null || true
 mv proto/battle.pb.go internal/proto/battle/ 2>/dev/null || true
 mv proto/pet.pb.go internal/proto/pet/ 2>/dev/null || true
 
-# 删除可能生成的gRPC文件
-rm -f proto/*_grpc.pb.go
+
 
 echo -e "${GREEN}生成C#代码...${NC}"
 
@@ -115,6 +113,3 @@ find internal/proto -name "*.pb.go" -type f
 
 echo -e "${YELLOW}C#生成的文件:${NC}"
 find csharp -name "*.g.cs" -type f
-
-echo -e "${YELLOW}注意: 只生成了protobuf消息定义，没有生成gRPC服务文件${NC}"
-echo -e "${YELLOW}项目使用netcore-go RPC架构，不使用gRPC${NC}"

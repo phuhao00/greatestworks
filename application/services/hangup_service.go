@@ -4,36 +4,39 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"greatestworks/internal/domain/player/hangup"
 )
 
 // HangupService 挂机应用服务
 type HangupService struct {
-	hangupRepo     hangup.HangupRepository
-	locationRepo   hangup.LocationRepository
-	rewardRepo     hangup.RewardRepository
-	statisticsRepo hangup.StatisticsRepository
-	cacheRepo      hangup.CacheRepository
-	hangupService  *hangup.HangupService
+	hangupRepo hangup.HangupRepository
+	// TODO: 实现这些仓储接口
+	// locationRepo   hangup.LocationRepository
+	// rewardRepo     hangup.RewardRepository
+	// statisticsRepo hangup.StatisticsRepository
+	// cacheRepo      hangup.CacheRepository
+	hangupService *hangup.HangupService
 }
 
 // NewHangupService 创建挂机应用服务
 func NewHangupService(
 	hangupRepo hangup.HangupRepository,
-	locationRepo hangup.LocationRepository,
-	rewardRepo hangup.RewardRepository,
-	statisticsRepo hangup.StatisticsRepository,
-	cacheRepo hangup.CacheRepository,
+	// TODO: 实现这些仓储接口
+	// locationRepo hangup.LocationRepository,
+	// rewardRepo hangup.RewardRepository,
+	// statisticsRepo hangup.StatisticsRepository,
+	// cacheRepo hangup.CacheRepository,
 	hangupService *hangup.HangupService,
 ) *HangupService {
 	return &HangupService{
-		hangupRepo:     hangupRepo,
-		locationRepo:   locationRepo,
-		rewardRepo:     rewardRepo,
-		statisticsRepo: statisticsRepo,
-		cacheRepo:      cacheRepo,
-		hangupService:  hangupService,
+		hangupRepo: hangupRepo,
+		// TODO: 实现这些仓储接口
+		// locationRepo:   locationRepo,
+		// rewardRepo:     rewardRepo,
+		// statisticsRepo: statisticsRepo,
+		// cacheRepo:      cacheRepo,
+		hangupService: hangupService,
 	}
 }
 
@@ -44,34 +47,34 @@ func (s *HangupService) StartHangup(ctx context.Context, playerID string, locati
 	if err != nil && !hangup.IsNotFoundError(err) {
 		return fmt.Errorf("failed to check existing hangup: %w", err)
 	}
-	
+
 	if existingHangup != nil {
 		return hangup.ErrAlreadyHanging
 	}
-	
+
 	// 获取挂机地点信息
 	location, err := s.locationRepo.FindByID(locationID)
 	if err != nil {
 		return fmt.Errorf("failed to get hangup location: %w", err)
 	}
-	
+
 	// 创建挂机记录
 	hangupRecord, err := s.hangupService.StartHangup(playerID, location)
 	if err != nil {
 		return fmt.Errorf("failed to start hangup: %w", err)
 	}
-	
+
 	// 保存挂机记录
 	if err := s.hangupRepo.Save(hangupRecord); err != nil {
 		return fmt.Errorf("failed to save hangup record: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetActiveHangup(playerID, hangupRecord, time.Hour); err != nil {
 		// 缓存失败不影响主流程，只记录日志
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -82,44 +85,44 @@ func (s *HangupService) StopHangup(ctx context.Context, playerID string) (*hangu
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hangup record: %w", err)
 	}
-	
+
 	if hangupRecord == nil {
 		return nil, hangup.ErrNotHanging
 	}
-	
+
 	// 计算离线奖励
 	reward, err := s.hangupService.CalculateOfflineReward(hangupRecord)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate offline reward: %w", err)
 	}
-	
+
 	// 停止挂机
 	if err := hangupRecord.Stop(); err != nil {
 		return nil, fmt.Errorf("failed to stop hangup: %w", err)
 	}
-	
+
 	// 更新挂机记录
 	if err := s.hangupRepo.Update(hangupRecord); err != nil {
 		return nil, fmt.Errorf("failed to update hangup record: %w", err)
 	}
-	
+
 	// 保存奖励记录
 	if err := s.rewardRepo.Save(reward); err != nil {
 		return nil, fmt.Errorf("failed to save reward record: %w", err)
 	}
-	
+
 	// 更新统计数据
 	if err := s.updateStatistics(ctx, playerID, hangupRecord, reward); err != nil {
 		// 统计更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	// 清除缓存
 	if err := s.cacheRepo.DeleteActiveHangup(playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return reward, nil
 }
 
@@ -130,26 +133,26 @@ func (s *HangupService) GetHangupStatus(ctx context.Context, playerID string) (*
 	if err == nil && cachedHangup != nil {
 		return s.buildHangupStatusDTO(cachedHangup), nil
 	}
-	
+
 	// 从数据库获取
 	hangupRecord, err := s.hangupRepo.FindActiveByPlayer(playerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hangup record: %w", err)
 	}
-	
+
 	if hangupRecord == nil {
 		return &HangupStatusDTO{
 			PlayerID:  playerID,
 			IsHanging: false,
 		}, nil
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetActiveHangup(playerID, hangupRecord, time.Hour); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildHangupStatusDTO(hangupRecord), nil
 }
 
@@ -160,19 +163,19 @@ func (s *HangupService) GetAvailableLocations(ctx context.Context, playerID stri
 	if err == nil && len(cachedLocations) > 0 {
 		return s.buildLocationDTOs(cachedLocations), nil
 	}
-	
+
 	// 从数据库获取
 	locations, err := s.locationRepo.FindAvailableForPlayer(playerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get available locations: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetAvailableLocations(playerID, locations, time.Hour*2); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildLocationDTOs(locations), nil
 }
 
@@ -182,7 +185,7 @@ func (s *HangupService) GetHangupHistory(ctx context.Context, playerID string, l
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hangup history: %w", err)
 	}
-	
+
 	return s.buildHistoryDTOs(history), nil
 }
 
@@ -192,7 +195,7 @@ func (s *HangupService) GetHangupStatistics(ctx context.Context, playerID string
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hangup statistics: %w", err)
 	}
-	
+
 	return s.buildStatisticsDTO(stats), nil
 }
 
@@ -203,25 +206,25 @@ func (s *HangupService) ClaimOfflineReward(ctx context.Context, playerID string,
 	if err != nil {
 		return fmt.Errorf("failed to get reward record: %w", err)
 	}
-	
+
 	if reward.PlayerID != playerID {
 		return hangup.ErrUnauthorized
 	}
-	
+
 	if reward.IsClaimed() {
 		return hangup.ErrRewardAlreadyClaimed
 	}
-	
+
 	// 领取奖励
 	if err := reward.Claim(); err != nil {
 		return fmt.Errorf("failed to claim reward: %w", err)
 	}
-	
+
 	// 更新奖励记录
 	if err := s.rewardRepo.Update(reward); err != nil {
 		return fmt.Errorf("failed to update reward record: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -233,15 +236,15 @@ func (s *HangupService) updateStatistics(ctx context.Context, playerID string, h
 	if err != nil && !hangup.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = hangup.NewHangupStatistics(playerID)
 	}
-	
+
 	// 更新统计数据
 	stats.AddHangupSession(hangupRecord.GetDuration(), reward.GetTotalValue())
 	stats.AddLocationTime(hangupRecord.GetLocationID(), hangupRecord.GetDuration())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.Save(stats)
 }
@@ -249,13 +252,13 @@ func (s *HangupService) updateStatistics(ctx context.Context, playerID string, h
 // buildHangupStatusDTO 构建挂机状态DTO
 func (s *HangupService) buildHangupStatusDTO(hangupRecord *hangup.HangupAggregate) *HangupStatusDTO {
 	return &HangupStatusDTO{
-		PlayerID:     hangupRecord.GetPlayerID(),
-		IsHanging:    hangupRecord.IsActive(),
-		LocationID:   hangupRecord.GetLocationID(),
-		LocationName: hangupRecord.GetLocationName(),
-		StartTime:    hangupRecord.GetStartTime(),
-		Duration:     hangupRecord.GetDuration(),
-		Efficiency:   hangupRecord.GetEfficiency(),
+		PlayerID:        hangupRecord.GetPlayerID(),
+		IsHanging:       hangupRecord.IsActive(),
+		LocationID:      hangupRecord.GetLocationID(),
+		LocationName:    hangupRecord.GetLocationName(),
+		StartTime:       hangupRecord.GetStartTime(),
+		Duration:        hangupRecord.GetDuration(),
+		Efficiency:      hangupRecord.GetEfficiency(),
 		EstimatedReward: s.calculateEstimatedReward(hangupRecord),
 	}
 }
@@ -265,13 +268,13 @@ func (s *HangupService) buildLocationDTOs(locations []*hangup.HangupLocation) []
 	dtos := make([]*HangupLocationDTO, len(locations))
 	for i, location := range locations {
 		dtos[i] = &HangupLocationDTO{
-			ID:          location.GetID(),
-			Name:        location.GetName(),
-			Description: location.GetDescription(),
-			BaseRate:    location.GetBaseRate(),
+			ID:            location.GetID(),
+			Name:          location.GetName(),
+			Description:   location.GetDescription(),
+			BaseRate:      location.GetBaseRate(),
 			RequiredLevel: location.GetRequiredLevel(),
-			IsUnlocked:  location.IsUnlocked(),
-			RewardTypes: location.GetRewardTypes(),
+			IsUnlocked:    location.IsUnlocked(),
+			RewardTypes:   location.GetRewardTypes(),
 		}
 	}
 	return dtos
@@ -298,15 +301,15 @@ func (s *HangupService) buildHistoryDTOs(history []*hangup.HangupAggregate) []*H
 // buildStatisticsDTO 构建统计DTO
 func (s *HangupService) buildStatisticsDTO(stats *hangup.HangupStatistics) *HangupStatisticsDTO {
 	return &HangupStatisticsDTO{
-		PlayerID:        stats.GetPlayerID(),
-		TotalSessions:   stats.GetTotalSessions(),
-		TotalDuration:   stats.GetTotalDuration(),
-		TotalReward:     stats.GetTotalReward(),
-		AverageDuration: stats.GetAverageDuration(),
-		AverageReward:   stats.GetAverageReward(),
+		PlayerID:         stats.GetPlayerID(),
+		TotalSessions:    stats.GetTotalSessions(),
+		TotalDuration:    stats.GetTotalDuration(),
+		TotalReward:      stats.GetTotalReward(),
+		AverageDuration:  stats.GetAverageDuration(),
+		AverageReward:    stats.GetAverageReward(),
 		FavoriteLocation: stats.GetFavoriteLocation(),
-		LocationStats:   stats.GetLocationStats(),
-		LastHangupTime:  stats.GetLastHangupTime(),
+		LocationStats:    stats.GetLocationStats(),
+		LastHangupTime:   stats.GetLastHangupTime(),
 	}
 }
 
@@ -316,7 +319,7 @@ func (s *HangupService) calculateEstimatedReward(hangupRecord *hangup.HangupAggr
 	duration := hangupRecord.GetDuration()
 	efficiency := hangupRecord.GetEfficiency()
 	baseRate := hangupRecord.GetBaseRate()
-	
+
 	return int64(duration.Hours() * efficiency * baseRate)
 }
 

@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档描述了 Greatest Works 游戏服务器的网络架构重构，实现了HTTP、TCP和gRPC多协议支持，明确了各协议的职责分工。
+本文档描述了 Greatest Works 游戏服务器的网络架构重构，实现了HTTP和TCP双协议支持，明确了各协议的职责分工。
 
 ## 架构设计原则
 
@@ -22,11 +22,7 @@
   - 长连接维护
   - 心跳检测
 
-- **gRPC服务器** (端口: 9091)
-  - 服务间通信
-  - 微服务架构支持
-  - 高性能RPC调用
-  - 类型安全的接口
+
 
 ## 目录结构
 
@@ -53,19 +49,7 @@ internal/interfaces/
 │   │   └── heartbeat.go
 │   ├── router.go           # 消息路由
 │   └── server.go           # TCP服务器
-└── grpc/                   # gRPC接口层
-    ├── proto/              # Protocol Buffers定义
-    │   ├── common.proto
-    │   ├── player.proto
-    │   ├── battle.proto
-    │   └── notification.proto
-    ├── services/           # gRPC服务实现
-    │   └── player_service.go
-    ├── interceptors/       # 拦截器
-    │   ├── auth.go
-    │   ├── logging.go
-    │   └── metrics.go
-    └── server.go           # gRPC服务器
+
 ```
 
 ## 核心功能
@@ -105,17 +89,7 @@ type MessageHeader struct {
 - 心跳检测机制
 - 断线重连处理
 
-### 3. gRPC接口层
 
-#### 服务定义
-- PlayerService: 玩家数据服务
-- BattleService: 战斗逻辑服务
-- NotificationService: 通知推送服务
-
-#### 拦截器
-- 认证拦截器: JWT验证
-- 日志拦截器: 请求日志记录
-- 监控拦截器: 性能指标收集
 
 ## 认证机制
 
@@ -148,17 +122,14 @@ type MessageHeader struct {
    }
    ```
 
-4. **gRPC认证**
-   ```
-   Authorization: Bearer eyJ...
-   ```
+
 
 ## 监控和日志
 
 ### 指标收集
 - HTTP请求计数和延迟
 - TCP连接数和消息统计
-- gRPC调用性能指标
+
 - 系统资源使用情况
 - 错误率统计
 
@@ -192,11 +163,7 @@ tcp:
     enabled: true
     interval: 30s
 
-grpc:
-  enabled: true
-  addr: ":9091"
-  max_connections: 1000
-  enable_reflection: true
+
 ```
 
 ## 部署和运维
@@ -208,7 +175,7 @@ go run cmd/server/main.go
 
 ### 健康检查
 - HTTP: `GET /health`
-- gRPC: `grpc.health.v1.Health/Check`
+
 - TCP: 心跳检测
 
 ### 监控端点
@@ -262,7 +229,7 @@ go run cmd/server/main.go
 - 分布式会话
 
 ### 微服务架构
-- gRPC服务间通信
+
 - 服务注册发现
 - 配置中心集成
 - 分布式追踪
@@ -324,7 +291,7 @@ go run cmd/server/main.go
 
 本次网络架构重构成功实现了：
 
-✅ **协议分工明确**: HTTP负责认证管理，TCP处理游戏逻辑，gRPC支持服务通信
+✅ **协议分工明确**: HTTP负责认证管理，TCP处理游戏逻辑
 
 ✅ **统一认证机制**: JWT Token在所有协议中统一使用
 
