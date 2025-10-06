@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+// RewardType 奖励类型
+type RewardType string
+
+const (
+	RewardTypeCoin    RewardType = "coin"
+	RewardTypeExp     RewardType = "exp"
+	RewardTypeItem    RewardType = "item"
+	RewardTypeCurrency RewardType = "currency"
+)
+
 // GameSession 游戏会话实体
 type GameSession struct {
 	ID            string                 `json:"id" bson:"_id"`
@@ -27,6 +37,18 @@ type GameSession struct {
 	LastActivity  time.Time              `json:"last_activity" bson:"last_activity"`
 	CreatedAt     time.Time              `json:"created_at" bson:"created_at"`
 	UpdatedAt     time.Time              `json:"updated_at" bson:"updated_at"`
+}
+
+// GameReward 游戏奖励
+type GameReward struct {
+	RewardID   string    `json:"reward_id" bson:"reward_id"`
+	PlayerID   uint64    `json:"player_id" bson:"player_id"`
+	RewardType RewardType `json:"reward_type" bson:"reward_type"`
+	Amount     int64     `json:"amount" bson:"amount"`
+	ItemID     string    `json:"item_id,omitempty" bson:"item_id,omitempty"`
+	ItemCount  int       `json:"item_count,omitempty" bson:"item_count,omitempty"`
+	GameID     string    `json:"game_id" bson:"game_id"`
+	Timestamp  time.Time `json:"timestamp" bson:"timestamp"`
 }
 
 // NewGameSession 创建新的游戏会话

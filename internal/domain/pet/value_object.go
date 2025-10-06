@@ -1,7 +1,6 @@
 package pet
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -503,16 +502,16 @@ func (ps PetSize) GetHealthModifier() float64 {
 type PetPersonality int
 
 const (
-	PetPersonalityBrave     PetPersonality = 1  // 勇敢
-	PetPersonalityTimid     PetPersonality = 2  // 胆小
+	PetPersonalityBrave      PetPersonality = 1  // 勇敢
+	PetPersonalityTimid      PetPersonality = 2  // 胆小
 	PetPersonalityAggressive PetPersonality = 3  // 好斗
-	PetPersonalityGentle    PetPersonality = 4  // 温和
-	PetPersonalityPlayful   PetPersonality = 5  // 顽皮
-	PetPersonalityLazy      PetPersonality = 6  // 懒惰
-	PetPersonalityLoyal     PetPersonality = 7  // 忠诚
-	PetPersonalityStubborn  PetPersonality = 8  // 固执
-	PetPersonalityCurious   PetPersonality = 9  // 好奇
-	PetPersonalityCalm      PetPersonality = 10 // 冷静
+	PetPersonalityGentle     PetPersonality = 4  // 温和
+	PetPersonalityPlayful    PetPersonality = 5  // 顽皮
+	PetPersonalityLazy       PetPersonality = 6  // 懒惰
+	PetPersonalityLoyal      PetPersonality = 7  // 忠诚
+	PetPersonalityStubborn   PetPersonality = 8  // 固执
+	PetPersonalityCurious    PetPersonality = 9  // 好奇
+	PetPersonalityCalm       PetPersonality = 10 // 冷静
 )
 
 // String 返回性格字符串

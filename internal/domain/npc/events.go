@@ -828,3 +828,33 @@ func NewQuestGivenEvent(npcID, questID, playerID string) *BaseDomainEvent {
 		},
 	}
 }
+
+// NewShopSetEvent 创建商店设置事件
+func NewShopSetEvent(npcID, shopID string) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("shop_set_%d", time.Now().UnixNano()),
+		EventType:   "ShopSet",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"shop_id": shopID,
+		},
+	}
+}
+
+// NewTradeExecutedEvent 创建交易执行事件
+func NewTradeExecutedEvent(npcID, playerID string, tradeRequest interface{}, result interface{}) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("trade_executed_%d", time.Now().UnixNano()),
+		EventType:   "TradeExecuted",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"player_id": playerID,
+			"request":   tradeRequest,
+			"result":    result,
+		},
+	}
+}

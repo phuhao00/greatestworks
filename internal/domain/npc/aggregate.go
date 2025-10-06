@@ -207,7 +207,7 @@ func (n *NPCAggregate) AddDialogue(dialogue *Dialogue) error {
 
 // RemoveDialogue 移除对话
 func (n *NPCAggregate) RemoveDialogue(dialogueID string) error {
-	dialogue, exists := n.dialogues[dialogueID]
+	_, exists := n.dialogues[dialogueID]
 	if !exists {
 		return ErrDialogueNotFound
 	}
@@ -263,7 +263,7 @@ func (n *NPCAggregate) AddQuest(quest *Quest) error {
 	n.version++
 
 	// 发布任务添加事件
-	event := NewQuestAddedEvent(n.id, quest.GetID(), quest.GetType())
+	event := NewQuestAddedEvent(n.id, quest.GetID())
 	n.addEvent(event)
 
 	return nil
@@ -271,7 +271,7 @@ func (n *NPCAggregate) AddQuest(quest *Quest) error {
 
 // RemoveQuest 移除任务
 func (n *NPCAggregate) RemoveQuest(questID string) error {
-	quest, exists := n.quests[questID]
+	_, exists := n.quests[questID]
 	if !exists {
 		return ErrQuestNotFound
 	}
@@ -281,7 +281,7 @@ func (n *NPCAggregate) RemoveQuest(questID string) error {
 	n.version++
 
 	// 发布任务移除事件
-	event := NewQuestRemovedEvent(n.id, questID, quest.GetType())
+	event := NewQuestRemovedEvent(n.id, questID)
 	n.addEvent(event)
 
 	return nil
@@ -375,7 +375,9 @@ func (n *NPCAggregate) UpdateRelationship(playerID string, change int, reason st
 
 	// 如果关系等级发生变化，发布事�?
 	if relationship.GetLevel() != oldLevel {
-		event := NewRelationshipChangedEvent(n.id, playerID, oldLevel, relationship.GetLevel(), change)
+		oldValue := relationship.GetValue() - change
+		newValue := relationship.GetValue()
+		event := NewRelationshipChangedEvent(n.id, playerID, oldValue, newValue, oldLevel, relationship.GetLevel(), RelationshipChangeTypeIncrease, reason)
 		n.addEvent(event)
 	}
 

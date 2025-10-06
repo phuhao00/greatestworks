@@ -6,6 +6,7 @@ package monitoring
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -19,6 +20,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/expfmt"
 	dto "github.com/prometheus/client_model/go"
+)
+
+// 错误定义
+var (
+	ErrServerAlreadyStarted = errors.New("server already started")
+	ErrServerNotStarted     = errors.New("server not started")
 )
 
 // PrometheusRegistry Prometheus注册表实现
@@ -36,53 +43,35 @@ func NewPrometheusRegistry() *PrometheusRegistry {
 	}
 }
 
-// Register 注册指标
-func (pr *PrometheusRegistry) Register(metric Metric) error {
+// Register 注册收集器
+func (pr *PrometheusRegistry) Register(collector Collector) error {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 
-	name := metric.Name()
-	if _, exists := pr.metrics[name]; exists {
-		return ErrMetricExists
+	// 直接注册收集器到Prometheus
+	if err := pr.registry.Register(collector); err != nil {
+		return fmt.Errorf("failed to register prometheus collector: %w", err)
 	}
 
-	// 转换为Prometheus指标
-	promMetric, err := pr.convertToPrometheusMetric(metric)
-	if err != nil {
-		return err
-	}
-
-	// 注册到Prometheus
-	if err := pr.registry.Register(promMetric); err != nil {
-		return fmt.Errorf("failed to register prometheus metric: %w", err)
-	}
-
-	pr.metrics[name] = metric
 	return nil
 }
 
-// Unregister 注销指标
-func (pr *PrometheusRegistry) Unregister(name string) error {
+// Unregister 注销收集器
+func (pr *PrometheusRegistry) Unregister(collector Collector) bool {
 	pr.mutex.Lock()
 	defer pr.mutex.Unlock()
 
-	metric, exists := pr.metrics[name]
-	if !exists {
-		return ErrMetricNotFound
-	}
+	return pr.registry.Unregister(collector)
+}
 
-	// 从Prometheus注销
-	promMetric, err := pr.convertToPrometheusMetric(metric)
-	if err != nil {
-		return err
-	}
+// MustRegister 必须注册收集器
+func (pr *PrometheusRegistry) MustRegister(collectors ...Collector) {
+	pr.mutex.Lock()
+	defer pr.mutex.Unlock()
 
-	if !pr.registry.Unregister(promMetric) {
-		return fmt.Errorf("failed to unregister prometheus metric")
+	for _, collector := range collectors {
+		pr.registry.MustRegister(collector)
 	}
-
-	delete(pr.metrics, name)
-	return nil
 }
 
 // Get 获取指标
@@ -257,7 +246,7 @@ func NewPrometheusFactory(namespace, subsystem string, labels Labels, registry *
 }
 
 // NewCounter 创建计数器
-func (pf *PrometheusFactory) NewCounter(name, help string, labels Labels) Counter {
+func (pf *PrometheusFactory) NewCounter(name, help string, labels Labels) CounterInterface {
 	opts := prometheus.CounterOpts{
 		Namespace:   pf.namespace,
 		Subsystem:   pf.subsystem,
@@ -295,7 +284,7 @@ func (pf *PrometheusFactory) NewGauge(name, help string, labels Labels) GaugeInt
 }
 
 // NewHistogram 创建直方图
-func (pf *PrometheusFactory) NewHistogram(name, help string, labels Labels, buckets []float64) HistogramInterface {
+func (pf *PrometheusFactory) NewHistogram(name, help string, buckets []float64, labels Labels) HistogramInterface {
 	opts := prometheus.HistogramOpts{
 		Namespace:   pf.namespace,
 		Subsystem:   pf.subsystem,
@@ -316,12 +305,7 @@ func (pf *PrometheusFactory) NewHistogram(name, help string, labels Labels, buck
 }
 
 // NewSummary 创建摘要
-func (pf *PrometheusFactory) NewSummary(name, help string, labels Labels, quantiles map[float64]float64) Summary {
-	objectives := make(map[float64]float64)
-	for q, err := range quantiles {
-		objectives[q] = err
-	}
-
+func (pf *PrometheusFactory) NewSummary(name, help string, objectives map[float64]float64, labels Labels) Summary {
 	opts := prometheus.SummaryOpts{
 		Namespace:   pf.namespace,
 		Subsystem:   pf.subsystem,
@@ -337,7 +321,7 @@ func (pf *PrometheusFactory) NewSummary(name, help string, labels Labels, quanti
 		name:      pf.buildMetricName(name),
 		help:      help,
 		labels:    labels,
-		quantiles: quantiles,
+		quantiles: objectives,
 	}
 }
 
@@ -392,23 +376,24 @@ type PrometheusCounter struct {
 	labels  Labels
 }
 
-func (pc *PrometheusCounter) Name() string     { return pc.name }
+func (pc *PrometheusCounter) GetName() string { return pc.name }
+func (pc *PrometheusCounter) GetType() MetricType { return CounterType }
+func (pc *PrometheusCounter) Help() string { return pc.help }
 func (pc *PrometheusCounter) Type() MetricType { return CounterType }
-func (pc *PrometheusCounter) Help() string     { return pc.help }
-func (pc *PrometheusCounter) Labels() Labels   { return pc.labels }
-func (pc *PrometheusCounter) Value() interface{} {
+func (pc *PrometheusCounter) Name() string { return pc.name }
+func (pc *PrometheusCounter) GetLabels() map[string]string { return pc.labels }
+func (pc *PrometheusCounter) GetValue() interface{} {
 	metric := &dto.MetricFamily{}
 	pc.counter.Write(metric)
 	return metric.GetMetric()[0].GetCounter().GetValue()
 }
-func (pc *PrometheusCounter) Reset()        { /* Prometheus计数器不支持重置 */ }
-func (pc *PrometheusCounter) String() string { return fmt.Sprintf("%s{%v} = %v", pc.name, pc.labels, pc.Value()) }
-func (pc *PrometheusCounter) Inc()           { pc.counter.Inc() }
-func (pc *PrometheusCounter) Add(value float64) { pc.counter.Add(value) }
-func (pc *PrometheusCounter) Get() float64 {
+func (pc *PrometheusCounter) GetTimestamp() time.Time { return time.Now() }
+func (pc *PrometheusCounter) Inc() { pc.counter.Inc() }
+func (pc *PrometheusCounter) Add(value int64) { pc.counter.Add(float64(value)) }
+func (pc *PrometheusCounter) Get() int64 {
 	metric := &dto.MetricFamily{}
 	pc.counter.Write(metric)
-	return metric.GetMetric()[0].GetCounter().GetValue()
+	return int64(metric.GetMetric()[0].GetCounter().GetValue())
 }
 
 // PrometheusGauge Prometheus仪表盘实现
@@ -419,27 +404,23 @@ type PrometheusGauge struct {
 	labels Labels
 }
 
-func (pg *PrometheusGauge) Name() string     { return pg.name }
+func (pg *PrometheusGauge) GetName() string { return pg.name }
+func (pg *PrometheusGauge) GetType() MetricType { return GaugeType }
+func (pg *PrometheusGauge) Help() string { return pg.help }
 func (pg *PrometheusGauge) Type() MetricType { return GaugeType }
-func (pg *PrometheusGauge) Help() string     { return pg.help }
-func (pg *PrometheusGauge) Labels() Labels   { return pg.labels }
-func (pg *PrometheusGauge) Value() interface{} {
+func (pg *PrometheusGauge) Name() string { return pg.name }
+func (pg *PrometheusGauge) GetLabels() map[string]string { return pg.labels }
+func (pg *PrometheusGauge) GetValue() interface{} {
 	metric := &dto.MetricFamily{}
 	pg.gauge.Write(metric)
 	return metric.GetMetric()[0].GetGauge().GetValue()
 }
-func (pg *PrometheusGauge) Reset()                { pg.gauge.Set(0) }
-func (pg *PrometheusGauge) String() string        { return fmt.Sprintf("%s{%v} = %v", pg.name, pg.labels, pg.Value()) }
-func (pg *PrometheusGauge) Set(value float64)     { pg.gauge.Set(value) }
-func (pg *PrometheusGauge) Inc()                  { pg.gauge.Inc() }
-func (pg *PrometheusGauge) Dec()                  { pg.gauge.Dec() }
-func (pg *PrometheusGauge) Add(value float64)     { pg.gauge.Add(value) }
-func (pg *PrometheusGauge) Sub(value float64)     { pg.gauge.Sub(value) }
-func (pg *PrometheusGauge) Get() float64 {
-	metric := &dto.MetricFamily{}
-	pg.gauge.Write(metric)
-	return metric.GetMetric()[0].GetGauge().GetValue()
-}
+func (pg *PrometheusGauge) GetTimestamp() time.Time { return time.Now() }
+func (pg *PrometheusGauge) Set(value float64) { pg.gauge.Set(value) }
+func (pg *PrometheusGauge) Inc() { pg.gauge.Inc() }
+func (pg *PrometheusGauge) Dec() { pg.gauge.Dec() }
+func (pg *PrometheusGauge) Add(value float64) { pg.gauge.Add(value) }
+func (pg *PrometheusGauge) Sub(value float64) { pg.gauge.Sub(value) }
 
 // PrometheusHistogram Prometheus直方图实现
 type PrometheusHistogram struct {
@@ -450,19 +431,18 @@ type PrometheusHistogram struct {
 	buckets   []float64
 }
 
-func (ph *PrometheusHistogram) Name() string     { return ph.name }
+func (ph *PrometheusHistogram) GetName() string { return ph.name }
+func (ph *PrometheusHistogram) GetType() MetricType { return HistogramType }
+func (ph *PrometheusHistogram) Help() string { return ph.help }
 func (ph *PrometheusHistogram) Type() MetricType { return HistogramType }
-func (ph *PrometheusHistogram) Help() string     { return ph.help }
-func (ph *PrometheusHistogram) Labels() Labels   { return ph.labels }
-func (ph *PrometheusHistogram) Value() interface{} {
+func (ph *PrometheusHistogram) Name() string { return ph.name }
+func (ph *PrometheusHistogram) GetLabels() map[string]string { return ph.labels }
+func (ph *PrometheusHistogram) GetValue() interface{} {
 	metric := &dto.MetricFamily{}
 	ph.histogram.Write(metric)
 	return metric.GetMetric()[0].GetHistogram().GetSampleSum()
 }
-func (ph *PrometheusHistogram) Reset() { /* Prometheus直方图不支持重置 */ }
-func (ph *PrometheusHistogram) String() string {
-	return fmt.Sprintf("%s{%v} = %v", ph.name, ph.labels, ph.Value())
-}
+func (ph *PrometheusHistogram) GetTimestamp() time.Time { return time.Now() }
 func (ph *PrometheusHistogram) Observe(value float64) { ph.histogram.Observe(value) }
 func (ph *PrometheusHistogram) ObserveWithLabels(value float64, labels Labels) {
 	// Prometheus直方图不支持动态标签
@@ -499,15 +479,24 @@ type PrometheusSummary struct {
 	quantiles map[float64]float64
 }
 
+func (ps *PrometheusSummary) GetName() string { return ps.name }
+func (ps *PrometheusSummary) GetType() MetricType { return SummaryType }
 func (ps *PrometheusSummary) Name() string     { return ps.name }
 func (ps *PrometheusSummary) Type() MetricType { return SummaryType }
 func (ps *PrometheusSummary) Help() string     { return ps.help }
+func (ps *PrometheusSummary) GetLabels() map[string]string { return ps.labels }
 func (ps *PrometheusSummary) Labels() Labels   { return ps.labels }
+func (ps *PrometheusSummary) GetValue() interface{} {
+	metric := &dto.MetricFamily{}
+	ps.summary.Write(metric)
+	return metric.GetMetric()[0].GetSummary().GetSampleSum()
+}
 func (ps *PrometheusSummary) Value() interface{} {
 	metric := &dto.MetricFamily{}
 	ps.summary.Write(metric)
 	return metric.GetMetric()[0].GetSummary().GetSampleSum()
 }
+func (ps *PrometheusSummary) GetTimestamp() time.Time { return time.Now() }
 func (ps *PrometheusSummary) Reset() { /* Prometheus摘要不支持重置 */ }
 func (ps *PrometheusSummary) String() string {
 	return fmt.Sprintf("%s{%v} = %v", ps.name, ps.labels, ps.Value())

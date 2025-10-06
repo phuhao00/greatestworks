@@ -66,7 +66,7 @@ func (pf *PetFragment) ConsumeQuantity(amount uint64) error {
 	if pf.quantity < amount {
 		return ErrInsufficientFragments
 	}
-	
+
 	pf.quantity -= amount
 	pf.updatedAt = time.Now()
 	return nil
@@ -89,17 +89,17 @@ func (pf *PetFragment) GetUpdatedAt() time.Time {
 
 // PetSkin 宠物皮肤实体
 type PetSkin struct {
-	id        string
-	skinID    string
-	name      string
-	rarity    PetRarity
-	equipped  bool
-	powerBonus int64
+	id             string
+	skinID         string
+	name           string
+	rarity         PetRarity
+	equipped       bool
+	powerBonus     int64
 	attributeBonus map[string]float64
-	unlocked  bool
-	unlockTime time.Time
-	createdAt time.Time
-	updatedAt time.Time
+	unlocked       bool
+	unlockTime     time.Time
+	createdAt      time.Time
+	updatedAt      time.Time
 }
 
 // NewPetSkin 创建新的宠物皮肤
@@ -164,7 +164,7 @@ func (ps *PetSkin) Unlock() error {
 	if ps.unlocked {
 		return ErrSkinAlreadyUnlocked
 	}
-	
+
 	ps.unlocked = true
 	ps.unlockTime = time.Now()
 	ps.updatedAt = time.Now()
@@ -176,11 +176,11 @@ func (ps *PetSkin) Equip() error {
 	if !ps.unlocked {
 		return ErrSkinNotUnlocked
 	}
-	
+
 	if ps.equipped {
 		return ErrSkinAlreadyEquipped
 	}
-	
+
 	ps.equipped = true
 	ps.updatedAt = time.Now()
 	return nil
@@ -215,18 +215,18 @@ func (ps *PetSkin) GetUpdatedAt() time.Time {
 
 // PetSkill 宠物技能实体
 type PetSkill struct {
-	id          string
-	skillID     string
-	name        string
-	level       uint32
-	experience  uint64
-	cooldown    time.Duration
-	lastUsed    time.Time
-	skillType   SkillType
-	damage      int64
-	effects     []SkillEffect
-	createdAt   time.Time
-	updatedAt   time.Time
+	id         string
+	skillID    string
+	name       string
+	level      uint32
+	experience uint64
+	cooldown   time.Duration
+	lastUsed   time.Time
+	skillType  SkillType
+	damage     int64
+	effects    []SkillEffect
+	createdAt  time.Time
+	updatedAt  time.Time
 }
 
 // SkillType 技能类型
@@ -251,17 +251,17 @@ type SkillEffect struct {
 func NewPetSkill(skillID, name string, skillType SkillType, cooldown time.Duration, damage int64, description string) *PetSkill {
 	now := time.Now()
 	return &PetSkill{
-		id:        fmt.Sprintf("skill_%d", now.UnixNano()),
-		skillID:   skillID,
-		name:      name,
-		level:     1,
+		id:         fmt.Sprintf("skill_%d", now.UnixNano()),
+		skillID:    skillID,
+		name:       name,
+		level:      1,
 		experience: 0,
-		cooldown:  cooldown,
-		skillType: skillType,
-		damage:    damage,
-		effects:   make([]SkillEffect, 0),
-		createdAt: now,
-		updatedAt: now,
+		cooldown:   cooldown,
+		skillType:  skillType,
+		damage:     damage,
+		effects:    make([]SkillEffect, 0),
+		createdAt:  now,
+		updatedAt:  now,
 	}
 }
 
@@ -329,7 +329,7 @@ func (ps *PetSkill) GetEffects() []SkillEffect {
 func (ps *PetSkill) AddExperience(exp uint64) {
 	ps.experience += exp
 	ps.updatedAt = time.Now()
-	
+
 	// 检查是否可以升级
 	if ps.canLevelUp() {
 		ps.levelUp()
@@ -359,11 +359,11 @@ func (ps *PetSkill) Upgrade() error {
 	if ps.level >= MaxSkillLevel {
 		return ErrMaxSkillLevelReached
 	}
-	
+
 	if !ps.canLevelUp() {
 		return ErrInsufficientSkillExperience
 	}
-	
+
 	ps.levelUp()
 	return nil
 }
@@ -373,7 +373,7 @@ func (ps *PetSkill) Use() error {
 	if !ps.IsReady() {
 		return ErrSkillOnCooldown
 	}
-	
+
 	ps.lastUsed = time.Now()
 	ps.updatedAt = time.Now()
 	return nil
@@ -528,22 +528,22 @@ func (pb *PetBonds) ActivateBond(bondID string) error {
 			return ErrBondAlreadyActive
 		}
 	}
-	
+
 	// 检查是否达到最大激活数量
 	if len(pb.activeBonds) >= MaxActiveBonds {
 		return ErrMaxActiveBondsReached
 	}
-	
+
 	// 创建新的激活羁绊
 	bond := NewActiveBond(bondID, "Bond", 1, "Effect")
 	pb.activeBonds = append(pb.activeBonds, bond)
-	
+
 	// 激活羁绊效果
 	if effect, exists := pb.bondEffects[bondID]; exists {
 		effect.Active = true
 		effect.ActivatedAt = time.Now()
 	}
-	
+
 	pb.updatedAt = time.Now()
 	return nil
 }
@@ -554,17 +554,17 @@ func (pb *PetBonds) DeactivateBond(bondID string) error {
 	for i, activeBond := range pb.activeBonds {
 		if activeBond.GetBondID() == bondID {
 			pb.activeBonds = append(pb.activeBonds[:i], pb.activeBonds[i+1:]...)
-			
+
 			// 取消羁绊效果
 			if effect, exists := pb.bondEffects[bondID]; exists {
 				effect.Active = false
 			}
-			
+
 			pb.updatedAt = time.Now()
 			return nil
 		}
 	}
-	
+
 	return ErrBondNotActive
 }
 
@@ -577,8 +577,8 @@ func (pb *PetBonds) AddBondEffect(effect *BondEffect) {
 // GetPowerBonus 获取羁绊战力加成
 func (pb *PetBonds) GetPowerBonus() int64 {
 	var totalBonus int64
-	for _, bondID := range pb.activeBonds {
-		if effect, exists := pb.bondEffects[bondID]; exists && effect.Active {
+	for _, bond := range pb.activeBonds {
+		if effect, exists := pb.bondEffects[bond.bondID]; exists && effect.Active {
 			totalBonus += effect.PowerBonus
 		}
 	}
@@ -588,15 +588,15 @@ func (pb *PetBonds) GetPowerBonus() int64 {
 // GetAttributeBonus 获取羁绊属性加成
 func (pb *PetBonds) GetAttributeBonus() map[string]float64 {
 	attributeBonus := make(map[string]float64)
-	
-	for _, bondID := range pb.activeBonds {
-		if effect, exists := pb.bondEffects[bondID]; exists && effect.Active {
+
+	for _, bond := range pb.activeBonds {
+		if effect, exists := pb.bondEffects[bond.bondID]; exists && effect.Active {
 			for attr, bonus := range effect.Attributes {
 				attributeBonus[attr] += bonus
 			}
 		}
 	}
-	
+
 	return attributeBonus
 }
 
@@ -726,6 +726,6 @@ func (pp *PetPictorial) GetUpdatedAt() time.Time {
 
 // 常量定义
 const (
-	MaxSkillLevel    = 10
-	MaxActiveBonds   = 3
+	MaxSkillLevel  = 10
+	MaxActiveBonds = 3
 )

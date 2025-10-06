@@ -623,7 +623,8 @@ func (dt *DialogueTemplate) GenerateNodes(npcType NPCType, context map[string]in
 
 	// 如果没有模板节点，生成默认节点
 	if len(nodes) == 0 {
-		defaultNode := NewDialogueNode("node_0", s.getDefaultDialogueText(npcType), "NPC")
+		defaultText := "你好，我是NPC。" // 默认文本
+		defaultNode := NewDialogueNode("node_0", defaultText, "NPC")
 		nodes = append(nodes, defaultNode)
 	}
 

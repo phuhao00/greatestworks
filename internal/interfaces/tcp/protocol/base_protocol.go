@@ -440,7 +440,7 @@ func (r *TCPRouter) RegisterHandler(msgType uint16, handler MessageHandler) {
 // HandleMessage 处理消息
 func (r *TCPRouter) HandleMessage(ctx context.Context, conn *TCPConnection, msg *Message) error {
 	r.mutex.RLock()
-	handler, exists := r.handlers[msg.Header.MessageType]
+	handler, exists := r.handlers[uint16(msg.Header.MessageType)]
 	r.mutex.RUnlock()
 
 	if !exists {

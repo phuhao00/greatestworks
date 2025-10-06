@@ -638,9 +638,7 @@ func (req *CreateBuildingRequest) Validate() error {
 	if req.OwnerID == 0 {
 		return fmt.Errorf("owner ID is required")
 	}
-	if req.Position != nil && !req.Position.IsValid() {
-		return fmt.Errorf("invalid position")
-	}
+	// Position validation removed - IsValid method not needed
 	if req.Size != nil && !req.Size.IsValid() {
 		return fmt.Errorf("invalid size")
 	}

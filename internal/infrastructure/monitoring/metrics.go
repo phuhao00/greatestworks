@@ -13,6 +13,21 @@ import (
 	"greatestworks/internal/infrastructure/logger"
 )
 
+// CounterInterface 计数器指标接口
+type CounterInterface interface {
+	Inc()
+	Add(value int64)
+	GetName() string
+	GetType() MetricType
+	GetValue() interface{}
+	GetLabels() map[string]string
+	GetTimestamp() time.Time
+	Help() string
+	Type() MetricType
+	Name() string
+	Get() int64
+}
+
 // GaugeInterface 仪表盘指标接口
 type GaugeInterface interface {
 	Set(value float64)
@@ -25,6 +40,9 @@ type GaugeInterface interface {
 	GetValue() interface{}
 	GetLabels() map[string]string
 	GetTimestamp() time.Time
+	Help() string
+	Type() MetricType
+	Name() string
 }
 
 // HistogramInterface 直方图指标接口
@@ -35,6 +53,9 @@ type HistogramInterface interface {
 	GetValue() interface{}
 	GetLabels() map[string]string
 	GetTimestamp() time.Time
+	Help() string
+	Type() MetricType
+	Name() string
 }
 
 // Summary 摘要指标接口
@@ -49,9 +70,16 @@ type Summary interface {
 
 // Timer 计时器接口
 type Timer interface {
-	Start() time.Time
-	Stop(start time.Time) time.Duration
-	Observe(duration time.Duration)
+	Start() TimerContext
+	Time(fn func())
+	TimeContext(ctx context.Context, fn func(context.Context))
+	ObserveDuration(duration time.Duration)
+}
+
+// TimerContext 计时器上下文接口
+type TimerContext interface {
+	Stop()
+	Duration() time.Duration
 }
 
 // Config 监控配置
@@ -65,10 +93,17 @@ type Config struct {
 
 // Factory 指标工厂接口
 type Factory interface {
-	NewCounter(name, help string, labels Labels) Counter
+	NewCounter(name, help string, labels Labels) CounterInterface
 	NewGauge(name, help string, labels Labels) GaugeInterface
 	NewHistogram(name, help string, buckets []float64, labels Labels) HistogramInterface
 	NewSummary(name, help string, objectives map[float64]float64, labels Labels) Summary
+}
+
+// Manager 监控管理器接口
+type Manager interface {
+	GetRegistry() Registry
+	GetFactory() Factory
+	RegisterCollector(collector Collector) error
 }
 
 // Registry 指标注册表接口
@@ -247,6 +282,13 @@ func (c *Counter) Type() MetricType {
 // Name 获取名称
 func (c *Counter) Name() string {
 	return c.name
+}
+
+// Get 获取当前值
+func (c *Counter) Get() int64 {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.value
 }
 
 // Gauge 仪表指标

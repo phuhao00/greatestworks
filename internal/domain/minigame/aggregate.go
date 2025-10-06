@@ -662,7 +662,19 @@ func (mg *MinigameAggregate) distributeRewards() {
 			reward.PlayerID = result.PlayerID
 			reward.GameID = mg.GameID
 			reward.Timestamp = time.Now()
-			mg.Rewards = append(mg.Rewards, reward)
+			// 将Reward转换为GameReward
+			playerID, _ := strconv.ParseUint(reward.PlayerID, 10, 64)
+			gameReward := &GameReward{
+				RewardID:   reward.RewardID,
+				PlayerID:   playerID,
+				RewardType: RewardType(reward.RewardType),
+				Amount:     reward.Amount,
+				ItemID:     reward.ItemID,
+				ItemCount:  reward.ItemCount,
+				GameID:     reward.GameID,
+				Timestamp:  reward.Timestamp,
+			}
+			mg.Rewards = append(mg.Rewards, gameReward)
 		}
 	}
 }

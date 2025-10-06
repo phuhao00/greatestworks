@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// 错误代码常量
+const (
+	ErrorCodeInvalidState        = "INVALID_STATE"
+	ErrorCodeInsufficientPlayers = "INSUFFICIENT_PLAYERS"
+)
+
 // MinigameError 小游戏错误接口
 type MinigameError interface {
 	error

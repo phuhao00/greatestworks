@@ -84,9 +84,11 @@ func NewConsoleLogger(config *Config) (*ConsoleLogger, error) {
 	}
 
 	// 创建格式化器
-	formatter := NewConsoleFormatter()
+	var formatter Formatter
 	if config.Format == "json" {
 		formatter = NewJSONFormatter()
+	} else {
+		formatter = NewConsoleFormatter()
 	}
 
 	// 检查是否支持颜色

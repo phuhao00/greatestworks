@@ -42,6 +42,8 @@ var (
 	ErrInvalidQuest             = fmt.Errorf("invalid quest")
 	ErrInvalidShop              = fmt.Errorf("invalid shop")
 	ErrNPCCannotHaveShop        = fmt.Errorf("NPC cannot have shop")
+	ErrQuestConditionsNotMet    = fmt.Errorf("quest conditions not met")
+	ErrNPCHasNoShop             = fmt.Errorf("NPC has no shop")
 
 	// 任务相关错误
 	ErrQuestNotFound          = fmt.Errorf("quest not found")

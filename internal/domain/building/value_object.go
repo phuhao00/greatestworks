@@ -219,27 +219,7 @@ func (s *Size) Clone() *Size {
 	return &Size{Width: s.Width, Height: s.Height, Depth: s.Depth}
 }
 
-// Position 位置
-type Position struct {
-	X int32 `json:"x" bson:"x"`
-	Y int32 `json:"y" bson:"y"`
-	Z int32 `json:"z" bson:"z"`
-}
-
-// NewPosition 创建新位置
-func NewPosition(x, y, z int32) *Position {
-	return &Position{X: x, Y: y, Z: z}
-}
-
-// IsValid 检查位置是否有效
-func (p *Position) IsValid() bool {
-	return p != nil
-}
-
-// Clone 克隆位置
-func (p *Position) Clone() *Position {
-	return &Position{X: p.X, Y: p.Y, Z: p.Z}
-}
+// 注意：Position和NewPosition已经在文件前面定义，这里删除重复定义
 
 // BoundingBox 边界框
 type BoundingBox struct {

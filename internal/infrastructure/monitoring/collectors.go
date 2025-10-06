@@ -6,6 +6,7 @@ package monitoring
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"runtime"
 	"sync"
@@ -16,6 +17,12 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
+)
+
+// 错误定义
+var (
+	ErrCollectorExists   = errors.New("collector already exists")
+	ErrCollectorNotFound = errors.New("collector not found")
 )
 
 // SystemCollector 系统指标收集器
@@ -184,13 +191,13 @@ func (sc *SystemCollector) collectNetworkMetrics() {
 		return
 	}
 
-	if counter, ok := sc.metrics["network_bytes_received_total"].(Counter); ok {
+	if counter, ok := sc.metrics["network_bytes_received_total"].(CounterInterface); ok {
 		// 注意：这里应该计算增量，但为了简化，直接设置总值
-		counter.Add(float64(stats[0].BytesRecv) - counter.Get())
+		counter.Add(int64(stats[0].BytesRecv) - counter.Get())
 	}
 
-	if counter, ok := sc.metrics["network_bytes_sent_total"].(Counter); ok {
-		counter.Add(float64(stats[0].BytesSent) - counter.Get())
+	if counter, ok := sc.metrics["network_bytes_sent_total"].(CounterInterface); ok {
+		counter.Add(int64(stats[0].BytesSent) - counter.Get())
 	}
 }
 
@@ -291,8 +298,8 @@ func (rc *RuntimeCollector) initMetrics() {
 	rc.metrics["go_gc_duration_seconds"] = rc.factory.NewHistogram(
 		"go_gc_duration_seconds",
 		"Time spent in garbage collection",
-		Labels{},
 		[]float64{0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0},
+		Labels{},
 	)
 }
 
@@ -332,54 +339,54 @@ func (rc *RuntimeCollector) collectRuntimeMetrics() {
 	runtime.ReadMemStats(&m)
 
 	// Goroutines
-	if gauge, ok := rc.metrics["go_goroutines"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_goroutines"].(GaugeInterface); ok {
 		gauge.Set(float64(runtime.NumGoroutine()))
 	}
 
 	// Threads
-	if gauge, ok := rc.metrics["go_threads"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_threads"].(GaugeInterface); ok {
 		var numThreads int
 		runtime.SetFinalizer(&numThreads, nil)
 		gauge.Set(float64(runtime.GOMAXPROCS(0)))
 	}
 
 	// Memory stats
-	if gauge, ok := rc.metrics["go_memstats_alloc_bytes"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_memstats_alloc_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(m.Alloc))
 	}
 
-	if counter, ok := rc.metrics["go_memstats_total_alloc_bytes"].(Counter); ok {
+	if counter, ok := rc.metrics["go_memstats_total_alloc_bytes"].(CounterInterface); ok {
 		current := counter.Get()
-		if float64(m.TotalAlloc) > current {
-			counter.Add(float64(m.TotalAlloc) - current)
+		if int64(m.TotalAlloc) > current {
+			counter.Add(int64(m.TotalAlloc) - current)
 		}
 	}
 
-	if gauge, ok := rc.metrics["go_memstats_sys_bytes"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_memstats_sys_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(m.Sys))
 	}
 
-	if gauge, ok := rc.metrics["go_memstats_heap_alloc_bytes"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_memstats_heap_alloc_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(m.HeapAlloc))
 	}
 
-	if gauge, ok := rc.metrics["go_memstats_heap_sys_bytes"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_memstats_heap_sys_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(m.HeapSys))
 	}
 
-	if gauge, ok := rc.metrics["go_memstats_heap_objects"].(Gauge); ok {
+	if gauge, ok := rc.metrics["go_memstats_heap_objects"].(GaugeInterface); ok {
 		gauge.Set(float64(m.HeapObjects))
 	}
 
-	if counter, ok := rc.metrics["go_memstats_gc_total"].(Counter); ok {
+	if counter, ok := rc.metrics["go_memstats_gc_total"].(CounterInterface); ok {
 		current := counter.Get()
-		if float64(m.NumGC) > current {
-			counter.Add(float64(m.NumGC) - current)
+		if int64(m.NumGC) > current {
+			counter.Add(int64(m.NumGC) - current)
 		}
 	}
 
 	// GC duration (简化实现)
-	if histogram, ok := rc.metrics["go_gc_duration_seconds"].(Histogram); ok {
+	if histogram, ok := rc.metrics["go_gc_duration_seconds"].(HistogramInterface); ok {
 		// 这里应该记录实际的GC时间，但为了简化，使用PauseNs的平均值
 		if m.NumGC > 0 {
 			avgPause := float64(m.PauseTotalNs) / float64(m.NumGC) / 1e9
@@ -497,8 +504,8 @@ func (pc *ProcessCollector) Collect(ch chan<- Metric) {
 func (pc *ProcessCollector) collectProcessMetrics() {
 	// CPU时间
 	if times, err := pc.process.Times(); err == nil {
-		if counter, ok := pc.metrics["process_cpu_seconds_total"].(Counter); ok {
-			totalCPU := times.User + times.System
+		if counter, ok := pc.metrics["process_cpu_seconds_total"].(CounterInterface); ok {
+			totalCPU := int64(times.User + times.System)
 			current := counter.Get()
 			if totalCPU > current {
 				counter.Add(totalCPU - current)
@@ -508,25 +515,25 @@ func (pc *ProcessCollector) collectProcessMetrics() {
 
 	// 内存信息
 	if memInfo, err := pc.process.MemoryInfo(); err == nil {
-		if gauge, ok := pc.metrics["process_resident_memory_bytes"].(Gauge); ok {
+		if gauge, ok := pc.metrics["process_resident_memory_bytes"].(GaugeInterface); ok {
 			gauge.Set(float64(memInfo.RSS))
 		}
 
-		if gauge, ok := pc.metrics["process_virtual_memory_bytes"].(Gauge); ok {
+		if gauge, ok := pc.metrics["process_virtual_memory_bytes"].(GaugeInterface); ok {
 			gauge.Set(float64(memInfo.VMS))
 		}
 	}
 
 	// 文件描述符
 	if fds, err := pc.process.NumFDs(); err == nil {
-		if gauge, ok := pc.metrics["process_open_fds"].(Gauge); ok {
+		if gauge, ok := pc.metrics["process_open_fds"].(GaugeInterface); ok {
 			gauge.Set(float64(fds))
 		}
 	}
 
 	// 启动时间
 	if createTime, err := pc.process.CreateTime(); err == nil {
-		if gauge, ok := pc.metrics["process_start_time_seconds"].(Gauge); ok {
+		if gauge, ok := pc.metrics["process_start_time_seconds"].(GaugeInterface); ok {
 			gauge.Set(float64(createTime) / 1000) // 转换为秒
 		}
 	}
@@ -605,15 +612,15 @@ func (gc *GameCollector) initMetrics() {
 	gc.metrics["player_level_distribution"] = gc.factory.NewHistogram(
 		"player_level_distribution",
 		"Distribution of player levels",
-		Labels{},
 		[]float64{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100},
+		Labels{},
 	)
 
 	gc.metrics["session_duration_seconds"] = gc.factory.NewHistogram(
 		"session_duration_seconds",
 		"Player session duration in seconds",
-		Labels{},
 		[]float64{60, 300, 900, 1800, 3600, 7200, 14400, 28800},
+		Labels{},
 	)
 }
 
@@ -647,49 +654,49 @@ func (gc *GameCollector) Collect(ch chan<- Metric) {
 
 // RecordPlayerAction 记录玩家行为
 func (gc *GameCollector) RecordPlayerAction(action string) {
-	if counter, ok := gc.metrics["player_actions_total"].(Counter); ok {
+	if counter, ok := gc.metrics["player_actions_total"].(CounterInterface); ok {
 		counter.Inc()
 	}
 }
 
 // RecordGameEvent 记录游戏事件
 func (gc *GameCollector) RecordGameEvent(eventType string) {
-	if counter, ok := gc.metrics["game_events_total"].(Counter); ok {
+	if counter, ok := gc.metrics["game_events_total"].(CounterInterface); ok {
 		counter.Inc()
 	}
 }
 
 // SetPlayersOnline 设置在线玩家数
 func (gc *GameCollector) SetPlayersOnline(count int) {
-	if gauge, ok := gc.metrics["players_online"].(Gauge); ok {
+	if gauge, ok := gc.metrics["players_online"].(GaugeInterface); ok {
 		gauge.Set(float64(count))
 	}
 }
 
 // SetActiveBattles 设置活跃战斗数
 func (gc *GameCollector) SetActiveBattles(count int) {
-	if gauge, ok := gc.metrics["battles_active"].(Gauge); ok {
+	if gauge, ok := gc.metrics["battles_active"].(GaugeInterface); ok {
 		gauge.Set(float64(count))
 	}
 }
 
 // SetGuildMembers 设置公会成员总数
 func (gc *GameCollector) SetGuildMembers(count int) {
-	if gauge, ok := gc.metrics["guild_members_total"].(Gauge); ok {
+	if gauge, ok := gc.metrics["guild_members_total"].(GaugeInterface); ok {
 		gauge.Set(float64(count))
 	}
 }
 
 // RecordPlayerLevel 记录玩家等级
 func (gc *GameCollector) RecordPlayerLevel(level int) {
-	if histogram, ok := gc.metrics["player_level_distribution"].(Histogram); ok {
+	if histogram, ok := gc.metrics["player_level_distribution"].(HistogramInterface); ok {
 		histogram.Observe(float64(level))
 	}
 }
 
 // RecordSessionDuration 记录会话持续时间
 func (gc *GameCollector) RecordSessionDuration(duration time.Duration) {
-	if histogram, ok := gc.metrics["session_duration_seconds"].(Histogram); ok {
+	if histogram, ok := gc.metrics["session_duration_seconds"].(HistogramInterface); ok {
 		histogram.Observe(duration.Seconds())
 	}
 }
@@ -743,22 +750,22 @@ func (hc *HTTPCollector) initMetrics() {
 	hc.metrics["http_request_duration_seconds"] = hc.factory.NewHistogram(
 		"http_request_duration_seconds",
 		"HTTP request duration in seconds",
-		Labels{"method": "unknown", "status_code": "unknown"},
 		[]float64{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0},
+		Labels{"method": "unknown", "status_code": "unknown"},
 	)
 
 	hc.metrics["http_request_size_bytes"] = hc.factory.NewHistogram(
 		"http_request_size_bytes",
 		"HTTP request size in bytes",
-		Labels{"method": "unknown"},
 		[]float64{100, 1000, 10000, 100000, 1000000},
+		Labels{"method": "unknown"},
 	)
 
 	hc.metrics["http_response_size_bytes"] = hc.factory.NewHistogram(
 		"http_response_size_bytes",
 		"HTTP response size in bytes",
-		Labels{"method": "unknown", "status_code": "unknown"},
 		[]float64{100, 1000, 10000, 100000, 1000000},
+		Labels{"method": "unknown", "status_code": "unknown"},
 	)
 
 	hc.metrics["http_requests_in_flight"] = hc.factory.NewGauge(
@@ -799,36 +806,36 @@ func (hc *HTTPCollector) Collect(ch chan<- Metric) {
 // RecordRequest 记录HTTP请求
 func (hc *HTTPCollector) RecordRequest(method, statusCode string, duration time.Duration, requestSize, responseSize int64) {
 	// 增加请求计数
-	if counter, ok := hc.metrics["http_requests_total"].(Counter); ok {
+	if counter, ok := hc.metrics["http_requests_total"].(CounterInterface); ok {
 		counter.Inc()
 	}
 
 	// 记录请求持续时间
-	if histogram, ok := hc.metrics["http_request_duration_seconds"].(Histogram); ok {
+	if histogram, ok := hc.metrics["http_request_duration_seconds"].(HistogramInterface); ok {
 		histogram.Observe(duration.Seconds())
 	}
 
 	// 记录请求大小
-	if histogram, ok := hc.metrics["http_request_size_bytes"].(Histogram); ok {
+	if histogram, ok := hc.metrics["http_request_size_bytes"].(HistogramInterface); ok {
 		histogram.Observe(float64(requestSize))
 	}
 
 	// 记录响应大小
-	if histogram, ok := hc.metrics["http_response_size_bytes"].(Histogram); ok {
+	if histogram, ok := hc.metrics["http_response_size_bytes"].(HistogramInterface); ok {
 		histogram.Observe(float64(responseSize))
 	}
 }
 
 // IncInFlightRequests 增加正在处理的请求数
 func (hc *HTTPCollector) IncInFlightRequests() {
-	if gauge, ok := hc.metrics["http_requests_in_flight"].(Gauge); ok {
+	if gauge, ok := hc.metrics["http_requests_in_flight"].(GaugeInterface); ok {
 		gauge.Inc()
 	}
 }
 
 // DecInFlightRequests 减少正在处理的请求数
 func (hc *HTTPCollector) DecInFlightRequests() {
-	if gauge, ok := hc.metrics["http_requests_in_flight"].(Gauge); ok {
+	if gauge, ok := hc.metrics["http_requests_in_flight"].(GaugeInterface); ok {
 		gauge.Dec()
 	}
 }
@@ -919,19 +926,10 @@ func (cm *CollectorManager) CollectAll() error {
 	}
 	cm.mutex.RUnlock()
 
-	// 收集指标
-	metricChan := make(chan Metric, 100)
-	go func() {
-		defer close(metricChan)
-		for _, collector := range collectors {
-			collector.Collect(metricChan)
-		}
-	}()
-
-	// 注册指标
-	for metric := range metricChan {
-		if err := cm.registry.Register(metric); err != nil {
-			// 忽略已存在的指标错误
+	// 注册收集器到注册表
+	for _, collector := range collectors {
+		if err := cm.registry.Register(collector); err != nil {
+			// 忽略已存在的收集器错误
 			if err != ErrMetricExists {
 				return err
 			}
