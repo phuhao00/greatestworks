@@ -9,29 +9,29 @@ import (
 // 基础错误定义
 var (
 	// 天气类型相关错误
-	ErrInvalidWeatherType      = errors.New("invalid weather type")
-	ErrUnsupportedWeatherType  = errors.New("unsupported weather type")
-	ErrWeatherTypeNotFound     = errors.New("weather type not found")
-	ErrWeatherTypeConflict     = errors.New("weather type conflict")
-	
+	ErrInvalidWeatherType     = errors.New("invalid weather type")
+	ErrUnsupportedWeatherType = errors.New("unsupported weather type")
+	ErrWeatherTypeNotFound    = errors.New("weather type not found")
+	ErrWeatherTypeConflict    = errors.New("weather type conflict")
+
 	// 天气强度相关错误
 	ErrInvalidWeatherIntensity = errors.New("invalid weather intensity")
 	ErrIntensityOutOfRange     = errors.New("weather intensity out of range")
 	ErrIntensityNotSupported   = errors.New("weather intensity not supported")
-	
+
 	// 天气状态相关错误
-	ErrInvalidWeatherState     = errors.New("invalid weather state")
-	ErrWeatherStateExpired     = errors.New("weather state expired")
-	ErrWeatherStateNotActive   = errors.New("weather state not active")
-	ErrWeatherStateConflict    = errors.New("weather state conflict")
-	ErrWeatherStateNotFound    = errors.New("weather state not found")
-	
+	ErrInvalidWeatherState   = errors.New("invalid weather state")
+	ErrWeatherStateExpired   = errors.New("weather state expired")
+	ErrWeatherStateNotActive = errors.New("weather state not active")
+	ErrWeatherStateConflict  = errors.New("weather state conflict")
+	ErrWeatherStateNotFound  = errors.New("weather state not found")
+
 	// 天气转换相关错误
 	ErrInvalidWeatherTransition = errors.New("invalid weather transition")
 	ErrWeatherTransitionBlocked = errors.New("weather transition blocked")
 	ErrTransitionTooFrequent    = errors.New("weather transition too frequent")
 	ErrTransitionNotAllowed     = errors.New("weather transition not allowed")
-	
+
 	// 天气效果相关错误
 	ErrInvalidWeatherEffect    = errors.New("invalid weather effect")
 	ErrWeatherEffectExpired    = errors.New("weather effect expired")
@@ -39,66 +39,66 @@ var (
 	ErrWeatherEffectConflict   = errors.New("weather effect conflict")
 	ErrWeatherEffectNotFound   = errors.New("weather effect not found")
 	ErrEffectMultiplierInvalid = errors.New("effect multiplier invalid")
-	
+
 	// 天气事件相关错误
-	ErrInvalidWeatherEvent     = errors.New("invalid weather event")
-	ErrWeatherEventExpired     = errors.New("weather event expired")
-	ErrWeatherEventNotActive   = errors.New("weather event not active")
-	ErrWeatherEventConflict    = errors.New("weather event conflict")
-	ErrWeatherEventNotFound    = errors.New("weather event not found")
-	ErrEventTriggerFailed      = errors.New("weather event trigger failed")
-	ErrEventSeverityInvalid    = errors.New("weather event severity invalid")
-	
+	ErrInvalidWeatherEvent   = errors.New("invalid weather event")
+	ErrWeatherEventExpired   = errors.New("weather event expired")
+	ErrWeatherEventNotActive = errors.New("weather event not active")
+	ErrWeatherEventConflict  = errors.New("weather event conflict")
+	ErrWeatherEventNotFound  = errors.New("weather event not found")
+	ErrEventTriggerFailed    = errors.New("weather event trigger failed")
+	ErrEventSeverityInvalid  = errors.New("weather event severity invalid")
+
 	// 天气预报相关错误
-	ErrInvalidForecastPeriod   = errors.New("invalid forecast period")
-	ErrForecastNotAvailable    = errors.New("weather forecast not available")
-	ErrForecastExpired         = errors.New("weather forecast expired")
+	ErrInvalidForecastPeriod    = errors.New("invalid forecast period")
+	ErrForecastNotAvailable     = errors.New("weather forecast not available")
+	ErrForecastExpired          = errors.New("weather forecast expired")
 	ErrForecastGenerationFailed = errors.New("weather forecast generation failed")
-	ErrForecastAccuracyLow     = errors.New("weather forecast accuracy too low")
-	
+	ErrForecastAccuracyLow      = errors.New("weather forecast accuracy too low")
+
 	// 季节模式相关错误
 	ErrInvalidSeason           = errors.New("invalid season")
 	ErrSeasonalPatternNotFound = errors.New("seasonal pattern not found")
 	ErrSeasonalPatternInvalid  = errors.New("seasonal pattern invalid")
 	ErrSeasonTransitionFailed  = errors.New("season transition failed")
-	
+
 	// 气候区域相关错误
-	ErrInvalidClimateZone      = errors.New("invalid climate zone")
-	ErrClimateZoneNotFound     = errors.New("climate zone not found")
-	ErrClimateZoneConflict     = errors.New("climate zone conflict")
-	
+	ErrInvalidClimateZone  = errors.New("invalid climate zone")
+	ErrClimateZoneNotFound = errors.New("climate zone not found")
+	ErrClimateZoneConflict = errors.New("climate zone conflict")
+
 	// 时间相关错误
-	ErrInvalidTimeRange        = errors.New("invalid time range")
-	ErrInvalidDuration         = errors.New("invalid duration")
-	ErrInvalidChangeInterval   = errors.New("invalid change interval")
-	ErrTimeoutExceeded         = errors.New("timeout exceeded")
-	
+	ErrInvalidTimeRange      = errors.New("invalid time range")
+	ErrInvalidDuration       = errors.New("invalid duration")
+	ErrInvalidChangeInterval = errors.New("invalid change interval")
+	ErrTimeoutExceeded       = errors.New("timeout exceeded")
+
 	// 配置相关错误
-	ErrInvalidConfiguration    = errors.New("invalid weather configuration")
-	ErrConfigurationNotFound   = errors.New("weather configuration not found")
-	ErrConfigurationConflict   = errors.New("weather configuration conflict")
-	
+	ErrInvalidConfiguration  = errors.New("invalid weather configuration")
+	ErrConfigurationNotFound = errors.New("weather configuration not found")
+	ErrConfigurationConflict = errors.New("weather configuration conflict")
+
 	// 数据相关错误
 	ErrDataCorrupted           = errors.New("weather data corrupted")
 	ErrDataNotFound            = errors.New("weather data not found")
 	ErrDataValidationFailed    = errors.New("weather data validation failed")
 	ErrDataSerializationFailed = errors.New("weather data serialization failed")
-	
+
 	// 系统相关错误
-	ErrSystemNotInitialized    = errors.New("weather system not initialized")
-	ErrSystemOverloaded        = errors.New("weather system overloaded")
-	ErrSystemMaintenance       = errors.New("weather system under maintenance")
-	ErrResourceExhausted       = errors.New("weather system resources exhausted")
-	
+	ErrSystemNotInitialized = errors.New("weather system not initialized")
+	ErrSystemOverloaded     = errors.New("weather system overloaded")
+	ErrSystemMaintenance    = errors.New("weather system under maintenance")
+	ErrResourceExhausted    = errors.New("weather system resources exhausted")
+
 	// 并发相关错误
-	ErrConcurrentModification  = errors.New("concurrent weather modification")
-	ErrLockAcquisitionFailed   = errors.New("weather lock acquisition failed")
-	ErrVersionMismatch         = errors.New("weather version mismatch")
-	
+	ErrConcurrentModification = errors.New("concurrent weather modification")
+	ErrLockAcquisitionFailed  = errors.New("weather lock acquisition failed")
+	ErrVersionMismatch        = errors.New("weather version mismatch")
+
 	// 权限相关错误
-	ErrPermissionDenied        = errors.New("weather operation permission denied")
-	ErrUnauthorizedAccess      = errors.New("unauthorized weather access")
-	ErrInsufficientPrivileges  = errors.New("insufficient weather privileges")
+	ErrPermissionDenied       = errors.New("weather operation permission denied")
+	ErrUnauthorizedAccess     = errors.New("unauthorized weather access")
+	ErrInsufficientPrivileges = errors.New("insufficient weather privileges")
 )
 
 // WeatherError 天气错误结构体
@@ -209,7 +209,7 @@ type ConcurrencyError struct {
 
 // Error 实现error接口
 func (e *ConcurrencyError) Error() string {
-	return fmt.Sprintf("concurrency error in operation '%s' on resource '%s': conflict with %s (retry %d/%d)", 
+	return fmt.Sprintf("concurrency error in operation '%s' on resource '%s': conflict with %s (retry %d/%d)",
 		e.Operation, e.Resource, e.ConflictID, e.RetryCount, e.MaxRetries)
 }
 
@@ -242,7 +242,7 @@ type ConfigurationError struct {
 
 // Error 实现error接口
 func (e *ConfigurationError) Error() string {
-	return fmt.Sprintf("configuration error in %s.%s: expected %s, got %s (value: %v). Suggestion: %s", 
+	return fmt.Sprintf("configuration error in %s.%s: expected %s, got %s (value: %v). Suggestion: %s",
 		e.ConfigType, e.ConfigKey, e.Expected, e.Actual, e.ConfigValue, e.Suggestion)
 }
 
@@ -272,7 +272,7 @@ type SystemError struct {
 
 // Error 实现error接口
 func (e *SystemError) Error() string {
-	msg := fmt.Sprintf("system error in %s.%s [%s]: %s (severity: %s, recoverable: %t)", 
+	msg := fmt.Sprintf("system error in %s.%s [%s]: %s (severity: %s, recoverable: %t)",
 		e.Component, e.Operation, e.ErrorCode, e.Description, e.Severity, e.Recoverable)
 	if e.Cause != nil {
 		msg += fmt.Sprintf(", cause: %v", e.Cause)
@@ -337,11 +337,11 @@ func (ec *ErrorCollection) Error() string {
 	if len(ec.Errors) == 0 {
 		return "no errors"
 	}
-	
+
 	if len(ec.Errors) == 1 {
 		return fmt.Sprintf("error in %s: %v", ec.Context, ec.Errors[0])
 	}
-	
+
 	msg := fmt.Sprintf("%d errors in %s:", len(ec.Errors), ec.Context)
 	for i, err := range ec.Errors {
 		msg += fmt.Sprintf("\n  %d. %v", i+1, err)
@@ -512,6 +512,6 @@ func getCurrentTimestamp() int64 {
 }
 
 // getCurrentTime 获取当前时间（可用于测试时的时间注入）
-var getCurrentTime = func() int64 {
-	return time.Now().Unix()
+var getCurrentTime = func() time.Time {
+	return time.Now()
 }

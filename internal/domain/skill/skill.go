@@ -1,18 +1,18 @@
 package skill
 
 import (
-	"errors"
+	// "errors"
 	"time"
 )
 
 // SkillTree 技能树聚合根
 type SkillTree struct {
-	playerID     string
-	skills       map[string]*Skill
-	skillPoints  int64
-	totalPoints  int64
-	lastUpdate   time.Time
-	events       []DomainEvent
+	playerID    string
+	skills      map[string]*Skill
+	skillPoints int64
+	totalPoints int64
+	lastUpdate  time.Time
+	events      []DomainEvent
 }
 
 // NewSkillTree 创建新技能树
@@ -52,15 +52,15 @@ type Skill struct {
 // NewSkill 创建新技能
 func NewSkill(id, name string, skillType SkillType) *Skill {
 	return &Skill{
-		id:          id,
-		name:        name,
-		skillType:   skillType,
-		level:       0,
-		maxLevel:    10,
-		effects:     make([]*SkillEffect, 0),
-		scaling:     make(map[AttributeType]float64),
-		createdAt:   time.Now(),
-		updatedAt:   time.Now(),
+		id:        id,
+		name:      name,
+		skillType: skillType,
+		level:     0,
+		maxLevel:  10,
+		effects:   make([]*SkillEffect, 0),
+		scaling:   make(map[AttributeType]float64),
+		createdAt: time.Now(),
+		updatedAt: time.Now(),
 	}
 }
 
@@ -152,10 +152,10 @@ const (
 
 // SkillCombo 技能连击
 type SkillCombo struct {
-	id         string
-	name       string
-	skills     []string // 技能ID序列
-	timeWindow time.Duration
+	id          string
+	name        string
+	skills      []string // 技能ID序列
+	timeWindow  time.Duration
 	bonusEffect *SkillEffect
 }
 
@@ -173,9 +173,9 @@ type SkillLearnedEvent struct {
 	occurredAt time.Time
 }
 
-func (e SkillLearnedEvent) EventType() string   { return "skill.learned" }
+func (e SkillLearnedEvent) EventType() string     { return "skill.learned" }
 func (e SkillLearnedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e SkillLearnedEvent) PlayerID() string    { return e.playerID }
+func (e SkillLearnedEvent) PlayerID() string      { return e.playerID }
 
 // SkillUpgradedEvent 技能升级事件
 type SkillUpgradedEvent struct {
@@ -186,9 +186,9 @@ type SkillUpgradedEvent struct {
 	occurredAt time.Time
 }
 
-func (e SkillUpgradedEvent) EventType() string   { return "skill.upgraded" }
+func (e SkillUpgradedEvent) EventType() string     { return "skill.upgraded" }
 func (e SkillUpgradedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e SkillUpgradedEvent) PlayerID() string    { return e.playerID }
+func (e SkillUpgradedEvent) PlayerID() string      { return e.playerID }
 
 // SkillUsedEvent 技能使用事件
 type SkillUsedEvent struct {
@@ -199,9 +199,9 @@ type SkillUsedEvent struct {
 	occurredAt time.Time
 }
 
-func (e SkillUsedEvent) EventType() string   { return "skill.used" }
+func (e SkillUsedEvent) EventType() string     { return "skill.used" }
 func (e SkillUsedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e SkillUsedEvent) PlayerID() string    { return e.playerID }
+func (e SkillUsedEvent) PlayerID() string      { return e.playerID }
 
 // SkillPointsGainedEvent 技能点获得事件
 type SkillPointsGainedEvent struct {
@@ -211,9 +211,9 @@ type SkillPointsGainedEvent struct {
 	occurredAt time.Time
 }
 
-func (e SkillPointsGainedEvent) EventType() string   { return "skill.points.gained" }
+func (e SkillPointsGainedEvent) EventType() string     { return "skill.points.gained" }
 func (e SkillPointsGainedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e SkillPointsGainedEvent) PlayerID() string    { return e.playerID }
+func (e SkillPointsGainedEvent) PlayerID() string      { return e.playerID }
 
 // SkillTree 业务方法
 
@@ -405,10 +405,10 @@ func (st *SkillTree) calculateUpgradeCost(currentLevel int) int64 {
 func (st *SkillTree) calculateSkillResult(skill *Skill, targetID string) *SkillResult {
 	// 基础伤害计算
 	damage := skill.baseDamage * int64(skill.level)
-	
+
 	// 这里可以添加更复杂的伤害计算逻辑
 	// 包括属性加成、暴击、抗性等
-	
+
 	return &SkillResult{
 		SkillID:  skill.id,
 		TargetID: targetID,

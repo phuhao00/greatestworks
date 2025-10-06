@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/greatestworks/internal/domain/ranking"
+	"greatestworks/internal/domain/ranking"
 )
 
 // RankingRepository MongoDB排行榜仓储实现

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"greatestworks/application/handlers"
-	"greatestworks/application/queries"
+	// "greatestworks/application/queries" // TODO: 实现查询系统
 	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/interfaces/http/auth"
 )

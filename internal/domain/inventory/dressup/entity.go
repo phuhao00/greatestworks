@@ -2,6 +2,7 @@ package dressup
 
 import (
 	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -192,7 +193,7 @@ func (o *Outfit) GetMaxExp() int {
 func (o *Outfit) AddExp(exp int) bool {
 	o.exp += exp
 	leveledUp := false
-	
+
 	// 检查是否升级
 	for o.exp >= o.maxExp && o.level < 100 {
 		o.exp -= o.maxExp
@@ -200,7 +201,7 @@ func (o *Outfit) AddExp(exp int) bool {
 		o.maxExp = o.calculateMaxExp(o.level)
 		leveledUp = true
 	}
-	
+
 	return leveledUp
 }
 
@@ -280,15 +281,15 @@ func (o *Outfit) Enhance() bool {
 	if o.enhanceLevel >= 20 { // 最大强化等级
 		return false
 	}
-	
+
 	o.enhanceLevel++
-	
+
 	// 计算强化加成
 	for attr, baseValue := range o.attributes {
 		enhanceBonus := int(float64(baseValue) * 0.1 * float64(o.enhanceLevel))
 		o.enhanceBonuses[attr] = enhanceBonus
 	}
-	
+
 	return true
 }
 
@@ -300,29 +301,29 @@ func (o *Outfit) GetEnhanceBonuses() map[string]int {
 // GetTotalAttributes 获取总属性（基础+强化）
 func (o *Outfit) GetTotalAttributes() map[string]int {
 	total := make(map[string]int)
-	
+
 	// 基础属性
 	for attr, value := range o.attributes {
 		total[attr] = value
 	}
-	
+
 	// 强化加成
 	for attr, bonus := range o.enhanceBonuses {
 		total[attr] += bonus
 	}
-	
+
 	// 品质加成
 	qualityMultiplier := o.quality.GetQualityMultiplier()
 	for attr, value := range total {
 		total[attr] = int(float64(value) * qualityMultiplier)
 	}
-	
+
 	// 稀有度加成
 	rarityMultiplier := o.rarity.GetRarityMultiplier()
 	for attr, value := range total {
 		total[attr] = int(float64(value) * rarityMultiplier)
 	}
-	
+
 	return total
 }
 
@@ -366,17 +367,17 @@ func (o *Outfit) CanEnhance() bool {
 func (o *Outfit) GetPower() int {
 	power := 0
 	totalAttrs := o.GetTotalAttributes()
-	
+
 	for _, value := range totalAttrs {
 		power += value
 	}
-	
+
 	// 等级加成
 	power += o.level * 10
-	
+
 	// 强化加成
 	power += o.enhanceLevel * 20
-	
+
 	return power
 }
 
@@ -408,18 +409,18 @@ func (o *Outfit) Clone() *Outfit {
 		useCount:       0,
 		metadata:       make(map[string]interface{}),
 	}
-	
+
 	// 复制属性
 	for attr, value := range o.attributes {
 		cloned.attributes[attr] = value
 	}
-	
+
 	// 复制槽位
 	copy(cloned.slots, o.slots)
-	
+
 	// 复制标签
 	copy(cloned.tags, o.tags)
-	
+
 	// 复制外观配置
 	if o.appearance != nil {
 		cloned.appearance = NewAppearanceConfig()
@@ -439,28 +440,28 @@ func (o *Outfit) Clone() *Outfit {
 		cloned.appearance.SetTransparency(o.appearance.GetTransparency())
 		cloned.appearance.SetGlowIntensity(o.appearance.GetGlowIntensity())
 	}
-	
+
 	// 复制染色
 	for part, color := range o.dyeColors {
 		cloned.dyeColors[part] = &DyeColor{
-			colorID:   color.colorID,
-			colorName: color.colorName,
-			hexValue:  color.hexValue,
-			rarity:    color.rarity,
+			colorID:    color.colorID,
+			colorName:  color.colorName,
+			hexValue:   color.hexValue,
+			rarity:     color.rarity,
 			isUnlocked: color.isUnlocked,
 		}
 	}
-	
+
 	// 复制强化加成
 	for attr, bonus := range o.enhanceBonuses {
 		cloned.enhanceBonuses[attr] = bonus
 	}
-	
+
 	// 复制元数据
 	for key, value := range o.metadata {
 		cloned.metadata[key] = value
 	}
-	
+
 	return cloned
 }
 
@@ -476,8 +477,8 @@ type OutfitSet struct {
 
 // FashionSetBonus 时装套装加成信息
 type FashionSetBonus struct {
-	setID       string
-	setName     string
+	setID         string
+	setName       string
 	equippedCount int
 	totalCount    int
 	activeBonus   map[string]int
@@ -528,30 +529,30 @@ func (os *OutfitSet) calculateSetBonuses() {
 	os.setBonuses = make(map[string]int)
 	os.fashionSets = make(map[string]*FashionSetBonus)
 	os.totalPower = 0
-	
+
 	// 统计各类型服装数量
 	typeCount := make(map[OutfitType]int)
-	setCount := make(map[string]int) // 套装ID -> 装备数量
+	setCount := make(map[string]int)    // 套装ID -> 装备数量
 	setNames := make(map[string]string) // 套装ID -> 套装名称
-	
+
 	for _, outfit := range os.equippedOutfits {
 		if outfit != nil {
 			typeCount[outfit.GetType()]++
-			
+
 			// 统计套装
 			if outfit.GetSetID() != "" {
 				setCount[outfit.GetSetID()]++
 				// 这里应该从套装配置中获取名称，暂时使用ID
 				setNames[outfit.GetSetID()] = outfit.GetSetID()
 			}
-			
+
 			// 累计战力
 			os.totalPower += outfit.GetPower()
 		}
 	}
-	
+
 	// 根据类型数量计算基础加成
-	for outfitType, count := range typeCount {
+	for _, count := range typeCount {
 		if count >= 2 {
 			os.setBonuses["attack"] += count * 10
 		}
@@ -562,7 +563,7 @@ func (os *OutfitSet) calculateSetBonuses() {
 			os.setBonuses["hp"] += count * 20
 		}
 	}
-	
+
 	// 计算时装套装加成
 	for setID, equippedCount := range setCount {
 		setBonus := &FashionSetBonus{
@@ -572,7 +573,7 @@ func (os *OutfitSet) calculateSetBonuses() {
 			totalCount:    6, // 假设每套装有6件，实际应该从配置获取
 			activeBonus:   make(map[string]int),
 		}
-		
+
 		// 根据装备数量计算套装加成
 		if equippedCount >= 2 {
 			setBonus.activeBonus["attack"] = equippedCount * 15
@@ -588,17 +589,17 @@ func (os *OutfitSet) calculateSetBonuses() {
 			os.setBonuses["hp"] += setBonus.activeBonus["hp"]
 			os.setBonuses["crit_rate"] += setBonus.activeBonus["crit_rate"]
 		}
-		
+
 		os.fashionSets[setID] = setBonus
 	}
-	
+
 	// 应用风格加成
 	if os.styleBonus != nil {
 		for attr, bonus := range os.styleBonus.GetBonuses() {
 			os.setBonuses[attr] += bonus
 		}
 	}
-	
+
 	os.lastUpdated = time.Now()
 }
 
@@ -651,14 +652,14 @@ func (os *OutfitSet) GetEmptySlots() []OutfitSlot {
 		SlotRing, SlotNecklace, SlotFashionWeapon,
 		SlotFashionArmor, SlotFashionHelmet, SlotPet, SlotMount,
 	}
-	
+
 	emptySlots := make([]OutfitSlot, 0)
 	for _, slot := range allSlots {
 		if os.equippedOutfits[slot] == nil {
 			emptySlots = append(emptySlots, slot)
 		}
 	}
-	
+
 	return emptySlots
 }
 
@@ -687,7 +688,7 @@ func (os *OutfitSet) GetOutfitsByRarity(rarity Rarity) []*Outfit {
 // GetTotalAttributes 获取套装总属性
 func (os *OutfitSet) GetTotalAttributes() map[string]int {
 	total := make(map[string]int)
-	
+
 	// 累计装备属性
 	for _, outfit := range os.equippedOutfits {
 		if outfit != nil {
@@ -696,12 +697,12 @@ func (os *OutfitSet) GetTotalAttributes() map[string]int {
 			}
 		}
 	}
-	
+
 	// 加上套装加成
 	for attr, bonus := range os.setBonuses {
 		total[attr] += bonus
 	}
-	
+
 	return total
 }
 
@@ -710,22 +711,22 @@ func (os *OutfitSet) CanEquipOutfit(outfit *Outfit, slot OutfitSlot) bool {
 	if outfit == nil {
 		return false
 	}
-	
+
 	// 检查服装是否支持该槽位
 	if !outfit.CanEquipToSlot(slot) {
 		return false
 	}
-	
+
 	// 检查是否已装备
 	if outfit.IsEquipped() {
 		return false
 	}
-	
+
 	// 检查是否锁定
 	if outfit.IsLocked() {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -735,7 +736,7 @@ func (os *OutfitSet) GetSetCompletionRate(setID string) float64 {
 	if setBonus == nil {
 		return 0.0
 	}
-	
+
 	return float64(setBonus.equippedCount) / float64(setBonus.totalCount) * 100.0
 }
 
@@ -743,14 +744,14 @@ func (os *OutfitSet) GetSetCompletionRate(setID string) float64 {
 func (os *OutfitSet) GetHighestQualityOutfit() *Outfit {
 	var highest *Outfit
 	highestQuality := QualityNormal
-	
+
 	for _, outfit := range os.equippedOutfits {
 		if outfit != nil && outfit.GetQuality() > highestQuality {
 			highest = outfit
 			highestQuality = outfit.GetQuality()
 		}
 	}
-	
+
 	return highest
 }
 
@@ -758,18 +759,18 @@ func (os *OutfitSet) GetHighestQualityOutfit() *Outfit {
 func (os *OutfitSet) GetAverageLevel() float64 {
 	totalLevel := 0
 	count := 0
-	
+
 	for _, outfit := range os.equippedOutfits {
 		if outfit != nil {
 			totalLevel += outfit.GetLevel()
 			count++
 		}
 	}
-	
+
 	if count == 0 {
 		return 0.0
 	}
-	
+
 	return float64(totalLevel) / float64(count)
 }
 
@@ -777,35 +778,35 @@ func (os *OutfitSet) GetAverageLevel() float64 {
 func (os *OutfitSet) GetAverageEnhanceLevel() float64 {
 	totalEnhance := 0
 	count := 0
-	
+
 	for _, outfit := range os.equippedOutfits {
 		if outfit != nil {
 			totalEnhance += outfit.GetEnhanceLevel()
 			count++
 		}
 	}
-	
+
 	if count == 0 {
 		return 0.0
 	}
-	
+
 	return float64(totalEnhance) / float64(count)
 }
 
 // Clone 克隆套装
 func (os *OutfitSet) Clone() *OutfitSet {
 	cloned := NewOutfitSet()
-	
+
 	// 复制装备（注意：这里复制引用，不是深拷贝装备本身）
 	for slot, outfit := range os.equippedOutfits {
 		cloned.equippedOutfits[slot] = outfit
 	}
-	
+
 	// 复制套装加成
 	for attr, bonus := range os.setBonuses {
 		cloned.setBonuses[attr] = bonus
 	}
-	
+
 	// 复制时装套装信息
 	for setID, setBonus := range os.fashionSets {
 		cloned.fashionSets[setID] = &FashionSetBonus{
@@ -815,17 +816,17 @@ func (os *OutfitSet) Clone() *OutfitSet {
 			totalCount:    setBonus.totalCount,
 			activeBonus:   make(map[string]int),
 		}
-		
+
 		// 复制激活加成
 		for attr, bonus := range setBonus.activeBonus {
 			cloned.fashionSets[setID].activeBonus[attr] = bonus
 		}
 	}
-	
+
 	// 复制风格加成
 	cloned.styleBonus = os.styleBonus
 	cloned.totalPower = os.totalPower
 	cloned.lastUpdated = os.lastUpdated
-	
+
 	return cloned
 }

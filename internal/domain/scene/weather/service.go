@@ -1,7 +1,7 @@
 package weather
 
 import (
-	"fmt"
+	// "fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -9,16 +9,16 @@ import (
 
 // WeatherService 天气领域服务
 type WeatherService struct {
-	weatherTemplates    map[WeatherType]*WeatherTemplate
-	seasonalPatterns    map[string]*SeasonalPattern
-	weatherEvents       map[WeatherEventType]*WeatherEventTemplate
-	effectCalculators   map[string]EffectCalculator
-	forecastGenerators  map[string]ForecastGenerator
-	weatherRules        []*WeatherRule
-	climateZones        map[string]*ClimateZone
-	randomSeed          int64
-	createdAt           time.Time
-	updatedAt           time.Time
+	weatherTemplates   map[WeatherType]*WeatherTemplate
+	seasonalPatterns   map[string]*SeasonalPattern
+	weatherEvents      map[WeatherEventType]*WeatherEventTemplate
+	effectCalculators  map[string]EffectCalculator
+	forecastGenerators map[string]ForecastGenerator
+	weatherRules       []*WeatherRule
+	climateZones       map[string]*ClimateZone
+	randomSeed         int64
+	createdAt          time.Time
+	updatedAt          time.Time
 }
 
 // NewWeatherService 创建天气服务
@@ -36,14 +36,14 @@ func NewWeatherService() *WeatherService {
 		createdAt:          now,
 		updatedAt:          now,
 	}
-	
+
 	// 初始化默认模板和规则
 	service.initializeDefaultTemplates()
 	service.initializeDefaultRules()
 	service.initializeDefaultClimateZones()
 	service.initializeEffectCalculators()
 	service.initializeForecastGenerators()
-	
+
 	return service
 }
 
@@ -107,37 +107,37 @@ func (ws *WeatherService) CalculateNextWeather(currentWeather *WeatherState, zon
 	if currentWeather == nil {
 		return nil, ErrInvalidWeatherState
 	}
-	
+
 	// 获取气候区域和季节模式
 	climateZone := ws.GetClimateZone(zoneID)
 	if climateZone == nil {
 		climateZone = ws.getDefaultClimateZone()
 	}
-	
+
 	seasonalPattern := ws.GetSeasonalPattern(zoneID)
 	if seasonalPattern == nil {
 		seasonalPattern = NewSeasonalPattern()
 	}
-	
+
 	// 获取当前季节
 	currentSeason := seasonalPattern.GetCurrentSeason(time.Now())
-	
+
 	// 获取天气转换概率
 	transitionProbs := ws.calculateWeatherTransitionProbabilities(currentWeather.WeatherType, currentSeason, climateZone)
-	
+
 	// 应用天气规则
 	adjustedProbs := ws.applyWeatherRules(transitionProbs, currentWeather, climateZone)
-	
+
 	// 选择下一个天气
 	nextWeatherType := ws.selectWeatherByProbability(adjustedProbs)
 	nextIntensity := ws.calculateWeatherIntensity(nextWeatherType, currentSeason, climateZone)
-	
+
 	// 创建新的天气状态
 	nextWeather := NewWeatherState(nextWeatherType, nextIntensity)
-	
+
 	// 应用气候区域的影响
 	ws.applyClimateZoneEffects(nextWeather, climateZone)
-	
+
 	return nextWeather, nil
 }
 
@@ -146,27 +146,27 @@ func (ws *WeatherService) GenerateWeatherForecast(currentWeather *WeatherState, 
 	if currentWeather == nil {
 		return nil, ErrInvalidWeatherState
 	}
-	
+
 	if hours <= 0 || hours > 168 {
 		return nil, ErrInvalidForecastPeriod
 	}
-	
+
 	forecasts := make([]*WeatherForecast, 0, hours)
 	currentTime := time.Now()
 	predictedWeather := currentWeather
-	
+
 	for i := 1; i <= hours; i++ {
 		forecastTime := currentTime.Add(time.Duration(i) * time.Hour)
-		
+
 		// 预测下一个小时的天气
 		nextWeather, err := ws.CalculateNextWeather(predictedWeather, zoneID)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// 计算预报置信度
 		confidence := ws.calculateForecastConfidence(i)
-		
+
 		// 创建预报
 		forecast := NewWeatherForecast(forecastTime, nextWeather.WeatherType, nextWeather.Intensity)
 		forecast.Temperature = nextWeather.Temperature
@@ -174,11 +174,11 @@ func (ws *WeatherService) GenerateWeatherForecast(currentWeather *WeatherState, 
 		forecast.WindSpeed = nextWeather.WindSpeed
 		forecast.Visibility = nextWeather.Visibility
 		forecast.Confidence = confidence
-		
+
 		forecasts = append(forecasts, forecast)
 		predictedWeather = nextWeather
 	}
-	
+
 	return forecasts, nil
 }
 
@@ -187,29 +187,29 @@ func (ws *WeatherService) CalculateWeatherEffects(weather *WeatherState, targetT
 	if weather == nil {
 		return nil, ErrInvalidWeatherState
 	}
-	
+
 	effects := make([]*WeatherEffect, 0)
-	
+
 	// 获取天气模板
 	template := ws.GetWeatherTemplate(weather.WeatherType)
 	if template == nil {
 		return effects, nil
 	}
-	
+
 	// 根据目标类型计算效果
 	for effectType, baseMultiplier := range template.BaseEffects {
 		if targetType != "" && effectType != targetType {
 			continue
 		}
-		
+
 		// 应用强度调整
 		adjustedMultiplier := baseMultiplier * weather.Intensity.GetMultiplier()
-		
+
 		// 创建效果
 		effect := NewWeatherEffect(effectType, adjustedMultiplier, weather.Duration)
 		effects = append(effects, effect)
 	}
-	
+
 	return effects, nil
 }
 
@@ -218,7 +218,7 @@ func (ws *WeatherService) CheckWeatherEventTrigger(weather *WeatherState, zoneID
 	if weather == nil {
 		return nil, ErrInvalidWeatherState
 	}
-	
+
 	// 检查每种天气事件的触发条件
 	for eventType, template := range ws.weatherEvents {
 		if ws.shouldTriggerWeatherEvent(weather, eventType, template, zoneID) {
@@ -227,7 +227,7 @@ func (ws *WeatherService) CheckWeatherEventTrigger(weather *WeatherState, zoneID
 			return event, nil
 		}
 	}
-	
+
 	return nil, nil
 }
 
@@ -236,12 +236,12 @@ func (ws *WeatherService) CalculateWeatherInfluence(weather *WeatherState, attri
 	if weather == nil {
 		return 1.0, ErrInvalidWeatherState
 	}
-	
+
 	// 使用效果计算器
 	if calculator, exists := ws.effectCalculators[attributeType]; exists {
 		return calculator.Calculate(weather), nil
 	}
-	
+
 	// 默认计算逻辑
 	return ws.calculateDefaultInfluence(weather, attributeType), nil
 }
@@ -251,11 +251,11 @@ func (ws *WeatherService) ValidateWeatherTransition(from, to WeatherType, intens
 	if !from.IsValid() || !to.IsValid() {
 		return ErrInvalidWeatherType
 	}
-	
+
 	if !intensity.IsValid() {
 		return ErrInvalidWeatherIntensity
 	}
-	
+
 	// 检查转换规则
 	for _, rule := range ws.weatherRules {
 		if rule.FromWeather == from && rule.ToWeather == to {
@@ -268,7 +268,7 @@ func (ws *WeatherService) ValidateWeatherTransition(from, to WeatherType, intens
 			return nil
 		}
 	}
-	
+
 	return nil
 }
 
@@ -297,10 +297,10 @@ func (ws *WeatherService) initializeDefaultTemplates() {
 	sunnyTemplate := &WeatherTemplate{
 		WeatherType: WeatherTypeSunny,
 		BaseEffects: map[string]float64{
-			"visibility":      1.2,
-			"movement_speed":  1.1,
-			"energy_regen":    1.15,
-			"mood":            1.1,
+			"visibility":     1.2,
+			"movement_speed": 1.1,
+			"energy_regen":   1.15,
+			"mood":           1.1,
 		},
 		DurationRange: DurationRange{Min: 2 * time.Hour, Max: 8 * time.Hour},
 		TransitionRules: map[WeatherType]float64{
@@ -310,15 +310,15 @@ func (ws *WeatherService) initializeDefaultTemplates() {
 		},
 	}
 	ws.RegisterWeatherTemplate(WeatherTypeSunny, sunnyTemplate)
-	
+
 	// 雨天模板
 	rainyTemplate := &WeatherTemplate{
 		WeatherType: WeatherTypeRainy,
 		BaseEffects: map[string]float64{
-			"visibility":     0.8,
-			"fire_damage":    0.7,
-			"water_damage":   1.3,
-			"plant_growth":   1.5,
+			"visibility":   0.8,
+			"fire_damage":  0.7,
+			"water_damage": 1.3,
+			"plant_growth": 1.5,
 		},
 		DurationRange: DurationRange{Min: 1 * time.Hour, Max: 4 * time.Hour},
 		TransitionRules: map[WeatherType]float64{
@@ -328,15 +328,15 @@ func (ws *WeatherService) initializeDefaultTemplates() {
 		},
 	}
 	ws.RegisterWeatherTemplate(WeatherTypeRainy, rainyTemplate)
-	
+
 	// 暴风雨模板
 	stormyTemplate := &WeatherTemplate{
 		WeatherType: WeatherTypeStormy,
 		BaseEffects: map[string]float64{
-			"visibility":        0.5,
-			"lightning_damage":  1.8,
-			"movement_speed":    0.7,
-			"accuracy":          0.8,
+			"visibility":       0.5,
+			"lightning_damage": 1.8,
+			"movement_speed":   0.7,
+			"accuracy":         0.8,
 		},
 		DurationRange: DurationRange{Min: 30 * time.Minute, Max: 2 * time.Hour},
 		TransitionRules: map[WeatherType]float64{
@@ -352,13 +352,13 @@ func (ws *WeatherService) initializeDefaultTemplates() {
 func (ws *WeatherService) initializeDefaultRules() {
 	// 添加一些基本的天气转换规则
 	ws.AddWeatherRule(&WeatherRule{
-		FromWeather:   WeatherTypeSunny,
-		ToWeather:     WeatherTypeStormy,
-		Probability:   0.05, // 晴天直接转暴风雨概率很低
-		MinIntensity:  WeatherIntensityNormal,
-		SeasonFactor:  map[Season]float64{SeasonSummer: 0.1, SeasonWinter: 0.01},
+		FromWeather:  WeatherTypeSunny,
+		ToWeather:    WeatherTypeStormy,
+		Probability:  0.05, // 晴天直接转暴风雨概率很低
+		MinIntensity: WeatherIntensityNormal,
+		SeasonFactor: map[Season]float64{SeasonSummer: 0.1, SeasonWinter: 0.01},
 	})
-	
+
 	ws.AddWeatherRule(&WeatherRule{
 		FromWeather:  WeatherTypeRainy,
 		ToWeather:    WeatherTypeSnowy,
@@ -372,10 +372,10 @@ func (ws *WeatherService) initializeDefaultRules() {
 func (ws *WeatherService) initializeDefaultClimateZones() {
 	// 温带气候
 	temperateZone := &ClimateZone{
-		ZoneID:      "temperate",
-		Name:        "温带气候",
-		Description: "四季分明的温带气候区域",
-		BaseTemperature: 15.0,
+		ZoneID:           "temperate",
+		Name:             "温带气候",
+		Description:      "四季分明的温带气候区域",
+		BaseTemperature:  15.0,
 		TemperatureRange: TemperatureRange{Min: -10, Max: 35, Average: 15},
 		HumidityRange:    HumidityRange{Min: 30, Max: 80, Average: 55},
 		WeatherModifiers: map[WeatherType]float64{
@@ -385,13 +385,13 @@ func (ws *WeatherService) initializeDefaultClimateZones() {
 		},
 	}
 	ws.RegisterClimateZone("temperate", temperateZone)
-	
+
 	// 热带气候
 	tropicalZone := &ClimateZone{
-		ZoneID:      "tropical",
-		Name:        "热带气候",
-		Description: "高温多雨的热带气候区域",
-		BaseTemperature: 28.0,
+		ZoneID:           "tropical",
+		Name:             "热带气候",
+		Description:      "高温多雨的热带气候区域",
+		BaseTemperature:  28.0,
 		TemperatureRange: TemperatureRange{Min: 20, Max: 40, Average: 28},
 		HumidityRange:    HumidityRange{Min: 60, Max: 95, Average: 75},
 		WeatherModifiers: map[WeatherType]float64{
@@ -412,7 +412,7 @@ func (ws *WeatherService) initializeEffectCalculators() {
 		intensityFactor := weather.Intensity.GetMultiplier()
 		return math.Max(0.1, base*intensityFactor)
 	})
-	
+
 	// 移动速度计算器
 	ws.effectCalculators["movement_speed"] = EffectCalculatorFunc(func(weather *WeatherState) float64 {
 		switch weather.WeatherType {
@@ -433,7 +433,7 @@ func (ws *WeatherService) initializeForecastGenerators() {
 		// 实现短期预报逻辑
 		return make([]*WeatherForecast, 0)
 	})
-	
+
 	// 长期预报生成器（1-7天）
 	ws.forecastGenerators["long_term"] = ForecastGeneratorFunc(func(current *WeatherState, hours int) []*WeatherForecast {
 		// 实现长期预报逻辑
@@ -444,7 +444,7 @@ func (ws *WeatherService) initializeForecastGenerators() {
 // calculateWeatherTransitionProbabilities 计算天气转换概率
 func (ws *WeatherService) calculateWeatherTransitionProbabilities(currentType WeatherType, season Season, zone *ClimateZone) map[WeatherType]float64 {
 	probs := make(map[WeatherType]float64)
-	
+
 	// 获取基础转换概率
 	template := ws.GetWeatherTemplate(currentType)
 	if template != nil {
@@ -452,7 +452,7 @@ func (ws *WeatherService) calculateWeatherTransitionProbabilities(currentType We
 			probs[weatherType] = prob
 		}
 	}
-	
+
 	// 应用气候区域修正
 	if zone != nil {
 		for weatherType, modifier := range zone.WeatherModifiers {
@@ -461,19 +461,19 @@ func (ws *WeatherService) calculateWeatherTransitionProbabilities(currentType We
 			}
 		}
 	}
-	
+
 	// 标准化概率
 	total := 0.0
 	for _, prob := range probs {
 		total += prob
 	}
-	
+
 	if total > 0 {
 		for weatherType := range probs {
 			probs[weatherType] /= total
 		}
 	}
-	
+
 	return probs
 }
 
@@ -483,7 +483,7 @@ func (ws *WeatherService) applyWeatherRules(probs map[WeatherType]float64, curre
 	for k, v := range probs {
 		adjusted[k] = v
 	}
-	
+
 	// 应用每个规则
 	for _, rule := range ws.weatherRules {
 		if rule.FromWeather == current.WeatherType {
@@ -493,7 +493,7 @@ func (ws *WeatherService) applyWeatherRules(probs map[WeatherType]float64, curre
 			}
 		}
 	}
-	
+
 	return adjusted
 }
 
@@ -501,7 +501,7 @@ func (ws *WeatherService) applyWeatherRules(probs map[WeatherType]float64, curre
 func (ws *WeatherService) selectWeatherByProbability(probs map[WeatherType]float64) WeatherType {
 	rand.Seed(time.Now().UnixNano() + ws.randomSeed)
 	randomValue := rand.Float64()
-	
+
 	cumulativeProb := 0.0
 	for weatherType, prob := range probs {
 		cumulativeProb += prob
@@ -509,7 +509,7 @@ func (ws *WeatherService) selectWeatherByProbability(probs map[WeatherType]float
 			return weatherType
 		}
 	}
-	
+
 	// 默认返回晴天
 	return WeatherTypeSunny
 }
@@ -517,14 +517,14 @@ func (ws *WeatherService) selectWeatherByProbability(probs map[WeatherType]float
 // calculateWeatherIntensity 计算天气强度
 func (ws *WeatherService) calculateWeatherIntensity(weatherType WeatherType, season Season, zone *ClimateZone) WeatherIntensity {
 	rand.Seed(time.Now().UnixNano() + ws.randomSeed)
-	
+
 	// 基础强度概率
 	intensityProbs := map[WeatherIntensity]float64{
 		WeatherIntensityLight:  0.3,
 		WeatherIntensityNormal: 0.5,
 		WeatherIntensityHeavy:  0.2,
 	}
-	
+
 	// 根据天气类型调整
 	switch weatherType {
 	case WeatherTypeStormy:
@@ -535,18 +535,18 @@ func (ws *WeatherService) calculateWeatherIntensity(weatherType WeatherType, sea
 		intensityProbs[WeatherIntensityNormal] = 0.6
 		intensityProbs[WeatherIntensityHeavy] = 0.0
 	}
-	
+
 	// 选择强度
 	randomValue := rand.Float64()
 	cumulativeProb := 0.0
-	
+
 	for intensity, prob := range intensityProbs {
 		cumulativeProb += prob
 		if randomValue <= cumulativeProb {
 			return intensity
 		}
 	}
-	
+
 	return WeatherIntensityNormal
 }
 
@@ -555,11 +555,11 @@ func (ws *WeatherService) applyClimateZoneEffects(weather *WeatherState, zone *C
 	if zone == nil {
 		return
 	}
-	
+
 	// 调整温度
 	temperatureOffset := zone.BaseTemperature - weather.WeatherType.GetBaseTemperature()
 	weather.UpdateTemperature(weather.Temperature + temperatureOffset)
-	
+
 	// 调整湿度
 	if weather.Humidity < zone.HumidityRange.Min {
 		weather.UpdateHumidity(zone.HumidityRange.Min)
@@ -572,12 +572,12 @@ func (ws *WeatherService) applyClimateZoneEffects(weather *WeatherState, zone *C
 func (ws *WeatherService) calculateForecastConfidence(hoursAhead int) float64 {
 	baseConfidence := 0.95
 	decayRate := 0.02
-	
+
 	confidence := baseConfidence - float64(hoursAhead)*decayRate
 	if confidence < 0.3 {
 		confidence = 0.3
 	}
-	
+
 	return confidence
 }
 
@@ -587,7 +587,7 @@ func (ws *WeatherService) shouldTriggerWeatherEvent(weather *WeatherState, event
 	if !template.CanTriggerWith(weather.WeatherType, weather.Intensity) {
 		return false
 	}
-	
+
 	// 检查概率
 	rand.Seed(time.Now().UnixNano() + ws.randomSeed)
 	return rand.Float64() < template.TriggerProbability
@@ -597,15 +597,15 @@ func (ws *WeatherService) shouldTriggerWeatherEvent(weather *WeatherState, event
 func (ws *WeatherService) createWeatherEvent(eventType WeatherEventType, template *WeatherEventTemplate, weather *WeatherState) *WeatherEvent {
 	severity := ws.calculateEventSeverity(weather.Intensity)
 	duration := template.BaseDuration
-	
+
 	event := NewWeatherEvent(eventType, severity, template.Title, template.Description, duration)
-	
+
 	// 添加效果
 	for effectType, multiplier := range template.Effects {
 		effect := NewWeatherEffect(effectType, multiplier*weather.Intensity.GetMultiplier(), duration)
 		event.AddEffect(effect)
 	}
-	
+
 	return event
 }
 
@@ -664,13 +664,13 @@ type DurationRange struct {
 
 // WeatherRule 天气规则
 type WeatherRule struct {
-	FromWeather   WeatherType
-	ToWeather     WeatherType
-	Probability   float64
-	MinIntensity  WeatherIntensity
-	MaxIntensity  WeatherIntensity
-	SeasonFactor  map[Season]float64
-	Conditions    []string
+	FromWeather  WeatherType
+	ToWeather    WeatherType
+	Probability  float64
+	MinIntensity WeatherIntensity
+	MaxIntensity WeatherIntensity
+	SeasonFactor map[Season]float64
+	Conditions   []string
 }
 
 // ClimateZone 气候区域
@@ -693,13 +693,13 @@ type HumidityRange struct {
 
 // WeatherEventTemplate 天气事件模板
 type WeatherEventTemplate struct {
-	EventType         WeatherEventType
-	Title             string
-	Description       string
+	EventType          WeatherEventType
+	Title              string
+	Description        string
 	TriggerProbability float64
-	BaseDuration      time.Duration
-	Effects           map[string]float64
-	TriggerConditions []WeatherCondition
+	BaseDuration       time.Duration
+	Effects            map[string]float64
+	TriggerConditions  []WeatherCondition
 }
 
 // CanTriggerWith 检查是否可以触发

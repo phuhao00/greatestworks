@@ -2,64 +2,64 @@ package dressup
 
 import (
 	"time"
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 )
 
 // DressupAggregate 换装聚合根
 type DressupAggregate struct {
-	playerID       string
-	outfits        map[string]*Outfit
-	currentSet     *OutfitSet
-	savedSets      map[string]*OutfitSet // 保存的套装方案
-	fashionSets    map[string]*FashionSet // 时装套装配置
-	dyeColors      map[string]*DyeColor // 已解锁的染色
-	styles         map[string]*DressupStyle // 风格配置
-	currentStyle   string // 当前风格ID
-	preferences    *DressupPreferences // 换装偏好
-	statistics     *DressupStatistics // 换装统计
-	updatedAt      time.Time
-	version        int
+	playerID     string
+	outfits      map[string]*Outfit
+	currentSet   *OutfitSet
+	savedSets    map[string]*OutfitSet    // 保存的套装方案
+	fashionSets  map[string]*FashionSet   // 时装套装配置
+	dyeColors    map[string]*DyeColor     // 已解锁的染色
+	styles       map[string]*DressupStyle // 风格配置
+	currentStyle string                   // 当前风格ID
+	preferences  *DressupPreferences      // 换装偏好
+	statistics   *DressupStatistics       // 换装统计
+	updatedAt    time.Time
+	version      int
 }
 
 // DressupPreferences 换装偏好
 type DressupPreferences struct {
-	autoEquipBetter   bool     // 自动装备更好的装备
-	preferredRarities []Rarity // 偏好的稀有度
+	autoEquipBetter   bool         // 自动装备更好的装备
+	preferredRarities []Rarity     // 偏好的稀有度
 	preferredTypes    []OutfitType // 偏好的类型
-	hideHelmet        bool     // 隐藏头盔
-	showCape          bool     // 显示斗篷
-	defaultStyle      string   // 默认风格
+	hideHelmet        bool         // 隐藏头盔
+	showCape          bool         // 显示斗篷
+	defaultStyle      string       // 默认风格
 }
 
 // DressupStatistics 换装统计
 type DressupStatistics struct {
-	totalOutfits      int                    // 总服装数
-	equippedOutfits   int                    // 已装备数
-	totalPower        int                    // 总战力
-	changeCount       int                    // 换装次数
-	lastChangeTime    time.Time              // 最后换装时间
-	rarityDistribution map[Rarity]int        // 稀有度分布
-	typeDistribution   map[OutfitType]int    // 类型分布
+	totalOutfits        int                   // 总服装数
+	equippedOutfits     int                   // 已装备数
+	totalPower          int                   // 总战力
+	changeCount         int                   // 换装次数
+	lastChangeTime      time.Time             // 最后换装时间
+	rarityDistribution  map[Rarity]int        // 稀有度分布
+	typeDistribution    map[OutfitType]int    // 类型分布
 	qualityDistribution map[OutfitQuality]int // 品质分布
-	favoriteSet       string                 // 最常用套装
-	mostUsedOutfit    string                 // 最常用单品
+	favoriteSet         string                // 最常用套装
+	mostUsedOutfit      string                // 最常用单品
 }
 
 // NewDressupAggregate 创建换装聚合根
 func NewDressupAggregate(playerID string) *DressupAggregate {
 	return &DressupAggregate{
-		playerID:       playerID,
-		outfits:        make(map[string]*Outfit),
-		currentSet:     NewOutfitSet(),
-		savedSets:      make(map[string]*OutfitSet),
-		fashionSets:    make(map[string]*FashionSet),
-		dyeColors:      make(map[string]*DyeColor),
-		styles:         make(map[string]*DressupStyle),
-		currentStyle:   "",
-		preferences:    NewDressupPreferences(),
-		statistics:     NewDressupStatistics(),
-		updatedAt:      time.Now(),
-		version:        1,
+		playerID:     playerID,
+		outfits:      make(map[string]*Outfit),
+		currentSet:   NewOutfitSet(),
+		savedSets:    make(map[string]*OutfitSet),
+		fashionSets:  make(map[string]*FashionSet),
+		dyeColors:    make(map[string]*DyeColor),
+		styles:       make(map[string]*DressupStyle),
+		currentStyle: "",
+		preferences:  NewDressupPreferences(),
+		statistics:   NewDressupStatistics(),
+		updatedAt:    time.Now(),
+		version:      1,
 	}
 }
 
@@ -101,7 +101,7 @@ func (d *DressupAggregate) AddOutfit(outfit *Outfit) error {
 	if outfit == nil {
 		return ErrInvalidOutfit
 	}
-	
+
 	d.outfits[outfit.GetID()] = outfit
 	d.updateVersion()
 	return nil
@@ -113,11 +113,11 @@ func (d *DressupAggregate) EquipOutfit(outfitID string, slot OutfitSlot) error {
 	if !exists {
 		return ErrOutfitNotFound
 	}
-	
+
 	if !outfit.CanEquipToSlot(slot) {
 		return ErrInvalidSlot
 	}
-	
+
 	d.currentSet.EquipToSlot(slot, outfit)
 	d.updateVersion()
 	return nil
@@ -161,7 +161,7 @@ func (d *DressupAggregate) SaveOutfitSet(name string) error {
 	if name == "" {
 		return ErrInvalidSetName
 	}
-	
+
 	// 克隆当前套装
 	savedSet := d.currentSet.Clone()
 	d.savedSets[name] = savedSet
@@ -175,19 +175,19 @@ func (d *DressupAggregate) LoadOutfitSet(name string) error {
 	if !exists {
 		return ErrSetNotFound
 	}
-	
+
 	// 先卸下当前装备
 	for slot := range d.currentSet.GetAllEquipped() {
 		d.UnequipOutfit(slot)
 	}
-	
+
 	// 装备保存的套装
 	for slot, outfit := range savedSet.GetAllEquipped() {
 		if outfit != nil {
 			d.EquipOutfit(outfit.GetID(), slot)
 		}
 	}
-	
+
 	d.statistics.changeCount++
 	d.statistics.lastChangeTime = time.Now()
 	d.updateVersion()
@@ -199,7 +199,7 @@ func (d *DressupAggregate) DeleteOutfitSet(name string) error {
 	if _, exists := d.savedSets[name]; !exists {
 		return ErrSetNotFound
 	}
-	
+
 	delete(d.savedSets, name)
 	d.updateVersion()
 	return nil
@@ -215,7 +215,7 @@ func (d *DressupAggregate) AddFashionSet(fashionSet *FashionSet) error {
 	if fashionSet == nil {
 		return ErrInvalidFashionSet
 	}
-	
+
 	d.fashionSets[fashionSet.GetSetID()] = fashionSet
 	d.updateVersion()
 	return nil
@@ -236,7 +236,7 @@ func (d *DressupAggregate) UnlockDyeColor(color *DyeColor) error {
 	if color == nil {
 		return ErrInvalidDyeColor
 	}
-	
+
 	color.Unlock()
 	d.dyeColors[color.GetColorID()] = color
 	d.updateVersion()
@@ -265,12 +265,12 @@ func (d *DressupAggregate) DyeOutfit(outfitID, part, colorID string) error {
 	if !exists {
 		return ErrOutfitNotFound
 	}
-	
+
 	color, exists := d.dyeColors[colorID]
 	if !exists || !color.IsUnlocked() {
 		return ErrDyeColorNotUnlocked
 	}
-	
+
 	outfit.SetDyeColor(part, color)
 	d.updateVersion()
 	return nil
@@ -281,7 +281,7 @@ func (d *DressupAggregate) AddStyle(style *DressupStyle) error {
 	if style == nil {
 		return ErrInvalidStyle
 	}
-	
+
 	d.styles[style.GetStyleID()] = style
 	d.updateVersion()
 	return nil
@@ -293,7 +293,7 @@ func (d *DressupAggregate) SetCurrentStyle(styleID string) error {
 	if !exists {
 		return ErrStyleNotFound
 	}
-	
+
 	d.currentStyle = styleID
 	d.currentSet.SetStyleBonus(style)
 	d.updateVersion()
@@ -331,19 +331,19 @@ func (d *DressupAggregate) UpdateStatistics() {
 	d.statistics.totalOutfits = len(d.outfits)
 	d.statistics.equippedOutfits = d.currentSet.GetEquippedCount()
 	d.statistics.totalPower = d.currentSet.GetTotalPower()
-	
+
 	// 重置分布统计
 	d.statistics.rarityDistribution = make(map[Rarity]int)
 	d.statistics.typeDistribution = make(map[OutfitType]int)
 	d.statistics.qualityDistribution = make(map[OutfitQuality]int)
-	
+
 	// 统计分布
 	for _, outfit := range d.outfits {
 		d.statistics.rarityDistribution[outfit.GetRarity()]++
 		d.statistics.typeDistribution[outfit.GetType()]++
 		d.statistics.qualityDistribution[outfit.GetQuality()]++
 	}
-	
+
 	// 找出最常用的装备
 	maxUseCount := 0
 	for _, outfit := range d.outfits {
@@ -357,13 +357,13 @@ func (d *DressupAggregate) UpdateStatistics() {
 // FilterOutfits 筛选服装
 func (d *DressupAggregate) FilterOutfits(filter *OutfitFilter) []*Outfit {
 	result := make([]*Outfit, 0)
-	
+
 	for _, outfit := range d.outfits {
 		if d.matchesFilter(outfit, filter) {
 			result = append(result, outfit)
 		}
 	}
-	
+
 	return result
 }
 
@@ -372,27 +372,27 @@ func (d *DressupAggregate) matchesFilter(outfit *Outfit, filter *OutfitFilter) b
 	if filter == nil {
 		return true
 	}
-	
+
 	// 类型筛选
 	if filter.GetOutfitType() != nil && outfit.GetType() != *filter.GetOutfitType() {
 		return false
 	}
-	
+
 	// 稀有度筛选
 	if filter.GetRarity() != nil && outfit.GetRarity() != *filter.GetRarity() {
 		return false
 	}
-	
+
 	// 品质筛选
 	if filter.GetQuality() != nil && outfit.GetQuality() != *filter.GetQuality() {
 		return false
 	}
-	
+
 	// 来源筛选
 	if filter.GetSource() != nil && outfit.GetSource() != *filter.GetSource() {
 		return false
 	}
-	
+
 	// 槽位筛选
 	if filter.GetSlot() != nil {
 		canEquip := outfit.CanEquipToSlot(*filter.GetSlot())
@@ -400,12 +400,12 @@ func (d *DressupAggregate) matchesFilter(outfit *Outfit, filter *OutfitFilter) b
 			return false
 		}
 	}
-	
+
 	// 锁定状态筛选
 	if filter.GetLocked() != nil && outfit.IsLocked() != *filter.GetLocked() {
 		return false
 	}
-	
+
 	// 等级范围筛选
 	if filter.GetMinLevel() != nil && outfit.GetLevel() < *filter.GetMinLevel() {
 		return false
@@ -413,7 +413,7 @@ func (d *DressupAggregate) matchesFilter(outfit *Outfit, filter *OutfitFilter) b
 	if filter.GetMaxLevel() != nil && outfit.GetLevel() > *filter.GetMaxLevel() {
 		return false
 	}
-	
+
 	// 搜索文本筛选
 	if filter.GetSearchText() != "" {
 		searchText := filter.GetSearchText()
@@ -422,7 +422,7 @@ func (d *DressupAggregate) matchesFilter(outfit *Outfit, filter *OutfitFilter) b
 			return false
 		}
 	}
-	
+
 	// 标签筛选
 	if len(filter.GetTags()) > 0 {
 		outfitTags := outfit.GetTags()
@@ -439,7 +439,7 @@ func (d *DressupAggregate) matchesFilter(outfit *Outfit, filter *OutfitFilter) b
 			}
 		}
 	}
-	
+
 	return true
 }
 
@@ -452,13 +452,13 @@ func (d *DressupAggregate) containsIgnoreCase(str, substr string) bool {
 // GetRecommendedOutfits 获取推荐服装
 func (d *DressupAggregate) GetRecommendedOutfits(slot OutfitSlot, limit int) []*Outfit {
 	recommended := make([]*Outfit, 0)
-	
+
 	for _, outfit := range d.outfits {
 		if outfit.CanEquipToSlot(slot) && !outfit.IsEquipped() && !outfit.IsLocked() {
 			recommended = append(recommended, outfit)
 		}
 	}
-	
+
 	// 按战力排序（简单实现）
 	for i := 0; i < len(recommended)-1; i++ {
 		for j := i + 1; j < len(recommended); j++ {
@@ -467,12 +467,12 @@ func (d *DressupAggregate) GetRecommendedOutfits(slot OutfitSlot, limit int) []*
 			}
 		}
 	}
-	
+
 	// 限制数量
 	if limit > 0 && len(recommended) > limit {
 		recommended = recommended[:limit]
 	}
-	
+
 	return recommended
 }
 
@@ -481,26 +481,26 @@ func (d *DressupAggregate) AutoEquipBest() error {
 	if !d.preferences.autoEquipBetter {
 		return ErrAutoEquipDisabled
 	}
-	
+
 	allSlots := []OutfitSlot{
 		SlotWeapon, SlotArmor, SlotHelmet, SlotShoes,
 		SlotRing, SlotNecklace, SlotFashionWeapon,
 		SlotFashionArmor, SlotFashionHelmet, SlotPet, SlotMount,
 	}
-	
+
 	for _, slot := range allSlots {
 		recommended := d.GetRecommendedOutfits(slot, 1)
 		if len(recommended) > 0 {
 			best := recommended[0]
 			current := d.currentSet.GetEquippedOutfit(slot)
-			
+
 			// 如果推荐的比当前的好，则装备
 			if current == nil || best.GetPower() > current.GetPower() {
 				d.EquipOutfit(best.GetID(), slot)
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -551,13 +551,13 @@ func (d *DressupAggregate) GetSetCompletionRate(setID string) float64 {
 	if fashionSet == nil {
 		return 0.0
 	}
-	
+
 	owned := len(d.GetOutfitsBySet(setID))
 	total := len(fashionSet.GetPieces())
-	
+
 	if total == 0 {
 		return 0.0
 	}
-	
+
 	return float64(owned) / float64(total) * 100.0
 }

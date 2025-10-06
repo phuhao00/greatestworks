@@ -11,16 +11,16 @@ import (
 type RankType int32
 
 const (
-	RankTypeLevel      RankType = iota + 1 // 等级排行榜
-	RankTypePower                          // 战力排行榜
-	RankTypeWealth                         // 财富排行榜
-	RankTypeAchievement                    // 成就排行榜
-	RankTypePet                            // 宠物排行榜
-	RankTypeGuild                          // 公会排行榜
-	RankTypeArena                          // 竞技场排行榜
-	RankTypeDungeon                        // 副本排行榜
-	RankTypeActivity                       // 活动排行榜
-	RankTypeCustom                         // 自定义排行榜
+	RankTypeLevel       RankType = iota + 1 // 等级排行榜
+	RankTypePower                           // 战力排行榜
+	RankTypeWealth                          // 财富排行榜
+	RankTypeAchievement                     // 成就排行榜
+	RankTypePet                             // 宠物排行榜
+	RankTypeGuild                           // 公会排行榜
+	RankTypeArena                           // 竞技场排行榜
+	RankTypeDungeon                         // 副本排行榜
+	RankTypeActivity                        // 活动排行榜
+	RankTypeCustom                          // 自定义排行榜
 )
 
 // String 返回排行榜类型的字符串表示
@@ -178,12 +178,12 @@ func (rp RankPeriod) GetDuration() time.Duration {
 type RankStatus int32
 
 const (
-	RankStatusActive   RankStatus = iota + 1 // 活跃状态
-	RankStatusInactive                       // 非活跃状态
-	RankStatusPaused                         // 暂停状态
-	RankStatusExpired                        // 过期状态
-	RankStatusMaintenance                    // 维护状态
-	RankStatusArchived                       // 归档状态
+	RankStatusActive      RankStatus = iota + 1 // 活跃状态
+	RankStatusInactive                          // 非活跃状态
+	RankStatusPaused                            // 暂停状态
+	RankStatusExpired                           // 过期状态
+	RankStatusMaintenance                       // 维护状态
+	RankStatusArchived                          // 归档状态
 )
 
 // String 返回排行榜状态的字符串表示
@@ -220,31 +220,31 @@ func (rs RankStatus) CanAcceptUpdates() bool {
 
 // RankRewardConfig 排行榜奖励配置
 type RankRewardConfig struct {
-	Enabled      bool                    `json:"enabled" bson:"enabled"`
-	RewardTiers  []*RankRewardTier      `json:"reward_tiers" bson:"reward_tiers"`
-	RewardType   RankRewardType         `json:"reward_type" bson:"reward_type"`
-	DistributeAt RankRewardDistributeAt `json:"distribute_at" bson:"distribute_at"`
-	AutoDistribute bool                 `json:"auto_distribute" bson:"auto_distribute"`
-	CreatedAt    time.Time              `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at" bson:"updated_at"`
+	Enabled        bool                   `json:"enabled" bson:"enabled"`
+	RewardTiers    []*RankRewardTier      `json:"reward_tiers" bson:"reward_tiers"`
+	RewardType     RankRewardType         `json:"reward_type" bson:"reward_type"`
+	DistributeAt   RankRewardDistributeAt `json:"distribute_at" bson:"distribute_at"`
+	AutoDistribute bool                   `json:"auto_distribute" bson:"auto_distribute"`
+	CreatedAt      time.Time              `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
 // RankRewardTier 排行榜奖励档次
 type RankRewardTier struct {
-	MinRank   int64                  `json:"min_rank" bson:"min_rank"`
-	MaxRank   int64                  `json:"max_rank" bson:"max_rank"`
-	Rewards   []*RankReward         `json:"rewards" bson:"rewards"`
-	Title     string                 `json:"title" bson:"title"`
-	Badge     string                 `json:"badge" bson:"badge"`
-	Metadata  map[string]interface{} `json:"metadata" bson:"metadata"`
+	MinRank  int64                  `json:"min_rank" bson:"min_rank"`
+	MaxRank  int64                  `json:"max_rank" bson:"max_rank"`
+	Rewards  []*RankReward          `json:"rewards" bson:"rewards"`
+	Title    string                 `json:"title" bson:"title"`
+	Badge    string                 `json:"badge" bson:"badge"`
+	Metadata map[string]interface{} `json:"metadata" bson:"metadata"`
 }
 
 // RankReward 排行榜奖励
 type RankReward struct {
-	RewardID   string `json:"reward_id" bson:"reward_id"`
-	RewardType string `json:"reward_type" bson:"reward_type"`
-	Quantity   int64  `json:"quantity" bson:"quantity"`
-	Name       string `json:"name" bson:"name"`
+	RewardID    string `json:"reward_id" bson:"reward_id"`
+	RewardType  string `json:"reward_type" bson:"reward_type"`
+	Quantity    int64  `json:"quantity" bson:"quantity"`
+	Name        string `json:"name" bson:"name"`
 	Description string `json:"description" bson:"description"`
 }
 
@@ -252,10 +252,10 @@ type RankReward struct {
 type RankRewardType int32
 
 const (
-	RankRewardTypeImmediate RankRewardType = iota + 1 // 立即奖励
-	RankRewardTypeDeferred                            // 延迟奖励
-	RankRewardTypeMail                                // 邮件奖励
-	RankRewardTypeAchievement                         // 成就奖励
+	RankRewardTypeImmediate   RankRewardType = iota + 1 // 立即奖励
+	RankRewardTypeDeferred                              // 延迟奖励
+	RankRewardTypeMail                                  // 邮件奖励
+	RankRewardTypeAchievement                           // 成就奖励
 )
 
 // String 返回奖励类型的字符串表示
@@ -278,7 +278,7 @@ func (rrt RankRewardType) String() string {
 type RankRewardDistributeAt int32
 
 const (
-	RankRewardDistributeAtPeriodEnd RankRewardDistributeAt = iota + 1 // 周期结束时
+	RankRewardDistributeAtPeriodEnd  RankRewardDistributeAt = iota + 1 // 周期结束时
 	RankRewardDistributeAtRankChange                                   // 排名变化时
 	RankRewardDistributeAtManual                                       // 手动分发
 	RankRewardDistributeAtScheduled                                    // 定时分发
@@ -302,48 +302,48 @@ func (rrda RankRewardDistributeAt) String() string {
 
 // RankCacheConfig 排行榜缓存配置
 type RankCacheConfig struct {
-	Enabled       bool          `json:"enabled" bson:"enabled"`
-	CacheSize     int64         `json:"cache_size" bson:"cache_size"`
-	CacheTTL      time.Duration `json:"cache_ttl" bson:"cache_ttl"`
+	Enabled         bool          `json:"enabled" bson:"enabled"`
+	CacheSize       int64         `json:"cache_size" bson:"cache_size"`
+	CacheTTL        time.Duration `json:"cache_ttl" bson:"cache_ttl"`
 	RefreshInterval time.Duration `json:"refresh_interval" bson:"refresh_interval"`
-	PreloadTop    int64         `json:"preload_top" bson:"preload_top"`
-	LazyLoad      bool          `json:"lazy_load" bson:"lazy_load"`
-	Compression   bool          `json:"compression" bson:"compression"`
-	CreatedAt     time.Time     `json:"created_at" bson:"created_at"`
-	UpdatedAt     time.Time     `json:"updated_at" bson:"updated_at"`
+	PreloadTop      int64         `json:"preload_top" bson:"preload_top"`
+	LazyLoad        bool          `json:"lazy_load" bson:"lazy_load"`
+	Compression     bool          `json:"compression" bson:"compression"`
+	CreatedAt       time.Time     `json:"created_at" bson:"created_at"`
+	UpdatedAt       time.Time     `json:"updated_at" bson:"updated_at"`
 }
 
 // 排行榜统计相关值对象
 
 // RankingStatistics 排行榜统计信息
 type RankingStatistics struct {
-	RankID          uint32    `json:"rank_id" bson:"rank_id"`
-	TotalPlayers    int64     `json:"total_players" bson:"total_players"`
-	ActiveEntries   int64     `json:"active_entries" bson:"active_entries"`
-	AverageScore    float64   `json:"average_score" bson:"average_score"`
-	TopScore        int64     `json:"top_score" bson:"top_score"`
-	LowestScore     int64     `json:"lowest_score" bson:"lowest_score"`
-	ScoreRange      int64     `json:"score_range" bson:"score_range"`
-	MedianScore     float64   `json:"median_score" bson:"median_score"`
-	StandardDeviation float64 `json:"standard_deviation" bson:"standard_deviation"`
-	BlacklistCount  int64     `json:"blacklist_count" bson:"blacklist_count"`
-	LastUpdated     time.Time `json:"last_updated" bson:"last_updated"`
-	LastScoreUpdate time.Time `json:"last_score_update" bson:"last_score_update"`
-	UpdateFrequency float64   `json:"update_frequency" bson:"update_frequency"`
-	PeakPlayers     int64     `json:"peak_players" bson:"peak_players"`
-	PeakTime        time.Time `json:"peak_time" bson:"peak_time"`
+	RankID            uint32    `json:"rank_id" bson:"rank_id"`
+	TotalPlayers      int64     `json:"total_players" bson:"total_players"`
+	ActiveEntries     int64     `json:"active_entries" bson:"active_entries"`
+	AverageScore      float64   `json:"average_score" bson:"average_score"`
+	TopScore          int64     `json:"top_score" bson:"top_score"`
+	LowestScore       int64     `json:"lowest_score" bson:"lowest_score"`
+	ScoreRange        int64     `json:"score_range" bson:"score_range"`
+	MedianScore       float64   `json:"median_score" bson:"median_score"`
+	StandardDeviation float64   `json:"standard_deviation" bson:"standard_deviation"`
+	BlacklistCount    int64     `json:"blacklist_count" bson:"blacklist_count"`
+	LastUpdated       time.Time `json:"last_updated" bson:"last_updated"`
+	LastScoreUpdate   time.Time `json:"last_score_update" bson:"last_score_update"`
+	UpdateFrequency   float64   `json:"update_frequency" bson:"update_frequency"`
+	PeakPlayers       int64     `json:"peak_players" bson:"peak_players"`
+	PeakTime          time.Time `json:"peak_time" bson:"peak_time"`
 }
 
 // RankingTrend 排行榜趋势数据
 type RankingTrend struct {
-	RankID        uint32                   `json:"rank_id" bson:"rank_id"`
-	Period        RankPeriod               `json:"period" bson:"period"`
-	TrendData     []*RankingTrendPoint     `json:"trend_data" bson:"trend_data"`
-	GrowthRate    float64                  `json:"growth_rate" bson:"growth_rate"`
-	Volatility    float64                  `json:"volatility" bson:"volatility"`
-	Prediction    *RankingTrendPrediction  `json:"prediction,omitempty" bson:"prediction,omitempty"`
-	CreatedAt     time.Time                `json:"created_at" bson:"created_at"`
-	UpdatedAt     time.Time                `json:"updated_at" bson:"updated_at"`
+	RankID     uint32                  `json:"rank_id" bson:"rank_id"`
+	Period     RankPeriod              `json:"period" bson:"period"`
+	TrendData  []*RankingTrendPoint    `json:"trend_data" bson:"trend_data"`
+	GrowthRate float64                 `json:"growth_rate" bson:"growth_rate"`
+	Volatility float64                 `json:"volatility" bson:"volatility"`
+	Prediction *RankingTrendPrediction `json:"prediction,omitempty" bson:"prediction,omitempty"`
+	CreatedAt  time.Time               `json:"created_at" bson:"created_at"`
+	UpdatedAt  time.Time               `json:"updated_at" bson:"updated_at"`
 }
 
 // RankingTrendPoint 排行榜趋势点
@@ -359,49 +359,49 @@ type RankingTrendPoint struct {
 
 // RankingTrendPrediction 排行榜趋势预测
 type RankingTrendPrediction struct {
-	PredictedPlayerCount int64     `json:"predicted_player_count" bson:"predicted_player_count"`
-	PredictedAverageScore float64  `json:"predicted_average_score" bson:"predicted_average_score"`
-	PredictedTopScore    int64     `json:"predicted_top_score" bson:"predicted_top_score"`
-	ConfidenceLevel      float64   `json:"confidence_level" bson:"confidence_level"`
-	PredictionTime       time.Time `json:"prediction_time" bson:"prediction_time"`
-	ValidUntil           time.Time `json:"valid_until" bson:"valid_until"`
+	PredictedPlayerCount  int64     `json:"predicted_player_count" bson:"predicted_player_count"`
+	PredictedAverageScore float64   `json:"predicted_average_score" bson:"predicted_average_score"`
+	PredictedTopScore     int64     `json:"predicted_top_score" bson:"predicted_top_score"`
+	ConfidenceLevel       float64   `json:"confidence_level" bson:"confidence_level"`
+	PredictionTime        time.Time `json:"prediction_time" bson:"prediction_time"`
+	ValidUntil            time.Time `json:"valid_until" bson:"valid_until"`
 }
 
 // 排行榜查询相关值对象
 
 // RankingQuery 排行榜查询条件
 type RankingQuery struct {
-	RankID       *uint32      `json:"rank_id,omitempty"`
-	RankType     *RankType    `json:"rank_type,omitempty"`
-	Category     *RankCategory `json:"category,omitempty"`
-	Status       *RankStatus  `json:"status,omitempty"`
-	Period       *RankPeriod  `json:"period,omitempty"`
-	IsActive     *bool        `json:"is_active,omitempty"`
-	PlayerID     *uint64      `json:"player_id,omitempty"`
-	MinScore     *int64       `json:"min_score,omitempty"`
-	MaxScore     *int64       `json:"max_score,omitempty"`
-	MinRank      *int64       `json:"min_rank,omitempty"`
-	MaxRank      *int64       `json:"max_rank,omitempty"`
-	StartTime    *time.Time   `json:"start_time,omitempty"`
-	EndTime      *time.Time   `json:"end_time,omitempty"`
-	CreatedAfter *time.Time   `json:"created_after,omitempty"`
-	CreatedBefore *time.Time  `json:"created_before,omitempty"`
-	UpdatedAfter *time.Time   `json:"updated_after,omitempty"`
-	UpdatedBefore *time.Time  `json:"updated_before,omitempty"`
-	Keywords     []string     `json:"keywords,omitempty"`
-	Tags         []string     `json:"tags,omitempty"`
-	OrderBy      string       `json:"order_by,omitempty"`
-	OrderDesc    bool         `json:"order_desc,omitempty"`
-	Offset       int          `json:"offset,omitempty"`
-	Limit        int          `json:"limit,omitempty"`
+	RankID        *uint32       `json:"rank_id,omitempty"`
+	RankType      *RankType     `json:"rank_type,omitempty"`
+	Category      *RankCategory `json:"category,omitempty"`
+	Status        *RankStatus   `json:"status,omitempty"`
+	Period        *RankPeriod   `json:"period,omitempty"`
+	IsActive      *bool         `json:"is_active,omitempty"`
+	PlayerID      *uint64       `json:"player_id,omitempty"`
+	MinScore      *int64        `json:"min_score,omitempty"`
+	MaxScore      *int64        `json:"max_score,omitempty"`
+	MinRank       *int64        `json:"min_rank,omitempty"`
+	MaxRank       *int64        `json:"max_rank,omitempty"`
+	StartTime     *time.Time    `json:"start_time,omitempty"`
+	EndTime       *time.Time    `json:"end_time,omitempty"`
+	CreatedAfter  *time.Time    `json:"created_after,omitempty"`
+	CreatedBefore *time.Time    `json:"created_before,omitempty"`
+	UpdatedAfter  *time.Time    `json:"updated_after,omitempty"`
+	UpdatedBefore *time.Time    `json:"updated_before,omitempty"`
+	Keywords      []string      `json:"keywords,omitempty"`
+	Tags          []string      `json:"tags,omitempty"`
+	OrderBy       string        `json:"order_by,omitempty"`
+	OrderDesc     bool          `json:"order_desc,omitempty"`
+	Offset        int           `json:"offset,omitempty"`
+	Limit         int           `json:"limit,omitempty"`
 }
 
 // RankingRange 排行榜范围
 type RankingRange struct {
-	Start         int64 `json:"start"`
-	End           int64 `json:"end"`
-	IncludeStart  bool  `json:"include_start"`
-	IncludeEnd    bool  `json:"include_end"`
+	Start        int64 `json:"start"`
+	End          int64 `json:"end"`
+	IncludeStart bool  `json:"include_start"`
+	IncludeEnd   bool  `json:"include_end"`
 }
 
 // NewRankingRange 创建排行榜范围
@@ -432,10 +432,10 @@ func (rr *RankingRange) Contains(position int64) bool {
 	if !rr.IsValid() {
 		return false
 	}
-	
+
 	startCheck := position > rr.Start || (rr.IncludeStart && position == rr.Start)
 	endCheck := position < rr.End || (rr.IncludeEnd && position == rr.End)
-	
+
 	return startCheck && endCheck
 }
 
@@ -443,14 +443,14 @@ func (rr *RankingRange) Contains(position int64) bool {
 
 // RankingFilter 排行榜过滤器
 type RankingFilter struct {
-	ExcludeBlacklisted bool     `json:"exclude_blacklisted"`
-	ExcludeInactive    bool     `json:"exclude_inactive"`
-	MinScore           *int64   `json:"min_score,omitempty"`
-	MaxScore           *int64   `json:"max_score,omitempty"`
-	PlayerIDs          []uint64 `json:"player_ids,omitempty"`
-	ExcludePlayerIDs   []uint64 `json:"exclude_player_ids,omitempty"`
-	ScoreRange         *RankingRange `json:"score_range,omitempty"`
-	TimeRange          *TimeRange    `json:"time_range,omitempty"`
+	ExcludeBlacklisted bool                   `json:"exclude_blacklisted"`
+	ExcludeInactive    bool                   `json:"exclude_inactive"`
+	MinScore           *int64                 `json:"min_score,omitempty"`
+	MaxScore           *int64                 `json:"max_score,omitempty"`
+	PlayerIDs          []uint64               `json:"player_ids,omitempty"`
+	ExcludePlayerIDs   []uint64               `json:"exclude_player_ids,omitempty"`
+	ScoreRange         *RankingRange          `json:"score_range,omitempty"`
+	TimeRange          *TimeRange             `json:"time_range,omitempty"`
 	CustomFilters      map[string]interface{} `json:"custom_filters,omitempty"`
 }
 
@@ -484,15 +484,15 @@ func (tr *TimeRange) Contains(t time.Time) bool {
 	if !tr.IsValid() {
 		return false
 	}
-	
+
 	if tr.Start != nil && t.Before(*tr.Start) {
 		return false
 	}
-	
+
 	if tr.End != nil && t.After(*tr.End) {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -502,13 +502,13 @@ func (tr *TimeRange) Contains(t time.Time) bool {
 type RankingOperation int32
 
 const (
-	RankingOperationUpdate RankingOperation = iota + 1 // 更新分数
-	RankingOperationRemove                             // 移除玩家
-	RankingOperationReset                              // 重置排行榜
-	RankingOperationFreeze                             // 冻结排行榜
-	RankingOperationUnfreeze                           // 解冻排行榜
-	RankingOperationArchive                            // 归档排行榜
-	RankingOperationRestore                            // 恢复排行榜
+	RankingOperationUpdate   RankingOperation = iota + 1 // 更新分数
+	RankingOperationRemove                               // 移除玩家
+	RankingOperationReset                                // 重置排行榜
+	RankingOperationFreeze                               // 冻结排行榜
+	RankingOperationUnfreeze                             // 解冻排行榜
+	RankingOperationArchive                              // 归档排行榜
+	RankingOperationRestore                              // 恢复排行榜
 )
 
 // String 返回排行榜操作的字符串表示
@@ -542,7 +542,7 @@ func (ro RankingOperation) IsValid() bool {
 func (ro RankingOperation) RequiresPermission() bool {
 	switch ro {
 	case RankingOperationReset, RankingOperationFreeze, RankingOperationUnfreeze,
-		 RankingOperationArchive, RankingOperationRestore:
+		RankingOperationArchive, RankingOperationRestore:
 		return true
 	default:
 		return false
@@ -632,39 +632,39 @@ func ValidateRankingQuery(query *RankingQuery) error {
 	if query == nil {
 		return fmt.Errorf("query cannot be nil")
 	}
-	
-	if query.Limit != nil && *query.Limit <= 0 {
+
+	if query.Limit != 0 && query.Limit <= 0 {
 		return fmt.Errorf("limit must be positive")
 	}
-	
-	if query.Limit != nil && *query.Limit > 1000 {
+
+	if query.Limit != 0 && query.Limit > 1000 {
 		return fmt.Errorf("limit cannot exceed 1000")
 	}
-	
-	if query.Offset != nil && *query.Offset < 0 {
+
+	if query.Offset != 0 && query.Offset < 0 {
 		return fmt.Errorf("offset cannot be negative")
 	}
-	
+
 	if query.MinScore != nil && query.MaxScore != nil && *query.MinScore > *query.MaxScore {
 		return fmt.Errorf("min_score cannot be greater than max_score")
 	}
-	
+
 	if query.MinRank != nil && query.MaxRank != nil && *query.MinRank > *query.MaxRank {
 		return fmt.Errorf("min_rank cannot be greater than max_rank")
 	}
-	
+
 	if query.StartTime != nil && query.EndTime != nil && query.StartTime.After(*query.EndTime) {
 		return fmt.Errorf("start_time cannot be after end_time")
 	}
-	
+
 	if query.CreatedAfter != nil && query.CreatedBefore != nil && query.CreatedAfter.After(*query.CreatedBefore) {
 		return fmt.Errorf("created_after cannot be after created_before")
 	}
-	
+
 	if query.UpdatedAfter != nil && query.UpdatedBefore != nil && query.UpdatedAfter.After(*query.UpdatedBefore) {
 		return fmt.Errorf("updated_after cannot be after updated_before")
 	}
-	
+
 	return nil
 }
 
@@ -770,3 +770,4 @@ func GetRankStatusByString(s string) (RankStatus, error) {
 	default:
 		return 0, fmt.Errorf("unknown rank status: %s", s)
 	}
+}

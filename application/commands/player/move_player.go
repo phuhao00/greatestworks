@@ -39,7 +39,14 @@ func NewMovePlayerHandler(playerService PlayerService) *MovePlayerHandler {
 
 // Handle 处理移动玩家命令
 func (h *MovePlayerHandler) Handle(ctx context.Context, cmd *MovePlayerCommand) (*MovePlayerResult, error) {
-	return h.playerService.MovePlayer(ctx, cmd.PlayerID, cmd.Position)
+	err := h.playerService.MovePlayer(ctx, cmd.PlayerID, cmd.Position)
+	if err != nil {
+		return nil, err
+	}
+	return &MovePlayerResult{
+		PlayerID: cmd.PlayerID,
+		Success:  true,
+	}, nil
 }
 
 // CommandType 返回命令类型
@@ -52,7 +59,7 @@ func (cmd *MovePlayerCommand) Validate() error {
 	if cmd.PlayerID == "" {
 		return ErrInvalidPlayerID
 	}
-	
+
 	// 验证位置范围
 	if cmd.Position.X < -1000 || cmd.Position.X > 1000 {
 		return ErrInvalidPosition
@@ -63,6 +70,6 @@ func (cmd *MovePlayerCommand) Validate() error {
 	if cmd.Position.Z < -100 || cmd.Position.Z > 100 {
 		return ErrInvalidPosition
 	}
-	
+
 	return nil
 }

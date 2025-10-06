@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
-	"greatestworks/aop/logger"
+
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // CacheManager 缓存管理器
@@ -21,12 +21,12 @@ type CacheManager struct {
 
 // CacheManagerConfig 缓存管理器配置
 type CacheManagerConfig struct {
-	UseFallback     bool          `json:"use_fallback" yaml:"use_fallback"`         // 是否使用备用缓存
-	FallbackOnError bool          `json:"fallback_on_error" yaml:"fallback_on_error"` // 错误时是否回退到备用缓存
-	SyncToSecondary bool          `json:"sync_to_secondary" yaml:"sync_to_secondary"` // 是否同步到备用缓存
+	UseFallback         bool          `json:"use_fallback" yaml:"use_fallback"`                   // 是否使用备用缓存
+	FallbackOnError     bool          `json:"fallback_on_error" yaml:"fallback_on_error"`         // 错误时是否回退到备用缓存
+	SyncToSecondary     bool          `json:"sync_to_secondary" yaml:"sync_to_secondary"`         // 是否同步到备用缓存
 	HealthCheckInterval time.Duration `json:"health_check_interval" yaml:"health_check_interval"` // 健康检查间隔
-	RetryAttempts   int           `json:"retry_attempts" yaml:"retry_attempts"`     // 重试次数
-	RetryDelay      time.Duration `json:"retry_delay" yaml:"retry_delay"`           // 重试延迟
+	RetryAttempts       int           `json:"retry_attempts" yaml:"retry_attempts"`               // 重试次数
+	RetryDelay          time.Duration `json:"retry_delay" yaml:"retry_delay"`                     // 重试延迟
 }
 
 // ManagerStats 管理器统计信息
@@ -51,7 +51,7 @@ func NewCacheManager(primary, secondary Cache, config *CacheManagerConfig, logge
 			RetryDelay:          100 * time.Millisecond,
 		}
 	}
-	
+
 	m := &CacheManager{
 		primary:   primary,
 		secondary: secondary,
@@ -59,12 +59,12 @@ func NewCacheManager(primary, secondary Cache, config *CacheManagerConfig, logge
 		config:    config,
 		stats:     &ManagerStats{},
 	}
-	
+
 	// 启动健康检查
 	if config.HealthCheckInterval > 0 {
 		go m.healthCheck()
 	}
-	
+
 	logger.Info("Cache manager initialized successfully", "use_fallback", config.UseFallback, "sync_to_secondary", config.SyncToSecondary)
 	return m
 }
@@ -75,14 +75,14 @@ func (m *CacheManager) Set(ctx context.Context, key string, value interface{}, t
 	err := m.executeWithRetry(func() error {
 		return m.primary.Set(ctx, key, value, ttl)
 	})
-	
+
 	if err != nil {
 		m.mu.Lock()
 		m.stats.PrimaryErrors++
 		m.mu.Unlock()
-		
+
 		m.logger.Error("Failed to set primary cache", "error", err, "key", key)
-		
+
 		// 如果配置了错误时回退，尝试设置备用缓存
 		if m.config.FallbackOnError && m.secondary != nil {
 			if fallbackErr := m.secondary.Set(ctx, key, value, ttl); fallbackErr != nil {
@@ -99,11 +99,11 @@ func (m *CacheManager) Set(ctx context.Context, key string, value interface{}, t
 		}
 		return err
 	}
-	
+
 	m.mu.Lock()
 	m.stats.PrimaryHits++
 	m.mu.Unlock()
-	
+
 	// 如果配置了同步到备用缓存
 	if m.config.SyncToSecondary && m.secondary != nil {
 		go func() {
@@ -116,7 +116,7 @@ func (m *CacheManager) Set(ctx context.Context, key string, value interface{}, t
 			}
 		}()
 	}
-	
+
 	return nil
 }
 
@@ -126,18 +126,18 @@ func (m *CacheManager) Get(ctx context.Context, key string, dest interface{}) er
 	err := m.executeWithRetry(func() error {
 		return m.primary.Get(ctx, key, dest)
 	})
-	
+
 	if err == nil {
 		m.mu.Lock()
 		m.stats.PrimaryHits++
 		m.mu.Unlock()
 		return nil
 	}
-	
+
 	m.mu.Lock()
 	m.stats.PrimaryErrors++
 	m.mu.Unlock()
-	
+
 	// 如果主缓存失败且配置了备用缓存
 	if m.config.UseFallback && m.secondary != nil {
 		if fallbackErr := m.secondary.Get(ctx, key, dest); fallbackErr == nil {
@@ -153,7 +153,7 @@ func (m *CacheManager) Get(ctx context.Context, key string, dest interface{}) er
 			m.mu.Unlock()
 		}
 	}
-	
+
 	m.logger.Debug("Cache miss for key", "key", key, "primary_error", err)
 	return err
 }
@@ -161,41 +161,41 @@ func (m *CacheManager) Get(ctx context.Context, key string, dest interface{}) er
 // Delete 删除缓存
 func (m *CacheManager) Delete(ctx context.Context, key string) error {
 	var primaryErr, secondaryErr error
-	
+
 	// 删除主缓存
 	primaryErr = m.executeWithRetry(func() error {
 		return m.primary.Delete(ctx, key)
 	})
-	
+
 	// 删除备用缓存
 	if m.secondary != nil {
 		secondaryErr = m.secondary.Delete(ctx, key)
 	}
-	
+
 	if primaryErr != nil {
 		m.mu.Lock()
 		m.stats.PrimaryErrors++
 		m.mu.Unlock()
 		m.logger.Error("Failed to delete from primary cache", "error", primaryErr, "key", key)
 	}
-	
+
 	if secondaryErr != nil {
 		m.mu.Lock()
 		m.stats.SecondaryErrors++
 		m.mu.Unlock()
 		m.logger.Error("Failed to delete from secondary cache", "error", secondaryErr, "key", key)
 	}
-	
+
 	// 如果主缓存删除成功，认为操作成功
 	if primaryErr == nil {
 		return nil
 	}
-	
+
 	// 如果主缓存失败但备用缓存成功，也认为操作成功
 	if secondaryErr == nil {
 		return nil
 	}
-	
+
 	return primaryErr
 }
 
@@ -206,11 +206,11 @@ func (m *CacheManager) Exists(ctx context.Context, key string) (bool, error) {
 	if err == nil {
 		return exists, nil
 	}
-	
+
 	m.mu.Lock()
 	m.stats.PrimaryErrors++
 	m.mu.Unlock()
-	
+
 	// 如果主缓存失败，检查备用缓存
 	if m.config.UseFallback && m.secondary != nil {
 		if fallbackExists, fallbackErr := m.secondary.Exists(ctx, key); fallbackErr == nil {
@@ -224,7 +224,7 @@ func (m *CacheManager) Exists(ctx context.Context, key string) (bool, error) {
 			m.mu.Unlock()
 		}
 	}
-	
+
 	return false, err
 }
 
@@ -234,12 +234,12 @@ func (m *CacheManager) SetBatch(ctx context.Context, items map[string]interface{
 	err := m.executeWithRetry(func() error {
 		return m.primary.SetBatch(ctx, items, ttl)
 	})
-	
+
 	if err != nil {
 		m.mu.Lock()
 		m.stats.PrimaryErrors++
 		m.mu.Unlock()
-		
+
 		// 如果配置了错误时回退，尝试设置备用缓存
 		if m.config.FallbackOnError && m.secondary != nil {
 			if fallbackErr := m.secondary.SetBatch(ctx, items, ttl); fallbackErr != nil {
@@ -254,7 +254,7 @@ func (m *CacheManager) SetBatch(ctx context.Context, items map[string]interface{
 		}
 		return err
 	}
-	
+
 	// 如果配置了同步到备用缓存
 	if m.config.SyncToSecondary && m.secondary != nil {
 		go func() {
@@ -267,7 +267,7 @@ func (m *CacheManager) SetBatch(ctx context.Context, items map[string]interface{
 			}
 		}()
 	}
-	
+
 	return nil
 }
 
@@ -281,11 +281,11 @@ func (m *CacheManager) GetBatch(ctx context.Context, keys []string) (map[string]
 		m.mu.Unlock()
 		return results, nil
 	}
-	
+
 	m.mu.Lock()
 	m.stats.PrimaryErrors++
 	m.mu.Unlock()
-	
+
 	// 如果主缓存失败且配置了备用缓存
 	if m.config.UseFallback && m.secondary != nil {
 		if fallbackResults, fallbackErr := m.secondary.GetBatch(ctx, keys); fallbackErr == nil {
@@ -300,41 +300,41 @@ func (m *CacheManager) GetBatch(ctx context.Context, keys []string) (map[string]
 			m.mu.Unlock()
 		}
 	}
-	
+
 	return nil, err
 }
 
 // DeleteBatch 批量删除缓存
 func (m *CacheManager) DeleteBatch(ctx context.Context, keys []string) error {
 	var primaryErr, secondaryErr error
-	
+
 	// 删除主缓存
 	primaryErr = m.executeWithRetry(func() error {
 		return m.primary.DeleteBatch(ctx, keys)
 	})
-	
+
 	// 删除备用缓存
 	if m.secondary != nil {
 		secondaryErr = m.secondary.DeleteBatch(ctx, keys)
 	}
-	
+
 	if primaryErr != nil {
 		m.mu.Lock()
 		m.stats.PrimaryErrors++
 		m.mu.Unlock()
 	}
-	
+
 	if secondaryErr != nil {
 		m.mu.Lock()
 		m.stats.SecondaryErrors++
 		m.mu.Unlock()
 	}
-	
+
 	// 如果主缓存删除成功，认为操作成功
 	if primaryErr == nil {
 		return nil
 	}
-	
+
 	return primaryErr
 }
 
@@ -343,11 +343,11 @@ func (m *CacheManager) SetTTL(ctx context.Context, key string, ttl time.Duration
 	err := m.executeWithRetry(func() error {
 		return m.primary.SetTTL(ctx, key, ttl)
 	})
-	
+
 	if err != nil && m.config.FallbackOnError && m.secondary != nil {
 		return m.secondary.SetTTL(ctx, key, ttl)
 	}
-	
+
 	return err
 }
 
@@ -357,43 +357,43 @@ func (m *CacheManager) GetTTL(ctx context.Context, key string) (time.Duration, e
 	if err == nil {
 		return ttl, nil
 	}
-	
+
 	if m.config.UseFallback && m.secondary != nil {
 		return m.secondary.GetTTL(ctx, key)
 	}
-	
+
 	return 0, err
 }
 
 // Clear 清理缓存
 func (m *CacheManager) Clear(ctx context.Context) error {
 	var primaryErr, secondaryErr error
-	
+
 	primaryErr = m.primary.Clear(ctx)
 	if m.secondary != nil {
 		secondaryErr = m.secondary.Clear(ctx)
 	}
-	
+
 	if primaryErr != nil {
 		return primaryErr
 	}
-	
+
 	return secondaryErr
 }
 
 // FlushDB 清空整个缓存
 func (m *CacheManager) FlushDB(ctx context.Context) error {
 	var primaryErr, secondaryErr error
-	
+
 	primaryErr = m.primary.FlushDB(ctx)
 	if m.secondary != nil {
 		secondaryErr = m.secondary.FlushDB(ctx)
 	}
-	
+
 	if primaryErr != nil {
 		return primaryErr
 	}
-	
+
 	return secondaryErr
 }
 
@@ -409,21 +409,21 @@ func (m *CacheManager) Ping(ctx context.Context) error {
 // Close 关闭缓存管理器
 func (m *CacheManager) Close() error {
 	var primaryErr, secondaryErr error
-	
+
 	if m.primary != nil {
 		primaryErr = m.primary.Close()
 	}
-	
+
 	if m.secondary != nil {
 		secondaryErr = m.secondary.Close()
 	}
-	
+
 	m.logger.Info("Cache manager closed successfully")
-	
+
 	if primaryErr != nil {
 		return primaryErr
 	}
-	
+
 	return secondaryErr
 }
 
@@ -431,7 +431,7 @@ func (m *CacheManager) Close() error {
 func (m *CacheManager) GetStats() *ManagerStats {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// 创建副本以避免并发访问问题
 	return &ManagerStats{
 		PrimaryHits:     m.stats.PrimaryHits,
@@ -458,7 +458,7 @@ func (m *CacheManager) GetSecondaryCache() Cache {
 // executeWithRetry 带重试的执行
 func (m *CacheManager) executeWithRetry(fn func() error) error {
 	var lastErr error
-	
+
 	for i := 0; i <= m.config.RetryAttempts; i++ {
 		if err := fn(); err == nil {
 			return nil
@@ -469,7 +469,7 @@ func (m *CacheManager) executeWithRetry(fn func() error) error {
 			}
 		}
 	}
-	
+
 	return lastErr
 }
 
@@ -477,17 +477,17 @@ func (m *CacheManager) executeWithRetry(fn func() error) error {
 func (m *CacheManager) healthCheck() {
 	ticker := time.NewTicker(m.config.HealthCheckInterval)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		
+
 		// 检查主缓存
 		if err := m.primary.Ping(ctx); err != nil {
 			m.logger.Error("Primary cache health check failed", "error", err)
 		} else {
 			m.logger.Debug("Primary cache health check passed")
 		}
-		
+
 		// 检查备用缓存
 		if m.secondary != nil {
 			if err := m.secondary.Ping(ctx); err != nil {
@@ -496,7 +496,7 @@ func (m *CacheManager) healthCheck() {
 				m.logger.Debug("Secondary cache health check passed")
 			}
 		}
-		
+
 		cancel()
 	}
 }

@@ -10,9 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"greatestworks/aop/logger"
 	"greatestworks/internal/domain/scene/weather"
 	"greatestworks/internal/infrastructure/cache"
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // MongoWeatherRepository MongoDB天气仓储实现

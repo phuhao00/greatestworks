@@ -26,17 +26,15 @@ func (sl *SacredLevel) AddExperience(exp int) (int, error) {
 	if exp <= 0 {
 		return sl.Level, fmt.Errorf("experience must be positive")
 	}
-	
+
 	sl.Experience += exp
-	oldLevel := sl.Level
-	
 	// 检查是否可以升级
 	for sl.Experience >= sl.MaxExp {
 		sl.Experience -= sl.MaxExp
 		sl.Level++
 		sl.MaxExp = calculateMaxExp(sl.Level)
 	}
-	
+
 	return sl.Level, nil
 }
 
@@ -79,13 +77,13 @@ func calculateMaxExp(level int) int {
 type ChallengeType int
 
 const (
-	ChallengeTypeCombat     ChallengeType = iota + 1 // 战斗挑战
-	ChallengeTypePuzzle                              // 解谜挑战
-	ChallengeTypeEndurance                           // 耐力挑战
-	ChallengeTypeSpeed                               // 速度挑战
-	ChallengeTypeStrategy                            // 策略挑战
-	ChallengeTypeCooperation                         // 合作挑战
-	ChallengeTypeSpecial                             // 特殊挑战
+	ChallengeTypeCombat      ChallengeType = iota + 1 // 战斗挑战
+	ChallengeTypePuzzle                               // 解谜挑战
+	ChallengeTypeEndurance                            // 耐力挑战
+	ChallengeTypeSpeed                                // 速度挑战
+	ChallengeTypeStrategy                             // 策略挑战
+	ChallengeTypeCooperation                          // 合作挑战
+	ChallengeTypeSpecial                              // 特殊挑战
 )
 
 // String 返回类型字符串
@@ -142,10 +140,10 @@ type ChallengeDifficulty int
 
 const (
 	ChallengeDifficultyEasy      ChallengeDifficulty = iota + 1 // 简单
-	ChallengeDifficultyNormal                                    // 普通
-	ChallengeDifficultyHard                                      // 困难
-	ChallengeDifficultyExpert                                    // 专家
-	ChallengeDifficultyLegendary                                 // 传奇
+	ChallengeDifficultyNormal                                   // 普通
+	ChallengeDifficultyHard                                     // 困难
+	ChallengeDifficultyExpert                                   // 专家
+	ChallengeDifficultyLegendary                                // 传奇
 )
 
 // String 返回难度字符串
@@ -230,11 +228,11 @@ type ChallengeStatus int
 
 const (
 	ChallengeStatusAvailable  ChallengeStatus = iota + 1 // 可用
-	ChallengeStatusInProgress                             // 进行中
-	ChallengeStatusCompleted                              // 已完成
-	ChallengeStatusFailed                                 // 失败
-	ChallengeStatusLocked                                 // 锁定
-	ChallengeStatusExpired                                // 过期
+	ChallengeStatusInProgress                            // 进行中
+	ChallengeStatusCompleted                             // 已完成
+	ChallengeStatusFailed                                // 失败
+	ChallengeStatusLocked                                // 锁定
+	ChallengeStatusExpired                               // 过期
 )
 
 // String 返回状态字符串
@@ -276,14 +274,14 @@ func (cs ChallengeStatus) IsFinished() bool {
 type BlessingType int
 
 const (
-	BlessingTypeAttribute BlessingType = iota + 1 // 属性祝福
-	BlessingTypeSkill                             // 技能祝福
-	BlessingTypeExperience                        // 经验祝福
-	BlessingTypeWealth                            // 财富祝福
-	BlessingTypeProtection                        // 保护祝福
-	BlessingTypeHealing                           // 治疗祝福
-	BlessingTypeSpeed                             // 速度祝福
-	BlessingTypeLuck                              // 幸运祝福
+	BlessingTypeAttribute  BlessingType = iota + 1 // 属性祝福
+	BlessingTypeSkill                              // 技能祝福
+	BlessingTypeExperience                         // 经验祝福
+	BlessingTypeWealth                             // 财富祝福
+	BlessingTypeProtection                         // 保护祝福
+	BlessingTypeHealing                            // 治疗祝福
+	BlessingTypeSpeed                              // 速度祝福
+	BlessingTypeLuck                               // 幸运祝福
 )
 
 // String 返回类型字符串
@@ -368,10 +366,10 @@ type BlessingStatus int
 
 const (
 	BlessingStatusAvailable BlessingStatus = iota + 1 // 可用
-	BlessingStatusActive                               // 激活
-	BlessingStatusInactive                             // 未激活
-	BlessingStatusExpired                              // 过期
-	BlessingStatusLocked                               // 锁定
+	BlessingStatusActive                              // 激活
+	BlessingStatusInactive                            // 未激活
+	BlessingStatusExpired                             // 过期
+	BlessingStatusLocked                              // 锁定
 )
 
 // String 返回状态字符串
@@ -409,31 +407,31 @@ func (bs BlessingStatus) IsActive() bool {
 
 // SacredRelic 圣物值对象
 type SacredRelic struct {
-	ID          string
-	Name        string
-	Description string
-	Type        RelicType
-	Rarity      RelicRarity
-	Level       int
-	Attributes  map[string]float64
-	Effects     []string
+	ID           string
+	Name         string
+	Description  string
+	Type         RelicType
+	Rarity       RelicRarity
+	Level        int
+	Attributes   map[string]float64
+	Effects      []string
 	Requirements map[string]interface{}
-	ObtainedAt  time.Time
+	ObtainedAt   time.Time
 }
 
 // NewSacredRelic 创建圣物
 func NewSacredRelic(id, name, description string, relicType RelicType, rarity RelicRarity) *SacredRelic {
 	return &SacredRelic{
-		ID:          id,
-		Name:        name,
-		Description: description,
-		Type:        relicType,
-		Rarity:      rarity,
-		Level:       1,
-		Attributes:  make(map[string]float64),
-		Effects:     make([]string, 0),
+		ID:           id,
+		Name:         name,
+		Description:  description,
+		Type:         relicType,
+		Rarity:       rarity,
+		Level:        1,
+		Attributes:   make(map[string]float64),
+		Effects:      make([]string, 0),
 		Requirements: make(map[string]interface{}),
-		ObtainedAt:  time.Now(),
+		ObtainedAt:   time.Now(),
 	}
 }
 
@@ -454,13 +452,13 @@ func (sr *SacredRelic) Upgrade() error {
 	if !sr.CanUpgrade() {
 		return fmt.Errorf("relic cannot be upgraded further")
 	}
-	
+
 	sr.Level++
 	// 升级时增强属性
 	for attr, value := range sr.Attributes {
 		sr.Attributes[attr] = value * 1.1 // 每级增加10%
 	}
-	
+
 	return nil
 }
 
@@ -486,7 +484,7 @@ func (sr *SacredRelic) CheckRequirements(playerData map[string]interface{}) bool
 		if !exists {
 			return false
 		}
-		
+
 		// 简单的数值比较
 		if reqInt, ok := reqValue.(int); ok {
 			if playerInt, ok := playerValue.(int); ok {
@@ -550,11 +548,11 @@ type RelicRarity int
 
 const (
 	RelicRarityCommon    RelicRarity = iota + 1 // 普通
-	RelicRarityUncommon                          // 不常见
-	RelicRarityRare                              // 稀有
-	RelicRarityEpic                              // 史诗
-	RelicRarityLegendary                         // 传奇
-	RelicRarityMythic                            // 神话
+	RelicRarityUncommon                         // 不常见
+	RelicRarityRare                             // 稀有
+	RelicRarityEpic                             // 史诗
+	RelicRarityLegendary                        // 传奇
+	RelicRarityMythic                           // 神话
 )
 
 // String 返回稀有度字符串
@@ -667,20 +665,20 @@ func (sp *SacredPortal) CanUse(playerLevel int, playerGold int) bool {
 	if !sp.Active {
 		return false
 	}
-	
+
 	if playerLevel < sp.RequiredLevel {
 		return false
 	}
-	
+
 	if playerGold < sp.Cost {
 		return false
 	}
-	
+
 	// 检查冷却时间
 	if !sp.LastUsed.IsZero() && time.Since(sp.LastUsed) < sp.Cooldown {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -689,7 +687,7 @@ func (sp *SacredPortal) Use() error {
 	if !sp.Active {
 		return fmt.Errorf("portal is not active")
 	}
-	
+
 	sp.LastUsed = time.Now()
 	return nil
 }
@@ -699,12 +697,12 @@ func (sp *SacredPortal) GetRemainingCooldown() time.Duration {
 	if sp.LastUsed.IsZero() {
 		return 0
 	}
-	
+
 	elapsed := time.Since(sp.LastUsed)
 	if elapsed >= sp.Cooldown {
 		return 0
 	}
-	
+
 	return sp.Cooldown - elapsed
 }
 
@@ -721,36 +719,36 @@ func (sp *SacredPortal) Deactivate() {
 // ToMap 转换为映射
 func (sp *SacredPortal) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":             sp.ID,
-		"name":           sp.Name,
-		"destination":    sp.Destination,
-		"required_level": sp.RequiredLevel,
-		"cost":           sp.Cost,
-		"cooldown":       sp.Cooldown.String(),
-		"last_used":      sp.LastUsed,
-		"active":         sp.Active,
+		"id":                 sp.ID,
+		"name":               sp.Name,
+		"destination":        sp.Destination,
+		"required_level":     sp.RequiredLevel,
+		"cost":               sp.Cost,
+		"cooldown":           sp.Cooldown.String(),
+		"last_used":          sp.LastUsed,
+		"active":             sp.Active,
 		"remaining_cooldown": sp.GetRemainingCooldown().String(),
 	}
 }
 
 // SacredAura 圣地光环值对象
 type SacredAura struct {
-	Type       AuraType
-	Intensity  float64
-	Radius     float64
-	Effects    map[string]float64
-	Duration   time.Duration
+	Type        AuraType
+	Intensity   float64
+	Radius      float64
+	Effects     map[string]float64
+	Duration    time.Duration
 	ActivatedAt time.Time
 }
 
 // NewSacredAura 创建圣地光环
 func NewSacredAura(auraType AuraType, intensity, radius float64, duration time.Duration) *SacredAura {
 	return &SacredAura{
-		Type:      auraType,
-		Intensity: intensity,
-		Radius:    radius,
-		Effects:   make(map[string]float64),
-		Duration:  duration,
+		Type:        auraType,
+		Intensity:   intensity,
+		Radius:      radius,
+		Effects:     make(map[string]float64),
+		Duration:    duration,
 		ActivatedAt: time.Now(),
 	}
 }
@@ -782,12 +780,12 @@ func (sa *SacredAura) GetEffect(name string) float64 {
 type AuraType int
 
 const (
-	AuraTypeHealing     AuraType = iota + 1 // 治疗光环
-	AuraTypeProtection                      // 保护光环
-	AuraTypeStrength                        // 力量光环
-	AuraTypeWisdom                          // 智慧光环
-	AuraTypeSpeed                           // 速度光环
-	AuraTypeLuck                            // 幸运光环
+	AuraTypeHealing    AuraType = iota + 1 // 治疗光环
+	AuraTypeProtection                     // 保护光环
+	AuraTypeStrength                       // 力量光环
+	AuraTypeWisdom                         // 智慧光环
+	AuraTypeSpeed                          // 速度光环
+	AuraTypeLuck                           // 幸运光环
 )
 
 // String 返回光环类型字符串

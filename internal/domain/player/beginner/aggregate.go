@@ -1,24 +1,25 @@
 package beginner
 
 import (
+	"fmt"
+	"strings"
 	"time"
-	"github.com/google/uuid"
 )
 
 // BeginnerAggregate 新手聚合根
 type BeginnerAggregate struct {
-	playerID       string
-	guideSteps     map[string]*GuideStep
-	tutorials      map[string]*Tutorial
-	currentGuide   string
-	currentStep    int
+	playerID        string
+	guideSteps      map[string]*GuideStep
+	tutorials       map[string]*Tutorial
+	currentGuide    string
+	currentStep     int
 	completedGuides []string
-	rewards        []*BeginnerReward
-	isCompleted   bool
-	startedAt      time.Time
-	completedAt    *time.Time
-	updatedAt      time.Time
-	version        int
+	rewards         []*BeginnerReward
+	isCompleted     bool
+	startedAt       time.Time
+	completedAt     *time.Time
+	updatedAt       time.Time
+	version         int
 }
 
 // NewBeginnerAggregate 创建新手聚合根
@@ -48,14 +49,14 @@ func (b *BeginnerAggregate) StartGuide(guideID string) error {
 	if b.isCompleted {
 		return ErrBeginnerAlreadyCompleted
 	}
-	
+
 	// 检查是否已完成该引导
 	for _, completed := range b.completedGuides {
 		if completed == guideID {
 			return ErrGuideAlreadyCompleted
 		}
 	}
-	
+
 	b.currentGuide = guideID
 	b.currentStep = 1
 	b.updateVersion()
@@ -67,37 +68,37 @@ func (b *BeginnerAggregate) CompleteStep(guideID string, stepID int) error {
 	if b.isCompleted {
 		return ErrBeginnerAlreadyCompleted
 	}
-	
+
 	if b.currentGuide != guideID {
 		return ErrInvalidGuide
 	}
-	
+
 	if b.currentStep != stepID {
 		return ErrInvalidStep
 	}
-	
+
 	stepKey := b.getStepKey(guideID, stepID)
 	step, exists := b.guideSteps[stepKey]
 	if !exists {
 		return ErrStepNotFound
 	}
-	
+
 	// 标记步骤完成
 	step.Complete()
-	
+
 	// 给予奖励
 	if step.HasReward() {
 		reward := step.GetReward()
 		b.rewards = append(b.rewards, reward)
 	}
-	
+
 	// 检查是否完成整个引导
 	if b.isGuideCompleted(guideID) {
 		b.completeGuide(guideID)
 	} else {
 		b.currentStep++
 	}
-	
+
 	b.updateVersion()
 	return nil
 }
@@ -107,7 +108,7 @@ func (b *BeginnerAggregate) AddGuideStep(guideID string, step *GuideStep) error 
 	if step == nil {
 		return ErrInvalidStep
 	}
-	
+
 	stepKey := b.getStepKey(guideID, step.GetStepID())
 	b.guideSteps[stepKey] = step
 	b.updateVersion()
@@ -124,7 +125,7 @@ func (b *BeginnerAggregate) GetCurrentStep() *GuideStep {
 func (b *BeginnerAggregate) GetGuideProgress(guideID string) *GuideProgress {
 	totalSteps := b.countGuideSteps(guideID)
 	completedSteps := b.countCompletedSteps(guideID)
-	
+
 	return &GuideProgress{
 		GuideID:        guideID,
 		TotalSteps:     totalSteps,
@@ -139,7 +140,7 @@ func (b *BeginnerAggregate) AddTutorial(tutorial *Tutorial) error {
 	if tutorial == nil {
 		return ErrInvalidTutorial
 	}
-	
+
 	b.tutorials[tutorial.GetID()] = tutorial
 	b.updateVersion()
 	return nil
@@ -151,15 +152,15 @@ func (b *BeginnerAggregate) CompleteTutorial(tutorialID string) error {
 	if !exists {
 		return ErrTutorialNotFound
 	}
-	
+
 	tutorial.Complete()
-	
+
 	// 给予教程奖励
 	if tutorial.HasReward() {
 		reward := tutorial.GetReward()
 		b.rewards = append(b.rewards, reward)
 	}
-	
+
 	b.updateVersion()
 	return nil
 }
@@ -279,13 +280,13 @@ func (b *BeginnerAggregate) countCompletedSteps(guideID string) int {
 // completeGuide 完成引导
 func (b *BeginnerAggregate) completeGuide(guideID string) {
 	b.completedGuides = append(b.completedGuides, guideID)
-	
+
 	// 检查是否完成所有必要的引导
 	if b.isAllRequiredGuidesCompleted() {
 		b.isCompleted = true
 		now := time.Now()
 		b.completedAt = &now
-		
+
 		// 给予完成新手引导的最终奖励
 		finalReward := NewBeginnerReward("final_reward", RewardTypeMultiple, map[string]interface{}{
 			"gold":       1000,
@@ -299,7 +300,7 @@ func (b *BeginnerAggregate) completeGuide(guideID string) {
 // isAllRequiredGuidesCompleted 检查是否完成所有必要引导
 func (b *BeginnerAggregate) isAllRequiredGuidesCompleted() bool {
 	requiredGuides := []string{"main_guide", "combat_guide", "inventory_guide"}
-	
+
 	for _, required := range requiredGuides {
 		found := false
 		for _, completed := range b.completedGuides {
@@ -312,7 +313,7 @@ func (b *BeginnerAggregate) isAllRequiredGuidesCompleted() bool {
 			return false
 		}
 	}
-	
+
 	return true
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"time"
 )
 
 // Service 玩家领域服务
@@ -24,24 +23,21 @@ func (s *Service) CreatePlayer(ctx context.Context, name string) (*Player, error
 	if name == "" {
 		return nil, ErrInvalidPlayerName
 	}
-	
+
 	// 检查名称是否已存在
-	exists, err := s.repository.ExistsByName(ctx, name)
-	if err != nil {
-		return nil, fmt.Errorf("check player name exists: %w", err)
-	}
+	exists := s.repository.ExistsByName(ctx, name)
 	if exists {
 		return nil, ErrPlayerAlreadyExists
 	}
-	
+
 	// 创建新玩家
 	player := NewPlayer(name)
-	
+
 	// 保存到仓储
 	if err := s.repository.Save(ctx, player); err != nil {
 		return nil, fmt.Errorf("save player: %w", err)
 	}
-	
+
 	return player, nil
 }
 
@@ -51,15 +47,15 @@ func (s *Service) AuthenticatePlayer(ctx context.Context, playerID PlayerID) (*P
 	if err != nil {
 		return nil, fmt.Errorf("find player: %w", err)
 	}
-	
+
 	// 设置玩家上线
 	player.SetOnline()
-	
+
 	// 更新玩家状态
 	if err := s.repository.Update(ctx, player); err != nil {
 		return nil, fmt.Errorf("update player: %w", err)
 	}
-	
+
 	return player, nil
 }
 
@@ -69,15 +65,15 @@ func (s *Service) LogoutPlayer(ctx context.Context, playerID PlayerID) error {
 	if err != nil {
 		return fmt.Errorf("find player: %w", err)
 	}
-	
+
 	// 设置玩家下线
 	player.SetOffline()
-	
+
 	// 更新玩家状态
 	if err := s.repository.Update(ctx, player); err != nil {
 		return fmt.Errorf("update player: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -87,22 +83,22 @@ func (s *Service) MovePlayer(ctx context.Context, playerID PlayerID, position Po
 	if err != nil {
 		return fmt.Errorf("find player: %w", err)
 	}
-	
+
 	// 验证位置有效性
 	if err := s.validatePosition(position); err != nil {
 		return err
 	}
-	
+
 	// 移动玩家
 	if err := player.MoveTo(position); err != nil {
 		return err
 	}
-	
+
 	// 更新玩家
 	if err := s.repository.Update(ctx, player); err != nil {
 		return fmt.Errorf("update player: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -112,21 +108,21 @@ func (s *Service) GainExperience(ctx context.Context, playerID PlayerID, exp int
 	if err != nil {
 		return fmt.Errorf("find player: %w", err)
 	}
-	
+
 	oldLevel := player.Level()
 	player.GainExp(exp)
 	newLevel := player.Level()
-	
+
 	// 更新玩家
 	if err := s.repository.Update(ctx, player); err != nil {
 		return fmt.Errorf("update player: %w", err)
 	}
-	
+
 	// 如果升级了，发布升级事件
 	if newLevel > oldLevel {
 		// TODO: 发布玩家升级事件
 	}
-	
+
 	return nil
 }
 
@@ -136,14 +132,14 @@ func (s *Service) HealPlayer(ctx context.Context, playerID PlayerID, amount int)
 	if err != nil {
 		return fmt.Errorf("find player: %w", err)
 	}
-	
+
 	player.Heal(amount)
-	
+
 	// 更新玩家
 	if err := s.repository.Update(ctx, player); err != nil {
 		return fmt.Errorf("update player: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -153,7 +149,7 @@ func (s *Service) GetOnlinePlayers(ctx context.Context, limit int) ([]*Player, e
 	if err != nil {
 		return nil, fmt.Errorf("find online players: %w", err)
 	}
-	
+
 	return players, nil
 }
 
@@ -169,7 +165,7 @@ func (s *Service) validatePosition(pos Position) error {
 	if pos.Z < -100 || pos.Z > 100 {
 		return ErrInvalidPosition
 	}
-	
+
 	return nil
 }
 
@@ -187,12 +183,12 @@ func (s *Service) IsPlayerNearby(ctx context.Context, playerID1, playerID2 Playe
 	if err != nil {
 		return false, fmt.Errorf("find player1: %w", err)
 	}
-	
+
 	player2, err := s.repository.FindByID(ctx, playerID2)
 	if err != nil {
 		return false, fmt.Errorf("find player2: %w", err)
 	}
-	
+
 	distance := s.CalculateDistance(player1.GetPosition(), player2.GetPosition())
 	return distance <= maxDistance, nil
 }

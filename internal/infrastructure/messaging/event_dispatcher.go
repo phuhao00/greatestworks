@@ -6,23 +6,23 @@ import (
 	"sync"
 	"time"
 
-	"greatestworks/aop/logger"
 	"greatestworks/internal/events"
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // EventDispatcher 事件分发器
 type EventDispatcher struct {
-	publisher    Publisher
-	subscriber   Subscriber
-	logger       logger.Logger
-	config       *DispatcherConfig
-	handlers     map[string][]EventHandler
-	mu           sync.RWMutex
-	stats        *DispatcherStats
-	ctx          context.Context
-	cancel       context.CancelFunc
-	eventQueue   chan *EventMessage
-	workerPool   *WorkerPool
+	publisher  Publisher
+	subscriber Subscriber
+	logger     logger.Logger
+	config     *DispatcherConfig
+	handlers   map[string][]EventHandler
+	mu         sync.RWMutex
+	stats      *DispatcherStats
+	ctx        context.Context
+	cancel     context.CancelFunc
+	eventQueue chan *EventMessage
+	workerPool *WorkerPool
 }
 
 // DispatcherConfig 分发器配置
@@ -40,35 +40,35 @@ type DispatcherConfig struct {
 
 // EventMessage 事件消息
 type EventMessage struct {
-	Event     events.DomainEvent `json:"event"`
-	Timestamp time.Time          `json:"timestamp"`
-	RetryCount int               `json:"retry_count"`
-	Metadata  map[string]string  `json:"metadata"`
+	Event      events.DomainEvent `json:"event"`
+	Timestamp  time.Time          `json:"timestamp"`
+	RetryCount int                `json:"retry_count"`
+	Metadata   map[string]string  `json:"metadata"`
 }
 
 // Dispatcher 事件分发器接口
 type Dispatcher interface {
 	// RegisterHandler 注册事件处理器
 	RegisterHandler(eventType string, handler EventHandler) error
-	
+
 	// UnregisterHandler 取消注册事件处理器
 	UnregisterHandler(eventType string, handlerName string) error
-	
+
 	// Dispatch 分发事件
 	Dispatch(ctx context.Context, event events.DomainEvent) error
-	
+
 	// DispatchAsync 异步分发事件
 	DispatchAsync(ctx context.Context, event events.DomainEvent) error
-	
+
 	// DispatchBatch 批量分发事件
 	DispatchBatch(ctx context.Context, events []events.DomainEvent) error
-	
+
 	// Start 启动分发器
 	Start(ctx context.Context) error
-	
+
 	// Stop 停止分发器
 	Stop() error
-	
+
 	// GetStats 获取统计信息
 	GetStats() *DispatcherStats
 }
@@ -88,9 +88,9 @@ func NewEventDispatcher(publisher Publisher, subscriber Subscriber, config *Disp
 			MaxProcessingTime: 30 * time.Second,
 		}
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	d := &EventDispatcher{
 		publisher:  publisher,
 		subscriber: subscriber,
@@ -106,10 +106,10 @@ func NewEventDispatcher(publisher Publisher, subscriber Subscriber, config *Disp
 			ByHandler:   make(map[string]*HandlerStats),
 		},
 	}
-	
+
 	// 创建工作池
 	d.workerPool = NewWorkerPool(config.WorkerCount, d.processEvent, logger)
-	
+
 	logger.Info("Event dispatcher initialized successfully", "worker_count", config.WorkerCount, "queue_size", config.QueueSize)
 	return d
 }
@@ -118,23 +118,23 @@ func NewEventDispatcher(publisher Publisher, subscriber Subscriber, config *Disp
 func (d *EventDispatcher) RegisterHandler(eventType string, handler EventHandler) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	// 检查处理器是否已存在
 	for _, existingHandler := range d.handlers[eventType] {
 		if existingHandler.GetHandlerName() == handler.GetHandlerName() {
 			return fmt.Errorf("handler %s already registered for event type %s", handler.GetHandlerName(), eventType)
 		}
 	}
-	
+
 	// 添加处理器
 	d.handlers[eventType] = append(d.handlers[eventType], handler)
-	
+
 	// 订阅事件
 	if err := d.subscriber.SubscribeEvent(eventType, handler); err != nil {
 		d.logger.Error("Failed to subscribe to event", "error", err, "event_type", eventType, "handler", handler.GetHandlerName())
 		return fmt.Errorf("failed to subscribe to event %s: %w", eventType, err)
 	}
-	
+
 	d.logger.Info("Event handler registered successfully", "event_type", eventType, "handler", handler.GetHandlerName())
 	return nil
 }
@@ -143,24 +143,24 @@ func (d *EventDispatcher) RegisterHandler(eventType string, handler EventHandler
 func (d *EventDispatcher) UnregisterHandler(eventType string, handlerName string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	handlers := d.handlers[eventType]
 	for i, handler := range handlers {
 		if handler.GetHandlerName() == handlerName {
 			// 移除处理器
 			d.handlers[eventType] = append(handlers[:i], handlers[i+1:]...)
-			
+
 			// 如果没有更多处理器，取消订阅
 			if len(d.handlers[eventType]) == 0 {
 				delete(d.handlers, eventType)
 				// 这里应该取消订阅，但NATS订阅是按主题的，可能有其他处理器
 			}
-			
+
 			d.logger.Info("Event handler unregistered successfully", "event_type", eventType, "handler", handlerName)
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("handler %s not found for event type %s", handlerName, eventType)
 }
 
@@ -173,7 +173,7 @@ func (d *EventDispatcher) Dispatch(ctx context.Context, event events.DomainEvent
 		d.logger.Error("Failed to dispatch event", "error", err, "event_type", event.GetEventType(), "event_id", event.GetEventID())
 		return fmt.Errorf("failed to dispatch event: %w", err)
 	}
-	
+
 	d.updateStats(event.GetEventType(), true, 0, "dispatched")
 	d.logger.Debug("Event dispatched successfully", "event_type", event.GetEventType(), "event_id", event.GetEventID())
 	return nil
@@ -182,12 +182,12 @@ func (d *EventDispatcher) Dispatch(ctx context.Context, event events.DomainEvent
 // DispatchAsync 异步分发事件
 func (d *EventDispatcher) DispatchAsync(ctx context.Context, event events.DomainEvent) error {
 	eventMsg := &EventMessage{
-		Event:     event,
-		Timestamp: time.Now(),
+		Event:      event,
+		Timestamp:  time.Now(),
 		RetryCount: 0,
-		Metadata:  make(map[string]string),
+		Metadata:   make(map[string]string),
 	}
-	
+
 	// 添加到队列
 	select {
 	case d.eventQueue <- eventMsg:
@@ -207,7 +207,7 @@ func (d *EventDispatcher) DispatchBatch(ctx context.Context, events []events.Dom
 	if len(events) == 0 {
 		return nil
 	}
-	
+
 	// 构建批量消息
 	batchMessages := make([]BatchMessage, len(events))
 	for i, event := range events {
@@ -216,7 +216,7 @@ func (d *EventDispatcher) DispatchBatch(ctx context.Context, events []events.Dom
 			Data:    event,
 		}
 	}
-	
+
 	// 批量发布
 	err := d.publisher.PublishBatch(ctx, batchMessages)
 	if err != nil {
@@ -226,12 +226,12 @@ func (d *EventDispatcher) DispatchBatch(ctx context.Context, events []events.Dom
 		d.logger.Error("Failed to dispatch batch events", "error", err, "count", len(events))
 		return fmt.Errorf("failed to dispatch batch events: %w", err)
 	}
-	
+
 	// 更新统计
 	for _, event := range events {
 		d.updateStats(event.GetEventType(), true, 0, "batch_dispatched")
 	}
-	
+
 	d.logger.Debug("Batch events dispatched successfully", "count", len(events))
 	return nil
 }
@@ -239,30 +239,30 @@ func (d *EventDispatcher) DispatchBatch(ctx context.Context, events []events.Dom
 // Start 启动分发器
 func (d *EventDispatcher) Start(ctx context.Context) error {
 	d.logger.Info("Starting event dispatcher")
-	
+
 	// 启动工作池
 	if err := d.workerPool.Start(d.ctx); err != nil {
 		return fmt.Errorf("failed to start worker pool: %w", err)
 	}
-	
+
 	// 启动队列处理器
 	go d.processQueue()
-	
+
 	// 启动批处理器
 	go d.processBatch()
-	
+
 	// 启动指标收集
 	if d.config.EnableMetrics {
 		go d.collectMetrics()
 	}
-	
+
 	// 启动订阅者
 	go func() {
 		if err := d.subscriber.Start(d.ctx); err != nil {
 			d.logger.Error("Subscriber stopped with error", "error", err)
 		}
 	}()
-	
+
 	// 等待上下文取消
 	select {
 	case <-ctx.Done():
@@ -277,28 +277,28 @@ func (d *EventDispatcher) Start(ctx context.Context) error {
 // Stop 停止分发器
 func (d *EventDispatcher) Stop() error {
 	d.logger.Info("Stopping event dispatcher")
-	
+
 	// 取消上下文
 	d.cancel()
-	
+
 	// 停止工作池
 	if err := d.workerPool.Stop(); err != nil {
 		d.logger.Error("Failed to stop worker pool", "error", err)
 	}
-	
+
 	// 停止订阅者
 	if err := d.subscriber.Stop(); err != nil {
 		d.logger.Error("Failed to stop subscriber", "error", err)
 	}
-	
+
 	// 关闭发布者
 	if err := d.publisher.Close(); err != nil {
 		d.logger.Error("Failed to close publisher", "error", err)
 	}
-	
+
 	// 关闭事件队列
 	close(d.eventQueue)
-	
+
 	d.logger.Info("Event dispatcher stopped successfully")
 	return nil
 }
@@ -307,7 +307,7 @@ func (d *EventDispatcher) Stop() error {
 func (d *EventDispatcher) GetStats() *DispatcherStats {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-	
+
 	// 创建统计信息副本
 	stats := &DispatcherStats{
 		TotalDispatched: d.stats.TotalDispatched,
@@ -319,7 +319,7 @@ func (d *EventDispatcher) GetStats() *DispatcherStats {
 		ByEventType:     make(map[string]*EventTypeStats),
 		ByHandler:       make(map[string]*HandlerStats),
 	}
-	
+
 	// 复制事件类型统计
 	for eventType, eventStats := range d.stats.ByEventType {
 		stats.ByEventType[eventType] = &EventTypeStats{
@@ -329,7 +329,7 @@ func (d *EventDispatcher) GetStats() *DispatcherStats {
 			AvgProcessTime:  eventStats.AvgProcessTime,
 		}
 	}
-	
+
 	// 复制处理器统计
 	for handlerName, handlerStats := range d.stats.ByHandler {
 		stats.ByHandler[handlerName] = &HandlerStats{
@@ -339,7 +339,7 @@ func (d *EventDispatcher) GetStats() *DispatcherStats {
 			AvgProcessTime: handlerStats.AvgProcessTime,
 		}
 	}
-	
+
 	return stats
 }
 
@@ -364,15 +364,15 @@ func (d *EventDispatcher) processQueue() {
 func (d *EventDispatcher) processBatch() {
 	ticker := time.NewTicker(d.config.BatchTimeout)
 	defer ticker.Stop()
-	
+
 	batch := make([]*EventMessage, 0, d.config.BatchSize)
-	
+
 	for {
 		select {
 		case eventMsg := <-d.eventQueue:
 			if eventMsg != nil {
 				batch = append(batch, eventMsg)
-				
+
 				// 如果批次满了，立即处理
 				if len(batch) >= d.config.BatchSize {
 					d.processBatchEvents(batch)
@@ -401,13 +401,13 @@ func (d *EventDispatcher) processBatchEvents(batch []*EventMessage) {
 	for i, eventMsg := range batch {
 		events[i] = eventMsg.Event
 	}
-	
+
 	ctx, cancel := context.WithTimeout(d.ctx, d.config.MaxProcessingTime)
 	defer cancel()
-	
+
 	if err := d.DispatchBatch(ctx, events); err != nil {
 		d.logger.Error("Failed to process batch events", "error", err, "count", len(batch))
-		
+
 		// 重试单个事件
 		for _, eventMsg := range batch {
 			d.retryEvent(eventMsg)
@@ -421,18 +421,18 @@ func (d *EventDispatcher) processEvent(data interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid event message type")
 	}
-	
+
 	start := time.Now()
-	
+
 	ctx, cancel := context.WithTimeout(d.ctx, d.config.MaxProcessingTime)
 	defer cancel()
-	
+
 	err := d.Dispatch(ctx, eventMsg.Event)
 	processTime := time.Since(start)
-	
+
 	if err != nil {
 		d.updateStats(eventMsg.Event.GetEventType(), false, processTime, "process_error")
-		
+
 		// 重试逻辑
 		if eventMsg.RetryCount < d.config.RetryAttempts {
 			d.retryEvent(eventMsg)
@@ -441,7 +441,7 @@ func (d *EventDispatcher) processEvent(data interface{}) error {
 		}
 		return err
 	}
-	
+
 	d.updateStats(eventMsg.Event.GetEventType(), true, processTime, "processed")
 	return nil
 }
@@ -449,11 +449,11 @@ func (d *EventDispatcher) processEvent(data interface{}) error {
 // retryEvent 重试事件
 func (d *EventDispatcher) retryEvent(eventMsg *EventMessage) {
 	eventMsg.RetryCount++
-	
+
 	// 延迟重试
 	go func() {
 		time.Sleep(d.config.RetryDelay * time.Duration(eventMsg.RetryCount))
-		
+
 		select {
 		case d.eventQueue <- eventMsg:
 			d.logger.Debug("Event queued for retry", "event_type", eventMsg.Event.GetEventType(), "retry_count", eventMsg.RetryCount)
@@ -469,24 +469,24 @@ func (d *EventDispatcher) retryEvent(eventMsg *EventMessage) {
 func (d *EventDispatcher) updateStats(eventType string, success bool, processTime time.Duration, operation string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if success {
 		d.stats.TotalDispatched++
 	} else {
 		d.stats.TotalFailed++
 	}
-	
+
 	// 更新事件类型统计
 	eventStats, exists := d.stats.ByEventType[eventType]
 	if !exists {
 		eventStats = &EventTypeStats{}
 		d.stats.ByEventType[eventType] = eventStats
 	}
-	
+
 	if success {
 		eventStats.DispatchedCount++
 		eventStats.LastDispatched = time.Now()
-		
+
 		// 更新平均处理时间
 		if eventStats.AvgProcessTime == 0 {
 			eventStats.AvgProcessTime = processTime
@@ -502,7 +502,7 @@ func (d *EventDispatcher) updateStats(eventType string, success bool, processTim
 func (d *EventDispatcher) collectMetrics() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -521,14 +521,14 @@ func (d *EventDispatcher) collectMetrics() {
 
 // 统计信息结构
 type DispatcherStats struct {
-	TotalDispatched int64                       `json:"total_dispatched"`
-	TotalFailed     int64                       `json:"total_failed"`
-	QueueSize       int64                       `json:"queue_size"`
-	WorkerCount     int64                       `json:"worker_count"`
-	StartTime       time.Time                   `json:"start_time"`
-	Uptime          time.Duration               `json:"uptime"`
-	ByEventType     map[string]*EventTypeStats  `json:"by_event_type"`
-	ByHandler       map[string]*HandlerStats    `json:"by_handler"`
+	TotalDispatched int64                      `json:"total_dispatched"`
+	TotalFailed     int64                      `json:"total_failed"`
+	QueueSize       int64                      `json:"queue_size"`
+	WorkerCount     int64                      `json:"worker_count"`
+	StartTime       time.Time                  `json:"start_time"`
+	Uptime          time.Duration              `json:"uptime"`
+	ByEventType     map[string]*EventTypeStats `json:"by_event_type"`
+	ByHandler       map[string]*HandlerStats   `json:"by_handler"`
 }
 
 type EventTypeStats struct {

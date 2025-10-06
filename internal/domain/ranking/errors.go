@@ -2,6 +2,7 @@ package ranking
 
 import (
 	"fmt"
+	"time"
 )
 
 // 排行榜领域错误定义
@@ -156,8 +157,8 @@ type RankingTimeExpiredError struct {
 func NewRankingTimeExpiredError(rankID uint32, startTime, endTime int64) *RankingTimeExpiredError {
 	return &RankingTimeExpiredError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_TIME_EXPIRED",
-			Message:   fmt.Sprintf("Ranking %d is outside valid time range", rankID),
+			Code:    "RANKING_TIME_EXPIRED",
+			Message: fmt.Sprintf("Ranking %d is outside valid time range", rankID),
 			Details: map[string]interface{}{
 				"rank_id":    rankID,
 				"start_time": startTime,
@@ -184,8 +185,8 @@ type RankingFullError struct {
 func NewRankingFullError(rankID uint32, maxSize, currentSize int64) *RankingFullError {
 	return &RankingFullError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_FULL",
-			Message:   fmt.Sprintf("Ranking %d is full (%d/%d)", rankID, currentSize, maxSize),
+			Code:    "RANKING_FULL",
+			Message: fmt.Sprintf("Ranking %d is full (%d/%d)", rankID, currentSize, maxSize),
 			Details: map[string]interface{}{
 				"rank_id":      rankID,
 				"max_size":     maxSize,
@@ -236,8 +237,8 @@ type PlayerAlreadyInRankingError struct {
 func NewPlayerAlreadyInRankingError(playerID uint64, rankID uint32, currentRank int64) *PlayerAlreadyInRankingError {
 	return &PlayerAlreadyInRankingError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "PLAYER_ALREADY_IN_RANKING",
-			Message:   fmt.Sprintf("Player %d already exists in ranking %d at rank %d", playerID, rankID, currentRank),
+			Code:    "PLAYER_ALREADY_IN_RANKING",
+			Message: fmt.Sprintf("Player %d already exists in ranking %d at rank %d", playerID, rankID, currentRank),
 			Details: map[string]interface{}{
 				"player_id":    playerID,
 				"rank_id":      rankID,
@@ -394,17 +395,17 @@ func NewInvalidScoreError(score int64, minScore, maxScore *int64) *InvalidScoreE
 // InsufficientPermissionError 权限不足错误
 type InsufficientPermissionError struct {
 	*BaseRankingError
-	UserID         string `json:"user_id"`
+	UserID             string `json:"user_id"`
 	RequiredPermission string `json:"required_permission"`
-	Operation      string `json:"operation"`
+	Operation          string `json:"operation"`
 }
 
 // NewInsufficientPermissionError 创建权限不足错误
 func NewInsufficientPermissionError(userID, operation, permission string) *InsufficientPermissionError {
 	return &InsufficientPermissionError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "INSUFFICIENT_PERMISSION",
-			Message:   fmt.Sprintf("User %s lacks permission %s for operation %s", userID, permission, operation),
+			Code:    "INSUFFICIENT_PERMISSION",
+			Message: fmt.Sprintf("User %s lacks permission %s for operation %s", userID, permission, operation),
 			Details: map[string]interface{}{
 				"user_id":             userID,
 				"required_permission": permission,
@@ -530,8 +531,8 @@ type RankingValidationError struct {
 func NewRankingValidationError(field string, value interface{}, constraint, rule string) *RankingValidationError {
 	return &RankingValidationError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_VALIDATION_ERROR",
-			Message:   fmt.Sprintf("Validation failed for field %s: %s (rule: %s)", field, constraint, rule),
+			Code:    "RANKING_VALIDATION_ERROR",
+			Message: fmt.Sprintf("Validation failed for field %s: %s (rule: %s)", field, constraint, rule),
 			Details: map[string]interface{}{
 				"field":           field,
 				"value":           value,
@@ -562,8 +563,8 @@ type RankingConcurrencyError struct {
 func NewRankingConcurrencyError(rankID uint32, expectedVersion, actualVersion int64) *RankingConcurrencyError {
 	return &RankingConcurrencyError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_CONCURRENCY_ERROR",
-			Message:   fmt.Sprintf("Concurrency conflict for ranking %d: expected version %d, actual version %d", rankID, expectedVersion, actualVersion),
+			Code:    "RANKING_CONCURRENCY_ERROR",
+			Message: fmt.Sprintf("Concurrency conflict for ranking %d: expected version %d, actual version %d", rankID, expectedVersion, actualVersion),
 			Details: map[string]interface{}{
 				"rank_id":          rankID,
 				"expected_version": expectedVersion,
@@ -590,8 +591,8 @@ type RankingLockError struct {
 func NewRankingLockError(rankID uint32, lockType, lockOwner string) *RankingLockError {
 	return &RankingLockError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_LOCK_ERROR",
-			Message:   fmt.Sprintf("Cannot acquire %s lock for ranking %d, owned by %s", lockType, rankID, lockOwner),
+			Code:    "RANKING_LOCK_ERROR",
+			Message: fmt.Sprintf("Cannot acquire %s lock for ranking %d, owned by %s", lockType, rankID, lockOwner),
 			Details: map[string]interface{}{
 				"rank_id":    rankID,
 				"lock_type":  lockType,
@@ -620,8 +621,8 @@ type RankingConfigError struct {
 func NewRankingConfigError(configKey string, configValue interface{}, reason string) *RankingConfigError {
 	return &RankingConfigError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_CONFIG_ERROR",
-			Message:   fmt.Sprintf("Configuration error for %s: %s", configKey, reason),
+			Code:    "RANKING_CONFIG_ERROR",
+			Message: fmt.Sprintf("Configuration error for %s: %s", configKey, reason),
 			Details: map[string]interface{}{
 				"config_key":   configKey,
 				"config_value": configValue,
@@ -641,20 +642,20 @@ func NewRankingConfigError(configKey string, configValue interface{}, reason str
 // RankingRateLimitError 排行榜限流错误
 type RankingRateLimitError struct {
 	*BaseRankingError
-	PlayerID      uint64 `json:"player_id"`
-	RankID        uint32 `json:"rank_id"`
-	Operation     string `json:"operation"`
-	CurrentRate   int64  `json:"current_rate"`
-	MaxRate       int64  `json:"max_rate"`
-	ResetTime     int64  `json:"reset_time"`
+	PlayerID    uint64 `json:"player_id"`
+	RankID      uint32 `json:"rank_id"`
+	Operation   string `json:"operation"`
+	CurrentRate int64  `json:"current_rate"`
+	MaxRate     int64  `json:"max_rate"`
+	ResetTime   int64  `json:"reset_time"`
 }
 
 // NewRankingRateLimitError 创建排行榜限流错误
 func NewRankingRateLimitError(playerID uint64, rankID uint32, operation string, currentRate, maxRate, resetTime int64) *RankingRateLimitError {
 	return &RankingRateLimitError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_RATE_LIMIT_ERROR",
-			Message:   fmt.Sprintf("Rate limit exceeded for player %d in ranking %d: %d/%d %s operations", playerID, rankID, currentRate, maxRate, operation),
+			Code:    "RANKING_RATE_LIMIT_ERROR",
+			Message: fmt.Sprintf("Rate limit exceeded for player %d in ranking %d: %d/%d %s operations", playerID, rankID, currentRate, maxRate, operation),
 			Details: map[string]interface{}{
 				"player_id":    playerID,
 				"rank_id":      rankID,
@@ -689,8 +690,8 @@ type RankingEventError struct {
 func NewRankingEventError(eventID, eventType, reason string) *RankingEventError {
 	return &RankingEventError{
 		BaseRankingError: &BaseRankingError{
-			Code:      "RANKING_EVENT_ERROR",
-			Message:   fmt.Sprintf("Event error for %s (%s): %s", eventID, eventType, reason),
+			Code:    "RANKING_EVENT_ERROR",
+			Message: fmt.Sprintf("Event error for %s (%s): %s", eventID, eventType, reason),
 			Details: map[string]interface{}{
 				"event_id":   eventID,
 				"event_type": eventType,
@@ -714,41 +715,41 @@ const (
 	ErrCodeRankingInactive      = "RANKING_INACTIVE"
 	ErrCodeRankingTimeExpired   = "RANKING_TIME_EXPIRED"
 	ErrCodeRankingFull          = "RANKING_FULL"
-	
+
 	// 玩家相关错误代码
-	ErrCodePlayerNotInRanking      = "PLAYER_NOT_IN_RANKING"
-	ErrCodePlayerAlreadyInRanking  = "PLAYER_ALREADY_IN_RANKING"
-	ErrCodePlayerBlacklisted       = "PLAYER_BLACKLISTED"
+	ErrCodePlayerNotInRanking       = "PLAYER_NOT_IN_RANKING"
+	ErrCodePlayerAlreadyInRanking   = "PLAYER_ALREADY_IN_RANKING"
+	ErrCodePlayerBlacklisted        = "PLAYER_BLACKLISTED"
 	ErrCodePlayerAlreadyBlacklisted = "PLAYER_ALREADY_BLACKLISTED"
-	ErrCodePlayerNotBlacklisted    = "PLAYER_NOT_BLACKLISTED"
-	
+	ErrCodePlayerNotBlacklisted     = "PLAYER_NOT_BLACKLISTED"
+
 	// 参数相关错误代码
 	ErrCodeInvalidRange     = "INVALID_RANGE"
 	ErrCodeInvalidTimeRange = "INVALID_TIME_RANGE"
 	ErrCodeInvalidScore     = "INVALID_SCORE"
-	
+
 	// 权限相关错误代码
 	ErrCodeInsufficientPermission = "INSUFFICIENT_PERMISSION"
 	ErrCodeOperationNotAllowed    = "OPERATION_NOT_ALLOWED"
-	
+
 	// 系统错误代码
 	ErrCodeRankingSystemError   = "RANKING_SYSTEM_ERROR"
 	ErrCodeRankingDatabaseError = "RANKING_DATABASE_ERROR"
 	ErrCodeRankingCacheError    = "RANKING_CACHE_ERROR"
-	
+
 	// 验证错误代码
 	ErrCodeRankingValidationError = "RANKING_VALIDATION_ERROR"
-	
+
 	// 并发相关错误代码
 	ErrCodeRankingConcurrencyError = "RANKING_CONCURRENCY_ERROR"
 	ErrCodeRankingLockError        = "RANKING_LOCK_ERROR"
-	
+
 	// 配置相关错误代码
 	ErrCodeRankingConfigError = "RANKING_CONFIG_ERROR"
-	
+
 	// 限流相关错误代码
 	ErrCodeRankingRateLimitError = "RANKING_RATE_LIMIT_ERROR"
-	
+
 	// 事件相关错误代码
 	ErrCodeRankingEventError = "RANKING_EVENT_ERROR"
 )
@@ -869,11 +870,11 @@ func IsSystemError(err error) bool {
 
 // ErrorRecoveryStrategy 错误恢复策略
 type ErrorRecoveryStrategy struct {
-	MaxRetries    int           `json:"max_retries"`
-	RetryInterval time.Duration `json:"retry_interval"`
-	BackoffFactor float64       `json:"backoff_factor"`
-	MaxInterval   time.Duration `json:"max_interval"`
-	RecoveryActions []string    `json:"recovery_actions"`
+	MaxRetries      int           `json:"max_retries"`
+	RetryInterval   time.Duration `json:"retry_interval"`
+	BackoffFactor   float64       `json:"backoff_factor"`
+	MaxInterval     time.Duration `json:"max_interval"`
+	RecoveryActions []string      `json:"recovery_actions"`
 }
 
 // GetRecoveryStrategy 获取错误恢复策略
@@ -881,10 +882,10 @@ func GetRecoveryStrategy(err error) *ErrorRecoveryStrategy {
 	if !IsRankingError(err) {
 		return nil
 	}
-	
+
 	rankingErr := err.(RankingError)
 	code := rankingErr.GetCode()
-	
+
 	switch code {
 	case ErrCodeRankingSystemError, ErrCodeRankingDatabaseError:
 		return &ErrorRecoveryStrategy{

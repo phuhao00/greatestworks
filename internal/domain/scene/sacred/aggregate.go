@@ -1,7 +1,7 @@
 package sacred
 
 import (
-	"fmt"
+	"errors"
 	"time"
 )
 
@@ -90,16 +90,16 @@ func (s *SacredPlaceAggregate) SetName(name string) error {
 	if name == "" {
 		return ErrInvalidSacredName
 	}
-	
+
 	oldName := s.name
 	s.name = name
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布名称变更事件
 	event := NewSacredNameChangedEvent(s.id, oldName, name)
 	s.addEvent(event)
-	
+
 	return nil
 }
 
@@ -115,22 +115,22 @@ func (s *SacredPlaceAggregate) UpgradeLevel(experience int) error {
 	if experience <= 0 {
 		return ErrInvalidExperience
 	}
-	
+
 	oldLevel := s.level.Level
 	newLevel, err := s.level.AddExperience(experience)
 	if err != nil {
 		return err
 	}
-	
+
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 如果等级提升，发布升级事件
 	if newLevel > oldLevel {
 		event := NewSacredLevelUpEvent(s.id, oldLevel, newLevel, s.level.Experience)
 		s.addEvent(event)
 	}
-	
+
 	return nil
 }
 
@@ -139,24 +139,24 @@ func (s *SacredPlaceAggregate) AddChallenge(challenge *Challenge) error {
 	if challenge == nil {
 		return ErrInvalidChallenge
 	}
-	
+
 	if _, exists := s.challenges[challenge.GetID()]; exists {
 		return ErrChallengeAlreadyExists
 	}
-	
+
 	// 检查等级要求
 	if challenge.GetRequiredLevel() > s.level.Level {
-		return ErrInsufficientSacredLevel
+		return errors.New("challenge level is too high")
 	}
-	
+
 	s.challenges[challenge.GetID()] = challenge
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布挑战添加事件
 	event := NewChallengeAddedEvent(s.id, challenge.GetID(), challenge.GetType(), challenge.GetDifficulty())
 	s.addEvent(event)
-	
+
 	return nil
 }
 
@@ -166,20 +166,20 @@ func (s *SacredPlaceAggregate) RemoveChallenge(challengeID string) error {
 	if !exists {
 		return ErrChallengeNotFound
 	}
-	
+
 	// 检查挑战是否正在进行
 	if challenge.GetStatus() == ChallengeStatusInProgress {
 		return ErrChallengeInProgress
 	}
-	
+
 	delete(s.challenges, challengeID)
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布挑战移除事件
 	event := NewChallengeRemovedEvent(s.id, challengeID, challenge.GetType())
 	s.addEvent(event)
-	
+
 	return nil
 }
 
@@ -189,30 +189,30 @@ func (s *SacredPlaceAggregate) StartChallenge(challengeID, playerID string) (*Ch
 	if !exists {
 		return nil, ErrChallengeNotFound
 	}
-	
+
 	// 检查挑战状态
 	if challenge.GetStatus() != ChallengeStatusAvailable {
 		return nil, ErrChallengeNotAvailable
 	}
-	
+
 	// 检查冷却时间
 	if !challenge.CanStart() {
 		return nil, ErrChallengeOnCooldown
 	}
-	
+
 	// 开始挑战
 	result, err := challenge.Start(playerID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布挑战开始事件
 	event := NewChallengeStartedEvent(s.id, challengeID, playerID, challenge.GetType())
 	s.addEvent(event)
-	
+
 	return result, nil
 }
 
@@ -222,25 +222,25 @@ func (s *SacredPlaceAggregate) CompleteChallenge(challengeID, playerID string, s
 	if !exists {
 		return nil, ErrChallengeNotFound
 	}
-	
+
 	// 完成挑战
 	reward, err := challenge.Complete(playerID, success, score)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 如果成功，增加经验
 	if success {
 		s.UpgradeLevel(reward.Experience)
 	}
-	
+
 	// 发布挑战完成事件
 	event := NewChallengeCompletedEvent(s.id, challengeID, playerID, success, score, reward)
 	s.addEvent(event)
-	
+
 	return reward, nil
 }
 
@@ -249,19 +249,19 @@ func (s *SacredPlaceAggregate) AddBlessing(blessing *Blessing) error {
 	if blessing == nil {
 		return ErrInvalidBlessing
 	}
-	
+
 	if _, exists := s.blessings[blessing.GetID()]; exists {
 		return ErrBlessingAlreadyExists
 	}
-	
+
 	s.blessings[blessing.GetID()] = blessing
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布祝福添加事件
 	event := NewBlessingAddedEvent(s.id, blessing.GetID(), blessing.GetType(), blessing.GetDuration())
 	s.addEvent(event)
-	
+
 	return nil
 }
 
@@ -271,15 +271,15 @@ func (s *SacredPlaceAggregate) RemoveBlessing(blessingID string) error {
 	if !exists {
 		return ErrBlessingNotFound
 	}
-	
+
 	delete(s.blessings, blessingID)
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布祝福移除事件
 	event := NewBlessingRemovedEvent(s.id, blessingID, blessing.GetType())
 	s.addEvent(event)
-	
+
 	return nil
 }
 
@@ -289,25 +289,25 @@ func (s *SacredPlaceAggregate) ActivateBlessing(blessingID, playerID string) (*B
 	if !exists {
 		return nil, ErrBlessingNotFound
 	}
-	
+
 	// 检查祝福状态
 	if !blessing.IsAvailable() {
 		return nil, ErrBlessingNotAvailable
 	}
-	
+
 	// 激活祝福
 	effect, err := blessing.Activate(playerID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布祝福激活事件
 	event := NewBlessingActivatedEvent(s.id, blessingID, playerID, blessing.GetType(), effect)
 	s.addEvent(event)
-	
+
 	return effect, nil
 }
 
@@ -366,16 +366,16 @@ func (s *SacredPlaceAggregate) SetStatus(status SacredStatus) error {
 	if !status.IsValid() {
 		return ErrInvalidSacredStatus
 	}
-	
+
 	oldStatus := s.status
 	s.status = status
 	s.updatedAt = time.Now()
 	s.version++
-	
+
 	// 发布状态变更事件
 	event := NewSacredStatusChangedEvent(s.id, oldStatus, status)
 	s.addEvent(event)
-	
+
 	return nil
 }
 
@@ -404,7 +404,7 @@ func (s *SacredPlaceAggregate) CanAccess(playerID string) bool {
 	if !s.IsActive() {
 		return false
 	}
-	
+
 	// 检查是否为拥有者或有权限
 	return s.owner == playerID || s.hasAccessPermission(playerID)
 }
@@ -421,19 +421,19 @@ func (s *SacredPlaceAggregate) GetStatistics() *SacredStatistics {
 	totalChallenges := len(s.challenges)
 	completedChallenges := 0
 	activeBlessings := 0
-	
+
 	for _, challenge := range s.challenges {
 		if challenge.GetStatus() == ChallengeStatusCompleted {
 			completedChallenges++
 		}
 	}
-	
+
 	for _, blessing := range s.blessings {
 		if blessing.IsActive() {
 			activeBlessings++
 		}
 	}
-	
+
 	return &SacredStatistics{
 		SacredID:            s.id,
 		Level:               s.level.Level,
@@ -478,10 +478,10 @@ func (s *SacredPlaceAggregate) ToMap() map[string]interface{} {
 type SacredStatus int
 
 const (
-	SacredStatusActive   SacredStatus = iota + 1 // 激活
-	SacredStatusInactive                         // 未激活
-	SacredStatusLocked                           // 锁定
-	SacredStatusMaintenance                      // 维护中
+	SacredStatusActive      SacredStatus = iota + 1 // 激活
+	SacredStatusInactive                            // 未激活
+	SacredStatusLocked                              // 锁定
+	SacredStatusMaintenance                         // 维护中
 )
 
 // String 返回状态字符串
@@ -517,20 +517,20 @@ type SacredStatistics struct {
 	LastActiveAt        time.Time
 }
 
-// 相关错误定义
-var (
-	ErrInvalidSacredName      = fmt.Errorf("invalid sacred name")
-	ErrInvalidExperience      = fmt.Errorf("invalid experience")
-	ErrInvalidChallenge       = fmt.Errorf("invalid challenge")
-	ErrChallengeAlreadyExists = fmt.Errorf("challenge already exists")
-	ErrInsufficientSacredLevel = fmt.Errorf("insufficient sacred level")
-	ErrChallengeNotFound      = fmt.Errorf("challenge not found")
-	ErrChallengeInProgress    = fmt.Errorf("challenge in progress")
-	ErrChallengeNotAvailable  = fmt.Errorf("challenge not available")
-	ErrChallengeOnCooldown    = fmt.Errorf("challenge on cooldown")
-	ErrInvalidBlessing        = fmt.Errorf("invalid blessing")
-	ErrBlessingAlreadyExists  = fmt.Errorf("blessing already exists")
-	ErrBlessingNotFound       = fmt.Errorf("blessing not found")
-	ErrBlessingNotAvailable   = fmt.Errorf("blessing not available")
-	ErrInvalidSacredStatus    = fmt.Errorf("invalid sacred status")
-)
+// 相关错误定义 - 错误定义在errors.go中
+// var (
+// 	ErrInvalidSacredName      = fmt.Errorf("invalid sacred name")
+// 	ErrInvalidExperience      = fmt.Errorf("invalid experience")
+// 	ErrInvalidChallenge       = fmt.Errorf("invalid challenge")
+// 	ErrChallengeAlreadyExists = fmt.Errorf("challenge already exists")
+// 	ErrInsufficientSacredLevel = fmt.Errorf("insufficient sacred level")
+// 	ErrChallengeNotFound      = fmt.Errorf("challenge not found")
+// 	ErrChallengeInProgress    = fmt.Errorf("challenge in progress")
+// 	ErrChallengeNotAvailable  = fmt.Errorf("challenge not available")
+// 	ErrChallengeOnCooldown    = fmt.Errorf("challenge on cooldown")
+// 	ErrInvalidBlessing        = fmt.Errorf("invalid blessing")
+// 	ErrBlessingAlreadyExists  = fmt.Errorf("blessing already exists")
+// 	ErrBlessingNotFound       = fmt.Errorf("blessing not found")
+// 	ErrBlessingNotAvailable   = fmt.Errorf("blessing not available")
+// 	ErrInvalidSacredStatus    = fmt.Errorf("invalid sacred status")
+// )

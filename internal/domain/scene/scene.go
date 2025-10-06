@@ -1,7 +1,8 @@
 package scene
 
 import (
-	"errors"
+	// "errors"
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -9,25 +10,25 @@ import (
 
 // Scene 场景聚合根
 type Scene struct {
-	id          string
-	name        string
-	sceneType   SceneType
-	status      SceneStatus
-	width       float64
-	height      float64
-	maxPlayers  int
+	id             string
+	name           string
+	sceneType      SceneType
+	status         SceneStatus
+	width          float64
+	height         float64
+	maxPlayers     int
 	currentPlayers int
-	entities    map[string]Entity
-	players     map[string]*Player
-	npcs        map[string]*NPC
-	monsters    map[string]*Monster
-	items       map[string]*Item
-	portals     map[string]*Portal
-	aoi         *AOIManager
-	spawnPoints []*SpawnPoint
-	lastUpdate  time.Time
-	events      []DomainEvent
-	mu          sync.RWMutex
+	entities       map[string]Entity
+	players        map[string]*Player
+	npcs           map[string]*NPC
+	monsters       map[string]*Monster
+	items          map[string]*Item
+	portals        map[string]*Portal
+	aoi            *AOIManager
+	spawnPoints    []*SpawnPoint
+	lastUpdate     time.Time
+	events         []DomainEvent
+	mu             sync.RWMutex
 }
 
 // NewScene 创建新场景
@@ -158,15 +159,15 @@ const (
 
 // NPC 非玩家角色实体
 type NPC struct {
-	id         string
-	name       string
-	npcType    NPCType
-	position   *Position
-	health     int64
-	maxHealth  int64
-	status     NPCStatus
-	ai         *AIBehavior
-	active     bool
+	id        string
+	name      string
+	npcType   NPCType
+	position  *Position
+	health    int64
+	maxHealth int64
+	status    NPCStatus
+	ai        *AIBehavior
+	active    bool
 }
 
 // NPCType NPC类型
@@ -194,18 +195,18 @@ const (
 
 // Monster 怪物实体
 type Monster struct {
-	id         string
-	name       string
+	id          string
+	name        string
 	monsterType MonsterType
-	position   *Position
-	health     int64
-	maxHealth  int64
-	level      int
-	status     MonsterStatus
-	ai         *AIBehavior
-	spawnPoint *SpawnPoint
-	lastAttack time.Time
-	active     bool
+	position    *Position
+	health      int64
+	maxHealth   int64
+	level       int
+	status      MonsterStatus
+	ai          *AIBehavior
+	spawnPoint  *SpawnPoint
+	lastAttack  time.Time
+	active      bool
 }
 
 // MonsterType 怪物类型
@@ -245,28 +246,28 @@ type Item struct {
 
 // Portal 传送门实体
 type Portal struct {
-	id            string
-	name          string
-	position      *Position
-	targetSceneID string
+	id             string
+	name           string
+	position       *Position
+	targetSceneID  string
 	targetPosition *Position
-	requiredLevel int
-	requiredItems []string
-	cost          int64
-	active        bool
+	requiredLevel  int
+	requiredItems  []string
+	cost           int64
+	active         bool
 }
 
 // SpawnPoint 刷新点
 type SpawnPoint struct {
-	id         string
-	position   *Position
-	spawnType  SpawnType
-	targetID   string // 刷新的实体ID
-	interval   time.Duration
-	lastSpawn  time.Time
-	maxCount   int
+	id           string
+	position     *Position
+	spawnType    SpawnType
+	targetID     string // 刷新的实体ID
+	interval     time.Duration
+	lastSpawn    time.Time
+	maxCount     int
 	currentCount int
-	active     bool
+	active       bool
 }
 
 // SpawnType 刷新类型
@@ -281,14 +282,14 @@ const (
 
 // AIBehavior AI行为
 type AIBehavior struct {
-	behaviorType BehaviorType
-	patrolPath   []*Position
+	behaviorType  BehaviorType
+	patrolPath    []*Position
 	currentTarget string
-	aggroRange   float64
-	chaseRange   float64
-	returnRange  float64
-	attackRange  float64
-	lastUpdate   time.Time
+	aggroRange    float64
+	chaseRange    float64
+	returnRange   float64
+	attackRange   float64
+	lastUpdate    time.Time
 }
 
 // BehaviorType 行为类型
@@ -305,12 +306,12 @@ const (
 
 // AOIManager AOI管理器
 type AOIManager struct {
-	width      float64
-	height     float64
-	gridSize   float64
-	grids      map[string]*AOIGrid
-	entities   map[string]*AOIEntity
-	mu         sync.RWMutex
+	width    float64
+	height   float64
+	gridSize float64
+	grids    map[string]*AOIGrid
+	entities map[string]*AOIEntity
+	mu       sync.RWMutex
 }
 
 // NewAOIManager 创建AOI管理器
@@ -356,9 +357,9 @@ type PlayerEnteredEvent struct {
 	occurredAt time.Time
 }
 
-func (e PlayerEnteredEvent) EventType() string   { return "player.entered" }
+func (e PlayerEnteredEvent) EventType() string     { return "player.entered" }
 func (e PlayerEnteredEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e PlayerEnteredEvent) SceneID() string     { return e.sceneID }
+func (e PlayerEnteredEvent) SceneID() string       { return e.sceneID }
 
 // PlayerLeftEvent 玩家离开场景事件
 type PlayerLeftEvent struct {
@@ -368,23 +369,23 @@ type PlayerLeftEvent struct {
 	occurredAt time.Time
 }
 
-func (e PlayerLeftEvent) EventType() string   { return "player.left" }
+func (e PlayerLeftEvent) EventType() string     { return "player.left" }
 func (e PlayerLeftEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e PlayerLeftEvent) SceneID() string     { return e.sceneID }
+func (e PlayerLeftEvent) SceneID() string       { return e.sceneID }
 
 // EntityMovedEvent 实体移动事件
 type EntityMovedEvent struct {
-	sceneID      string
-	entityID     string
-	entityType   EntityType
-	oldPosition  *Position
-	newPosition  *Position
-	occurredAt   time.Time
+	sceneID     string
+	entityID    string
+	entityType  EntityType
+	oldPosition *Position
+	newPosition *Position
+	occurredAt  time.Time
 }
 
-func (e EntityMovedEvent) EventType() string   { return "entity.moved" }
+func (e EntityMovedEvent) EventType() string     { return "entity.moved" }
 func (e EntityMovedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e EntityMovedEvent) SceneID() string     { return e.sceneID }
+func (e EntityMovedEvent) SceneID() string       { return e.sceneID }
 
 // MonsterSpawnedEvent 怪物刷新事件
 type MonsterSpawnedEvent struct {
@@ -395,9 +396,9 @@ type MonsterSpawnedEvent struct {
 	occurredAt  time.Time
 }
 
-func (e MonsterSpawnedEvent) EventType() string   { return "monster.spawned" }
+func (e MonsterSpawnedEvent) EventType() string     { return "monster.spawned" }
 func (e MonsterSpawnedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e MonsterSpawnedEvent) SceneID() string     { return e.sceneID }
+func (e MonsterSpawnedEvent) SceneID() string       { return e.sceneID }
 
 // ItemDroppedEvent 物品掉落事件
 type ItemDroppedEvent struct {
@@ -409,9 +410,9 @@ type ItemDroppedEvent struct {
 	occurredAt time.Time
 }
 
-func (e ItemDroppedEvent) EventType() string   { return "item.dropped" }
+func (e ItemDroppedEvent) EventType() string     { return "item.dropped" }
 func (e ItemDroppedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e ItemDroppedEvent) SceneID() string     { return e.sceneID }
+func (e ItemDroppedEvent) SceneID() string       { return e.sceneID }
 
 // Scene 业务方法实现
 

@@ -2,16 +2,16 @@ package hangup
 
 import (
 	"fmt"
-	"time"
 	"math"
+	"time"
 )
 
 // HangupService 挂机领域服务
 type HangupService struct {
-	config             *HangupConfig
-	locationTemplates  map[string]*LocationTemplate
-	efficiencyRules    []EfficiencyRule
-	rewardCalculators  map[LocationType]RewardCalculator
+	config            *HangupConfig
+	locationTemplates map[string]*LocationTemplate
+	efficiencyRules   []EfficiencyRule
+	rewardCalculators map[LocationType]RewardCalculator
 }
 
 // NewHangupService 创建挂机服务
@@ -26,16 +26,16 @@ func NewHangupService(config *HangupConfig) *HangupService {
 
 // LocationTemplate 地点模板
 type LocationTemplate struct {
-	ID              string
-	Name            string
-	Description     string
-	LocationType    LocationType
-	RequiredLevel   int
-	RequiredQuests  []string
-	BaseExpRate     float64
-	BaseGoldRate    float64
-	SpecialItems    []ItemDrop
-	MaxOfflineHours int
+	ID               string
+	Name             string
+	Description      string
+	LocationType     LocationType
+	RequiredLevel    int
+	RequiredQuests   []string
+	BaseExpRate      float64
+	BaseGoldRate     float64
+	SpecialItems     []ItemDrop
+	MaxOfflineHours  int
 	UnlockConditions []UnlockCondition
 }
 
@@ -46,17 +46,17 @@ func (lt *LocationTemplate) CreateLocation() *HangupLocation {
 	location.SetBaseExpRate(lt.BaseExpRate)
 	location.SetBaseGoldRate(lt.BaseGoldRate)
 	location.SetMaxOfflineHours(lt.MaxOfflineHours)
-	
+
 	// 添加所需任务
 	for _, questID := range lt.RequiredQuests {
 		location.AddRequiredQuest(questID)
 	}
-	
+
 	// 添加特殊物品
 	for _, item := range lt.SpecialItems {
 		location.AddSpecialItem(item)
 	}
-	
+
 	return location
 }
 
@@ -71,7 +71,7 @@ type UnlockCondition struct {
 type EfficiencyRule struct {
 	Name        string
 	Condition   func(*HangupAggregate) bool
-	BonusType   string  // "vip", "equipment", "skill", "guild", "event"
+	BonusType   string // "vip", "equipment", "skill", "guild", "event"
 	BonusValue  float64
 	Description string
 }
@@ -87,25 +87,25 @@ type DefaultRewardCalculator struct{}
 // CalculateReward 计算奖励
 func (drc *DefaultRewardCalculator) CalculateReward(location *HangupLocation, duration time.Duration, bonus *EfficiencyBonus) *BaseReward {
 	hours := duration.Hours()
-	
+
 	// 基础奖励计算
 	baseExp := int64(hours * 100 * location.GetBaseExpRate())
 	baseGold := int64(hours * 50 * location.GetBaseGoldRate())
-	
+
 	// 应用地点类型倍率
 	locationMultiplier := location.GetLocationType().GetExpMultiplier()
 	baseExp = int64(float64(baseExp) * locationMultiplier)
 	baseGold = int64(float64(baseGold) * location.GetLocationType().GetGoldMultiplier())
-	
+
 	baseReward := NewBaseReward(baseExp, baseGold)
-	
+
 	// 计算物品掉落
 	for _, itemDrop := range location.GetSpecialItems() {
 		if itemDrop.ShouldDrop(hours) {
 			baseReward.AddItem(NewRewardItem(itemDrop.ItemID, itemDrop.CalculateQuantity(hours)))
 		}
 	}
-	
+
 	return baseReward
 }
 
@@ -144,27 +144,27 @@ func (hs *HangupService) CalculateOfflineReward(hangup *HangupAggregate, offline
 	if hangup.GetCurrentLocation() == nil {
 		return nil, ErrNoHangupLocationSet
 	}
-	
+
 	// 限制最大离线时间
 	maxOfflineTime := time.Duration(hs.config.GetMaxOfflineHours()) * time.Hour
 	if offlineDuration > maxOfflineTime {
 		offlineDuration = maxOfflineTime
 	}
-	
+
 	// 应用离线衰减
 	offlineMultiplier := hs.config.GetOfflineDecayRate()
 	effectiveDuration := time.Duration(float64(offlineDuration) * offlineMultiplier)
-	
+
 	// 获取奖励计算器
 	location := hangup.GetCurrentLocation()
 	calculator := hs.getRewardCalculator(location.GetLocationType())
-	
+
 	// 计算基础奖励
 	baseReward := calculator.CalculateReward(location, effectiveDuration, hangup.GetEfficiencyBonus())
-	
+
 	// 应用效率加成
 	finalReward := hangup.GetEfficiencyBonus().ApplyBonus(baseReward)
-	
+
 	// 创建离线奖励
 	offlineReward := &OfflineReward{
 		Experience:      finalReward.Experience,
@@ -175,14 +175,14 @@ func (hs *HangupService) CalculateOfflineReward(hangup *HangupAggregate, offline
 		CalculatedAt:    time.Now(),
 		IsClaimed:       false,
 	}
-	
+
 	return offlineReward, nil
 }
 
 // UpdateEfficiencyBonus 更新效率加成
 func (hs *HangupService) UpdateEfficiencyBonus(hangup *HangupAggregate, playerLevel int, vipLevel int, equipmentBonus float64) {
 	bonus := NewEfficiencyBonus()
-	
+
 	// 应用所有效率规则
 	for _, rule := range hs.efficiencyRules {
 		if rule.Condition(hangup) {
@@ -202,14 +202,14 @@ func (hs *HangupService) UpdateEfficiencyBonus(hangup *HangupAggregate, playerLe
 			}
 		}
 	}
-	
+
 	// 设置VIP加成
 	vipBonus := hs.calculateVipBonus(vipLevel)
 	bonus.SetVipBonus(vipBonus)
-	
+
 	// 设置装备加成
 	bonus.SetEquipmentBonus(equipmentBonus)
-	
+
 	hangup.UpdateEfficiencyBonus(bonus)
 }
 
@@ -219,24 +219,24 @@ func (hs *HangupService) ValidateLocationUnlock(playerID string, locationID stri
 	if template == nil {
 		return fmt.Errorf("location template not found: %s", locationID)
 	}
-	
+
 	// 检查等级要求
 	if playerLevel < template.RequiredLevel {
 		return fmt.Errorf("player level %d is below required level %d", playerLevel, template.RequiredLevel)
 	}
-	
+
 	// 检查任务要求
 	completedQuestMap := make(map[string]bool)
 	for _, questID := range completedQuests {
 		completedQuestMap[questID] = true
 	}
-	
+
 	for _, requiredQuest := range template.RequiredQuests {
 		if !completedQuestMap[requiredQuest] {
 			return fmt.Errorf("required quest not completed: %s", requiredQuest)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -245,22 +245,22 @@ func (hs *HangupService) CalculateOptimalLocation(hangup *HangupAggregate, avail
 	if len(availableLocations) == 0 {
 		return nil
 	}
-	
+
 	var bestLocation *HangupLocation
 	var bestScore float64
-	
+
 	for _, location := range availableLocations {
 		if !location.IsUnlocked() || !location.IsActive() {
 			continue
 		}
-		
+
 		score := hs.calculateLocationScore(location, targetType)
 		if bestLocation == nil || score > bestScore {
 			bestLocation = location
 			bestScore = score
 		}
 	}
-	
+
 	return bestLocation
 }
 
@@ -269,26 +269,26 @@ func (hs *HangupService) CalculateHangupEfficiency(hangup *HangupAggregate) floa
 	if hangup.GetCurrentLocation() == nil {
 		return 0
 	}
-	
+
 	location := hangup.GetCurrentLocation()
 	bonus := hangup.GetEfficiencyBonus()
-	
+
 	// 基础效率
 	baseEfficiency := location.GetBaseExpRate() + location.GetBaseGoldRate()
-	
+
 	// 应用加成
 	totalBonus := bonus.GetTotalBonus()
-	
+
 	// 地点类型加成
 	locationBonus := location.GetLocationType().GetExpMultiplier() + location.GetLocationType().GetGoldMultiplier()
-	
+
 	return baseEfficiency * totalBonus * locationBonus
 }
 
 // GetHangupRecommendations 获取挂机建议
 func (hs *HangupService) GetHangupRecommendations(hangup *HangupAggregate, playerLevel int) []HangupRecommendation {
 	recommendations := make([]HangupRecommendation, 0)
-	
+
 	// 检查当前地点是否最优
 	currentLocation := hangup.GetCurrentLocation()
 	if currentLocation != nil {
@@ -302,7 +302,7 @@ func (hs *HangupService) GetHangupRecommendations(hangup *HangupAggregate, playe
 			})
 		}
 	}
-	
+
 	// 检查效率加成
 	bonus := hangup.GetEfficiencyBonus()
 	if bonus.GetTotalBonus() < 1.5 {
@@ -313,11 +313,11 @@ func (hs *HangupService) GetHangupRecommendations(hangup *HangupAggregate, playe
 			Priority:    "high",
 		})
 	}
-	
+
 	// 检查每日挂机时间
 	dailyTime := hangup.GetDailyHangupTime()
 	maxDailyTime := time.Duration(hs.config.GetMaxDailyHangupHours()) * time.Hour
-	if dailyTime < maxDailyTime*0.8 {
+	if dailyTime < time.Duration(float64(maxDailyTime)*0.8) { //todo need check it correct
 		recommendations = append(recommendations, HangupRecommendation{
 			Type:        "time_optimization",
 			Title:       "增加挂机时间",
@@ -325,7 +325,7 @@ func (hs *HangupService) GetHangupRecommendations(hangup *HangupAggregate, playe
 			Priority:    "low",
 		})
 	}
-	
+
 	return recommendations
 }
 
@@ -344,37 +344,37 @@ func (hs *HangupService) calculateVipBonus(vipLevel int) float64 {
 	if vipLevel <= 0 {
 		return 0
 	}
-	
+
 	// VIP等级越高，加成越大，但有递减效应
 	bonus := float64(vipLevel) * 0.1 // 每级10%加成
 	if vipLevel > 10 {
 		bonus = 1.0 + math.Log(float64(vipLevel-10))*0.1 // 超过10级后递减
 	}
-	
+
 	return bonus
 }
 
 // calculateLocationScore 计算地点评分
 func (hs *HangupService) calculateLocationScore(location *HangupLocation, targetType string) float64 {
 	baseScore := location.GetBaseExpRate() + location.GetBaseGoldRate()
-	
+
 	// 根据目标类型调整评分
 	switch targetType {
 	case "experience":
-		baseScore = location.GetBaseExpRate() * 2 + location.GetBaseGoldRate() * 0.5
+		baseScore = location.GetBaseExpRate()*2 + location.GetBaseGoldRate()*0.5
 	case "gold":
-		baseScore = location.GetBaseGoldRate() * 2 + location.GetBaseExpRate() * 0.5
+		baseScore = location.GetBaseGoldRate()*2 + location.GetBaseExpRate()*0.5
 	case "items":
 		baseScore += float64(len(location.GetSpecialItems())) * 0.5
 	default:
 		// 平衡型
 		baseScore = location.GetBaseExpRate() + location.GetBaseGoldRate()
 	}
-	
+
 	// 地点类型加成
 	locationMultiplier := location.GetLocationType().GetExpMultiplier() + location.GetLocationType().GetGoldMultiplier()
 	baseScore *= locationMultiplier
-	
+
 	return baseScore
 }
 
@@ -397,7 +397,7 @@ func (hs *HangupService) InitializeDefaultLocations() {
 		},
 	}
 	hs.RegisterLocationTemplate(beginnerForest)
-	
+
 	// 魔法洞穴
 	magicCave := &LocationTemplate{
 		ID:              "magic_cave",
@@ -415,7 +415,7 @@ func (hs *HangupService) InitializeDefaultLocations() {
 		},
 	}
 	hs.RegisterLocationTemplate(magicCave)
-	
+
 	// 古代遗迹
 	ancientRuins := &LocationTemplate{
 		ID:              "ancient_ruins",
@@ -447,7 +447,7 @@ func (hs *HangupService) InitializeDefaultRules() {
 		BonusValue:  0.0, // 将在UpdateEfficiencyBonus中计算
 		Description: "VIP等级加成",
 	})
-	
+
 	// 长时间挂机加成
 	hs.AddEfficiencyRule(EfficiencyRule{
 		Name: "Long Session Bonus",
@@ -458,7 +458,7 @@ func (hs *HangupService) InitializeDefaultRules() {
 		BonusValue:  0.1, // 10%加成
 		Description: "长时间挂机加成",
 	})
-	
+
 	// 连续挂机加成
 	hs.AddEfficiencyRule(EfficiencyRule{
 		Name: "Consecutive Days Bonus",

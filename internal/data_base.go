@@ -1,13 +1,11 @@
 package internal
 
-import (
-	"greatestworks/internal/note/event"
-)
+// "greatestworks/internal/note/event" // TODO: 实现事件系统
 
 type DataAsPublisher struct {
-	event.BasePublisher
+	// event.BasePublisher // TODO: 实现事件系统
 }
 
 type DataAsSubscriber struct {
-	event.BaseSubscriber
+	// event.BaseSubscriber // TODO: 实现事件系统
 }

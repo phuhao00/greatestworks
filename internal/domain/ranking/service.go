@@ -3,7 +3,6 @@ package ranking
 import (
 	"fmt"
 	"math"
-	"sort"
 	"sync"
 	"time"
 )
@@ -11,47 +10,47 @@ import (
 // RankingService 排行榜领域服务
 type RankingService struct {
 	// 依赖的仓储
-	rankingRepo     RankingRepository
-	blacklistRepo   BlacklistRepository
-	cacheRepo       RankingCacheRepository
-	statisticsRepo  RankingStatisticsRepository
-	
+	rankingRepo    RankingRepository
+	blacklistRepo  BlacklistRepository
+	cacheRepo      RankingCacheRepository
+	statisticsRepo RankingStatisticsRepository
+
 	// 配置
-	config          *RankingServiceConfig
-	
+	config *RankingServiceConfig
+
 	// 内部状态
-	mutex           sync.RWMutex
-	activeRankings  map[uint32]*RankingAggregate
-	lastCleanup     time.Time
+	mutex          sync.RWMutex
+	activeRankings map[uint32]*RankingAggregate
+	lastCleanup    time.Time
 }
 
 // RankingServiceConfig 排行榜服务配置
 type RankingServiceConfig struct {
 	// 缓存配置
-	EnableCache        bool          `json:"enable_cache"`
-	CacheTTL          time.Duration `json:"cache_ttl"`
+	EnableCache          bool          `json:"enable_cache"`
+	CacheTTL             time.Duration `json:"cache_ttl"`
 	CacheRefreshInterval time.Duration `json:"cache_refresh_interval"`
-	
+
 	// 性能配置
 	MaxConcurrentUpdates int           `json:"max_concurrent_updates"`
-	BatchSize           int           `json:"batch_size"`
-	UpdateTimeout       time.Duration `json:"update_timeout"`
-	
+	BatchSize            int           `json:"batch_size"`
+	UpdateTimeout        time.Duration `json:"update_timeout"`
+
 	// 清理配置
-	CleanupInterval     time.Duration `json:"cleanup_interval"`
+	CleanupInterval      time.Duration `json:"cleanup_interval"`
 	ExpiredDataRetention time.Duration `json:"expired_data_retention"`
-	
+
 	// 统计配置
-	EnableStatistics    bool          `json:"enable_statistics"`
-	StatisticsInterval  time.Duration `json:"statistics_interval"`
-	
+	EnableStatistics   bool          `json:"enable_statistics"`
+	StatisticsInterval time.Duration `json:"statistics_interval"`
+
 	// 奖励配置
-	EnableRewards       bool          `json:"enable_rewards"`
-	AutoDistributeRewards bool        `json:"auto_distribute_rewards"`
-	
+	EnableRewards         bool `json:"enable_rewards"`
+	AutoDistributeRewards bool `json:"auto_distribute_rewards"`
+
 	// 验证配置
-	EnableValidation    bool          `json:"enable_validation"`
-	StrictMode          bool          `json:"strict_mode"`
+	EnableValidation bool `json:"enable_validation"`
+	StrictMode       bool `json:"strict_mode"`
 }
 
 // NewRankingService 创建排行榜服务
@@ -65,7 +64,7 @@ func NewRankingService(
 	if config == nil {
 		config = DefaultRankingServiceConfig()
 	}
-	
+
 	return &RankingService{
 		rankingRepo:    rankingRepo,
 		blacklistRepo:  blacklistRepo,
@@ -83,48 +82,48 @@ func (rs *RankingService) CreateRanking(rankID uint32, name string, rankType Ran
 	if err := rs.validateCreateRankingParams(rankID, name, rankType, category, config); err != nil {
 		return nil, err
 	}
-	
+
 	// 检查排行榜是否已存在
 	existing, _ := rs.rankingRepo.FindByRankID(rankID)
 	if existing != nil {
 		return nil, NewRankingAlreadyExistsError(rankID)
 	}
-	
+
 	// 创建排行榜聚合
 	ranking := NewRankingAggregate(rankID, name, rankType, category)
-	
+
 	// 应用配置
 	if config != nil {
 		rs.applyCreateConfig(ranking, config)
 	}
-	
+
 	// 验证排行榜
 	if rs.config.EnableValidation {
 		if err := ranking.Validate(); err != nil {
 			return nil, err
 		}
 	}
-	
+
 	// 保存到仓储
 	if err := rs.rankingRepo.Save(ranking); err != nil {
 		return nil, NewRankingSystemError("repository", "failed to save ranking", err)
 	}
-	
+
 	// 添加到活跃排行榜
 	rs.mutex.Lock()
 	rs.activeRankings[rankID] = ranking
 	rs.mutex.Unlock()
-	
+
 	// 初始化缓存
 	if rs.config.EnableCache {
 		rs.initializeRankingCache(ranking)
 	}
-	
+
 	// 初始化统计
 	if rs.config.EnableStatistics {
 		rs.initializeRankingStatistics(ranking)
 	}
-	
+
 	return ranking, nil
 }
 
@@ -133,59 +132,59 @@ func (rs *RankingService) UpdatePlayerScore(rankID uint32, playerID uint64, scor
 	start := time.Now()
 	result := NewRankingOperationResult(RankingOperationUpdate, rankID, false)
 	defer result.SetDuration(start)
-	
+
 	// 获取排行榜
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		result.SetError(err)
 		return result, err
 	}
-	
+
 	// 获取旧排名和分数
 	oldEntry, oldRank, _ := ranking.GetPlayerRank(playerID)
 	var oldScore *int64
 	if oldEntry != nil {
 		oldScore = &oldEntry.Score
 	}
-	
+
 	// 更新分数
 	err = ranking.UpdateScore(playerID, score, metadata)
 	if err != nil {
 		result.SetError(err)
 		return result, err
 	}
-	
+
 	// 获取新排名
-	newEntry, newRank, _ := ranking.GetPlayerRank(playerID)
-	
+	_, newRank, _ := ranking.GetPlayerRank(playerID)
+
 	// 保存排行榜
 	if err := rs.rankingRepo.Update(ranking); err != nil {
 		err = NewRankingSystemError("repository", "failed to update ranking", err)
 		result.SetError(err)
 		return result, err
 	}
-	
+
 	// 更新缓存
 	if rs.config.EnableCache {
 		rs.updateRankingCache(ranking)
 	}
-	
+
 	// 更新统计
 	if rs.config.EnableStatistics {
 		rs.updateRankingStatistics(ranking)
 	}
-	
+
 	// 检查奖励
 	if rs.config.EnableRewards && rs.config.AutoDistributeRewards {
 		rs.checkAndDistributeRewards(ranking, playerID, oldRank, newRank)
 	}
-	
+
 	// 设置结果
 	result.Success = true
 	result.SetPlayerInfo(playerID, &oldRank, &newRank, oldScore, &score)
 	result.AffectedCount = 1
 	result.SetMessage(fmt.Sprintf("Player %d score updated from %v to %d", playerID, oldScore, score))
-	
+
 	return result, nil
 }
 
@@ -195,37 +194,37 @@ func (rs *RankingService) GetRanking(rankID uint32, start, end int64, filter *Ra
 	if err := ValidateRankingRange(start, end); err != nil {
 		return nil, err
 	}
-	
+
 	// 尝试从缓存获取
 	if rs.config.EnableCache {
 		if entries, err := rs.getRankingFromCache(rankID, start, end, filter); err == nil {
 			return entries, nil
 		}
 	}
-	
+
 	// 从仓储获取
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 应用过滤器
 	excludeBlacklisted := filter == nil || filter.ExcludeBlacklisted
 	entries, err := ranking.GetRanking(start, end, excludeBlacklisted)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 应用额外过滤
 	if filter != nil {
 		entries = rs.applyRankingFilter(entries, filter)
 	}
-	
+
 	// 更新缓存
 	if rs.config.EnableCache {
 		rs.cacheRankingData(rankID, start, end, entries)
 	}
-	
+
 	return entries, nil
 }
 
@@ -237,23 +236,23 @@ func (rs *RankingService) GetPlayerRank(rankID uint32, playerID uint64) (*RankEn
 			return entry, rank, nil
 		}
 	}
-	
+
 	// 从仓储获取
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		return nil, -1, err
 	}
-	
+
 	entry, rank, err := ranking.GetPlayerRank(playerID)
 	if err != nil {
 		return nil, -1, err
 	}
-	
+
 	// 更新缓存
 	if rs.config.EnableCache {
 		rs.cachePlayerRank(rankID, playerID, entry, rank)
 	}
-	
+
 	return entry, rank, nil
 }
 
@@ -264,13 +263,13 @@ func (rs *RankingService) AddToBlacklist(rankID uint32, playerID uint64, reason 
 	if err != nil {
 		return err
 	}
-	
+
 	// 添加到黑名单
 	err = ranking.AddToBlacklist(playerID, reason)
 	if err != nil {
 		return err
 	}
-	
+
 	// 如果是临时黑名单，设置过期时间
 	if duration != nil {
 		blacklistEntry, exists := ranking.Blacklist.GetBlacklistEntry(playerID)
@@ -278,18 +277,18 @@ func (rs *RankingService) AddToBlacklist(rankID uint32, playerID uint64, reason 
 			blacklistEntry.SetExpiration(time.Now().Add(*duration))
 		}
 	}
-	
+
 	// 保存排行榜
 	if err := rs.rankingRepo.Update(ranking); err != nil {
 		return NewRankingSystemError("repository", "failed to update ranking", err)
 	}
-	
+
 	// 清除相关缓存
 	if rs.config.EnableCache {
 		rs.clearPlayerCache(rankID, playerID)
 		rs.clearRankingCache(rankID)
 	}
-	
+
 	return nil
 }
 
@@ -300,24 +299,24 @@ func (rs *RankingService) RemoveFromBlacklist(rankID uint32, playerID uint64) er
 	if err != nil {
 		return err
 	}
-	
+
 	// 从黑名单移除
 	err = ranking.RemoveFromBlacklist(playerID)
 	if err != nil {
 		return err
 	}
-	
+
 	// 保存排行榜
 	if err := rs.rankingRepo.Update(ranking); err != nil {
 		return NewRankingSystemError("repository", "failed to update ranking", err)
 	}
-	
+
 	// 清除相关缓存
 	if rs.config.EnableCache {
 		rs.clearPlayerCache(rankID, playerID)
 		rs.clearRankingCache(rankID)
 	}
-	
+
 	return nil
 }
 
@@ -326,46 +325,46 @@ func (rs *RankingService) ResetRanking(rankID uint32) (*RankingOperationResult, 
 	start := time.Now()
 	result := NewRankingOperationResult(RankingOperationReset, rankID, false)
 	defer result.SetDuration(start)
-	
+
 	// 获取排行榜
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		result.SetError(err)
 		return result, err
 	}
-	
+
 	// 记录重置前的玩家数量
 	oldPlayerCount := ranking.TotalPlayers
-	
+
 	// 重置排行榜
 	err = ranking.Reset()
 	if err != nil {
 		result.SetError(err)
 		return result, err
 	}
-	
+
 	// 保存排行榜
 	if err := rs.rankingRepo.Update(ranking); err != nil {
 		err = NewRankingSystemError("repository", "failed to update ranking", err)
 		result.SetError(err)
 		return result, err
 	}
-	
+
 	// 清除缓存
 	if rs.config.EnableCache {
 		rs.clearRankingCache(rankID)
 	}
-	
+
 	// 重置统计
 	if rs.config.EnableStatistics {
 		rs.resetRankingStatistics(rankID)
 	}
-	
+
 	// 设置结果
 	result.Success = true
 	result.AffectedCount = oldPlayerCount
 	result.SetMessage(fmt.Sprintf("Ranking %d reset, %d players removed", rankID, oldPlayerCount))
-	
+
 	return result, nil
 }
 
@@ -377,20 +376,20 @@ func (rs *RankingService) GetRankingStatistics(rankID uint32) (*RankingStatistic
 			return stats, nil
 		}
 	}
-	
+
 	// 从排行榜获取
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	stats := ranking.GetStatistics()
-	
+
 	// 更新缓存
 	if rs.config.EnableCache {
 		rs.cacheStatistics(rankID, stats)
 	}
-	
+
 	return stats, nil
 }
 
@@ -399,59 +398,59 @@ func (rs *RankingService) BatchUpdateScores(rankID uint32, updates []*ScoreUpdat
 	if len(updates) == 0 {
 		return []*RankingOperationResult{}, nil
 	}
-	
+
 	// 获取排行榜
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	results := make([]*RankingOperationResult, len(updates))
-	
+
 	// 批量处理更新
 	for i, update := range updates {
 		start := time.Now()
 		result := NewRankingOperationResult(RankingOperationUpdate, rankID, false)
-		
+
 		// 获取旧排名和分数
 		oldEntry, oldRank, _ := ranking.GetPlayerRank(update.PlayerID)
 		var oldScore *int64
 		if oldEntry != nil {
 			oldScore = &oldEntry.Score
 		}
-		
+
 		// 更新分数
 		err := ranking.UpdateScore(update.PlayerID, update.Score, update.Metadata)
 		if err != nil {
 			result.SetError(err)
 		} else {
 			// 获取新排名
-			newEntry, newRank, _ := ranking.GetPlayerRank(update.PlayerID)
-			
+			_, newRank, _ := ranking.GetPlayerRank(update.PlayerID)
+
 			result.Success = true
 			result.SetPlayerInfo(update.PlayerID, &oldRank, &newRank, oldScore, &update.Score)
 			result.AffectedCount = 1
 		}
-		
+
 		result.SetDuration(start)
 		results[i] = result
 	}
-	
+
 	// 保存排行榜
 	if err := rs.rankingRepo.Update(ranking); err != nil {
 		return results, NewRankingSystemError("repository", "failed to update ranking", err)
 	}
-	
+
 	// 更新缓存
 	if rs.config.EnableCache {
 		rs.updateRankingCache(ranking)
 	}
-	
+
 	// 更新统计
 	if rs.config.EnableStatistics {
 		rs.updateRankingStatistics(ranking)
 	}
-	
+
 	return results, nil
 }
 
@@ -460,27 +459,27 @@ func (rs *RankingService) GetTopPlayers(rankID uint32, count int) ([]*RankEntry,
 	if count <= 0 {
 		return []*RankEntry{}, nil
 	}
-	
+
 	// 尝试从缓存获取
 	if rs.config.EnableCache {
 		if entries, err := rs.getTopPlayersFromCache(rankID, count); err == nil {
 			return entries, nil
 		}
 	}
-	
+
 	// 从排行榜获取
 	ranking, err := rs.getRanking(rankID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	entries := ranking.GetTopPlayers(count)
-	
+
 	// 更新缓存
 	if rs.config.EnableCache {
 		rs.cacheTopPlayers(rankID, count, entries)
 	}
-	
+
 	return entries, nil
 }
 
@@ -491,7 +490,7 @@ func (rs *RankingService) CalculateRankingTrend(rankID uint32, period RankPeriod
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 计算趋势数据
 	trendData := make([]*RankingTrendPoint, len(historyStats))
 	for i, stats := range historyStats {
@@ -505,14 +504,14 @@ func (rs *RankingService) CalculateRankingTrend(rankID uint32, period RankPeriod
 			ActivePlayers: stats.ActiveEntries,
 		}
 	}
-	
+
 	// 计算增长率和波动性
 	growthRate := rs.calculateGrowthRate(trendData)
 	volatility := rs.calculateVolatility(trendData)
-	
+
 	// 生成预测
 	prediction := rs.generateTrendPrediction(trendData, period)
-	
+
 	trend := &RankingTrend{
 		RankID:     rankID,
 		Period:     period,
@@ -523,37 +522,37 @@ func (rs *RankingService) CalculateRankingTrend(rankID uint32, period RankPeriod
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
-	
+
 	return trend, nil
 }
 
 // CleanupExpiredData 清理过期数据
 func (rs *RankingService) CleanupExpiredData() error {
 	now := time.Now()
-	
+
 	// 检查是否需要清理
 	if now.Sub(rs.lastCleanup) < rs.config.CleanupInterval {
 		return nil
 	}
-	
+
 	rs.mutex.Lock()
 	defer rs.mutex.Unlock()
-	
+
 	// 清理过期的黑名单条目
 	for _, ranking := range rs.activeRankings {
 		rs.cleanupExpiredBlacklistEntries(ranking)
 	}
-	
+
 	// 清理过期的缓存
 	if rs.config.EnableCache {
 		rs.cleanupExpiredCache()
 	}
-	
+
 	// 清理过期的统计数据
 	if rs.config.EnableStatistics {
 		rs.cleanupExpiredStatistics()
 	}
-	
+
 	rs.lastCleanup = now
 	return nil
 }
@@ -566,26 +565,26 @@ func (rs *RankingService) getRanking(rankID uint32) (*RankingAggregate, error) {
 	rs.mutex.RLock()
 	ranking, exists := rs.activeRankings[rankID]
 	rs.mutex.RUnlock()
-	
+
 	if exists {
 		return ranking, nil
 	}
-	
+
 	// 从仓储加载
 	ranking, err := rs.rankingRepo.FindByRankID(rankID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if ranking == nil {
 		return nil, NewRankingNotFoundError(rankID)
 	}
-	
+
 	// 添加到内存
 	rs.mutex.Lock()
 	rs.activeRankings[rankID] = ranking
 	rs.mutex.Unlock()
-	
+
 	return ranking, nil
 }
 
@@ -594,19 +593,19 @@ func (rs *RankingService) validateCreateRankingParams(rankID uint32, name string
 	if rankID == 0 {
 		return NewRankingValidationError("rank_id", rankID, "rank_id cannot be zero", "required")
 	}
-	
+
 	if name == "" {
 		return NewRankingValidationError("name", name, "name cannot be empty", "required")
 	}
-	
+
 	if !rankType.IsValid() {
 		return NewRankingValidationError("rank_type", rankType, "invalid rank type", "enum")
 	}
-	
+
 	if !category.IsValid() {
 		return NewRankingValidationError("category", category, "invalid category", "enum")
 	}
-	
+
 	return nil
 }
 
@@ -615,31 +614,31 @@ func (rs *RankingService) applyCreateConfig(ranking *RankingAggregate, config *R
 	if config.Description != nil {
 		ranking.Description = *config.Description
 	}
-	
+
 	if config.SortType != nil {
 		ranking.SortType = *config.SortType
 	}
-	
+
 	if config.MaxSize != nil {
 		ranking.MaxSize = *config.MaxSize
 	}
-	
+
 	if config.Period != nil {
 		ranking.Period = *config.Period
 	}
-	
+
 	if config.StartTime != nil {
 		ranking.StartTime = config.StartTime.Unix()
 	}
-	
+
 	if config.EndTime != nil {
 		ranking.EndTime = config.EndTime.Unix()
 	}
-	
+
 	if config.RewardConfig != nil {
 		ranking.SetRewardConfig(config.RewardConfig)
 	}
-	
+
 	if config.CacheConfig != nil {
 		ranking.SetCacheConfig(config.CacheConfig)
 	}
@@ -650,9 +649,9 @@ func (rs *RankingService) applyRankingFilter(entries []*RankEntry, filter *Ranki
 	if filter == nil {
 		return entries
 	}
-	
+
 	filteredEntries := make([]*RankEntry, 0, len(entries))
-	
+
 	for _, entry := range entries {
 		// 检查分数范围
 		if filter.MinScore != nil && entry.Score < *filter.MinScore {
@@ -661,7 +660,7 @@ func (rs *RankingService) applyRankingFilter(entries []*RankEntry, filter *Ranki
 		if filter.MaxScore != nil && entry.Score > *filter.MaxScore {
 			continue
 		}
-		
+
 		// 检查玩家ID过滤
 		if len(filter.PlayerIDs) > 0 {
 			found := false
@@ -675,7 +674,7 @@ func (rs *RankingService) applyRankingFilter(entries []*RankEntry, filter *Ranki
 				continue
 			}
 		}
-		
+
 		// 检查排除玩家ID
 		if len(filter.ExcludePlayerIDs) > 0 {
 			excluded := false
@@ -689,22 +688,22 @@ func (rs *RankingService) applyRankingFilter(entries []*RankEntry, filter *Ranki
 				continue
 			}
 		}
-		
+
 		// 检查活跃状态
 		if filter.ExcludeInactive && !entry.IsActive {
 			continue
 		}
-		
+
 		// 检查时间范围
 		if filter.TimeRange != nil {
 			if !filter.TimeRange.Contains(entry.LastUpdateTime) {
 				continue
 			}
 		}
-		
+
 		filteredEntries = append(filteredEntries, entry)
 	}
-	
+
 	return filteredEntries
 }
 
@@ -795,18 +794,18 @@ func (rs *RankingService) checkAndDistributeRewards(ranking *RankingAggregate, p
 func (rs *RankingService) cleanupExpiredBlacklistEntries(ranking *RankingAggregate) {
 	// 清理过期的黑名单条目
 	expiredPlayers := make([]uint64, 0)
-	
+
 	for playerID, entry := range ranking.Blacklist.Players {
 		if entry.IsExpired() {
 			expiredPlayers = append(expiredPlayers, playerID)
 		}
 	}
-	
+
 	// 移除过期的玩家
 	for _, playerID := range expiredPlayers {
 		ranking.RemoveFromBlacklist(playerID)
 	}
-	
+
 	// 如果有变更，保存排行榜
 	if len(expiredPlayers) > 0 {
 		rs.rankingRepo.Update(ranking)
@@ -829,14 +828,14 @@ func (rs *RankingService) calculateGrowthRate(trendData []*RankingTrendPoint) fl
 	if len(trendData) < 2 {
 		return 0.0
 	}
-	
+
 	first := trendData[0]
 	last := trendData[len(trendData)-1]
-	
+
 	if first.PlayerCount == 0 {
 		return 0.0
 	}
-	
+
 	return float64(last.PlayerCount-first.PlayerCount) / float64(first.PlayerCount) * 100
 }
 
@@ -844,27 +843,27 @@ func (rs *RankingService) calculateVolatility(trendData []*RankingTrendPoint) fl
 	if len(trendData) < 2 {
 		return 0.0
 	}
-	
+
 	// 计算分数变化的标准差
 	scores := make([]float64, len(trendData))
 	for i, point := range trendData {
 		scores[i] = point.AverageScore
 	}
-	
+
 	// 计算平均值
 	sum := 0.0
 	for _, score := range scores {
 		sum += score
 	}
 	mean := sum / float64(len(scores))
-	
+
 	// 计算方差
 	variance := 0.0
 	for _, score := range scores {
 		variance += math.Pow(score-mean, 2)
 	}
 	variance /= float64(len(scores))
-	
+
 	// 返回标准差
 	return math.Sqrt(variance)
 }
@@ -873,24 +872,24 @@ func (rs *RankingService) generateTrendPrediction(trendData []*RankingTrendPoint
 	if len(trendData) < 3 {
 		return nil
 	}
-	
+
 	// 简单的线性预测
 	last := trendData[len(trendData)-1]
 	secondLast := trendData[len(trendData)-2]
-	
+
 	playerGrowth := last.PlayerCount - secondLast.PlayerCount
 	scoreGrowth := last.AverageScore - secondLast.AverageScore
 	topScoreGrowth := last.TopScore - secondLast.TopScore
-	
+
 	prediction := &RankingTrendPrediction{
 		PredictedPlayerCount:  last.PlayerCount + playerGrowth,
 		PredictedAverageScore: last.AverageScore + scoreGrowth,
 		PredictedTopScore:     last.TopScore + topScoreGrowth,
 		ConfidenceLevel:       0.7, // 70%置信度
 		PredictionTime:        time.Now(),
-		ValidUntil:           time.Now().Add(period.GetDuration()),
+		ValidUntil:            time.Now().Add(period.GetDuration()),
 	}
-	
+
 	return prediction
 }
 
@@ -898,14 +897,14 @@ func (rs *RankingService) generateTrendPrediction(trendData []*RankingTrendPoint
 
 // RankingCreateConfig 排行榜创建配置
 type RankingCreateConfig struct {
-	Description  *string              `json:"description,omitempty"`
-	SortType     *SortType            `json:"sort_type,omitempty"`
-	MaxSize      *int64               `json:"max_size,omitempty"`
-	Period       *RankPeriod          `json:"period,omitempty"`
-	StartTime    *time.Time           `json:"start_time,omitempty"`
-	EndTime      *time.Time           `json:"end_time,omitempty"`
-	RewardConfig *RankRewardConfig    `json:"reward_config,omitempty"`
-	CacheConfig  *RankCacheConfig     `json:"cache_config,omitempty"`
+	Description  *string           `json:"description,omitempty"`
+	SortType     *SortType         `json:"sort_type,omitempty"`
+	MaxSize      *int64            `json:"max_size,omitempty"`
+	Period       *RankPeriod       `json:"period,omitempty"`
+	StartTime    *time.Time        `json:"start_time,omitempty"`
+	EndTime      *time.Time        `json:"end_time,omitempty"`
+	RewardConfig *RankRewardConfig `json:"reward_config,omitempty"`
+	CacheConfig  *RankCacheConfig  `json:"cache_config,omitempty"`
 }
 
 // ScoreUpdate 分数更新
@@ -919,18 +918,18 @@ type ScoreUpdate struct {
 func DefaultRankingServiceConfig() *RankingServiceConfig {
 	return &RankingServiceConfig{
 		EnableCache:           true,
-		CacheTTL:             30 * time.Minute,
-		CacheRefreshInterval: 5 * time.Minute,
-		MaxConcurrentUpdates: 100,
-		BatchSize:            50,
-		UpdateTimeout:        30 * time.Second,
-		CleanupInterval:      1 * time.Hour,
-		ExpiredDataRetention: 7 * 24 * time.Hour,
-		EnableStatistics:     true,
-		StatisticsInterval:   10 * time.Minute,
-		EnableRewards:        true,
+		CacheTTL:              30 * time.Minute,
+		CacheRefreshInterval:  5 * time.Minute,
+		MaxConcurrentUpdates:  100,
+		BatchSize:             50,
+		UpdateTimeout:         30 * time.Second,
+		CleanupInterval:       1 * time.Hour,
+		ExpiredDataRetention:  7 * 24 * time.Hour,
+		EnableStatistics:      true,
+		StatisticsInterval:    10 * time.Minute,
+		EnableRewards:         true,
 		AutoDistributeRewards: true,
-		EnableValidation:     true,
-		StrictMode:           false,
+		EnableValidation:      true,
+		StrictMode:            false,
 	}
 }

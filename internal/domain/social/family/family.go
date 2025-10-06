@@ -41,15 +41,15 @@ func (f *Family) AddMember(member *FamilyMember) error {
 	if len(f.members) >= f.MaxMembers {
 		return ErrFamilyFull
 	}
-	
+
 	if _, exists := f.members[member.PlayerID]; exists {
 		return ErrMemberAlreadyExists
 	}
-	
+
 	f.members[member.PlayerID] = member
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -58,15 +58,15 @@ func (f *Family) RemoveMember(playerID string) error {
 	if playerID == f.LeaderID {
 		return ErrCannotRemoveLeader
 	}
-	
+
 	if _, exists := f.members[playerID]; !exists {
 		return ErrMemberNotFound
 	}
-	
+
 	delete(f.members, playerID)
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -76,15 +76,15 @@ func (f *Family) PromoteMember(playerID string, newRole FamilyRole) error {
 	if !exists {
 		return ErrMemberNotFound
 	}
-	
+
 	if newRole == FamilyRoleLeader {
 		return ErrCannotPromoteToLeader
 	}
-	
+
 	member.Role = newRole
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -94,18 +94,18 @@ func (f *Family) TransferLeadership(newLeaderID string) error {
 	if !exists {
 		return ErrMemberNotFound
 	}
-	
+
 	// 将原族长降为副族长
 	if oldLeader, exists := f.members[f.LeaderID]; exists {
 		oldLeader.Role = FamilyRoleViceLeader
 	}
-	
+
 	// 设置新族长
 	f.LeaderID = newLeaderID
 	newLeader.Role = FamilyRoleLeader
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -152,5 +152,6 @@ func (f *Family) IsFull() bool {
 }
 
 const (
-	DefaultMaxMembers = 20  // 默认最大成员数
-	MembersPerLevel   = 5
+	DefaultMaxMembers = 20 // 默认最大成员数
+	MembersPerLevel   = 5  // 每级增加的成员数
+)

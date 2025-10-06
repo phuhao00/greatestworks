@@ -10,9 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"greatestworks/aop/logger"
 	"greatestworks/internal/domain/npc"
 	"greatestworks/internal/infrastructure/cache"
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // MongoNPCRepository MongoDB NPC仓储实现

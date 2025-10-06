@@ -9,7 +9,8 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
-	"strconv"
+
+	// "strconv"
 	"strings"
 	"time"
 
@@ -65,18 +66,18 @@ func DefaultMiddlewareConfig() *MiddlewareConfig {
 		LogResponseBody:      false,
 		MaxRequestBodySize:   1024 * 1024, // 1MB
 		MaxResponseBodySize:  1024 * 1024, // 1MB
-		SkipPaths:           []string{"/health", "/metrics", "/favicon.ico"},
-		SkipMethods:         []string{"OPTIONS"},
-		LogHeaders:          true,
-		SensitiveHeaders:    []string{"Authorization", "Cookie", "Set-Cookie", "X-Auth-Token"},
-		LogQueryParams:      true,
-		SensitiveParams:     []string{"password", "token", "secret", "key"},
+		SkipPaths:            []string{"/health", "/metrics", "/favicon.ico"},
+		SkipMethods:          []string{"OPTIONS"},
+		LogHeaders:           true,
+		SensitiveHeaders:     []string{"Authorization", "Cookie", "Set-Cookie", "X-Auth-Token"},
+		LogQueryParams:       true,
+		SensitiveParams:      []string{"password", "token", "secret", "key"},
 		SlowRequestThreshold: 1 * time.Second,
-		EnableRequestID:     true,
-		RequestIDHeader:     "X-Request-ID",
-		LogUserAgent:       true,
-		LogClientIP:        true,
-		LogReferer:         true,
+		EnableRequestID:      true,
+		RequestIDHeader:      "X-Request-ID",
+		LogUserAgent:         true,
+		LogClientIP:          true,
+		LogReferer:           true,
 	}
 }
 
@@ -458,9 +459,9 @@ func (gm *GameMiddleware) LogPlayerAction(ctx context.Context, playerID string, 
 // LogGameEvent 记录游戏事件
 func (gm *GameMiddleware) LogGameEvent(ctx context.Context, eventType string, eventData Fields) {
 	fields := Fields{
-		FieldModule:   "game",
-		"event_type":  eventType,
-		"event_time":  time.Now(),
+		FieldModule:  "game",
+		"event_type": eventType,
+		"event_time": time.Now(),
 	}
 
 	// 合并事件数据

@@ -5,22 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"greatestworks/application/services"
+	// "greatestworks/application/services" // TODO: 实现services
 	"greatestworks/internal/infrastructure/logger"
-	"greatestworks/internal/proto/pet"
+	// "greatestworks/internal/proto/pet" // TODO: 实现pet proto
 )
 
 // PetRPCService 宠物RPC服务
 type PetRPCService struct {
-	petService *services.PetService
-	logger     logger.Logger
+	// petService *services.PetService // TODO: 实现PetService
+	logger logger.Logger
 }
 
 // NewPetRPCService 创建宠物RPC服务
-func NewPetRPCService(petService *services.PetService, logger logger.Logger) *PetRPCService {
+func NewPetRPCService(logger logger.Logger) *PetRPCService {
 	return &PetRPCService{
-		petService: petService,
-		logger:     logger,
+		// petService: petService, // TODO: 实现PetService
+		logger: logger,
 	}
 }
 
@@ -51,17 +51,21 @@ func (s *PetRPCService) HandleRequest(ctx context.Context, method string, data [
 
 // handleCreatePet 处理创建宠物请求
 func (s *PetRPCService) handleCreatePet(ctx context.Context, data []byte) ([]byte, error) {
-	var req services.CreatePetCommand
-	if err := json.Unmarshal(data, &req); err != nil {
-		return nil, err
-	}
-	
-	result, err := s.petService.CreatePet(ctx, &req)
-	if err != nil {
-		return nil, err
-	}
-	
-	return json.Marshal(result)
+	// TODO: 实现创建宠物逻辑
+	// var req services.CreatePetCommand
+	// if err := json.Unmarshal(data, &req); err != nil {
+	// 	return nil, err
+	// }
+
+	// result, err := s.petService.CreatePet(ctx, &req)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// return json.Marshal(result)
+
+	// 临时返回空结果
+	return json.Marshal(map[string]interface{}{"message": "Pet service not implemented"})
 }
 
 // handleGetPetInfo 处理获取宠物信息请求
@@ -72,13 +76,13 @@ func (s *PetRPCService) handleGetPetInfo(ctx context.Context, data []byte) ([]by
 	if err := json.Unmarshal(data, &req); err != nil {
 		return nil, err
 	}
-	
+
 	// 这里需要根据实际的PetService方法进行调用
 	// result, err := s.petService.GetPetInfo(ctx, req.PetID)
 	// if err != nil {
 	//     return nil, err
 	// }
-	
+
 	return json.Marshal(map[string]string{"status": "success"})
 }
 
@@ -91,13 +95,13 @@ func (s *PetRPCService) handleUpdatePet(ctx context.Context, data []byte) ([]byt
 	if err := json.Unmarshal(data, &req); err != nil {
 		return nil, err
 	}
-	
+
 	// 这里需要根据实际的PetService方法进行调用
 	// err := s.petService.UpdatePet(ctx, req.PetID, req.Updates)
 	// if err != nil {
 	//     return nil, err
 	// }
-	
+
 	return json.Marshal(map[string]string{"status": "success"})
 }
 
@@ -110,33 +114,33 @@ func (s *PetRPCService) handleLevelUpPet(ctx context.Context, data []byte) ([]by
 	if err := json.Unmarshal(data, &req); err != nil {
 		return nil, err
 	}
-	
+
 	// 这里需要根据实际的PetService方法进行调用
 	// result, err := s.petService.LevelUpPet(ctx, req.PetID, req.ExperiencePoints)
 	// if err != nil {
 	//     return nil, err
 	// }
-	
+
 	return json.Marshal(map[string]string{"status": "success"})
 }
 
 // handleEvolvePet 处理宠物进化请求
 func (s *PetRPCService) handleEvolvePet(ctx context.Context, data []byte) ([]byte, error) {
 	var req struct {
-		PetID            string   `json:"pet_id"`
-		TargetSpeciesID  string   `json:"target_species_id"`
-		RequiredItems    []string `json:"required_items"`
+		PetID           string   `json:"pet_id"`
+		TargetSpeciesID string   `json:"target_species_id"`
+		RequiredItems   []string `json:"required_items"`
 	}
 	if err := json.Unmarshal(data, &req); err != nil {
 		return nil, err
 	}
-	
+
 	// 这里需要根据实际的PetService方法进行调用
 	// result, err := s.petService.EvolvePet(ctx, req.PetID, req.TargetSpeciesID, req.RequiredItems)
 	// if err != nil {
 	//     return nil, err
 	// }
-	
+
 	return json.Marshal(map[string]string{"status": "success"})
 }
 
@@ -150,12 +154,12 @@ func (s *PetRPCService) handleGetPlayerPets(ctx context.Context, data []byte) ([
 	if err := json.Unmarshal(data, &req); err != nil {
 		return nil, err
 	}
-	
+
 	// 这里需要根据实际的PetService方法进行调用
 	// result, err := s.petService.GetPlayerPets(ctx, req.PlayerID, req.Limit, req.Offset)
 	// if err != nil {
 	//     return nil, err
 	// }
-	
+
 	return json.Marshal(map[string]string{"status": "success"})
 }

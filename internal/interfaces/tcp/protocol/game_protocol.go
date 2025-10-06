@@ -436,22 +436,22 @@ func IsValidMessageType(msgType uint32) bool {
 // GetMessageTypeName 获取消息类型名称
 func GetMessageTypeName(msgType uint32) string {
 	msgNames := map[uint32]string{
-		MsgPlayerLogin:      "PlayerLogin",
-		MsgPlayerLogout:     "PlayerLogout",
-		MsgPlayerMove:       "PlayerMove",
-		MsgPlayerInfo:       "PlayerInfo",
-		MsgPlayerCreate:     "PlayerCreate",
-		MsgCreateBattle:     "CreateBattle",
-		MsgJoinBattle:       "JoinBattle",
-		MsgStartBattle:      "StartBattle",
-		MsgBattleAction:     "BattleAction",
-		MsgLeaveBattle:      "LeaveBattle",
-		MsgGetPlayerInfo:    "GetPlayerInfo",
-		MsgGetOnlinePlayers: "GetOnlinePlayers",
-		MsgGetBattleInfo:    "GetBattleInfo",
-		MsgHeartbeat:        "Heartbeat",
-		MsgPing:             "Ping",
-		MsgError:            "Error",
+		MsgPlayerLogin:       "PlayerLogin",
+		MsgPlayerLogout:      "PlayerLogout",
+		MsgPlayerMove:        "PlayerMove",
+		MsgPlayerInfo:        "PlayerInfo",
+		MsgPlayerCreate:      "PlayerCreate",
+		MsgCreateBattle:      "CreateBattle",
+		MsgJoinBattle:        "JoinBattle",
+		MsgStartBattle:       "StartBattle",
+		MsgBattleAction:      "BattleAction",
+		MsgLeaveBattle:       "LeaveBattle",
+		MsgGetPlayerInfo:     "GetPlayerInfo",
+		MsgGetOnlinePlayers:  "GetOnlinePlayers",
+		MsgGetBattleInfo:     "GetBattleInfo",
+		uint32(MsgHeartbeat): "Heartbeat",
+		uint32(MsgPing):      "Ping",
+		uint32(MsgError):     "Error",
 	}
 
 	if name, exists := msgNames[msgType]; exists {

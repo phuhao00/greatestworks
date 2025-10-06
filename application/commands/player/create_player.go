@@ -26,6 +26,7 @@ type CreatePlayerHandler struct {
 // PlayerService 玩家服务接口
 type PlayerService interface {
 	CreatePlayer(ctx context.Context, name string) (*CreatePlayerResult, error)
+	MovePlayer(ctx context.Context, playerID string, position Position) error
 }
 
 // NewCreatePlayerHandler 创建命令处理器

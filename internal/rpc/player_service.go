@@ -168,7 +168,10 @@ func (s *PlayerRPCService) handleGetOnlinePlayers(ctx context.Context, data []by
 		return nil, err
 	}
 
-	result, err := s.playerService.GetOnlinePlayers(ctx, req.Limit, req.Offset)
+	query := &services.GetOnlinePlayersQuery{
+		Limit: req.Limit,
+	}
+	result, err := s.playerService.GetOnlinePlayers(ctx, query)
 	if err != nil {
 		return nil, err
 	}

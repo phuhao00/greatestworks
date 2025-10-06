@@ -1,5 +1,5 @@
 package battle
 
-import "errors"
+// import "errors"
 
 // English comment

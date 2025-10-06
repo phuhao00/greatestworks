@@ -7,7 +7,8 @@ package protocol
 import (
 	"context"
 	"fmt"
-	"io"
+
+	// "io"
 	"time"
 )
 
@@ -326,22 +327,22 @@ type TLSConfig struct {
 // DefaultConfig 默认配置
 func DefaultConfig() *Config {
 	return &Config{
-		Protocol:             "tcp",
-		Host:                 "0.0.0.0",
-		Port:                 8080,
-		BufferSize:           4096,
-		MaxPacketSize:        65536,
-		ReadTimeout:          30 * time.Second,
-		WriteTimeout:         30 * time.Second,
-		HeartbeatInterval:    30 * time.Second,
-		ConnectionTimeout:    10 * time.Second,
-		MaxConnections:       10000,
-		CompressionType:      "gzip",
-		EncryptionType:       "aes",
-		SerializationType:    "binary",
-		EnableCompression:    false,
-		EnableEncryption:     false,
-		EnableHeartbeat:      true,
+		Protocol:          "tcp",
+		Host:              "0.0.0.0",
+		Port:              8080,
+		BufferSize:        4096,
+		MaxPacketSize:     65536,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		HeartbeatInterval: 30 * time.Second,
+		ConnectionTimeout: 10 * time.Second,
+		MaxConnections:    10000,
+		CompressionType:   "gzip",
+		EncryptionType:    "aes",
+		SerializationType: "binary",
+		EnableCompression: false,
+		EnableEncryption:  false,
+		EnableHeartbeat:   true,
 		TLS: TLSConfig{
 			Enabled:            false,
 			InsecureSkipVerify: false,
@@ -385,20 +386,20 @@ type Manager interface {
 
 // 预定义错误
 var (
-	ErrInvalidMessageType   = fmt.Errorf("invalid message type")
-	ErrMessageNotRegistered = fmt.Errorf("message not registered")
-	ErrInvalidPacket        = fmt.Errorf("invalid packet")
-	ErrPacketTooLarge       = fmt.Errorf("packet too large")
-	ErrConnectionClosed     = fmt.Errorf("connection closed")
-	ErrConnectionTimeout    = fmt.Errorf("connection timeout")
-	ErrHandlerNotFound      = fmt.Errorf("handler not found")
-	ErrProtocolNotSupported = fmt.Errorf("protocol not supported")
-	ErrSerializationFailed  = fmt.Errorf("serialization failed")
+	ErrInvalidMessageType    = fmt.Errorf("invalid message type")
+	ErrMessageNotRegistered  = fmt.Errorf("message not registered")
+	ErrInvalidPacket         = fmt.Errorf("invalid packet")
+	ErrPacketTooLarge        = fmt.Errorf("packet too large")
+	ErrConnectionClosed      = fmt.Errorf("connection closed")
+	ErrConnectionTimeout     = fmt.Errorf("connection timeout")
+	ErrHandlerNotFound       = fmt.Errorf("handler not found")
+	ErrProtocolNotSupported  = fmt.Errorf("protocol not supported")
+	ErrSerializationFailed   = fmt.Errorf("serialization failed")
 	ErrDeserializationFailed = fmt.Errorf("deserialization failed")
-	ErrCompressionFailed    = fmt.Errorf("compression failed")
-	ErrDecompressionFailed  = fmt.Errorf("decompression failed")
-	ErrEncryptionFailed     = fmt.Errorf("encryption failed")
-	ErrDecryptionFailed     = fmt.Errorf("decryption failed")
+	ErrCompressionFailed     = fmt.Errorf("compression failed")
+	ErrDecompressionFailed   = fmt.Errorf("decompression failed")
+	ErrEncryptionFailed      = fmt.Errorf("encryption failed")
+	ErrDecryptionFailed      = fmt.Errorf("decryption failed")
 )
 
 // 常用常量
@@ -419,13 +420,13 @@ const (
 
 // PacketHeader 数据包头部
 type PacketHeader struct {
-	Magic     uint32    // 魔数
-	Version   uint16    // 协议版本
+	Magic     uint32      // 魔数
+	Version   uint16      // 协议版本
 	Type      MessageType // 消息类型
-	Length    uint32    // 数据长度
-	Sequence  uint32    // 序列号
-	Timestamp int64     // 时间戳
-	Checksum  uint32    // 校验和
+	Length    uint32      // 数据长度
+	Sequence  uint32      // 序列号
+	Timestamp int64       // 时间戳
+	Checksum  uint32      // 校验和
 }
 
 // BasePacket 基础数据包实现
@@ -448,14 +449,14 @@ func NewBasePacket(msgType MessageType, data []byte) *BasePacket {
 	}
 }
 
-func (bp *BasePacket) GetType() MessageType        { return bp.header.Type }
-func (bp *BasePacket) GetData() []byte             { return bp.data }
-func (bp *BasePacket) SetData(data []byte)         { bp.data = data; bp.header.Length = uint32(len(data)) }
-func (bp *BasePacket) GetSize() int                { return HeaderSize + len(bp.data) }
-func (bp *BasePacket) GetTimestamp() time.Time     { return time.Unix(0, bp.header.Timestamp) }
-func (bp *BasePacket) SetTimestamp(t time.Time)    { bp.header.Timestamp = t.UnixNano() }
-func (bp *BasePacket) GetSequence() uint32         { return bp.header.Sequence }
-func (bp *BasePacket) SetSequence(seq uint32)      { bp.header.Sequence = seq }
+func (bp *BasePacket) GetType() MessageType     { return bp.header.Type }
+func (bp *BasePacket) GetData() []byte          { return bp.data }
+func (bp *BasePacket) SetData(data []byte)      { bp.data = data; bp.header.Length = uint32(len(data)) }
+func (bp *BasePacket) GetSize() int             { return HeaderSize + len(bp.data) }
+func (bp *BasePacket) GetTimestamp() time.Time  { return time.Unix(0, bp.header.Timestamp) }
+func (bp *BasePacket) SetTimestamp(t time.Time) { bp.header.Timestamp = t.UnixNano() }
+func (bp *BasePacket) GetSequence() uint32      { return bp.header.Sequence }
+func (bp *BasePacket) SetSequence(seq uint32)   { bp.header.Sequence = seq }
 
 func (bp *BasePacket) Validate() error {
 	if bp.header.Magic != MagicNumber {

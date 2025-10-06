@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"greatestworks/aop/logger"
+	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/domain/player/hangup"
 	"greatestworks/internal/infrastructure/cache"
 )

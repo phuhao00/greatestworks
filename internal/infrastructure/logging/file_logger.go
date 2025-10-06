@@ -7,7 +7,8 @@ package logging
 import (
 	"context"
 	"fmt"
-	"io"
+
+	// "io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -573,8 +574,8 @@ func (fr *FileRotator) cleanupByAge() {
 // 辅助函数
 
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || (len(s) > len(substr) && 
-		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || 
+	return len(s) >= len(substr) && (s == substr || (len(s) > len(substr) &&
+		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
 			containsHelper(s, substr))))
 }
 

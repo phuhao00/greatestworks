@@ -13,28 +13,28 @@ type PetRepository interface {
 	FindByPlayerAndCategory(playerID string, category PetCategory) ([]*PetAggregate, error)
 	Update(pet *PetAggregate) error
 	Delete(id string) error
-	
+
 	// 分页查询
 	FindWithPagination(query *PetQuery) (*PetPageResult, error)
-	
+
 	// 统计操作
 	Count() (int64, error)
 	CountByPlayer(playerID string) (int64, error)
 	CountByCategory(category PetCategory) (int64, error)
-	
+
 	// 状态查询
 	FindByState(state PetState) ([]*PetAggregate, error)
 	FindActiveByPlayer(playerID string) ([]*PetAggregate, error)
 	FindDeadPets() ([]*PetAggregate, error)
-	
+
 	// 等级和星级查询
 	FindByLevelRange(minLevel, maxLevel uint32) ([]*PetAggregate, error)
 	FindByStarRange(minStar, maxStar uint32) ([]*PetAggregate, error)
-	
+
 	// 批量操作
 	SaveBatch(pets []*PetAggregate) error
 	DeleteBatch(ids []string) error
-	
+
 	// 高级查询
 	FindTopPetsByPower(limit int) ([]*PetAggregate, error)
 	FindRecentlyCreated(duration time.Duration) ([]*PetAggregate, error)
@@ -49,19 +49,19 @@ type PetFragmentRepository interface {
 	FindByPlayerAndFragmentID(playerID string, fragmentID uint32) (*PetFragment, error)
 	Update(fragment *PetFragment) error
 	Delete(id string) error
-	
+
 	// 分页查询
 	FindWithPagination(query *FragmentQuery) (*FragmentPageResult, error)
-	
+
 	// 统计操作
 	Count() (int64, error)
 	CountByPlayer(playerID string) (int64, error)
 	GetTotalQuantityByPlayer(playerID string, fragmentID uint32) (uint64, error)
-	
+
 	// 碎片相关查询
 	FindByRelatedPet(relatedPetID uint32) ([]*PetFragment, error)
 	FindSufficientFragments(playerID string, fragmentID uint32, requiredQuantity uint64) ([]*PetFragment, error)
-	
+
 	// 批量操作
 	SaveBatch(fragments []*PetFragment) error
 	UpdateBatch(fragments []*PetFragment) error
@@ -75,19 +75,19 @@ type PetSkinRepository interface {
 	FindBySkinID(skinID string) (*PetSkin, error)
 	Update(skin *PetSkin) error
 	Delete(id string) error
-	
+
 	// 分页查询
 	FindWithPagination(query *SkinQuery) (*SkinPageResult, error)
-	
+
 	// 统计操作
 	Count() (int64, error)
 	CountByRarity(rarity PetRarity) (int64, error)
-	
+
 	// 皮肤相关查询
 	FindByRarity(rarity PetRarity) ([]*PetSkin, error)
 	FindUnlockedSkins() ([]*PetSkin, error)
 	FindEquippedSkins() ([]*PetSkin, error)
-	
+
 	// 批量操作
 	SaveBatch(skins []*PetSkin) error
 	UpdateBatch(skins []*PetSkin) error
@@ -101,19 +101,19 @@ type PetSkillRepository interface {
 	FindBySkillID(skillID string) (*PetSkill, error)
 	Update(skill *PetSkill) error
 	Delete(id string) error
-	
+
 	// 分页查询
 	FindWithPagination(query *SkillQuery) (*SkillPageResult, error)
-	
+
 	// 统计操作
 	Count() (int64, error)
 	CountByType(skillType SkillType) (int64, error)
-	
+
 	// 技能相关查询
 	FindByType(skillType SkillType) ([]*PetSkill, error)
 	FindByLevelRange(minLevel, maxLevel uint32) ([]*PetSkill, error)
 	FindReadySkills() ([]*PetSkill, error)
-	
+
 	// 批量操作
 	SaveBatch(skills []*PetSkill) error
 	UpdateBatch(skills []*PetSkill) error
@@ -126,11 +126,11 @@ type PetBondsRepository interface {
 	FindByID(id string) (*PetBonds, error)
 	Update(bonds *PetBonds) error
 	Delete(id string) error
-	
+
 	// 羁绊相关查询
 	FindActiveBonds() ([]*PetBonds, error)
 	FindByBondID(bondID string) ([]*PetBonds, error)
-	
+
 	// 统计操作
 	Count() (int64, error)
 	CountActiveBonds() (int64, error)
@@ -145,19 +145,19 @@ type PetPictorialRepository interface {
 	FindByPlayerAndPetConfig(playerID string, petConfigID uint32) (*PetPictorial, error)
 	Update(pictorial *PetPictorial) error
 	Delete(id string) error
-	
+
 	// 分页查询
 	FindWithPagination(query *PictorialQuery) (*PictorialPageResult, error)
-	
+
 	// 统计操作
 	Count() (int64, error)
 	CountByPlayer(playerID string) (int64, error)
 	CountUnlockedByPlayer(playerID string) (int64, error)
-	
+
 	// 图鉴相关查询
 	FindUnlockedByPlayer(playerID string) ([]*PetPictorial, error)
 	FindRecentlyUnlocked(duration time.Duration) ([]*PetPictorial, error)
-	
+
 	// 批量操作
 	SaveBatch(pictorials []*PetPictorial) error
 	UpdateBatch(pictorials []*PetPictorial) error
@@ -168,19 +168,19 @@ type PetStatisticsRepository interface {
 	// 保存统计数据
 	SaveStatistics(stats *PetStatistics) error
 	UpdateStatistics(stats *PetStatistics) error
-	
+
 	// 查询统计数据
 	FindStatistics(playerID string) (*PetStatistics, error)
 	FindStatisticsByCategory(category PetCategory) ([]*PetStatistics, error)
-	
+
 	// 全局统计
 	GetGlobalStatistics() (*GlobalPetStatistics, error)
 	GetCategoryStatistics(category PetCategory) (*CategoryPetStatistics, error)
-	
+
 	// 趋势分析
 	GetLevelTrend(playerID string, days int) ([]*LevelTrendData, error)
 	GetPowerTrend(playerID string, days int) ([]*PowerTrendData, error)
-	
+
 	// 排行榜数据
 	GetTopPlayersByPetCount(limit int) ([]*PlayerPetRanking, error)
 	GetTopPlayersByTotalPower(limit int) ([]*PlayerPetRanking, error)
@@ -190,24 +190,24 @@ type PetStatisticsRepository interface {
 
 // PetQuery 宠物查询条件
 type PetQuery struct {
-	PlayerID    string
-	Name        string
-	Category    *PetCategory
-	State       *PetState
-	MinLevel    *uint32
-	MaxLevel    *uint32
-	MinStar     *uint32
-	MaxStar     *uint32
-	MinPower    *int64
-	MaxPower    *int64
+	PlayerID      string
+	Name          string
+	Category      *PetCategory
+	State         *PetState
+	MinLevel      *uint32
+	MaxLevel      *uint32
+	MinStar       *uint32
+	MaxStar       *uint32
+	MinPower      *int64
+	MaxPower      *int64
 	CreatedAfter  *time.Time
 	CreatedBefore *time.Time
 	UpdatedAfter  *time.Time
 	UpdatedBefore *time.Time
-	OrderBy     string
-	OrderDesc   bool
-	Offset      int
-	Limit       int
+	OrderBy       string
+	OrderDesc     bool
+	Offset        int
+	Limit         int
 }
 
 // FragmentQuery 碎片查询条件
@@ -242,18 +242,18 @@ type SkinQuery struct {
 
 // SkillQuery 技能查询条件
 type SkillQuery struct {
-	SkillID     string
-	Name        string
-	SkillType   *SkillType
-	MinLevel    *uint32
-	MaxLevel    *uint32
-	MinDamage   *int64
-	MaxDamage   *int64
-	Ready       *bool
-	OrderBy     string
-	OrderDesc   bool
-	Offset      int
-	Limit       int
+	SkillID   string
+	Name      string
+	SkillType *SkillType
+	MinLevel  *uint32
+	MaxLevel  *uint32
+	MinDamage *int64
+	MaxDamage *int64
+	Ready     *bool
+	OrderBy   string
+	OrderDesc bool
+	Offset    int
+	Limit     int
 }
 
 // PictorialQuery 图鉴查询条件
@@ -324,47 +324,47 @@ type PictorialPageResult struct {
 
 // PetStatistics 宠物统计
 type PetStatistics struct {
-	PlayerID         string
-	TotalPets        int64
-	AlivePets        int64
-	DeadPets         int64
-	MaxLevel         uint32
-	MaxStar          uint32
-	TotalPower       int64
-	AveragePower     float64
-	CategoryStats    map[PetCategory]*CategoryStats
-	FavoritePet      string
-	MostUsedSkill    string
+	PlayerID          string
+	TotalPets         int64
+	AlivePets         int64
+	DeadPets          int64
+	MaxLevel          uint32
+	MaxStar           uint32
+	TotalPower        int64
+	AveragePower      float64
+	CategoryStats     map[PetCategory]*CategoryStats
+	FavoritePet       string
+	MostUsedSkill     string
 	TotalTrainingTime time.Duration
 	TotalFeedingCount int64
-	LastActivityTime time.Time
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	LastActivityTime  time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 // CategoryStats 类别统计
 type CategoryStats struct {
-	Category    PetCategory
-	Count       int64
-	TotalPower  int64
+	Category     PetCategory
+	Count        int64
+	TotalPower   int64
 	AveragePower float64
-	MaxLevel    uint32
-	MaxStar     uint32
+	MaxLevel     uint32
+	MaxStar      uint32
 }
 
 // GlobalPetStatistics 全局宠物统计
 type GlobalPetStatistics struct {
-	TotalPets        int64
-	TotalPlayers     int64
+	TotalPets            int64
+	TotalPlayers         int64
 	AveragePetsPerPlayer float64
 	CategoryDistribution map[PetCategory]int64
 	RarityDistribution   map[PetRarity]int64
 	MostPopularCategory  PetCategory
 	MostPopularRarity    PetRarity
-	TotalPower          int64
-	AveragePower        float64
-	TopPet              string
-	UpdatedAt           time.Time
+	TotalPower           int64
+	AveragePower         float64
+	TopPet               string
+	UpdatedAt            time.Time
 }
 
 // CategoryPetStatistics 类别宠物统计
@@ -399,13 +399,13 @@ type PowerTrendData struct {
 
 // PlayerPetRanking 玩家宠物排行
 type PlayerPetRanking struct {
-	PlayerID    string
-	PlayerName  string
-	PetCount    int64
-	TotalPower  int64
+	PlayerID     string
+	PlayerName   string
+	PetCount     int64
+	TotalPower   int64
 	AveragePower float64
-	TopPetName  string
-	Rank        int
+	TopPetName   string
+	Rank         int
 }
 
 // 缓存接口
@@ -416,42 +416,42 @@ type PetCacheRepository interface {
 	SetPet(id string, pet *PetAggregate, ttl time.Duration) error
 	GetPet(id string) (*PetAggregate, error)
 	DeletePet(id string) error
-	
+
 	// 碎片缓存
 	SetFragment(id string, fragment *PetFragment, ttl time.Duration) error
 	GetFragment(id string) (*PetFragment, error)
 	DeleteFragment(id string) error
-	
+
 	// 皮肤缓存
 	SetSkin(id string, skin *PetSkin, ttl time.Duration) error
 	GetSkin(id string) (*PetSkin, error)
 	DeleteSkin(id string) error
-	
+
 	// 技能缓存
 	SetSkill(id string, skill *PetSkill, ttl time.Duration) error
 	GetSkill(id string) (*PetSkill, error)
 	DeleteSkill(id string) error
-	
+
 	// 图鉴缓存
 	SetPictorial(id string, pictorial *PetPictorial, ttl time.Duration) error
 	GetPictorial(id string) (*PetPictorial, error)
 	DeletePictorial(id string) error
-	
+
 	// 统计缓存
 	SetStatistics(key string, stats interface{}, ttl time.Duration) error
 	GetStatistics(key string, result interface{}) error
 	DeleteStatistics(key string) error
-	
+
 	// 玩家宠物列表缓存
 	SetPlayerPets(playerID string, pets []*PetAggregate, ttl time.Duration) error
 	GetPlayerPets(playerID string) ([]*PetAggregate, error)
 	DeletePlayerPets(playerID string) error
-	
+
 	// 批量操作
 	SetBatch(items map[string]interface{}, ttl time.Duration) error
 	GetBatch(keys []string) (map[string]interface{}, error)
 	DeleteBatch(keys []string) error
-	
+
 	// 缓存管理
 	Clear() error
 	Exists(key string) (bool, error)
@@ -467,7 +467,7 @@ type PetTransactionRepository interface {
 	BeginTransaction() (PetTransaction, error)
 	CommitTransaction(tx PetTransaction) error
 	RollbackTransaction(tx PetTransaction) error
-	
+
 	// 在事务中执行操作
 	ExecuteInTransaction(fn func(tx PetTransaction) error) error
 }
@@ -478,35 +478,35 @@ type PetTransaction interface {
 	SavePet(pet *PetAggregate) error
 	UpdatePet(pet *PetAggregate) error
 	DeletePet(id string) error
-	
+
 	// 碎片操作
 	SaveFragment(fragment *PetFragment) error
 	UpdateFragment(fragment *PetFragment) error
 	DeleteFragment(id string) error
-	
+
 	// 皮肤操作
 	SaveSkin(skin *PetSkin) error
 	UpdateSkin(skin *PetSkin) error
 	DeleteSkin(id string) error
-	
+
 	// 技能操作
 	SaveSkill(skill *PetSkill) error
 	UpdateSkill(skill *PetSkill) error
 	DeleteSkill(id string) error
-	
+
 	// 羁绊操作
 	SaveBonds(bonds *PetBonds) error
 	UpdateBonds(bonds *PetBonds) error
 	DeleteBonds(id string) error
-	
+
 	// 图鉴操作
 	SavePictorial(pictorial *PetPictorial) error
 	UpdatePictorial(pictorial *PetPictorial) error
 	DeletePictorial(id string) error
-	
+
 	// 统计操作
 	UpdateStatistics(stats *PetStatistics) error
-	
+
 	// 事务状态
 	IsActive() bool
 	GetID() string
@@ -526,10 +526,10 @@ type PetRepositoryFactory interface {
 	CreateStatisticsRepository() PetStatisticsRepository
 	CreateCacheRepository() PetCacheRepository
 	CreateTransactionRepository() PetTransactionRepository
-	
+
 	// 健康检查
 	HealthCheck() error
-	
+
 	// 关闭连接
 	Close() error
 }
@@ -543,15 +543,16 @@ type PetSearchRepository interface {
 	SearchFragments(query string, filters map[string]interface{}) ([]*PetFragment, error)
 	SearchSkins(query string, filters map[string]interface{}) ([]*PetSkin, error)
 	SearchSkills(query string, filters map[string]interface{}) ([]*PetSkill, error)
-	
+
 	// 智能推荐
 	RecommendPets(playerID string, category PetCategory, limit int) ([]*PetAggregate, error)
 	RecommendSkills(petID string, limit int) ([]*PetSkill, error)
 	RecommendSkins(petID string, limit int) ([]*PetSkin, error)
-	
+
 	// 相似度搜索
 	FindSimilarPets(petID string, limit int) ([]*PetAggregate, error)
-	
+
 	// 索引管理
 	RebuildIndex() error
-	UpdateIndex(entity
+	UpdateIndex(entity *Pet) error
+}

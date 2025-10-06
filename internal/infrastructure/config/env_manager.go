@@ -360,7 +360,7 @@ func (em *EnvManager) loadEnvFromFile(filePath string) error {
 		value := strings.TrimSpace(parts[1])
 
 		// 移除引号
-		if (strings.HasPrefix(value, `"") && strings.HasSuffix(value, `"")) ||
+		if (strings.HasPrefix(value, `"`) && strings.HasSuffix(value, `"`)) ||
 			(strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) {
 			value = value[1 : len(value)-1]
 		}

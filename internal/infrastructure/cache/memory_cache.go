@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
-	"greatestworks/aop/logger"
+
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // MemoryCache 内存缓存实现
@@ -21,10 +21,10 @@ type MemoryCache struct {
 
 // cacheItem 缓存项
 type cacheItem struct {
-	value      interface{}
-	expiration int64
-	createdAt  time.Time
-	accessedAt time.Time
+	value       interface{}
+	expiration  int64
+	createdAt   time.Time
+	accessedAt  time.Time
 	accessCount int64
 }
 
@@ -42,7 +42,7 @@ func NewMemoryCache(logger logger.Logger, prefix string, cleanupInterval time.Du
 		logger: logger,
 		prefix: prefix,
 	}
-	
+
 	// 启动清理器
 	if cleanupInterval > 0 {
 		c.cleaner = &cacheCleaner{
@@ -52,22 +52,22 @@ func NewMemoryCache(logger logger.Logger, prefix string, cleanupInterval time.Du
 		}
 		go c.cleaner.run()
 	}
-	
+
 	return c
 }
 
 // Set 设置缓存
 func (m *MemoryCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	fullKey := m.buildKey(key)
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	var expiration int64
 	if ttl > 0 {
 		expiration = time.Now().Add(ttl).UnixNano()
 	}
-	
+
 	m.items[fullKey] = &cacheItem{
 		value:       value,
 		expiration:  expiration,
@@ -75,7 +75,7 @@ func (m *MemoryCache) Set(ctx context.Context, key string, value interface{}, tt
 		accessedAt:  time.Now(),
 		accessCount: 0,
 	}
-	
+
 	m.logger.Debug("Memory cache set successfully", "key", key, "ttl", ttl)
 	return nil
 }
@@ -83,15 +83,15 @@ func (m *MemoryCache) Set(ctx context.Context, key string, value interface{}, tt
 // Get 获取缓存
 func (m *MemoryCache) Get(ctx context.Context, key string, dest interface{}) error {
 	fullKey := m.buildKey(key)
-	
+
 	m.mu.RLock()
 	item, found := m.items[fullKey]
 	m.mu.RUnlock()
-	
+
 	if !found {
 		return ErrCacheNotFound
 	}
-	
+
 	// 检查是否过期
 	if item.expiration > 0 && time.Now().UnixNano() > item.expiration {
 		m.mu.Lock()
@@ -99,20 +99,20 @@ func (m *MemoryCache) Get(ctx context.Context, key string, dest interface{}) err
 		m.mu.Unlock()
 		return ErrCacheExpired
 	}
-	
+
 	// 更新访问信息
 	m.mu.Lock()
 	item.accessedAt = time.Now()
 	item.accessCount++
 	m.mu.Unlock()
-	
+
 	// 复制值到目标
 	err := m.copyValue(item.value, dest)
 	if err != nil {
 		m.logger.Error("Failed to copy cache value", "error", err, "key", key)
 		return fmt.Errorf("failed to copy cache value: %w", err)
 	}
-	
+
 	m.logger.Debug("Memory cache get successfully", "key", key)
 	return nil
 }
@@ -120,12 +120,12 @@ func (m *MemoryCache) Get(ctx context.Context, key string, dest interface{}) err
 // Delete 删除缓存
 func (m *MemoryCache) Delete(ctx context.Context, key string) error {
 	fullKey := m.buildKey(key)
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	delete(m.items, fullKey)
-	
+
 	m.logger.Debug("Memory cache deleted successfully", "key", key)
 	return nil
 }
@@ -133,15 +133,15 @@ func (m *MemoryCache) Delete(ctx context.Context, key string) error {
 // Exists 检查缓存是否存在
 func (m *MemoryCache) Exists(ctx context.Context, key string) (bool, error) {
 	fullKey := m.buildKey(key)
-	
+
 	m.mu.RLock()
 	item, found := m.items[fullKey]
 	m.mu.RUnlock()
-	
+
 	if !found {
 		return false, nil
 	}
-	
+
 	// 检查是否过期
 	if item.expiration > 0 && time.Now().UnixNano() > item.expiration {
 		m.mu.Lock()
@@ -149,7 +149,7 @@ func (m *MemoryCache) Exists(ctx context.Context, key string) (bool, error) {
 		m.mu.Unlock()
 		return false, nil
 	}
-	
+
 	return true, nil
 }
 
@@ -157,12 +157,12 @@ func (m *MemoryCache) Exists(ctx context.Context, key string) (bool, error) {
 func (m *MemoryCache) SetBatch(ctx context.Context, items map[string]interface{}, ttl time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	var expiration int64
 	if ttl > 0 {
 		expiration = time.Now().Add(ttl).UnixNano()
 	}
-	
+
 	now := time.Now()
 	for key, value := range items {
 		fullKey := m.buildKey(key)
@@ -174,7 +174,7 @@ func (m *MemoryCache) SetBatch(ctx context.Context, items map[string]interface{}
 			accessCount: 0,
 		}
 	}
-	
+
 	m.logger.Debug("Memory batch cache set successfully", "count", len(items), "ttl", ttl)
 	return nil
 }
@@ -183,27 +183,27 @@ func (m *MemoryCache) SetBatch(ctx context.Context, items map[string]interface{}
 func (m *MemoryCache) GetBatch(ctx context.Context, keys []string) (map[string]interface{}, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	results := make(map[string]interface{})
 	now := time.Now().UnixNano()
-	
+
 	for _, key := range keys {
 		fullKey := m.buildKey(key)
 		item, found := m.items[fullKey]
-		
+
 		if !found {
 			continue
 		}
-		
+
 		// 检查是否过期
 		if item.expiration > 0 && now > item.expiration {
 			continue
 		}
-		
+
 		// 更新访问信息（在读锁中不能修改，这里只是获取值）
 		results[key] = item.value
 	}
-	
+
 	m.logger.Debug("Memory batch cache get successfully", "requested", len(keys), "found", len(results))
 	return results, nil
 }
@@ -212,12 +212,12 @@ func (m *MemoryCache) GetBatch(ctx context.Context, keys []string) (map[string]i
 func (m *MemoryCache) DeleteBatch(ctx context.Context, keys []string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	for _, key := range keys {
 		fullKey := m.buildKey(key)
 		delete(m.items, fullKey)
 	}
-	
+
 	m.logger.Debug("Memory batch cache deleted successfully", "count", len(keys))
 	return nil
 }
@@ -225,21 +225,21 @@ func (m *MemoryCache) DeleteBatch(ctx context.Context, keys []string) error {
 // SetTTL 设置缓存过期时间
 func (m *MemoryCache) SetTTL(ctx context.Context, key string, ttl time.Duration) error {
 	fullKey := m.buildKey(key)
-	
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	item, found := m.items[fullKey]
 	if !found {
 		return ErrCacheNotFound
 	}
-	
+
 	if ttl > 0 {
 		item.expiration = time.Now().Add(ttl).UnixNano()
 	} else {
 		item.expiration = 0 // 永不过期
 	}
-	
+
 	m.logger.Debug("Memory cache TTL set successfully", "key", key, "ttl", ttl)
 	return nil
 }
@@ -247,24 +247,24 @@ func (m *MemoryCache) SetTTL(ctx context.Context, key string, ttl time.Duration)
 // GetTTL 获取缓存剩余过期时间
 func (m *MemoryCache) GetTTL(ctx context.Context, key string) (time.Duration, error) {
 	fullKey := m.buildKey(key)
-	
+
 	m.mu.RLock()
 	item, found := m.items[fullKey]
 	m.mu.RUnlock()
-	
+
 	if !found {
 		return 0, ErrCacheNotFound
 	}
-	
+
 	if item.expiration == 0 {
 		return -1, nil // 永不过期
 	}
-	
+
 	ttl := time.Duration(item.expiration - time.Now().UnixNano())
 	if ttl <= 0 {
 		return 0, ErrCacheExpired
 	}
-	
+
 	return ttl, nil
 }
 
@@ -272,7 +272,7 @@ func (m *MemoryCache) GetTTL(ctx context.Context, key string) (time.Duration, er
 func (m *MemoryCache) Clear(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if m.prefix == "" {
 		// 清空所有
 		m.items = make(map[string]*cacheItem)
@@ -285,7 +285,7 @@ func (m *MemoryCache) Clear(ctx context.Context) error {
 			}
 		}
 	}
-	
+
 	m.logger.Info("Memory cache cleared successfully")
 	return nil
 }
@@ -294,9 +294,9 @@ func (m *MemoryCache) Clear(ctx context.Context) error {
 func (m *MemoryCache) FlushDB(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.items = make(map[string]*cacheItem)
-	
+
 	m.logger.Info("Memory cache flushed successfully")
 	return nil
 }
@@ -312,11 +312,11 @@ func (m *MemoryCache) Close() error {
 	if m.cleaner != nil {
 		m.cleaner.stop <- true
 	}
-	
+
 	m.mu.Lock()
 	m.items = nil
 	m.mu.Unlock()
-	
+
 	m.logger.Info("Memory cache closed successfully")
 	return nil
 }
@@ -325,22 +325,22 @@ func (m *MemoryCache) Close() error {
 func (m *MemoryCache) GetStats() *CacheStats {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	stats := &CacheStats{
 		TotalItems: int64(len(m.items)),
 		HitCount:   0,
 		MissCount:  0,
 	}
-	
+
 	now := time.Now().UnixNano()
 	for _, item := range m.items {
 		stats.HitCount += item.accessCount
-		
+
 		if item.expiration > 0 && now > item.expiration {
 			stats.ExpiredItems++
 		}
 	}
-	
+
 	return stats
 }
 
@@ -384,13 +384,13 @@ func (m *MemoryCache) copyValue(src, dest interface{}) error {
 			return nil
 		}
 	}
-	
+
 	// 使用JSON进行深拷贝
 	data, err := json.Marshal(src)
 	if err != nil {
 		return err
 	}
-	
+
 	return json.Unmarshal(data, dest)
 }
 
@@ -398,7 +398,7 @@ func (m *MemoryCache) copyValue(src, dest interface{}) error {
 func (c *cacheCleaner) run() {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -413,17 +413,17 @@ func (c *cacheCleaner) run() {
 func (c *cacheCleaner) cleanup() {
 	c.cache.mu.Lock()
 	defer c.cache.mu.Unlock()
-	
+
 	now := time.Now().UnixNano()
 	expiredCount := 0
-	
+
 	for key, item := range c.cache.items {
 		if item.expiration > 0 && now > item.expiration {
 			delete(c.cache.items, key)
 			expiredCount++
 		}
 	}
-	
+
 	if expiredCount > 0 {
 		c.cache.logger.Debug("Cleaned up expired cache items", "count", expiredCount)
 	}
@@ -451,8 +451,8 @@ func NewMemoryCacheFromConfig(config *MemoryCacheConfig, logger logger.Logger) C
 	if config.CleanupInterval == 0 {
 		config.CleanupInterval = 10 * time.Minute
 	}
-	
+
 	logger.Info("Memory cache initialized successfully", "prefix", config.Prefix, "cleanup_interval", config.CleanupInterval)
-	
+
 	return NewMemoryCache(logger, config.Prefix, config.CleanupInterval)
 }

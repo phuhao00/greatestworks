@@ -1,5 +1,7 @@
 package beginner
 
+import "strings"
+
 // StepType 步骤类型
 type StepType int
 

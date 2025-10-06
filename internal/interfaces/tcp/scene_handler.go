@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"greatestworks/aop/logger"
 	"greatestworks/application/services"
+	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/infrastructure/network"
-
-	"github.com/netcore-go/netcore"
+	// "github.com/netcore-go/netcore" // TODO: 实现netcore-go集成
 )
 
 // SceneHandler 场景TCP处理器
@@ -112,7 +111,7 @@ type WeatherInfoHandler struct {
 	*SceneHandler
 }
 
-func (h *WeatherInfoHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *WeatherInfoHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal weather info request", "error", err)
@@ -155,7 +154,7 @@ type WeatherForecastHandler struct {
 	*SceneHandler
 }
 
-func (h *WeatherForecastHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *WeatherForecastHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal weather forecast request", "error", err)
@@ -203,7 +202,7 @@ type WeatherUpdateHandler struct {
 	*SceneHandler
 }
 
-func (h *WeatherUpdateHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *WeatherUpdateHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal weather update request", "error", err)
@@ -245,7 +244,7 @@ type FarmInfoHandler struct {
 	*SceneHandler
 }
 
-func (h *FarmInfoHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *FarmInfoHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal farm info request", "error", err)
@@ -288,7 +287,7 @@ type PlantSeedHandler struct {
 	*SceneHandler
 }
 
-func (h *PlantSeedHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *PlantSeedHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal plant seed request", "error", err)
@@ -342,7 +341,7 @@ type HarvestCropHandler struct {
 	*SceneHandler
 }
 
-func (h *HarvestCropHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *HarvestCropHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal harvest crop request", "error", err)
@@ -391,7 +390,7 @@ type WaterPlantHandler struct {
 	*SceneHandler
 }
 
-func (h *WaterPlantHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *WaterPlantHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal water plant request", "error", err)
@@ -438,7 +437,7 @@ type FertilizePlantHandler struct {
 	*SceneHandler
 }
 
-func (h *FertilizePlantHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *FertilizePlantHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal fertilize plant request", "error", err)
@@ -490,7 +489,7 @@ type CropStatusHandler struct {
 	*SceneHandler
 }
 
-func (h *CropStatusHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *CropStatusHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal crop status request", "error", err)
@@ -538,7 +537,7 @@ type FarmUpgradeHandler struct {
 	*SceneHandler
 }
 
-func (h *FarmUpgradeHandler) Handle(ctx context.Context, conn *netcore.Connection, packet *netcore.Packet) error {
+func (h *FarmUpgradeHandler) Handle(ctx context.Context, conn network.Connection, packet network.Packet) error {
 	var req SceneRequest
 	if err := json.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal farm upgrade request", "error", err)
@@ -585,19 +584,19 @@ func (h *FarmUpgradeHandler) GetHandlerName() string {
 // 辅助方法
 
 // sendResponse 发送响应
-func (h *SceneHandler) sendResponse(conn *netcore.Connection, msgType uint32, response SceneResponse) error {
+func (h *SceneHandler) sendResponse(conn network.Connection, msgType uint32, response SceneResponse) error {
 	data, err := json.Marshal(response)
 	if err != nil {
 		h.logger.Error("Failed to marshal response", "error", err)
 		return err
 	}
 
-	packet := netcore.NewPacket(msgType, data)
+	packet := network.NewPacket(msgType, data)
 	return conn.Send(packet)
 }
 
 // sendErrorResponse 发送错误响应
-func (h *SceneHandler) sendErrorResponse(conn *netcore.Connection, errorMsg string) error {
+func (h *SceneHandler) sendErrorResponse(conn network.Connection, errorMsg string) error {
 	response := SceneResponse{
 		Success: false,
 		Message: "Request failed",
@@ -611,6 +610,6 @@ func (h *SceneHandler) sendErrorResponse(conn *netcore.Connection, errorMsg stri
 	}
 
 	// 使用通用错误消息类型
-	packet := netcore.NewPacket(9999, data)
+	packet := network.NewPacket(9999, data)
 	return conn.Send(packet)
 }

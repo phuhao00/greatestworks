@@ -1,20 +1,20 @@
 package quest
 
 import (
-	"errors"
+	// "errors"
 	"time"
 )
 
 // QuestManager 任务管理器聚合根
 type QuestManager struct {
-	playerID      string
-	activeQuests  map[string]*Quest
+	playerID        string
+	activeQuests    map[string]*Quest
 	completedQuests map[string]*Quest
-	dailyQuests   map[string]*Quest
-	weeklyQuests  map[string]*Quest
-	achievements  map[string]*Achievement
-	lastUpdate    time.Time
-	events        []DomainEvent
+	dailyQuests     map[string]*Quest
+	weeklyQuests    map[string]*Quest
+	achievements    map[string]*Achievement
+	lastUpdate      time.Time
+	events          []DomainEvent
 }
 
 // NewQuestManager 创建新任务管理器
@@ -33,30 +33,30 @@ func NewQuestManager(playerID string) *QuestManager {
 
 // Quest 任务实体
 type Quest struct {
-	id            string
-	name          string
-	description   string
-	questType     QuestType
-	category      QuestCategory
-	status        QuestStatus
-	priority      QuestPriority
-	objectives    []*QuestObjective
-	rewards       []*QuestReward
-	prerequisites []string // 前置任务ID
-	startTime     *time.Time
-	expireTime    *time.Time
-	completedTime *time.Time
-	timeLimit     *time.Duration
-	repeatType    RepeatType
-	repeatCount   int
-	maxRepeats    int
-	level         int
-	minLevel      int
-	maxLevel      int
+	id                string
+	name              string
+	description       string
+	questType         QuestType
+	category          QuestCategory
+	status            QuestStatus
+	priority          QuestPriority
+	objectives        []*QuestObjective
+	rewards           []*QuestReward
+	prerequisites     []string // 前置任务ID
+	startTime         *time.Time
+	expireTime        *time.Time
+	completedTime     *time.Time
+	timeLimit         *time.Duration
+	repeatType        RepeatType
+	repeatCount       int
+	maxRepeats        int
+	level             int
+	minLevel          int
+	maxLevel          int
 	classRestrictions []string
 	raceRestrictions  []string
-	createdAt     time.Time
-	updatedAt     time.Time
+	createdAt         time.Time
+	updatedAt         time.Time
 }
 
 // NewQuest 创建新任务
@@ -143,16 +143,16 @@ const (
 
 // QuestObjective 任务目标
 type QuestObjective struct {
-	id          string
-	description string
+	id            string
+	description   string
 	objectiveType ObjectiveType
-	target      string // 目标ID或名称
-	current     int64
-	required    int64
-	completed   bool
-	optional    bool
-	order       int
-	metadata    map[string]interface{}
+	target        string // 目标ID或名称
+	current       int64
+	required      int64
+	completed     bool
+	optional      bool
+	order         int
+	metadata      map[string]interface{}
 }
 
 // ObjectiveType 目标类型
@@ -282,9 +282,9 @@ type QuestAcceptedEvent struct {
 	occurredAt time.Time
 }
 
-func (e QuestAcceptedEvent) EventType() string   { return "quest.accepted" }
+func (e QuestAcceptedEvent) EventType() string     { return "quest.accepted" }
 func (e QuestAcceptedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e QuestAcceptedEvent) PlayerID() string    { return e.playerID }
+func (e QuestAcceptedEvent) PlayerID() string      { return e.playerID }
 
 // QuestCompletedEvent 任务完成事件
 type QuestCompletedEvent struct {
@@ -295,9 +295,9 @@ type QuestCompletedEvent struct {
 	occurredAt time.Time
 }
 
-func (e QuestCompletedEvent) EventType() string   { return "quest.completed" }
+func (e QuestCompletedEvent) EventType() string     { return "quest.completed" }
 func (e QuestCompletedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e QuestCompletedEvent) PlayerID() string    { return e.playerID }
+func (e QuestCompletedEvent) PlayerID() string      { return e.playerID }
 
 // QuestFailedEvent 任务失败事件
 type QuestFailedEvent struct {
@@ -308,9 +308,9 @@ type QuestFailedEvent struct {
 	occurredAt time.Time
 }
 
-func (e QuestFailedEvent) EventType() string   { return "quest.failed" }
+func (e QuestFailedEvent) EventType() string     { return "quest.failed" }
 func (e QuestFailedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e QuestFailedEvent) PlayerID() string    { return e.playerID }
+func (e QuestFailedEvent) PlayerID() string      { return e.playerID }
 
 // ObjectiveCompletedEvent 目标完成事件
 type ObjectiveCompletedEvent struct {
@@ -321,9 +321,9 @@ type ObjectiveCompletedEvent struct {
 	occurredAt    time.Time
 }
 
-func (e ObjectiveCompletedEvent) EventType() string   { return "objective.completed" }
+func (e ObjectiveCompletedEvent) EventType() string     { return "objective.completed" }
 func (e ObjectiveCompletedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e ObjectiveCompletedEvent) PlayerID() string    { return e.playerID }
+func (e ObjectiveCompletedEvent) PlayerID() string      { return e.playerID }
 
 // AchievementUnlockedEvent 成就解锁事件
 type AchievementUnlockedEvent struct {
@@ -334,9 +334,9 @@ type AchievementUnlockedEvent struct {
 	occurredAt      time.Time
 }
 
-func (e AchievementUnlockedEvent) EventType() string   { return "achievement.unlocked" }
+func (e AchievementUnlockedEvent) EventType() string     { return "achievement.unlocked" }
 func (e AchievementUnlockedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e AchievementUnlockedEvent) PlayerID() string    { return e.playerID }
+func (e AchievementUnlockedEvent) PlayerID() string      { return e.playerID }
 
 // QuestManager 业务方法
 

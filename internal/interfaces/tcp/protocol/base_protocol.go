@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// Message 基础消息结构
-type Message struct {
+// BaseMessage 基础消息结构
+type BaseMessage struct {
 	ID        string          `json:"id"`
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data,omitempty"`
@@ -50,28 +50,28 @@ const (
 	MsgTypeDisconnect = "disconnect"
 	MsgTypePing       = "ping"
 	MsgTypePong       = "pong"
-	
+
 	// 认证相关
 	MsgTypeAuth        = "auth"
 	MsgTypeAuthSuccess = "auth_success"
 	MsgTypeAuthFailed  = "auth_failed"
-	
+
 	// 错误相关
 	MsgTypeError = "error"
-	
+
 	// 通知相关
 	MsgTypeNotification = "notification"
 )
 
 // 错误代码
 const (
-	ErrorCodeInvalidMessage   = "INVALID_MESSAGE"
-	ErrorCodeUnauthorized     = "UNAUTHORIZED"
-	ErrorCodeNotFound         = "NOT_FOUND"
-	ErrorCodeInternalError    = "INTERNAL_ERROR"
-	ErrorCodeInvalidParameter = "INVALID_PARAMETER"
-	ErrorCodePermissionDenied = "PERMISSION_DENIED"
-	ErrorCodeRateLimit        = "RATE_LIMIT"
+	ErrorCodeInvalidMessage     = "INVALID_MESSAGE"
+	ErrorCodeUnauthorized       = "UNAUTHORIZED"
+	ErrorCodeNotFound           = "NOT_FOUND"
+	ErrorCodeInternalError      = "INTERNAL_ERROR"
+	ErrorCodeInvalidParameter   = "INVALID_PARAMETER"
+	ErrorCodePermissionDenied   = "PERMISSION_DENIED"
+	ErrorCodeRateLimit          = "RATE_LIMIT"
 	ErrorCodeServiceUnavailable = "SERVICE_UNAVAILABLE"
 )
 
@@ -92,30 +92,15 @@ type ConnectResponse struct {
 	Compression bool   `json:"compression"`
 }
 
-// AuthRequest 认证请求
-type AuthRequest struct {
-	Token    string `json:"token"`
-	PlayerID uint64 `json:"player_id,omitempty"`
-}
+// 认证相关的结构体已在message_types.go中定义
 
-// AuthResponse 认证响应
-type AuthResponse struct {
-	PlayerID    uint64 `json:"player_id"`
-	DisplayName string `json:"display_name"`
-	Permissions []string `json:"permissions,omitempty"`
-	AuthTime    int64  `json:"auth_time"`
-}
-
-// PingRequest Ping请求
-type PingRequest struct {
-	Timestamp int64 `json:"timestamp"`
-}
+// PingRequest已在game_protocol.go中定义
 
 // PongResponse Pong响应
 type PongResponse struct {
-	Timestamp   int64 `json:"timestamp"`
-	ServerTime  int64 `json:"server_time"`
-	RoundTrip   int64 `json:"round_trip,omitempty"`
+	Timestamp  int64 `json:"timestamp"`
+	ServerTime int64 `json:"server_time"`
+	RoundTrip  int64 `json:"round_trip,omitempty"`
 }
 
 // TCPConnection TCP连接封装
@@ -209,12 +194,12 @@ func (c *TCPConnection) SendMessage(msg *Message) error {
 		return fmt.Errorf("connection is closed")
 	}
 	c.mutex.RUnlock()
-	
+
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
-	
+
 	select {
 	case c.messageChan <- data:
 		return nil
@@ -234,14 +219,22 @@ func (c *TCPConnection) SendResponse(msgID, msgType string, data interface{}) er
 		Data:      data,
 		Timestamp: time.Now().Unix(),
 	}
-	
-	return c.SendMessage(&Message{
-		ID:        msgID,
-		Type:      msgType,
-		Data:      mustMarshal(resp),
-		Timestamp: time.Now().Unix(),
-		PlayerID:  c.GetPlayerID(),
-	})
+
+	// 创建消息头
+	header := MessageHeader{
+		MessageType: 1, // 响应消息类型
+		MessageID:   uint32(time.Now().UnixNano()),
+		Timestamp:   time.Now().Unix(),
+		Length:      uint32(len(mustMarshal(resp))),
+	}
+
+	// 创建消息
+	message := &Message{
+		Header:  header,
+		Payload: mustMarshal(resp),
+	}
+
+	return c.SendMessage(message)
 }
 
 // SendError 发送错误响应
@@ -256,14 +249,22 @@ func (c *TCPConnection) SendError(msgID, msgType, errorCode, errorMessage string
 		},
 		Timestamp: time.Now().Unix(),
 	}
-	
-	return c.SendMessage(&Message{
-		ID:        msgID,
-		Type:      MsgTypeError,
-		Data:      mustMarshal(resp),
-		Timestamp: time.Now().Unix(),
-		PlayerID:  c.GetPlayerID(),
-	})
+
+	// 创建消息头
+	header := MessageHeader{
+		MessageType: 2, // 错误消息类型
+		MessageID:   uint32(time.Now().UnixNano()),
+		Timestamp:   time.Now().Unix(),
+		Length:      uint32(len(mustMarshal(resp))),
+	}
+
+	// 创建消息
+	message := &Message{
+		Header:  header,
+		Payload: mustMarshal(resp),
+	}
+
+	return c.SendMessage(message)
 }
 
 // SendNotification 发送通知
@@ -274,13 +275,22 @@ func (c *TCPConnection) SendNotification(notificationType string, data interface
 		Timestamp: time.Now().Unix(),
 		PlayerID:  c.GetPlayerID(),
 	}
-	
-	return c.SendMessage(&Message{
-		Type:      MsgTypeNotification,
-		Data:      mustMarshal(notification),
-		Timestamp: time.Now().Unix(),
-		PlayerID:  c.GetPlayerID(),
-	})
+
+	// 创建消息头
+	header := MessageHeader{
+		MessageType: 3, // 通知消息类型
+		MessageID:   uint32(time.Now().UnixNano()),
+		Timestamp:   time.Now().Unix(),
+		Length:      uint32(len(mustMarshal(notification))),
+	}
+
+	// 创建消息
+	message := &Message{
+		Header:  header,
+		Payload: mustMarshal(notification),
+	}
+
+	return c.SendMessage(message)
 }
 
 // ReadMessage 读取消息
@@ -291,34 +301,34 @@ func (c *TCPConnection) ReadMessage() (*Message, error) {
 		return nil, fmt.Errorf("connection is closed")
 	}
 	c.mutex.RUnlock()
-	
+
 	// 设置读取超时
 	c.conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	
+
 	// 读取消息长度（4字节）
 	lengthBytes := make([]byte, 4)
 	if _, err := c.conn.Read(lengthBytes); err != nil {
 		return nil, fmt.Errorf("failed to read message length: %w", err)
 	}
-	
+
 	// 解析消息长度
 	length := int(lengthBytes[0])<<24 | int(lengthBytes[1])<<16 | int(lengthBytes[2])<<8 | int(lengthBytes[3])
 	if length <= 0 || length > 1024*1024 { // 最大1MB
 		return nil, fmt.Errorf("invalid message length: %d", length)
 	}
-	
+
 	// 读取消息内容
 	msgBytes := make([]byte, length)
 	if _, err := c.conn.Read(msgBytes); err != nil {
 		return nil, fmt.Errorf("failed to read message data: %w", err)
 	}
-	
+
 	// 解析消息
 	var msg Message
 	if err := json.Unmarshal(msgBytes, &msg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal message: %w", err)
 	}
-	
+
 	return &msg, nil
 }
 
@@ -330,10 +340,10 @@ func (c *TCPConnection) WriteMessage(data []byte) error {
 		return fmt.Errorf("connection is closed")
 	}
 	c.mutex.RUnlock()
-	
+
 	// 设置写入超时
 	c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	
+
 	// 写入消息长度（4字节）
 	length := len(data)
 	lengthBytes := []byte{
@@ -342,16 +352,16 @@ func (c *TCPConnection) WriteMessage(data []byte) error {
 		byte(length >> 8),
 		byte(length),
 	}
-	
+
 	if _, err := c.conn.Write(lengthBytes); err != nil {
 		return fmt.Errorf("failed to write message length: %w", err)
 	}
-	
+
 	// 写入消息内容
 	if _, err := c.conn.Write(data); err != nil {
 		return fmt.Errorf("failed to write message data: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -377,15 +387,15 @@ func (c *TCPConnection) StartMessageWriter() {
 func (c *TCPConnection) Close() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	
+
 	if c.closed {
 		return nil
 	}
-	
+
 	c.closed = true
 	c.cancel()
 	close(c.messageChan)
-	
+
 	return c.conn.Close()
 }
 
@@ -409,19 +419,19 @@ type MessageHandler func(ctx context.Context, conn *TCPConnection, msg *Message)
 
 // TCPRouter TCP路由器
 type TCPRouter struct {
-	handlers map[string]MessageHandler
+	handlers map[uint16]MessageHandler
 	mutex    sync.RWMutex
 }
 
 // NewTCPRouter 创建TCP路由器
 func NewTCPRouter() *TCPRouter {
 	return &TCPRouter{
-		handlers: make(map[string]MessageHandler),
+		handlers: make(map[uint16]MessageHandler),
 	}
 }
 
 // RegisterHandler 注册消息处理器
-func (r *TCPRouter) RegisterHandler(msgType string, handler MessageHandler) {
+func (r *TCPRouter) RegisterHandler(msgType uint16, handler MessageHandler) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	r.handlers[msgType] = handler
@@ -430,22 +440,22 @@ func (r *TCPRouter) RegisterHandler(msgType string, handler MessageHandler) {
 // HandleMessage 处理消息
 func (r *TCPRouter) HandleMessage(ctx context.Context, conn *TCPConnection, msg *Message) error {
 	r.mutex.RLock()
-	handler, exists := r.handlers[msg.Type]
+	handler, exists := r.handlers[msg.Header.MessageType]
 	r.mutex.RUnlock()
-	
+
 	if !exists {
-		return conn.SendError(msg.ID, msg.Type, ErrorCodeNotFound, fmt.Sprintf("unknown message type: %s", msg.Type))
+		return fmt.Errorf("no handler for message type: %d", msg.Header.MessageType)
 	}
-	
+
 	return handler(ctx, conn, msg)
 }
 
 // GetHandlers 获取所有处理器
-func (r *TCPRouter) GetHandlers() map[string]MessageHandler {
+func (r *TCPRouter) GetHandlers() map[uint16]MessageHandler {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
-	handlers := make(map[string]MessageHandler)
+
+	handlers := make(map[uint16]MessageHandler)
 	for k, v := range r.handlers {
 		handlers[k] = v
 	}

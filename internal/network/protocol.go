@@ -322,7 +322,7 @@ type NetworkService interface {
 
 // networkServiceImpl netcore-go网络服务实现
 type networkServiceImpl struct {
-	tcpServer   *tcp.Server
+	// tcpServer   *tcp.Server
 	connPool    *pool.ConnPool
 	connections map[string]*TCPConnection
 	mutex       sync.RWMutex
@@ -339,35 +339,36 @@ func (n *networkServiceImpl) StartTCPServer(ctx context.Context, addr string) er
 		return fmt.Errorf("server already running")
 	}
 
+	// TODO: 实现TCP服务器创建
 	// 创建netcore-go TCP服务器配置
-	config := &tcp.ServerConfig{
-		Address:      addr,
-		MaxConn:      10000,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
+	// config := &tcp.ServerConfig{
+	//     Address:      addr,
+	//     MaxConn:      10000,
+	//     ReadTimeout:  30 * time.Second,
+	//     WriteTimeout: 30 * time.Second,
+	// }
 
 	// 创建TCP服务器
-	server, err := tcp.NewServer(config)
-	if err != nil {
-		return fmt.Errorf("create tcp server failed: %w", err)
-	}
+	// server, err := tcp.NewServer(config)
+	// if err != nil {
+	//     return fmt.Errorf("create tcp server failed: %w", err)
+	// }
 
 	// 设置连接处理器
-	server.SetOnConnect(n.onConnect)
-	server.SetOnMessage(n.onMessage)
-	server.SetOnDisconnect(n.onDisconnect)
+	// server.SetOnConnect(n.onConnect)
+	// server.SetOnMessage(n.onMessage)
+	// server.SetOnDisconnect(n.onDisconnect)
 
-	n.tcpServer = server
+	// n.tcpServer = server
 	n.connections = make(map[string]*TCPConnection)
 	n.running = true
 
 	// 启动服务器
-	go func() {
-		if err := n.tcpServer.Start(); err != nil {
-			n.logger.Error("TCP server start failed", "error", err)
-		}
-	}()
+	// go func() {
+	//     if err := n.tcpServer.Start(); err != nil {
+	//         n.logger.Error("TCP server start failed", "error", err)
+	//     }
+	// }()
 
 	n.logger.Info("TCP server started", "addr", addr)
 	return nil

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
-	"greatestworks/aop/logger"
+
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // WorkerPool 工作池
@@ -61,9 +61,9 @@ func NewWorkerPool(workerCount int, processor WorkerProcessor, logger logger.Log
 	if workerCount <= 0 {
 		workerCount = 10 // 默认工作者数量
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	pool := &WorkerPool{
 		workerCount: workerCount,
 		workQueue:   make(chan interface{}, workerCount*10), // 队列大小为工作者数量的10倍
@@ -77,7 +77,7 @@ func NewWorkerPool(workerCount int, processor WorkerProcessor, logger logger.Log
 			ByWorker:  make(map[int]*WorkerStats),
 		},
 	}
-	
+
 	// 创建工作者
 	for i := 0; i < workerCount; i++ {
 		worker := &Worker{
@@ -90,11 +90,11 @@ func NewWorkerPool(workerCount int, processor WorkerProcessor, logger logger.Log
 				IsActive: false,
 			},
 		}
-		
+
 		pool.workers[i] = worker
 		pool.stats.ByWorker[worker.id] = worker.stats
 	}
-	
+
 	logger.Info("Worker pool created successfully", "worker_count", workerCount, "queue_capacity", cap(pool.workQueue))
 	return pool
 }
@@ -102,15 +102,15 @@ func NewWorkerPool(workerCount int, processor WorkerProcessor, logger logger.Log
 // Start 启动工作池
 func (p *WorkerPool) Start(ctx context.Context) error {
 	p.logger.Info("Starting worker pool", "worker_count", p.workerCount)
-	
+
 	// 启动所有工作者
 	for _, worker := range p.workers {
 		go worker.start()
 	}
-	
+
 	// 启动统计收集
 	go p.collectStats()
-	
+
 	p.logger.Info("Worker pool started successfully")
 	return nil
 }
@@ -118,18 +118,18 @@ func (p *WorkerPool) Start(ctx context.Context) error {
 // Stop 停止工作池
 func (p *WorkerPool) Stop() error {
 	p.logger.Info("Stopping worker pool")
-	
+
 	// 取消上下文，停止所有工作者
 	p.cancel()
-	
+
 	// 关闭工作队列
 	close(p.workQueue)
-	
+
 	// 等待所有工作者停止
 	for _, worker := range p.workers {
 		worker.stop()
 	}
-	
+
 	p.logger.Info("Worker pool stopped successfully")
 	return nil
 }
@@ -151,7 +151,7 @@ func (p *WorkerPool) Submit(data interface{}) error {
 func (p *WorkerPool) SubmitWithTimeout(data interface{}, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(p.ctx, timeout)
 	defer cancel()
-	
+
 	select {
 	case p.workQueue <- data:
 		p.logger.Debug("Task submitted to worker pool with timeout")
@@ -168,7 +168,7 @@ func (p *WorkerPool) SubmitWithTimeout(data interface{}, timeout time.Duration) 
 func (p *WorkerPool) GetStats() *WorkerPoolStats {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	
+
 	// 计算活跃工作者数量
 	activeWorkers := int64(0)
 	for _, worker := range p.workers {
@@ -178,7 +178,7 @@ func (p *WorkerPool) GetStats() *WorkerPoolStats {
 		}
 		worker.mu.RUnlock()
 	}
-	
+
 	// 创建统计信息副本
 	stats := &WorkerPoolStats{
 		TotalProcessed: p.stats.TotalProcessed,
@@ -189,7 +189,7 @@ func (p *WorkerPool) GetStats() *WorkerPoolStats {
 		Uptime:         time.Since(p.stats.StartTime),
 		ByWorker:       make(map[int]*WorkerStats),
 	}
-	
+
 	// 复制工作者统计信息
 	for id, workerStats := range p.stats.ByWorker {
 		stats.ByWorker[id] = &WorkerStats{
@@ -200,7 +200,7 @@ func (p *WorkerPool) GetStats() *WorkerPoolStats {
 			IsActive:       workerStats.IsActive,
 		}
 	}
-	
+
 	return stats
 }
 
@@ -230,7 +230,7 @@ func (p *WorkerPool) IsRunning() bool {
 func (p *WorkerPool) collectStats() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -251,7 +251,7 @@ func (p *WorkerPool) collectStats() {
 func (p *WorkerPool) updateStats(success bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if success {
 		p.stats.TotalProcessed++
 	} else {
@@ -264,7 +264,7 @@ func (p *WorkerPool) updateStats(success bool) {
 // start 启动工作者
 func (w *Worker) start() {
 	w.logger.Debug("Worker started", "worker_id", w.id)
-	
+
 	for {
 		select {
 		case data := <-w.workQueue:
@@ -283,35 +283,35 @@ func (w *Worker) stop() {
 	w.mu.Lock()
 	w.stats.IsActive = false
 	w.mu.Unlock()
-	
+
 	w.logger.Debug("Worker stopping", "worker_id", w.id)
 }
 
 // processTask 处理任务
 func (w *Worker) processTask(data interface{}) {
 	start := time.Now()
-	
+
 	// 标记为活跃
 	w.mu.Lock()
 	w.stats.IsActive = true
 	w.mu.Unlock()
-	
+
 	defer func() {
 		// 标记为非活跃
 		w.mu.Lock()
 		w.stats.IsActive = false
 		w.mu.Unlock()
 	}()
-	
+
 	w.logger.Debug("Worker processing task", "worker_id", w.id)
-	
+
 	// 处理任务
 	err := w.processor(data)
 	processTime := time.Since(start)
-	
+
 	// 更新统计信息
 	w.updateStats(err == nil, processTime)
-	
+
 	if err != nil {
 		w.logger.Error("Worker task processing failed", "error", err, "worker_id", w.id, "process_time", processTime)
 	} else {
@@ -323,11 +323,11 @@ func (w *Worker) processTask(data interface{}) {
 func (w *Worker) updateStats(success bool, processTime time.Duration) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	
+
 	if success {
 		w.stats.ProcessedCount++
 		w.stats.LastProcessed = time.Now()
-		
+
 		// 更新平均处理时间
 		if w.stats.AvgProcessTime == 0 {
 			w.stats.AvgProcessTime = processTime
@@ -343,7 +343,7 @@ func (w *Worker) updateStats(success bool, processTime time.Duration) {
 func (w *Worker) GetStats() *WorkerStats {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	
+
 	return &WorkerStats{
 		ProcessedCount: w.stats.ProcessedCount,
 		FailedCount:    w.stats.FailedCount,
@@ -367,10 +367,10 @@ func (w *Worker) IsActive() bool {
 
 // 工作池配置
 type WorkerPoolConfig struct {
-	WorkerCount    int           `json:"worker_count" yaml:"worker_count"`
-	QueueSize      int           `json:"queue_size" yaml:"queue_size"`
-	TaskTimeout    time.Duration `json:"task_timeout" yaml:"task_timeout"`
-	EnableMetrics  bool          `json:"enable_metrics" yaml:"enable_metrics"`
+	WorkerCount     int           `json:"worker_count" yaml:"worker_count"`
+	QueueSize       int           `json:"queue_size" yaml:"queue_size"`
+	TaskTimeout     time.Duration `json:"task_timeout" yaml:"task_timeout"`
+	EnableMetrics   bool          `json:"enable_metrics" yaml:"enable_metrics"`
 	MetricsInterval time.Duration `json:"metrics_interval" yaml:"metrics_interval"`
 }
 
@@ -385,9 +385,9 @@ func NewWorkerPoolFromConfig(config *WorkerPoolConfig, processor WorkerProcessor
 			MetricsInterval: 30 * time.Second,
 		}
 	}
-	
+
 	pool := NewWorkerPool(config.WorkerCount, processor, logger)
-	
+
 	// 如果指定了队列大小，重新创建队列
 	if config.QueueSize > 0 {
 		pool.workQueue = make(chan interface{}, config.QueueSize)
@@ -396,12 +396,12 @@ func NewWorkerPoolFromConfig(config *WorkerPoolConfig, processor WorkerProcessor
 			worker.workQueue = pool.workQueue
 		}
 	}
-	
-	logger.Info("Worker pool created from config", 
+
+	logger.Info("Worker pool created from config",
 		"worker_count", config.WorkerCount,
 		"queue_size", config.QueueSize,
 		"task_timeout", config.TaskTimeout,
 		"enable_metrics", config.EnableMetrics)
-	
+
 	return pool
 }

@@ -6,16 +6,16 @@ import (
 
 // Team 队伍聚合根
 type Team struct {
-	ID          string
-	Name        string
-	LeaderID    string
-	members     map[string]*TeamMember
-	MaxMembers  int
-	IsPublic    bool
-	Password    string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Version     int64
+	ID         string
+	Name       string
+	LeaderID   string
+	members    map[string]*TeamMember
+	MaxMembers int
+	IsPublic   bool
+	Password   string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	Version    int64
 }
 
 // NewTeam 创建新队伍
@@ -38,15 +38,15 @@ func (t *Team) AddMember(member *TeamMember) error {
 	if len(t.members) >= t.MaxMembers {
 		return ErrTeamFull
 	}
-	
+
 	if _, exists := t.members[member.PlayerID]; exists {
 		return ErrMemberAlreadyExists
 	}
-	
+
 	t.members[member.PlayerID] = member
 	t.UpdatedAt = time.Now()
 	t.Version++
-	
+
 	return nil
 }
 
@@ -55,15 +55,15 @@ func (t *Team) RemoveMember(playerID string) error {
 	if playerID == t.LeaderID {
 		return ErrCannotRemoveLeader
 	}
-	
+
 	if _, exists := t.members[playerID]; !exists {
 		return ErrMemberNotFound
 	}
-	
+
 	delete(t.members, playerID)
 	t.UpdatedAt = time.Now()
 	t.Version++
-	
+
 	return nil
 }
 
@@ -73,18 +73,18 @@ func (t *Team) TransferLeadership(newLeaderID string) error {
 	if !exists {
 		return ErrMemberNotFound
 	}
-	
+
 	// 将原队长降为普通成员
 	if oldLeader, exists := t.members[t.LeaderID]; exists {
 		oldLeader.Role = TeamRoleMember
 	}
-	
+
 	// 设置新队长
 	t.LeaderID = newLeaderID
 	newLeader.Role = TeamRoleLeader
 	t.UpdatedAt = time.Now()
 	t.Version++
-	
+
 	return nil
 }
 
@@ -119,3 +119,4 @@ func (t *Team) IsFull() bool {
 func (t *Team) IsMember(playerID string) bool {
 	_, exists := t.members[playerID]
 	return exists
+}

@@ -2,8 +2,10 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"net/http"
-	"strings"
+
+	// "strings"
 	"time"
 
 	"github.com/gin-gonic/gin"

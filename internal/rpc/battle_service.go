@@ -5,21 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"greatestworks/application/services"
 	"greatestworks/internal/infrastructure/logger"
 )
 
 // BattleRPCService 战斗RPC服务
 type BattleRPCService struct {
-	battleService *services.BattleService
-	logger        logger.Logger
+	// battleService *services.BattleService // TODO: 实现BattleService
+	logger logger.Logger
 }
 
 // NewBattleRPCService 创建战斗RPC服务
-func NewBattleRPCService(battleService *services.BattleService, logger logger.Logger) *BattleRPCService {
+func NewBattleRPCService(logger logger.Logger) *BattleRPCService {
 	return &BattleRPCService{
-		battleService: battleService,
-		logger:        logger,
+		// battleService: battleService, // TODO: 实现BattleService
+		logger: logger,
 	}
 }
 
@@ -50,17 +49,21 @@ func (s *BattleRPCService) HandleRequest(ctx context.Context, method string, dat
 
 // handleCreateBattle 处理创建战斗请求
 func (s *BattleRPCService) handleCreateBattle(ctx context.Context, data []byte) ([]byte, error) {
-	var req services.CreateBattleCommand
-	if err := json.Unmarshal(data, &req); err != nil {
-		return nil, err
-	}
+	// TODO: 实现创建战斗逻辑
+	// var req services.CreateBattleCommand
+	// if err := json.Unmarshal(data, &req); err != nil {
+	// 	return nil, err
+	// }
 
-	result, err := s.battleService.CreateBattle(ctx, &req)
-	if err != nil {
-		return nil, err
-	}
+	// result, err := s.battleService.CreateBattle(ctx, &req)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return json.Marshal(result)
+	// return json.Marshal(result)
+
+	// 临时返回空结果
+	return json.Marshal(map[string]interface{}{"message": "Battle service not implemented"})
 }
 
 // handleJoinBattle 处理加入战斗请求

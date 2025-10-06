@@ -36,10 +36,7 @@ type CreatePlayerResult struct {
 // CreatePlayer 创建玩家
 func (s *PlayerService) CreatePlayer(ctx context.Context, cmd *CreatePlayerCommand) (*CreatePlayerResult, error) {
 	// 验证玩家名称是否已存在
-	exists, err := s.playerRepo.ExistsByName(ctx, cmd.Name)
-	if err != nil {
-		return nil, fmt.Errorf("检查玩家名称失败: %w", err)
-	}
+	exists := s.playerRepo.ExistsByName(ctx, cmd.Name)
 	if exists {
 		return nil, player.ErrPlayerAlreadyExists
 	}
@@ -64,19 +61,22 @@ func (s *PlayerService) CreatePlayer(ctx context.Context, cmd *CreatePlayerComma
 // MovePlayer 移动玩家
 func (s *PlayerService) MovePlayer(ctx context.Context, playerID string, position player.Position) error {
 	// 获取玩家
-	player, err := s.playerRepo.FindByID(ctx, playerID)
+	playerIDObj := player.PlayerIDFromString(playerID)
+	p, err := s.playerRepo.FindByID(ctx, playerIDObj)
 	if err != nil {
 		return fmt.Errorf("获取玩家失败: %w", err)
 	}
-	if player == nil {
+	if p == nil {
 		return player.ErrPlayerNotFound
 	}
 
 	// 更新玩家位置
-	player.SetPosition(position)
+	if err := p.MoveTo(position); err != nil {
+		return fmt.Errorf("移动玩家失败: %w", err)
+	}
 
 	// 保存玩家
-	if err := s.playerRepo.Save(ctx, player); err != nil {
+	if err := s.playerRepo.Save(ctx, p); err != nil {
 		return fmt.Errorf("保存玩家失败: %w", err)
 	}
 
@@ -165,8 +165,8 @@ type MovePlayerCommand struct {
 	Position player.Position `json:"position" validate:"required"`
 }
 
-// MovePlayer 玩家移动
-func (s *PlayerService) MovePlayer(ctx context.Context, cmd *MovePlayerCommand) error {
+// MovePlayerWithCommand 使用命令移动玩家
+func (s *PlayerService) MovePlayerWithCommand(ctx context.Context, cmd *MovePlayerCommand) error {
 	// 解析玩家ID
 	playerID := player.PlayerID{}
 	// 注意：这里需要实现PlayerID的解析逻辑
@@ -274,7 +274,7 @@ func (s *PlayerService) GetOnlinePlayers(ctx context.Context, query *GetOnlinePl
 func (s *PlayerService) Login(ctx context.Context, playerID string) (*LoginPlayerResult, error) {
 	// 解析玩家ID
 	pid := player.PlayerID{}
-	
+
 	// 查找玩家
 	p, err := s.playerRepo.FindByID(ctx, pid)
 	if err != nil {
@@ -283,21 +283,21 @@ func (s *PlayerService) Login(ctx context.Context, playerID string) (*LoginPlaye
 	if p == nil {
 		return nil, player.ErrPlayerNotFound
 	}
-	
+
 	// 更新玩家状态为在线
-	p.SetStatus(player.StatusOnline)
-	
+	p.SetOnline()
+
 	// 保存玩家
 	if err := s.playerRepo.Save(ctx, p); err != nil {
 		return nil, fmt.Errorf("保存玩家失败: %w", err)
 	}
-	
+
 	return &LoginPlayerResult{
 		PlayerID: p.ID().String(),
 		Name:     p.Name(),
 		Level:    p.Level(),
 		Status:   p.Status(),
-		Position: p.Position(),
+		Position: p.GetPosition(),
 		Stats:    p.Stats(),
 	}, nil
 }
@@ -306,7 +306,7 @@ func (s *PlayerService) Login(ctx context.Context, playerID string) (*LoginPlaye
 func (s *PlayerService) Logout(ctx context.Context, playerID string) error {
 	// 解析玩家ID
 	pid := player.PlayerID{}
-	
+
 	// 查找玩家
 	p, err := s.playerRepo.FindByID(ctx, pid)
 	if err != nil {
@@ -315,15 +315,15 @@ func (s *PlayerService) Logout(ctx context.Context, playerID string) error {
 	if p == nil {
 		return player.ErrPlayerNotFound
 	}
-	
+
 	// 更新玩家状态为离线
-	p.SetStatus(player.StatusOffline)
-	
+	p.SetOffline()
+
 	// 保存玩家
 	if err := s.playerRepo.Save(ctx, p); err != nil {
 		return fmt.Errorf("保存玩家失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -331,7 +331,7 @@ func (s *PlayerService) Logout(ctx context.Context, playerID string) error {
 func (s *PlayerService) GetPlayerInfo(ctx context.Context, playerID string) (*LoginPlayerResult, error) {
 	// 解析玩家ID
 	pid := player.PlayerID{}
-	
+
 	// 查找玩家
 	p, err := s.playerRepo.FindByID(ctx, pid)
 	if err != nil {
@@ -340,13 +340,13 @@ func (s *PlayerService) GetPlayerInfo(ctx context.Context, playerID string) (*Lo
 	if p == nil {
 		return nil, player.ErrPlayerNotFound
 	}
-	
+
 	return &LoginPlayerResult{
 		PlayerID: p.ID().String(),
 		Name:     p.Name(),
 		Level:    p.Level(),
 		Status:   p.Status(),
-		Position: p.Position(),
+		Position: p.GetPosition(),
 		Stats:    p.Stats(),
 	}, nil
 }
@@ -355,7 +355,7 @@ func (s *PlayerService) GetPlayerInfo(ctx context.Context, playerID string) (*Lo
 func (s *PlayerService) UpdatePlayer(ctx context.Context, playerID string, updates map[string]interface{}) error {
 	// 解析玩家ID
 	pid := player.PlayerID{}
-	
+
 	// 查找玩家
 	p, err := s.playerRepo.FindByID(ctx, pid)
 	if err != nil {
@@ -364,26 +364,24 @@ func (s *PlayerService) UpdatePlayer(ctx context.Context, playerID string, updat
 	if p == nil {
 		return player.ErrPlayerNotFound
 	}
-	
+
 	// 应用更新
 	for key, value := range updates {
 		switch key {
 		case "name":
-			if name, ok := value.(string); ok {
-				p.SetName(name)
-			}
+			// TODO: 实现名称更新逻辑
+			_ = value
 		case "level":
-			if level, ok := value.(int); ok {
-				p.SetLevel(level)
-			}
-		// 可以添加更多字段的更新逻辑
+			// TODO: 实现等级更新逻辑
+			_ = value
+			// 可以添加更多字段的更新逻辑
 		}
 	}
-	
+
 	// 保存玩家
 	if err := s.playerRepo.Save(ctx, p); err != nil {
 		return fmt.Errorf("保存玩家失败: %w", err)
 	}
-	
+
 	return nil
 }

@@ -1,18 +1,19 @@
 package synthesis
 
 import (
+	"math/rand"
 	"time"
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 )
 
 // SynthesisAggregate 合成聚合根
 type SynthesisAggregate struct {
-	playerID    string
-	recipes     map[string]*Recipe
-	materials   map[string]*Material
-	history     []*SynthesisRecord
-	updatedAt   time.Time
-	version     int
+	playerID  string
+	recipes   map[string]*Recipe
+	materials map[string]*Material
+	history   []*SynthesisRecord
+	updatedAt time.Time
+	version   int
 }
 
 // NewSynthesisAggregate 创建合成聚合根
@@ -37,7 +38,7 @@ func (s *SynthesisAggregate) AddRecipe(recipe *Recipe) error {
 	if recipe == nil {
 		return ErrInvalidRecipe
 	}
-	
+
 	s.recipes[recipe.GetID()] = recipe
 	s.updateVersion()
 	return nil
@@ -58,14 +59,14 @@ func (s *SynthesisAggregate) AddMaterial(material *Material) error {
 	if material == nil {
 		return ErrInvalidMaterial
 	}
-	
+
 	existing, exists := s.materials[material.GetID()]
 	if exists {
 		existing.AddQuantity(material.GetQuantity())
 	} else {
 		s.materials[material.GetID()] = material
 	}
-	
+
 	s.updateVersion()
 	return nil
 }
@@ -76,16 +77,16 @@ func (s *SynthesisAggregate) ConsumeMaterial(materialID string, quantity int) er
 	if !exists {
 		return ErrMaterialNotFound
 	}
-	
+
 	if material.GetQuantity() < quantity {
 		return ErrInsufficientMaterial
 	}
-	
+
 	material.ConsumeQuantity(quantity)
 	if material.GetQuantity() <= 0 {
 		delete(s.materials, materialID)
 	}
-	
+
 	s.updateVersion()
 	return nil
 }
@@ -106,7 +107,7 @@ func (s *SynthesisAggregate) CanSynthesize(recipeID string) error {
 	if !exists {
 		return ErrRecipeNotFound
 	}
-	
+
 	// 检查材料是否足够
 	for _, requirement := range recipe.GetRequirements() {
 		material, exists := s.materials[requirement.MaterialID]
@@ -114,7 +115,7 @@ func (s *SynthesisAggregate) CanSynthesize(recipeID string) error {
 			return ErrInsufficientMaterial
 		}
 	}
-	
+
 	return nil
 }
 
@@ -124,7 +125,7 @@ func (s *SynthesisAggregate) Synthesize(recipeID string, quantity int) (*Synthes
 	if !exists {
 		return nil, ErrRecipeNotFound
 	}
-	
+
 	// 检查材料是否足够
 	for _, requirement := range recipe.GetRequirements() {
 		requiredQuantity := requirement.Quantity * quantity
@@ -133,7 +134,7 @@ func (s *SynthesisAggregate) Synthesize(recipeID string, quantity int) (*Synthes
 			return nil, ErrInsufficientMaterial
 		}
 	}
-	
+
 	// 消耗材料
 	for _, requirement := range recipe.GetRequirements() {
 		requiredQuantity := requirement.Quantity * quantity
@@ -142,14 +143,14 @@ func (s *SynthesisAggregate) Synthesize(recipeID string, quantity int) (*Synthes
 			return nil, err
 		}
 	}
-	
+
 	// 计算合成结果
 	result := s.calculateSynthesisResult(recipe, quantity)
-	
+
 	// 记录合成历史
 	record := NewSynthesisRecord(s.playerID, recipeID, quantity, result)
 	s.history = append(s.history, record)
-	
+
 	s.updateVersion()
 	return result, nil
 }
@@ -157,7 +158,7 @@ func (s *SynthesisAggregate) Synthesize(recipeID string, quantity int) (*Synthes
 // calculateSynthesisResult 计算合成结果
 func (s *SynthesisAggregate) calculateSynthesisResult(recipe *Recipe, quantity int) *SynthesisResult {
 	result := NewSynthesisResult()
-	
+
 	for i := 0; i < quantity; i++ {
 		// 计算成功率
 		if s.rollSuccess(recipe.GetSuccessRate()) {
@@ -172,7 +173,7 @@ func (s *SynthesisAggregate) calculateSynthesisResult(recipe *Recipe, quantity i
 			}
 		}
 	}
-	
+
 	return result
 }
 

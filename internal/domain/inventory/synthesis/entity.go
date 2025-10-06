@@ -2,8 +2,10 @@ package synthesis
 
 import (
 	"time"
-	"math/rand"
+
 	"github.com/google/uuid"
+	// "math/rand"
+	// "github.com/google/uuid"
 )
 
 // Recipe 配方实体
@@ -145,14 +147,14 @@ func (r *Recipe) GetUnlockedAt() time.Time {
 
 // Material 材料实体
 type Material struct {
-	id          string
-	name        string
+	id           string
+	name         string
 	materialType MaterialType
-	quality     Quality
-	quantity    int
-	maxStack    int
-	description string
-	obtainedAt  time.Time
+	quality      Quality
+	quantity     int
+	maxStack     int
+	description  string
+	obtainedAt   time.Time
 }
 
 // NewMaterial 创建材料
@@ -237,12 +239,12 @@ func (m *Material) GetObtainedAt() time.Time {
 
 // SynthesisRecord 合成记录实体
 type SynthesisRecord struct {
-	id         string
-	playerID   string
-	recipeID   string
-	quantity   int
-	result     *SynthesisResult
-	createdAt  time.Time
+	id        string
+	playerID  string
+	recipeID  string
+	quantity  int
+	result    *SynthesisResult
+	createdAt time.Time
 }
 
 // NewSynthesisRecord 创建合成记录

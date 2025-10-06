@@ -13,7 +13,8 @@ import (
 
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
-	"greatestworks/internal/interfaces/grpc"
+
+	// "greatestworks/internal/interfaces/grpc" // TODO: 实现gRPC接口
 	"greatestworks/internal/interfaces/http"
 	"greatestworks/internal/interfaces/tcp"
 )
@@ -27,17 +28,17 @@ type ServerConfig struct {
 
 // MultiProtocolServer 多协议服务器
 type MultiProtocolServer struct {
-	config        *ServerConfig
-	httpServer    *http.HTTPServer
-	tcpServer     *tcp.TCPServer
-	grpcServer    *grpc.GRPCServer
-	commandBus    *handlers.CommandBus
-	queryBus      *handlers.QueryBus
-	logger        logger.Logger
-	ctx           context.Context
-	cancel        context.CancelFunc
-	wg            sync.WaitGroup
-	shutdownChan  chan os.Signal
+	config       *ServerConfig
+	httpServer   *http.HTTPServer
+	tcpServer    *tcp.TCPServer
+	grpcServer   *grpc.GRPCServer
+	commandBus   *handlers.CommandBus
+	queryBus     *handlers.QueryBus
+	logger       logger.Logger
+	ctx          context.Context
+	cancel       context.CancelFunc
+	wg           sync.WaitGroup
+	shutdownChan chan os.Signal
 }
 
 // NewMultiProtocolServer 创建多协议服务器
@@ -204,13 +205,13 @@ func loadConfig() (*ServerConfig, error) {
 			EnableSwagger:  true,
 		},
 		TCP: &tcp.ServerConfig{
-			Addr:               ":9090",
-			MaxConnections:     10000,
-			ReadTimeout:        30 * time.Second,
-			WriteTimeout:       30 * time.Second,
-			HeartbeatConfig:    tcp.DefaultHeartbeatConfig(),
-			EnableCompression:  false,
-			BufferSize:         4096,
+			Addr:              ":9090",
+			MaxConnections:    10000,
+			ReadTimeout:       30 * time.Second,
+			WriteTimeout:      30 * time.Second,
+			HeartbeatConfig:   tcp.DefaultHeartbeatConfig(),
+			EnableCompression: false,
+			BufferSize:        4096,
 		},
 		GRPC: &grpc.ServerConfig{
 			Addr:                  ":9091",

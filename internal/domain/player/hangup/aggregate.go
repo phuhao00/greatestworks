@@ -2,7 +2,6 @@ package hangup
 
 import (
 	"time"
-	"errors"
 )
 
 // HangupAggregate 挂机聚合根
@@ -50,17 +49,17 @@ func (h *HangupAggregate) SetHangupLocation(location *HangupLocation) error {
 	if location == nil {
 		return ErrInvalidHangupLocation
 	}
-	
+
 	// 检查地点解锁条件
 	if !location.IsUnlocked() {
 		return ErrHangupLocationNotUnlocked
 	}
-	
+
 	// 检查玩家等级要求
 	if !h.checkLocationRequirements(location) {
 		return ErrHangupLocationRequirementNotMet
 	}
-	
+
 	h.currentLocation = location
 	h.updateVersion()
 	return nil
@@ -76,11 +75,11 @@ func (h *HangupAggregate) StartHangup() error {
 	if h.currentLocation == nil {
 		return ErrNoHangupLocationSet
 	}
-	
+
 	if h.hangupStatus == HangupStatusOnline {
 		return ErrAlreadyHangingUp
 	}
-	
+
 	h.hangupStatus = HangupStatusOnline
 	h.lastOnlineTime = time.Now()
 	h.updateVersion()
@@ -92,15 +91,15 @@ func (h *HangupAggregate) StopHangup() error {
 	if h.hangupStatus == HangupStatusOffline {
 		return ErrNotHangingUp
 	}
-	
+
 	h.hangupStatus = HangupStatusOffline
 	h.lastOfflineTime = time.Now()
-	
+
 	// 计算挂机时间
 	hangupDuration := h.lastOfflineTime.Sub(h.lastOnlineTime)
 	h.totalHangupTime += hangupDuration
 	h.dailyHangupTime += hangupDuration
-	
+
 	h.updateVersion()
 	return nil
 }
@@ -110,29 +109,29 @@ func (h *HangupAggregate) CalculateOfflineReward(offlineDuration time.Duration) 
 	if h.currentLocation == nil {
 		return nil, ErrNoHangupLocationSet
 	}
-	
+
 	// 限制最大离线时间（例如24小时）
 	maxOfflineTime := 24 * time.Hour
 	if offlineDuration > maxOfflineTime {
 		offlineDuration = maxOfflineTime
 	}
-	
+
 	// 计算基础奖励
 	baseReward := h.currentLocation.CalculateBaseReward(offlineDuration)
-	
+
 	// 应用效率加成
 	finalReward := h.efficiencyBonus.ApplyBonus(baseReward)
-	
+
 	// 创建离线奖励
 	offlineReward := &OfflineReward{
-		Experience:     finalReward.Experience,
-		Gold:           finalReward.Gold,
-		Items:          finalReward.Items,
+		Experience:      finalReward.Experience,
+		Gold:            finalReward.Gold,
+		Items:           finalReward.Items,
 		OfflineDuration: offlineDuration,
-		LocationID:     h.currentLocation.GetID(),
-		CalculatedAt:   time.Now(),
+		LocationID:      h.currentLocation.GetID(),
+		CalculatedAt:    time.Now(),
 	}
-	
+
 	h.offlineReward = offlineReward
 	h.updateVersion()
 	return offlineReward, nil
@@ -143,18 +142,18 @@ func (h *HangupAggregate) ClaimOfflineReward() (*OfflineReward, error) {
 	if h.offlineReward == nil {
 		return nil, ErrNoOfflineRewardAvailable
 	}
-	
+
 	if h.offlineReward.IsClaimed {
 		return nil, ErrOfflineRewardAlreadyClaimed
 	}
-	
+
 	// 标记为已领取
 	h.offlineReward.IsClaimed = true
 	h.offlineReward.ClaimedAt = time.Now()
-	
+
 	reward := h.offlineReward
 	h.offlineReward = nil // 清空已领取的奖励
-	
+
 	h.updateVersion()
 	return reward, nil
 }
@@ -243,7 +242,7 @@ func (h *HangupAggregate) checkLocationRequirements(location *HangupLocation) bo
 func (h *HangupAggregate) checkDailyReset() {
 	now := time.Now()
 	currentDate := now.Truncate(24 * time.Hour)
-	
+
 	if currentDate.After(h.lastResetDate) {
 		h.dailyHangupTime = 0
 		h.lastResetDate = currentDate
@@ -279,15 +278,3 @@ func (hs HangupStatus) String() string {
 		return "unknown"
 	}
 }
-
-// 挂机相关错误
-var (
-	ErrInvalidHangupLocation          = errors.New("invalid hangup location")
-	ErrHangupLocationNotUnlocked      = errors.New("hangup location not unlocked")
-	ErrHangupLocationRequirementNotMet = errors.New("hangup location requirement not met")
-	ErrNoHangupLocationSet            = errors.New("no hangup location set")
-	ErrAlreadyHangingUp               = errors.New("already hanging up")
-	ErrNotHangingUp                   = errors.New("not hanging up")
-	ErrNoOfflineRewardAvailable       = errors.New("no offline reward available")
-	ErrOfflineRewardAlreadyClaimed    = errors.New("offline reward already claimed")
-)

@@ -7,33 +7,33 @@ import (
 
 // Crop 作物实体
 type Crop struct {
-	ID              string
-	SeedType        SeedType
-	Quantity        int
-	GrowthStage     GrowthStage
-	HealthPoints    float64
-	MaxHealthPoints float64
-	GrowthProgress  float64
-	WaterLevel      float64
-	NutrientLevel   float64
-	PlantedTime     time.Time
-	LastWateredTime time.Time
-	LastFertilizedTime time.Time
+	ID                  string
+	SeedType            SeedType
+	Quantity            int
+	GrowthStage         GrowthStage
+	HealthPoints        float64
+	MaxHealthPoints     float64
+	GrowthProgress      float64
+	WaterLevel          float64
+	NutrientLevel       float64
+	PlantedTime         time.Time
+	LastWateredTime     time.Time
+	LastFertilizedTime  time.Time
 	ExpectedHarvestTime time.Time
-	SoilCondition   *Soil
-	ClimateZone     string
-	CareHistory     []*CareRecord
-	Problems        []string
-	Bonuses         []*GrowthBonus
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	SoilCondition       *Soil
+	ClimateZone         string
+	CareHistory         []*CareRecord
+	Problems            []string
+	Bonuses             []*GrowthBonus
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }
 
 // NewCrop 创建作物
 func NewCrop(id string, seedType SeedType, quantity int, soil *Soil, climateZone string) *Crop {
 	now := time.Now()
 	growthDuration := seedType.GetGrowthDuration()
-	
+
 	return &Crop{
 		ID:                  id,
 		SeedType:            seedType,
@@ -119,7 +119,7 @@ func (c *Crop) Water(amount float64) {
 	if c.WaterLevel > 100.0 {
 		c.WaterLevel = 100.0
 	}
-	
+
 	c.LastWateredTime = time.Now()
 	c.addCareRecord("watering", amount)
 	c.UpdatedAt = time.Now()
@@ -131,12 +131,12 @@ func (c *Crop) Fertilize(fertilizer *Fertilizer) {
 	if c.NutrientLevel > 100.0 {
 		c.NutrientLevel = 100.0
 	}
-	
+
 	// 应用肥料的额外效果
 	if bonus := fertilizer.GetGrowthBonus(); bonus != nil {
 		c.AddBonus(bonus)
 	}
-	
+
 	c.LastFertilizedTime = time.Now()
 	c.addCareRecord("fertilizing", fertilizer.GetNutrientValue())
 	c.UpdatedAt = time.Now()
@@ -147,29 +147,29 @@ func (c *Crop) Update(currentTime time.Time) {
 	// 计算时间差
 	timeDiff := currentTime.Sub(c.UpdatedAt)
 	hours := timeDiff.Hours()
-	
+
 	if hours <= 0 {
 		return
 	}
-	
+
 	// 更新生长进度
 	c.updateGrowthProgress(hours)
-	
+
 	// 更新生长阶段
 	c.updateGrowthStage()
-	
+
 	// 消耗水分和营养
 	c.consumeResources(hours)
-	
+
 	// 更新健康状态
 	c.updateHealth()
-	
+
 	// 处理奖励效果
 	c.processGrowthBonuses(hours)
-	
+
 	// 检查问题
 	c.checkForProblems()
-	
+
 	c.UpdatedAt = currentTime
 }
 
@@ -242,13 +242,13 @@ func (c *Crop) GetBaseExperience() int {
 // GetValue 获取作物价值
 func (c *Crop) GetValue() float64 {
 	baseValue := c.SeedType.GetBaseValue() * float64(c.Quantity)
-	
+
 	// 生长进度影响
 	progressMultiplier := c.GrowthProgress / 100.0
-	
+
 	// 健康状态影响
 	healthMultiplier := c.GetHealthScore() / 100.0
-	
+
 	return baseValue * progressMultiplier * healthMultiplier
 }
 
@@ -257,15 +257,15 @@ func (c *Crop) GetCareQualityMultiplier() float64 {
 	if len(c.CareHistory) == 0 {
 		return 1.0
 	}
-	
+
 	// 基于照料历史计算质量倍率
 	totalCare := 0.0
 	for _, record := range c.CareHistory {
 		totalCare += record.Quality
 	}
-	
+
 	averageQuality := totalCare / float64(len(c.CareHistory))
-	return 0.8 + (averageQuality / 100.0) * 0.4 // 0.8-1.2倍率
+	return 0.8 + (averageQuality/100.0)*0.4 // 0.8-1.2倍率
 }
 
 // GetCareQualityScore 获取照料质量分数
@@ -278,16 +278,16 @@ func (c *Crop) GetCareQualityScore() float64 {
 // updateGrowthProgress 更新生长进度
 func (c *Crop) updateGrowthProgress(hours float64) {
 	baseGrowthRate := c.SeedType.GetGrowthRate()
-	
+
 	// 应用环境因素
 	environmentMultiplier := c.calculateEnvironmentMultiplier()
-	
+
 	// 应用奖励效果
 	bonusMultiplier := c.calculateBonusMultiplier()
-	
+
 	// 计算实际生长速度
 	actualGrowthRate := baseGrowthRate * environmentMultiplier * bonusMultiplier
-	
+
 	// 更新进度
 	c.GrowthProgress += actualGrowthRate * hours
 	if c.GrowthProgress > 100.0 {
@@ -318,7 +318,7 @@ func (c *Crop) consumeResources(hours float64) {
 	if c.WaterLevel < 0 {
 		c.WaterLevel = 0
 	}
-	
+
 	// 营养消耗
 	nutrientConsumption := c.SeedType.GetNutrientConsumption() * hours
 	c.NutrientLevel -= nutrientConsumption
@@ -335,7 +335,7 @@ func (c *Crop) updateHealth() {
 	} else if c.WaterLevel > 80.0 && c.NutrientLevel > 80.0 {
 		c.HealthPoints += 2.0 // 充足的水分和营养会恢复健康值
 	}
-	
+
 	// 限制健康值范围
 	if c.HealthPoints < 0 {
 		c.HealthPoints = 0
@@ -360,22 +360,22 @@ func (c *Crop) processGrowthBonuses(hours float64) {
 func (c *Crop) checkForProblems() {
 	// 清除旧问题
 	c.Problems = c.Problems[:0]
-	
+
 	// 检查缺水
 	if c.WaterLevel < 20.0 {
 		c.AddProblem("drought_stress")
 	}
-	
+
 	// 检查缺营养
 	if c.NutrientLevel < 20.0 {
 		c.AddProblem("nutrient_deficiency")
 	}
-	
+
 	// 检查健康状态
 	if c.HealthPoints < 30.0 {
 		c.AddProblem("poor_health")
 	}
-	
+
 	// 检查过度浇水
 	if c.WaterLevel > 95.0 {
 		c.AddProblem("overwatering")
@@ -385,39 +385,39 @@ func (c *Crop) checkForProblems() {
 // calculateEnvironmentMultiplier 计算环境倍率
 func (c *Crop) calculateEnvironmentMultiplier() float64 {
 	multiplier := 1.0
-	
+
 	// 土壤影响
 	if c.SoilCondition != nil {
 		multiplier *= c.SoilCondition.GetGrowthMultiplier(c.SeedType)
 	}
-	
+
 	// 水分影响
 	if c.WaterLevel < 30.0 {
 		multiplier *= 0.7 // 缺水减慢生长
 	} else if c.WaterLevel > 80.0 {
 		multiplier *= 1.1 // 充足水分加速生长
 	}
-	
+
 	// 营养影响
 	if c.NutrientLevel < 30.0 {
 		multiplier *= 0.8 // 缺营养减慢生长
 	} else if c.NutrientLevel > 80.0 {
 		multiplier *= 1.2 // 充足营养加速生长
 	}
-	
+
 	return multiplier
 }
 
 // calculateBonusMultiplier 计算奖励倍率
 func (c *Crop) calculateBonusMultiplier() float64 {
 	multiplier := 1.0
-	
+
 	for _, bonus := range c.Bonuses {
 		if bonus.IsActive() {
 			multiplier *= bonus.Multiplier
 		}
 	}
-	
+
 	return multiplier
 }
 
@@ -429,9 +429,9 @@ func (c *Crop) addCareRecord(careType string, value float64) {
 		Quality:   c.calculateCareQuality(careType, value),
 		Timestamp: time.Now(),
 	}
-	
+
 	c.CareHistory = append(c.CareHistory, record)
-	
+
 	// 限制历史记录数量
 	if len(c.CareHistory) > 50 {
 		c.CareHistory = c.CareHistory[1:]
@@ -517,11 +517,6 @@ func (p *Plot) GetCrop() *Crop {
 	return p.Crop
 }
 
-// IsAvailable 检查是否可用
-func (p *Plot) IsAvailable() bool {
-	return p.IsAvailable && p.Crop == nil
-}
-
 // HasCrop 检查是否有作物
 func (p *Plot) HasCrop() bool {
 	return p.Crop != nil
@@ -529,10 +524,10 @@ func (p *Plot) HasCrop() bool {
 
 // PlantCrop 种植作物
 func (p *Plot) PlantCrop(crop *Crop) error {
-	if !p.IsAvailable() {
+	if !p.IsAvailable {
 		return fmt.Errorf("plot is not available")
 	}
-	
+
 	p.Crop = crop
 	p.IsAvailable = false
 	p.LastUsed = time.Now()
@@ -549,24 +544,24 @@ func (p *Plot) ClearCrop() {
 
 // FarmTool 农具实体
 type FarmTool struct {
-	ID           string
-	Name         string
-	Type         ToolType
-	Level        int
-	Durability   float64
+	ID            string
+	Name          string
+	Type          ToolType
+	Level         int
+	Durability    float64
 	MaxDurability float64
-	Efficiency   float64
-	IsActive     bool
-	LastUsed     time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	Efficiency    float64
+	IsActive      bool
+	LastUsed      time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 // NewFarmTool 创建农具
 func NewFarmTool(id, name string, toolType ToolType, level int) *FarmTool {
 	now := time.Now()
 	maxDurability := float64(100 + level*20) // 等级越高耐久越高
-	
+
 	return &FarmTool{
 		ID:            id,
 		Name:          name,
@@ -612,11 +607,6 @@ func (ft *FarmTool) GetEfficiency() float64 {
 	return ft.Efficiency
 }
 
-// IsActive 检查是否激活
-func (ft *FarmTool) IsActive() bool {
-	return ft.IsActive && ft.Durability > 0
-}
-
 // IsUsable 检查是否可用
 func (ft *FarmTool) IsUsable() bool {
 	return ft.IsActive && ft.Durability >= 10.0 // 至少需要10点耐久
@@ -627,16 +617,16 @@ func (ft *FarmTool) Use() *ToolEffect {
 	if !ft.IsUsable() {
 		return nil
 	}
-	
+
 	// 消耗耐久度
 	ft.Durability -= 5.0
 	if ft.Durability < 0 {
 		ft.Durability = 0
 	}
-	
+
 	ft.LastUsed = time.Now()
 	ft.UpdatedAt = time.Now()
-	
+
 	// 返回工具效果
 	return ft.Type.GetEffect(ft.Level, ft.Efficiency)
 }
@@ -664,16 +654,16 @@ func (ft *FarmTool) GetValue() float64 {
 	baseValue := ft.Type.GetBaseValue()
 	levelMultiplier := 1.0 + float64(ft.Level)*0.2
 	durabilityMultiplier := ft.Durability / ft.MaxDurability
-	
+
 	return baseValue * levelMultiplier * durabilityMultiplier
 }
 
 // GetProductivityBonus 获取生产力奖励
 func (ft *FarmTool) GetProductivityBonus() float64 {
-	if !ft.IsActive() {
+	if !ft.IsActive {
 		return 1.0
 	}
-	
+
 	return ft.Efficiency
 }
 

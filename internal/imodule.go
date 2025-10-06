@@ -1,8 +1,6 @@
 package internal
 
-import (
-	"greatestworks/internal/note/event"
-)
+// "greatestworks/internal/note/event" // TODO: 实现事件系统
 
 // IManager 管理器接口定义
 type IManager interface {
@@ -30,7 +28,7 @@ type ConfigMgrAction interface {
 }
 
 type IModule interface {
-	OnEvent(c Character, event event.IEvent)
+	OnEvent(c Character, event interface{}) // TODO: 实现event系统
 	SetEventCategoryActive(eventCategory int)
 	RegisterHandler()
 	IManager

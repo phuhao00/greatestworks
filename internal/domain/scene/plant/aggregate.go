@@ -1,9 +1,9 @@
 package plant
 
 import (
+	"errors"
 	"fmt"
 	"time"
-	"errors"
 )
 
 // FarmAggregate 农场聚合根
@@ -81,7 +81,7 @@ func (f *FarmAggregate) SetName(name string) error {
 	if name == "" {
 		return ErrInvalidFarmName
 	}
-	
+
 	f.name = name
 	f.updateVersion()
 	return nil
@@ -108,12 +108,12 @@ func (f *FarmAggregate) ExpandFarm(newSize FarmSize) error {
 	if newSize <= f.size {
 		return ErrInvalidFarmSize
 	}
-	
+
 	// 检查扩展条件
 	if !f.canExpand(newSize) {
 		return ErrFarmExpansionNotAllowed
 	}
-	
+
 	f.size = newSize
 	f.updateVersion()
 	return nil
@@ -129,7 +129,7 @@ func (f *FarmAggregate) UpdateSoil(soil *Soil) error {
 	if soil == nil {
 		return ErrInvalidSoil
 	}
-	
+
 	f.soil = soil
 	f.updateVersion()
 	return nil
@@ -140,21 +140,21 @@ func (f *FarmAggregate) ImproveSoil(fertilizer *Fertilizer) error {
 	if fertilizer == nil {
 		return ErrInvalidFertilizer
 	}
-	
+
 	// 检查资源是否足够
 	if !f.resources.HasEnoughFertilizer(fertilizer.GetType(), fertilizer.GetAmount()) {
 		return ErrInsufficientResources
 	}
-	
+
 	// 应用肥料效果
 	f.soil.ApplyFertilizer(fertilizer)
-	
+
 	// 消耗资源
 	f.resources.ConsumeFertilizer(fertilizer.GetType(), fertilizer.GetAmount())
-	
+
 	// 更新统计
 	f.statistics.AddFertilizerUsage(fertilizer.GetType(), fertilizer.GetAmount())
-	
+
 	f.updateVersion()
 	return nil
 }
@@ -164,52 +164,52 @@ func (f *FarmAggregate) PlantCrop(plotID string, seedType SeedType, quantity int
 	if plotID == "" {
 		return ErrInvalidPlotID
 	}
-	
+
 	if !seedType.IsValid() {
 		return ErrInvalidSeedType
 	}
-	
+
 	if quantity <= 0 {
 		return ErrInvalidQuantity
 	}
-	
+
 	// 检查地块是否存在
 	plot, exists := f.plots[plotID]
 	if !exists {
 		return ErrPlotNotFound
 	}
-	
+
 	// 检查地块是否可用
 	if !plot.IsAvailable() {
 		return ErrPlotNotAvailable
 	}
-	
+
 	// 检查种子资源
 	if !f.resources.HasEnoughSeeds(seedType, quantity) {
 		return ErrInsufficientSeeds
 	}
-	
+
 	// 检查土壤适宜性
 	if !f.soil.IsSuitableFor(seedType) {
 		return ErrSoilNotSuitable
 	}
-	
+
 	// 创建作物
 	crop := NewCrop(generateCropID(), seedType, quantity, f.soil, f.climateZone)
-	
+
 	// 应用季节修正
 	f.seasonModifier.ApplyToCrop(crop)
-	
+
 	// 种植作物
 	plot.PlantCrop(crop)
 	f.crops[crop.GetID()] = crop
-	
+
 	// 消耗种子
 	f.resources.ConsumeSeeds(seedType, quantity)
-	
+
 	// 更新统计
 	f.statistics.AddPlantingActivity(seedType, quantity)
-	
+
 	f.updateVersion()
 	return nil
 }
@@ -219,38 +219,38 @@ func (f *FarmAggregate) WaterCrops(plotIDs []string, waterAmount float64) error 
 	if len(plotIDs) == 0 {
 		return ErrInvalidPlotID
 	}
-	
+
 	if waterAmount <= 0 {
 		return ErrInvalidWaterAmount
 	}
-	
+
 	// 检查水资源
 	totalWaterNeeded := waterAmount * float64(len(plotIDs))
 	if !f.resources.HasEnoughWater(totalWaterNeeded) {
 		return ErrInsufficientWater
 	}
-	
+
 	for _, plotID := range plotIDs {
 		plot, exists := f.plots[plotID]
 		if !exists {
 			continue
 		}
-		
+
 		// 浇水
 		if crop := plot.GetCrop(); crop != nil {
 			crop.Water(waterAmount)
 		}
-		
+
 		// 更新土壤湿度
 		f.soil.AddMoisture(waterAmount)
 	}
-	
+
 	// 消耗水资源
 	f.resources.ConsumeWater(totalWaterNeeded)
-	
+
 	// 更新统计
 	f.statistics.AddWateringActivity(len(plotIDs), totalWaterNeeded)
-	
+
 	f.updateVersion()
 	return nil
 }
@@ -260,21 +260,21 @@ func (f *FarmAggregate) HarvestCrop(cropID string) (*HarvestResult, error) {
 	if cropID == "" {
 		return nil, ErrInvalidCropID
 	}
-	
+
 	crop, exists := f.crops[cropID]
 	if !exists {
 		return nil, ErrCropNotFound
 	}
-	
+
 	// 检查作物是否可收获
 	if !crop.IsHarvestable() {
 		return nil, ErrCropNotHarvestable
 	}
-	
+
 	// 计算收获量
 	yield := f.calculateYield(crop)
 	quality := f.calculateQuality(crop)
-	
+
 	// 创建收获结果
 	result := &HarvestResult{
 		CropID:      cropID,
@@ -284,16 +284,16 @@ func (f *FarmAggregate) HarvestCrop(cropID string) (*HarvestResult, error) {
 		HarvestTime: time.Now(),
 		Experience:  f.calculateExperience(crop, yield, quality),
 	}
-	
+
 	// 添加收获物到资源
 	f.resources.AddHarvest(crop.GetSeedType(), yield, quality)
-	
+
 	// 更新统计
 	f.statistics.AddHarvestActivity(crop.GetSeedType(), yield, quality)
-	
+
 	// 移除作物
 	delete(f.crops, cropID)
-	
+
 	// 释放地块
 	for _, plot := range f.plots {
 		if plot.GetCrop() != nil && plot.GetCrop().GetID() == cropID {
@@ -301,28 +301,28 @@ func (f *FarmAggregate) HarvestCrop(cropID string) (*HarvestResult, error) {
 			break
 		}
 	}
-	
+
 	f.lastHarvestTime = time.Now()
 	f.updateVersion()
-	
+
 	return result, nil
 }
 
 // UpdateCrops 更新所有作物
 func (f *FarmAggregate) UpdateCrops() error {
 	now := time.Now()
-	
+
 	for _, crop := range f.crops {
 		// 更新作物生长
 		crop.Update(now)
-		
+
 		// 应用环境影响
 		f.applyEnvironmentalEffects(crop)
-		
+
 		// 检查病虫害
 		f.checkPestsAndDiseases(crop)
 	}
-	
+
 	f.lastUpdateTime = now
 	f.updateVersion()
 	return nil
@@ -348,12 +348,12 @@ func (f *FarmAggregate) AddPlot(plot *Plot) error {
 	if plot == nil {
 		return ErrInvalidPlot
 	}
-	
+
 	// 检查地块数量限制
 	if len(f.plots) >= f.size.GetMaxPlots() {
 		return ErrMaxPlotsReached
 	}
-	
+
 	f.plots[plot.GetID()] = plot
 	f.updateVersion()
 	return nil
@@ -365,12 +365,12 @@ func (f *FarmAggregate) RemovePlot(plotID string) error {
 	if !exists {
 		return ErrPlotNotFound
 	}
-	
+
 	// 检查地块是否有作物
 	if plot.HasCrop() {
 		return ErrPlotHasCrop
 	}
-	
+
 	delete(f.plots, plotID)
 	f.updateVersion()
 	return nil
@@ -386,7 +386,7 @@ func (f *FarmAggregate) AddTool(tool *FarmTool) error {
 	if tool == nil {
 		return ErrInvalidTool
 	}
-	
+
 	f.tools = append(f.tools, tool)
 	f.updateVersion()
 	return nil
@@ -398,20 +398,20 @@ func (f *FarmAggregate) UseTool(toolID string, targetID string) error {
 	if tool == nil {
 		return ErrToolNotFound
 	}
-	
+
 	if !tool.IsUsable() {
 		return ErrToolNotUsable
 	}
-	
+
 	// 使用农具
 	effect := tool.Use()
-	
+
 	// 应用效果
 	f.applyToolEffect(effect, targetID)
-	
+
 	// 更新统计
 	f.statistics.AddToolUsage(tool.GetType())
-	
+
 	f.updateVersion()
 	return nil
 }
@@ -487,46 +487,46 @@ func (f *FarmAggregate) GetVersion() int {
 // CalculateFarmValue 计算农场价值
 func (f *FarmAggregate) CalculateFarmValue() float64 {
 	value := 0.0
-	
+
 	// 基础价值
 	value += f.size.GetBaseValue()
-	
+
 	// 土壤价值
 	value += f.soil.GetValue()
-	
+
 	// 作物价值
 	for _, crop := range f.crops {
 		value += crop.GetValue()
 	}
-	
+
 	// 农具价值
 	for _, tool := range f.tools {
 		value += tool.GetValue()
 	}
-	
+
 	// 资源价值
 	value += f.resources.GetTotalValue()
-	
+
 	return value
 }
 
 // CalculateProductivity 计算生产力
 func (f *FarmAggregate) CalculateProductivity() float64 {
 	productivity := 1.0
-	
+
 	// 土壤影响
 	productivity *= f.soil.GetProductivityMultiplier()
-	
+
 	// 季节影响
 	productivity *= f.seasonModifier.GetProductivityMultiplier()
-	
+
 	// 农具影响
 	for _, tool := range f.tools {
 		if tool.IsActive() {
 			productivity *= tool.GetProductivityBonus()
 		}
 	}
-	
+
 	return productivity
 }
 
@@ -535,21 +535,21 @@ func (f *FarmAggregate) GetFarmStatus() FarmStatus {
 	if len(f.crops) == 0 {
 		return FarmStatusIdle
 	}
-	
+
 	// 检查是否有成熟的作物
 	for _, crop := range f.crops {
 		if crop.IsHarvestable() {
 			return FarmStatusHarvestReady
 		}
 	}
-	
+
 	// 检查是否需要照料
 	for _, crop := range f.crops {
 		if crop.NeedsCare() {
 			return FarmStatusNeedsCare
 		}
 	}
-	
+
 	return FarmStatusGrowing
 }
 
@@ -566,32 +566,32 @@ func (f *FarmAggregate) canExpand(newSize FarmSize) bool {
 func (f *FarmAggregate) calculateYield(crop *Crop) int {
 	baseYield := crop.GetBaseYield()
 	multiplier := 1.0
-	
+
 	// 土壤影响
 	multiplier *= f.soil.GetYieldMultiplier(crop.GetSeedType())
-	
+
 	// 季节影响
 	multiplier *= f.seasonModifier.GetYieldMultiplier(crop.GetSeedType())
-	
+
 	// 照料质量影响
 	multiplier *= crop.GetCareQualityMultiplier()
-	
+
 	return int(float64(baseYield) * multiplier)
 }
 
 // calculateQuality 计算品质
 func (f *FarmAggregate) calculateQuality(crop *Crop) CropQuality {
 	qualityScore := 0.0
-	
+
 	// 土壤质量影响
 	qualityScore += f.soil.GetQualityScore()
-	
+
 	// 作物健康度影响
 	qualityScore += crop.GetHealthScore()
-	
+
 	// 照料质量影响
 	qualityScore += crop.GetCareQualityScore()
-	
+
 	// 转换为品质等级
 	if qualityScore >= 90 {
 		return CropQualityLegendary
@@ -610,13 +610,13 @@ func (f *FarmAggregate) calculateQuality(crop *Crop) CropQuality {
 func (f *FarmAggregate) calculateExperience(crop *Crop, yield int, quality CropQuality) int {
 	baseExp := crop.GetBaseExperience()
 	multiplier := 1.0
-	
+
 	// 产量影响
 	multiplier += float64(yield) * 0.01
-	
+
 	// 品质影响
 	multiplier += quality.GetExperienceMultiplier()
-	
+
 	return int(float64(baseExp) * multiplier)
 }
 
@@ -624,7 +624,7 @@ func (f *FarmAggregate) calculateExperience(crop *Crop, yield int, quality CropQ
 func (f *FarmAggregate) applyEnvironmentalEffects(crop *Crop) {
 	// 土壤影响
 	f.soil.ApplyToCrop(crop)
-	
+
 	// 季节影响
 	f.seasonModifier.ApplyToCrop(crop)
 }
@@ -719,25 +719,5 @@ var (
 	ErrInvalidFarmName         = errors.New("invalid farm name")
 	ErrInvalidFarmSize         = errors.New("invalid farm size")
 	ErrFarmExpansionNotAllowed = errors.New("farm expansion not allowed")
-	ErrInvalidSoil             = errors.New("invalid soil")
-	ErrInvalidFertilizer       = errors.New("invalid fertilizer")
-	ErrInsufficientResources   = errors.New("insufficient resources")
-	ErrInvalidPlotID           = errors.New("invalid plot id")
-	ErrInvalidSeedType         = errors.New("invalid seed type")
-	ErrInvalidQuantity         = errors.New("invalid quantity")
-	ErrPlotNotFound            = errors.New("plot not found")
-	ErrPlotNotAvailable        = errors.New("plot not available")
-	ErrInsufficientSeeds       = errors.New("insufficient seeds")
-	ErrSoilNotSuitable         = errors.New("soil not suitable")
-	ErrInvalidWaterAmount      = errors.New("invalid water amount")
-	ErrInsufficientWater       = errors.New("insufficient water")
-	ErrInvalidCropID           = errors.New("invalid crop id")
-	ErrCropNotFound            = errors.New("crop not found")
-	ErrCropNotHarvestable      = errors.New("crop not harvestable")
-	ErrInvalidPlot             = errors.New("invalid plot")
-	ErrMaxPlotsReached         = errors.New("maximum plots reached")
-	ErrPlotHasCrop             = errors.New("plot has crop")
-	ErrInvalidTool             = errors.New("invalid tool")
-	ErrToolNotFound            = errors.New("tool not found")
-	ErrToolNotUsable           = errors.New("tool not usable")
+	// 错误定义已移动到errors.go文件中
 )

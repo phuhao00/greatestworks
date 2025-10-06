@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"greatestworks/internal/infrastructure/module_router"
-	"greatestworks/internal/infrastructure/net/call"
-	"greatestworks/internal/note/event"
+	// "greatestworks/internal/infrastructure/module_router" // TODO: 实现模块路由
+	// "greatestworks/internal/infrastructure/net/call" // TODO: 实现网络调用
+	// "greatestworks/internal/note/event" // TODO: 实现事件系统
 
 	"go.opentelemetry.io/otel/trace"
 )
@@ -12,11 +12,11 @@ type BaseModule struct {
 	ModuleName          string
 	activeEventCategory map[int]bool
 	tracer              trace.Tracer
-	methods             []call.MethodKey
+	// methods             []call.MethodKey // TODO: 实现call包
 }
 
-func (b *BaseModule) OnEvent(c Character, event event.IEvent) {
-
+func (b *BaseModule) OnEvent(c Character, event interface{}) {
+	// TODO: 实现event处理
 }
 
 func (b *BaseModule) SetEventCategoryActive(eventCategory int) {
@@ -68,5 +68,6 @@ func (b *BaseModule) AfterStop() {
 }
 
 func (b *BaseModule) RegisterHandler() {
-	module_router.RegisterModuleMessageHandler(0, 0, nil)
+	// TODO: 实现module_router
+	// module_router.RegisterModuleMessageHandler(0, 0, nil)
 }
