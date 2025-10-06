@@ -18,6 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/expfmt"
+	dto "github.com/prometheus/client_model/go"
 )
 
 // PrometheusRegistry Prometheus注册表实现
@@ -153,7 +154,7 @@ func (pr *PrometheusRegistry) convertToPrometheusMetric(metric Metric) (promethe
 }
 
 // convertFromPrometheusMetricFamily 从Prometheus指标族转换
-func (pr *PrometheusRegistry) convertFromPrometheusMetricFamily(mf *prometheus.MetricFamily) *MetricFamily {
+func (pr *PrometheusRegistry) convertFromPrometheusMetricFamily(mf *dto.MetricFamily) *MetricFamily {
 	result := &MetricFamily{
 		Name:    mf.GetName(),
 		Help:    mf.GetHelp(),
@@ -168,15 +169,15 @@ func (pr *PrometheusRegistry) convertFromPrometheusMetricFamily(mf *prometheus.M
 		}
 
 		switch mf.GetType() {
-		case prometheus.MetricType_COUNTER:
+		case dto.MetricType_COUNTER:
 			sample.Value = m.GetCounter().GetValue()
-		case prometheus.MetricType_GAUGE:
+		case dto.MetricType_GAUGE:
 			sample.Value = m.GetGauge().GetValue()
-		case prometheus.MetricType_HISTOGRAM:
+		case dto.MetricType_HISTOGRAM:
 			hist := m.GetHistogram()
 			sample.Value = hist.GetSampleSum()
 			sample.Buckets = pr.convertBuckets(hist.GetBucket())
-		case prometheus.MetricType_SUMMARY:
+		case dto.MetricType_SUMMARY:
 			summ := m.GetSummary()
 			sample.Value = summ.GetSampleSum()
 			sample.Quantiles = pr.convertQuantiles(summ.GetQuantile())
@@ -189,15 +190,15 @@ func (pr *PrometheusRegistry) convertFromPrometheusMetricFamily(mf *prometheus.M
 }
 
 // convertMetricType 转换指标类型
-func (pr *PrometheusRegistry) convertMetricType(promType prometheus.MetricType) MetricType {
+func (pr *PrometheusRegistry) convertMetricType(promType dto.MetricType) MetricType {
 	switch promType {
-	case prometheus.MetricType_COUNTER:
+	case dto.MetricType_COUNTER:
 		return CounterType
-	case prometheus.MetricType_GAUGE:
+	case dto.MetricType_GAUGE:
 		return GaugeType
-	case prometheus.MetricType_HISTOGRAM:
+	case dto.MetricType_HISTOGRAM:
 		return HistogramType
-	case prometheus.MetricType_SUMMARY:
+	case dto.MetricType_SUMMARY:
 		return SummaryType
 	default:
 		return GaugeType
@@ -205,7 +206,7 @@ func (pr *PrometheusRegistry) convertMetricType(promType prometheus.MetricType) 
 }
 
 // convertLabels 转换标签
-func (pr *PrometheusRegistry) convertLabels(promLabels []*prometheus.LabelPair) Labels {
+func (pr *PrometheusRegistry) convertLabels(promLabels []*dto.LabelPair) Labels {
 	labels := make(Labels)
 	for _, label := range promLabels {
 		labels[label.GetName()] = label.GetValue()
@@ -214,7 +215,7 @@ func (pr *PrometheusRegistry) convertLabels(promLabels []*prometheus.LabelPair) 
 }
 
 // convertBuckets 转换桶
-func (pr *PrometheusRegistry) convertBuckets(promBuckets []*prometheus.Bucket) []Bucket {
+func (pr *PrometheusRegistry) convertBuckets(promBuckets []*dto.Bucket) []Bucket {
 	buckets := make([]Bucket, 0, len(promBuckets))
 	for _, bucket := range promBuckets {
 		buckets = append(buckets, Bucket{
@@ -226,7 +227,7 @@ func (pr *PrometheusRegistry) convertBuckets(promBuckets []*prometheus.Bucket) [
 }
 
 // convertQuantiles 转换分位数
-func (pr *PrometheusRegistry) convertQuantiles(promQuantiles []*prometheus.Quantile) []Quantile {
+func (pr *PrometheusRegistry) convertQuantiles(promQuantiles []*dto.Quantile) []Quantile {
 	quantiles := make([]Quantile, 0, len(promQuantiles))
 	for _, quantile := range promQuantiles {
 		quantiles = append(quantiles, Quantile{
@@ -275,7 +276,7 @@ func (pf *PrometheusFactory) NewCounter(name, help string, labels Labels) Counte
 }
 
 // NewGauge 创建仪表盘
-func (pf *PrometheusFactory) NewGauge(name, help string, labels Labels) Gauge {
+func (pf *PrometheusFactory) NewGauge(name, help string, labels Labels) GaugeInterface {
 	opts := prometheus.GaugeOpts{
 		Namespace:   pf.namespace,
 		Subsystem:   pf.subsystem,
@@ -294,7 +295,7 @@ func (pf *PrometheusFactory) NewGauge(name, help string, labels Labels) Gauge {
 }
 
 // NewHistogram 创建直方图
-func (pf *PrometheusFactory) NewHistogram(name, help string, labels Labels, buckets []float64) Histogram {
+func (pf *PrometheusFactory) NewHistogram(name, help string, labels Labels, buckets []float64) HistogramInterface {
 	opts := prometheus.HistogramOpts{
 		Namespace:   pf.namespace,
 		Subsystem:   pf.subsystem,
@@ -396,18 +397,18 @@ func (pc *PrometheusCounter) Type() MetricType { return CounterType }
 func (pc *PrometheusCounter) Help() string     { return pc.help }
 func (pc *PrometheusCounter) Labels() Labels   { return pc.labels }
 func (pc *PrometheusCounter) Value() interface{} {
-	dto := &prometheus.MetricFamily{}
-	pc.counter.Write(dto)
-	return dto.GetMetric()[0].GetCounter().GetValue()
+	metric := &dto.MetricFamily{}
+	pc.counter.Write(metric)
+	return metric.GetMetric()[0].GetCounter().GetValue()
 }
 func (pc *PrometheusCounter) Reset()        { /* Prometheus计数器不支持重置 */ }
 func (pc *PrometheusCounter) String() string { return fmt.Sprintf("%s{%v} = %v", pc.name, pc.labels, pc.Value()) }
 func (pc *PrometheusCounter) Inc()           { pc.counter.Inc() }
 func (pc *PrometheusCounter) Add(value float64) { pc.counter.Add(value) }
 func (pc *PrometheusCounter) Get() float64 {
-	dto := &prometheus.MetricFamily{}
-	pc.counter.Write(dto)
-	return dto.GetMetric()[0].GetCounter().GetValue()
+	metric := &dto.MetricFamily{}
+	pc.counter.Write(metric)
+	return metric.GetMetric()[0].GetCounter().GetValue()
 }
 
 // PrometheusGauge Prometheus仪表盘实现
@@ -423,9 +424,9 @@ func (pg *PrometheusGauge) Type() MetricType { return GaugeType }
 func (pg *PrometheusGauge) Help() string     { return pg.help }
 func (pg *PrometheusGauge) Labels() Labels   { return pg.labels }
 func (pg *PrometheusGauge) Value() interface{} {
-	dto := &prometheus.MetricFamily{}
-	pg.gauge.Write(dto)
-	return dto.GetMetric()[0].GetGauge().GetValue()
+	metric := &dto.MetricFamily{}
+	pg.gauge.Write(metric)
+	return metric.GetMetric()[0].GetGauge().GetValue()
 }
 func (pg *PrometheusGauge) Reset()                { pg.gauge.Set(0) }
 func (pg *PrometheusGauge) String() string        { return fmt.Sprintf("%s{%v} = %v", pg.name, pg.labels, pg.Value()) }
@@ -435,9 +436,9 @@ func (pg *PrometheusGauge) Dec()                  { pg.gauge.Dec() }
 func (pg *PrometheusGauge) Add(value float64)     { pg.gauge.Add(value) }
 func (pg *PrometheusGauge) Sub(value float64)     { pg.gauge.Sub(value) }
 func (pg *PrometheusGauge) Get() float64 {
-	dto := &prometheus.MetricFamily{}
-	pg.gauge.Write(dto)
-	return dto.GetMetric()[0].GetGauge().GetValue()
+	metric := &dto.MetricFamily{}
+	pg.gauge.Write(metric)
+	return metric.GetMetric()[0].GetGauge().GetValue()
 }
 
 // PrometheusHistogram Prometheus直方图实现
@@ -454,9 +455,9 @@ func (ph *PrometheusHistogram) Type() MetricType { return HistogramType }
 func (ph *PrometheusHistogram) Help() string     { return ph.help }
 func (ph *PrometheusHistogram) Labels() Labels   { return ph.labels }
 func (ph *PrometheusHistogram) Value() interface{} {
-	dto := &prometheus.MetricFamily{}
-	ph.histogram.Write(dto)
-	return dto.GetMetric()[0].GetHistogram().GetSampleSum()
+	metric := &dto.MetricFamily{}
+	ph.histogram.Write(metric)
+	return metric.GetMetric()[0].GetHistogram().GetSampleSum()
 }
 func (ph *PrometheusHistogram) Reset() { /* Prometheus直方图不支持重置 */ }
 func (ph *PrometheusHistogram) String() string {
@@ -469,9 +470,9 @@ func (ph *PrometheusHistogram) ObserveWithLabels(value float64, labels Labels) {
 }
 func (ph *PrometheusHistogram) GetBuckets() []float64 { return ph.buckets }
 func (ph *PrometheusHistogram) GetCounts() []uint64 {
-	dto := &prometheus.MetricFamily{}
-	ph.histogram.Write(dto)
-	buckets := dto.GetMetric()[0].GetHistogram().GetBucket()
+	metric := &dto.MetricFamily{}
+	ph.histogram.Write(metric)
+	buckets := metric.GetMetric()[0].GetHistogram().GetBucket()
 	counts := make([]uint64, len(buckets))
 	for i, bucket := range buckets {
 		counts[i] = bucket.GetCumulativeCount()
@@ -479,14 +480,14 @@ func (ph *PrometheusHistogram) GetCounts() []uint64 {
 	return counts
 }
 func (ph *PrometheusHistogram) GetSum() float64 {
-	dto := &prometheus.MetricFamily{}
-	ph.histogram.Write(dto)
-	return dto.GetMetric()[0].GetHistogram().GetSampleSum()
+	metric := &dto.MetricFamily{}
+	ph.histogram.Write(metric)
+	return metric.GetMetric()[0].GetHistogram().GetSampleSum()
 }
 func (ph *PrometheusHistogram) GetCount() uint64 {
-	dto := &prometheus.MetricFamily{}
-	ph.histogram.Write(dto)
-	return dto.GetMetric()[0].GetHistogram().GetSampleCount()
+	metric := &dto.MetricFamily{}
+	ph.histogram.Write(metric)
+	return metric.GetMetric()[0].GetHistogram().GetSampleCount()
 }
 
 // PrometheusSummary Prometheus摘要实现
@@ -503,9 +504,9 @@ func (ps *PrometheusSummary) Type() MetricType { return SummaryType }
 func (ps *PrometheusSummary) Help() string     { return ps.help }
 func (ps *PrometheusSummary) Labels() Labels   { return ps.labels }
 func (ps *PrometheusSummary) Value() interface{} {
-	dto := &prometheus.MetricFamily{}
-	ps.summary.Write(dto)
-	return dto.GetMetric()[0].GetSummary().GetSampleSum()
+	metric := &dto.MetricFamily{}
+	ps.summary.Write(metric)
+	return metric.GetMetric()[0].GetSummary().GetSampleSum()
 }
 func (ps *PrometheusSummary) Reset() { /* Prometheus摘要不支持重置 */ }
 func (ps *PrometheusSummary) String() string {
@@ -517,28 +518,28 @@ func (ps *PrometheusSummary) ObserveWithLabels(value float64, labels Labels) {
 	ps.summary.Observe(value)
 }
 func (ps *PrometheusSummary) GetQuantiles() map[float64]float64 {
-	dto := &prometheus.MetricFamily{}
-	ps.summary.Write(dto)
+	metric := &dto.MetricFamily{}
+	ps.summary.Write(metric)
 	quantiles := make(map[float64]float64)
-	for _, q := range dto.GetMetric()[0].GetSummary().GetQuantile() {
+	for _, q := range metric.GetMetric()[0].GetSummary().GetQuantile() {
 		quantiles[q.GetQuantile()] = q.GetValue()
 	}
 	return quantiles
 }
 func (ps *PrometheusSummary) GetSum() float64 {
-	dto := &prometheus.MetricFamily{}
-	ps.summary.Write(dto)
-	return dto.GetMetric()[0].GetSummary().GetSampleSum()
+	metric := &dto.MetricFamily{}
+	ps.summary.Write(metric)
+	return metric.GetMetric()[0].GetSummary().GetSampleSum()
 }
 func (ps *PrometheusSummary) GetCount() uint64 {
-	dto := &prometheus.MetricFamily{}
-	ps.summary.Write(dto)
-	return dto.GetMetric()[0].GetSummary().GetSampleCount()
+	metric := &dto.MetricFamily{}
+	ps.summary.Write(metric)
+	return metric.GetMetric()[0].GetSummary().GetSampleCount()
 }
 
 // PrometheusTimer Prometheus计时器实现
 type PrometheusTimer struct {
-	histogram Histogram
+	histogram HistogramInterface
 	name      string
 	help      string
 	labels    Labels

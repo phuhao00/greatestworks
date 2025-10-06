@@ -136,7 +136,7 @@ func (sc *SystemCollector) collectCPUMetrics() {
 		return
 	}
 
-	if gauge, ok := sc.metrics["cpu_usage_percent"].(Gauge); ok {
+	if gauge, ok := sc.metrics["cpu_usage_percent"].(GaugeInterface); ok {
 		gauge.Set(percent[0])
 	}
 }
@@ -148,15 +148,15 @@ func (sc *SystemCollector) collectMemoryMetrics() {
 		return
 	}
 
-	if gauge, ok := sc.metrics["memory_usage_bytes"].(Gauge); ok {
+	if gauge, ok := sc.metrics["memory_usage_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(vmem.Used))
 	}
 
-	if gauge, ok := sc.metrics["memory_total_bytes"].(Gauge); ok {
+	if gauge, ok := sc.metrics["memory_total_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(vmem.Total))
 	}
 
-	if gauge, ok := sc.metrics["memory_available_bytes"].(Gauge); ok {
+	if gauge, ok := sc.metrics["memory_available_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(vmem.Available))
 	}
 }
@@ -168,11 +168,11 @@ func (sc *SystemCollector) collectDiskMetrics() {
 		return
 	}
 
-	if gauge, ok := sc.metrics["disk_usage_bytes"].(Gauge); ok {
+	if gauge, ok := sc.metrics["disk_usage_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(usage.Used))
 	}
 
-	if gauge, ok := sc.metrics["disk_total_bytes"].(Gauge); ok {
+	if gauge, ok := sc.metrics["disk_total_bytes"].(GaugeInterface); ok {
 		gauge.Set(float64(usage.Total))
 	}
 }

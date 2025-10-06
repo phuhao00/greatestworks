@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"greatestworks/internal/domain/npc"
 )
 
@@ -50,19 +50,19 @@ func (s *NPCService) GetNPCInfo(ctx context.Context, npcID string) (*NPCDTO, err
 	if err == nil && cachedNPC != nil {
 		return s.buildNPCDTO(cachedNPC), nil
 	}
-	
+
 	// 从数据库获取
 	npcAggregate, err := s.npcRepo.FindByID(npcID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get NPC info: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetNPC(npcID, npcAggregate, time.Hour); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildNPCDTO(npcAggregate), nil
 }
 
@@ -75,19 +75,19 @@ func (s *NPCService) GetNearbyNPCs(ctx context.Context, playerID string, locatio
 		nearbyNPCs := s.filterNPCsByDistance(cachedNPCs, location, radius)
 		return s.buildNPCDTOs(nearbyNPCs), nil
 	}
-	
+
 	// 从数据库获取
 	nearbyNPCs, err := s.npcRepo.FindByLocation(location, radius)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get nearby NPCs: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetLocationIndex(location.GetRegion(), nearbyNPCs, time.Minute*30); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildNPCDTOs(nearbyNPCs), nil
 }
 
@@ -98,25 +98,25 @@ func (s *NPCService) StartDialogue(ctx context.Context, playerID string, npcID s
 	if err != nil {
 		return nil, fmt.Errorf("failed to get NPC info: %w", err)
 	}
-	
+
 	// 检查是否已有对话会话
 	existingSession, err := s.cacheRepo.GetSession(npcID, playerID)
 	if err == nil && existingSession != nil {
 		return s.buildDialogueSessionDTO(existingSession), nil
 	}
-	
+
 	// 开始新对话
 	session, err := s.npcService.StartDialogue(playerID, npcAggregate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start dialogue: %w", err)
 	}
-	
+
 	// 缓存对话会话
 	if err := s.cacheRepo.SetSession(npcID, playerID, session, time.Hour); err != nil {
 		// 缓存失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildDialogueSessionDTO(session), nil
 }
 
@@ -127,23 +127,23 @@ func (s *NPCService) ContinueDialogue(ctx context.Context, playerID string, npcI
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dialogue session: %w", err)
 	}
-	
+
 	if session == nil {
 		return nil, npc.ErrDialogueSessionNotFound
 	}
-	
+
 	// 处理对话选择
 	response, err := s.npcService.ProcessDialogueChoice(session, choiceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process dialogue choice: %w", err)
 	}
-	
+
 	// 更新会话缓存
 	if err := s.cacheRepo.SetSession(npcID, playerID, session, time.Hour); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildDialogueResponseDTO(response), nil
 }
 
@@ -154,26 +154,26 @@ func (s *NPCService) EndDialogue(ctx context.Context, playerID string, npcID str
 	if err != nil {
 		return fmt.Errorf("failed to get dialogue session: %w", err)
 	}
-	
+
 	if session != nil {
 		// 结束对话
 		if err := s.npcService.EndDialogue(session); err != nil {
 			return fmt.Errorf("failed to end dialogue: %w", err)
 		}
-		
+
 		// 更新统计数据
 		if err := s.updateDialogueStatistics(ctx, playerID, npcID, session); err != nil {
 			// 统计更新失败不影响主流程
 			// TODO: 添加日志记录
 		}
 	}
-	
+
 	// 清除会话缓存
 	if err := s.cacheRepo.DeleteSession(npcID, playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -184,7 +184,7 @@ func (s *NPCService) GetAvailableQuests(ctx context.Context, playerID string, np
 	if err != nil {
 		return nil, fmt.Errorf("failed to get NPC quests: %w", err)
 	}
-	
+
 	// 过滤可用任务
 	availableQuests := make([]*npc.Quest, 0)
 	for _, quest := range quests {
@@ -192,7 +192,7 @@ func (s *NPCService) GetAvailableQuests(ctx context.Context, playerID string, np
 			availableQuests = append(availableQuests, quest)
 		}
 	}
-	
+
 	return s.buildQuestDTOs(availableQuests), nil
 }
 
@@ -203,18 +203,18 @@ func (s *NPCService) AcceptQuest(ctx context.Context, playerID string, questID s
 	if err != nil {
 		return nil, fmt.Errorf("failed to get quest info: %w", err)
 	}
-	
+
 	// 接受任务
 	questInstance, err := s.npcService.AcceptQuest(playerID, quest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to accept quest: %w", err)
 	}
-	
+
 	// 保存任务实例
 	if err := s.questRepo.SaveInstance(questInstance); err != nil {
 		return nil, fmt.Errorf("failed to save quest instance: %w", err)
 	}
-	
+
 	return s.buildQuestInstanceDTO(questInstance), nil
 }
 
@@ -225,24 +225,24 @@ func (s *NPCService) CompleteQuest(ctx context.Context, playerID string, questID
 	if err != nil {
 		return nil, fmt.Errorf("failed to get quest instance: %w", err)
 	}
-	
+
 	// 完成任务
 	reward, err := s.npcService.CompleteQuest(questInstance)
 	if err != nil {
 		return nil, fmt.Errorf("failed to complete quest: %w", err)
 	}
-	
+
 	// 更新任务实例
 	if err := s.questRepo.UpdateInstance(questInstance); err != nil {
 		return nil, fmt.Errorf("failed to update quest instance: %w", err)
 	}
-	
+
 	// 更新统计数据
 	if err := s.updateQuestStatistics(ctx, playerID, questInstance, reward); err != nil {
 		// 统计更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildQuestRewardDTO(reward), nil
 }
 
@@ -253,7 +253,7 @@ func (s *NPCService) GetShopInfo(ctx context.Context, npcID string) (*ShopDTO, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shop info: %w", err)
 	}
-	
+
 	return s.buildShopDTO(shop), nil
 }
 
@@ -264,25 +264,25 @@ func (s *NPCService) BuyItem(ctx context.Context, playerID string, shopID string
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shop info: %w", err)
 	}
-	
+
 	// 执行购买
 	tradeResult, err := s.npcService.BuyItem(playerID, shop, itemID, quantity)
 	if err != nil {
 		return nil, fmt.Errorf("failed to buy item: %w", err)
 	}
-	
+
 	// 保存交易记录
 	tradeRecord := npc.NewTradeRecord(shopID, playerID, itemID, quantity, tradeResult.Price)
 	if err := s.shopRepo.SaveTradeRecord(tradeRecord); err != nil {
 		// 交易记录保存失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	// 更新商店
 	if err := s.shopRepo.Update(shop); err != nil {
 		return nil, fmt.Errorf("failed to update shop: %w", err)
 	}
-	
+
 	return s.buildTradeResultDTO(tradeResult), nil
 }
 
@@ -293,19 +293,19 @@ func (s *NPCService) GetRelationship(ctx context.Context, playerID string, npcID
 	if err == nil && cachedRelationship != nil {
 		return s.buildRelationshipDTO(cachedRelationship), nil
 	}
-	
+
 	// 从数据库获取
 	relationship, err := s.relationshipRepo.FindByID(playerID, npcID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get relationship: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetRelationship(playerID, npcID, relationship, time.Hour*2); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildRelationshipDTO(relationship), nil
 }
 
@@ -316,25 +316,25 @@ func (s *NPCService) UpdateRelationship(ctx context.Context, playerID string, np
 	if err != nil && !npc.IsNotFoundError(err) {
 		return fmt.Errorf("failed to get relationship: %w", err)
 	}
-	
+
 	if relationship == nil {
 		// 创建新关系
 		relationship = npc.NewRelationship(playerID, npcID)
 	}
-	
+
 	// 更新关系值
 	oldValue := relationship.GetValue()
 	oldLevel := relationship.GetLevel()
-	
-	if err := relationship.ChangeValue(changeType, value, reason); err != nil {
+
+	if err := relationship.ChangeValue(value, reason); err != nil {
 		return fmt.Errorf("failed to change relationship value: %w", err)
 	}
-	
+
 	// 保存关系
 	if err := s.relationshipRepo.Save(relationship); err != nil {
 		return fmt.Errorf("failed to save relationship: %w", err)
 	}
-	
+
 	// 记录关系变化事件
 	if relationship.GetValue() != oldValue {
 		event := npc.NewRelationshipChangedEvent(
@@ -346,13 +346,13 @@ func (s *NPCService) UpdateRelationship(ctx context.Context, playerID string, np
 		// TODO: 发布事件
 		_ = event
 	}
-	
+
 	// 清除缓存
 	if err := s.cacheRepo.DeleteRelationship(playerID, npcID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -362,7 +362,7 @@ func (s *NPCService) GetNPCStatistics(ctx context.Context, npcID string) (*NPCSt
 	if err != nil {
 		return nil, fmt.Errorf("failed to get NPC statistics: %w", err)
 	}
-	
+
 	return s.buildNPCStatisticsDTO(stats), nil
 }
 
@@ -385,15 +385,15 @@ func (s *NPCService) updateDialogueStatistics(ctx context.Context, playerID stri
 	if err != nil && !npc.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = npc.NewNPCStatistics(npcID)
 	}
-	
+
 	// 更新统计数据
 	stats.AddDialogueSession(playerID, session.GetDuration())
 	stats.UpdateLastInteractionTime(session.GetEndTime())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.SaveStatistics(stats)
 }
@@ -404,15 +404,15 @@ func (s *NPCService) updateQuestStatistics(ctx context.Context, playerID string,
 	if err != nil && !npc.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = npc.NewNPCStatistics(questInstance.GetNPCID())
 	}
-	
+
 	// 更新统计数据
 	stats.AddQuestCompletion(playerID, questInstance.GetQuestID(), reward.GetTotalValue())
 	stats.UpdateLastInteractionTime(questInstance.GetCompletedAt())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.SaveStatistics(stats)
 }
@@ -497,12 +497,12 @@ func (s *NPCService) buildDialogueSessionDTO(session *npc.DialogueSession) *Dial
 // buildDialogueResponseDTO 构建对话响应DTO
 func (s *NPCService) buildDialogueResponseDTO(response *npc.DialogueResponse) *DialogueResponseDTO {
 	return &DialogueResponseDTO{
-		NodeID:      response.GetNodeID(),
-		Text:        response.GetText(),
-		Choices:     s.buildDialogueChoiceDTOs(response.GetChoices()),
-		Actions:     response.GetActions(),
-		IsEnd:       response.IsEnd(),
-		NextNodeID:  response.GetNextNodeID(),
+		NodeID:     response.GetNodeID(),
+		Text:       response.GetText(),
+		Choices:    s.buildDialogueChoiceDTOs(response.GetChoices()),
+		Actions:    response.GetActions(),
+		IsEnd:      response.IsEnd(),
+		NextNodeID: response.GetNextNodeID(),
 	}
 }
 
@@ -631,15 +631,15 @@ func (s *NPCService) buildRelationshipDTO(relationship *npc.Relationship) *Relat
 // buildNPCStatisticsDTO 构建NPC统计DTO
 func (s *NPCService) buildNPCStatisticsDTO(stats *npc.NPCStatistics) *NPCStatisticsDTO {
 	return &NPCStatisticsDTO{
-		NPCID:               stats.GetNPCID(),
-		TotalInteractions:   stats.GetTotalInteractions(),
-		DialogueCount:       stats.GetDialogueCount(),
-		QuestCount:          stats.GetQuestCount(),
-		TradeCount:          stats.GetTradeCount(),
-		UniqueVisitors:      stats.GetUniqueVisitors(),
+		NPCID:                  stats.GetNPCID(),
+		TotalInteractions:      stats.GetTotalInteractions(),
+		DialogueCount:          stats.GetDialogueCount(),
+		QuestCount:             stats.GetQuestCount(),
+		TradeCount:             stats.GetTradeCount(),
+		UniqueVisitors:         stats.GetUniqueVisitors(),
 		AverageInteractionTime: stats.GetAverageInteractionTime(),
-		LastInteractionTime: stats.GetLastInteractionTime(),
-		PopularityScore:     stats.GetPopularityScore(),
+		LastInteractionTime:    stats.GetLastInteractionTime(),
+		PopularityScore:        stats.GetPopularityScore(),
 	}
 }
 
@@ -735,14 +735,14 @@ type QuestDTO struct {
 
 // QuestInstanceDTO 任务实例DTO
 type QuestInstanceDTO struct {
-	ID          string                 `json:"id"`
-	QuestID     string                 `json:"quest_id"`
-	PlayerID    string                 `json:"player_id"`
-	Status      string                 `json:"status"`
-	Progress    map[string]int         `json:"progress"`
-	StartTime   time.Time              `json:"start_time"`
-	EndTime     time.Time              `json:"end_time"`
-	IsCompleted bool                   `json:"is_completed"`
+	ID          string         `json:"id"`
+	QuestID     string         `json:"quest_id"`
+	PlayerID    string         `json:"player_id"`
+	Status      string         `json:"status"`
+	Progress    map[string]int `json:"progress"`
+	StartTime   time.Time      `json:"start_time"`
+	EndTime     time.Time      `json:"end_time"`
+	IsCompleted bool           `json:"is_completed"`
 }
 
 // QuestRewardDTO 任务奖励DTO
@@ -755,13 +755,13 @@ type QuestRewardDTO struct {
 
 // ShopDTO 商店DTO
 type ShopDTO struct {
-	ID          string             `json:"id"`
-	NPCID       string             `json:"npc_id"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Items       []*ShopItemDTO     `json:"items"`
-	IsOpen      bool               `json:"is_open"`
-	Schedule    *ShopScheduleDTO   `json:"schedule"`
+	ID          string           `json:"id"`
+	NPCID       string           `json:"npc_id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Items       []*ShopItemDTO   `json:"items"`
+	IsOpen      bool             `json:"is_open"`
+	Schedule    *ShopScheduleDTO `json:"schedule"`
 }
 
 // ShopItemDTO 商店物品DTO
@@ -805,13 +805,13 @@ type RelationshipDTO struct {
 
 // NPCStatisticsDTO NPC统计DTO
 type NPCStatisticsDTO struct {
-	NPCID                   string        `json:"npc_id"`
-	TotalInteractions       int64         `json:"total_interactions"`
-	DialogueCount           int64         `json:"dialogue_count"`
-	QuestCount              int64         `json:"quest_count"`
-	TradeCount              int64         `json:"trade_count"`
-	UniqueVisitors          int64         `json:"unique_visitors"`
-	AverageInteractionTime  time.Duration `json:"average_interaction_time"`
-	LastInteractionTime     time.Time     `json:"last_interaction_time"`
-	PopularityScore         float64       `json:"popularity_score"`
+	NPCID                  string        `json:"npc_id"`
+	TotalInteractions      int64         `json:"total_interactions"`
+	DialogueCount          int64         `json:"dialogue_count"`
+	QuestCount             int64         `json:"quest_count"`
+	TradeCount             int64         `json:"trade_count"`
+	UniqueVisitors         int64         `json:"unique_visitors"`
+	AverageInteractionTime time.Duration `json:"average_interaction_time"`
+	LastInteractionTime    time.Time     `json:"last_interaction_time"`
+	PopularityScore        float64       `json:"popularity_score"`
 }

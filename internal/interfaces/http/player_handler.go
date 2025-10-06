@@ -7,8 +7,8 @@ import (
 	
 	"github.com/gin-gonic/gin"
 	
-	"greatestworks/application/commands/player"
-	"greatestworks/application/queries/player"
+	playerCmd "greatestworks/application/commands/player"
+	playerQuery "greatestworks/application/queries/player"
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 )
@@ -101,13 +101,13 @@ func (h *PlayerHandler) CreatePlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行创建玩家命令
-	cmd := &player.CreatePlayerCommand{
+	cmd := &playerCmd.CreatePlayerCommand{
 		Name:   req.Name,
 		Avatar: req.Avatar,
 		Gender: req.Gender,
 	}
 	
-	result, err := handlers.ExecuteTyped[*player.CreatePlayerCommand, *player.CreatePlayerResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCmd.CreatePlayerCommand, *playerCmd.CreatePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to create player", "error", err, "name", req.Name)
 		HandleError(c, err)
@@ -142,8 +142,8 @@ func (h *PlayerHandler) GetPlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 查询玩家信息
-	query := &player.GetPlayerQuery{PlayerID: playerID}
-	result, err := handlers.ExecuteQueryTyped[*player.GetPlayerQuery, *player.GetPlayerResult](ctx, h.queryBus, query)
+	query := &playerQuery.GetPlayerQuery{PlayerID: playerID}
+	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player", "error", err, "player_id", playerID)
 		HandleError(c, err)
@@ -198,7 +198,7 @@ func (h *PlayerHandler) UpdatePlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行更新玩家命令
-	cmd := &player.UpdatePlayerCommand{
+	cmd := &playerCmd.UpdatePlayerCommand{
 		PlayerID: playerID,
 		Name:     req.Name,
 		Avatar:   req.Avatar,
@@ -208,7 +208,7 @@ func (h *PlayerHandler) UpdatePlayer(c *gin.Context) {
 		cmd.Gender = *req.Gender
 	}
 	
-	result, err := handlers.ExecuteTyped[*player.UpdatePlayerCommand, *player.UpdatePlayerResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCmd.UpdatePlayerCommand, *playerCmd.UpdatePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to update player", "error", err, "player_id", playerID)
 		HandleError(c, err)
@@ -238,8 +238,8 @@ func (h *PlayerHandler) DeletePlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行删除玩家命令
-	cmd := &player.DeletePlayerCommand{PlayerID: playerID}
-	_, err := handlers.ExecuteTyped[*player.DeletePlayerCommand, *player.DeletePlayerResult](ctx, h.commandBus, cmd)
+	cmd := &playerCmd.DeletePlayerCommand{PlayerID: playerID}
+	_, err := handlers.ExecuteTyped[*playerCmd.DeletePlayerCommand, *playerCmd.DeletePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to delete player", "error", err, "player_id", playerID)
 		HandleError(c, err)
@@ -260,7 +260,7 @@ func (h *PlayerHandler) ListPlayers(c *gin.Context) {
 	page, pageSize := req.GetPagination()
 	
 	// 查询玩家列表
-	query := &player.ListPlayersQuery{
+	query := &playerQuery.ListPlayersQuery{
 		Page:     page,
 		PageSize: pageSize,
 		Name:     req.Name,
@@ -268,7 +268,7 @@ func (h *PlayerHandler) ListPlayers(c *gin.Context) {
 		Level:    req.Level,
 	}
 	
-	result, err := handlers.ExecuteQueryTyped[*player.ListPlayersQuery, *player.ListPlayersResult](ctx, h.queryBus, query)
+	result, err := handlers.ExecuteQueryTyped[*playerQuery.ListPlayersQuery, *playerQuery.ListPlayersResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to list players", "error", err)
 		HandleError(c, err)
@@ -322,16 +322,16 @@ func (h *PlayerHandler) MovePlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行移动玩家命令
-	cmd := &player.MovePlayerCommand{
+	cmd := &playerCmd.MovePlayerCommand{
 		PlayerID: playerID,
-		Position: player.Position{
+		Position: playerCmd.Position{
 			X: req.X,
 			Y: req.Y,
 			Z: req.Z,
 		},
 	}
 	
-	result, err := handlers.ExecuteTyped[*player.MovePlayerCommand, *player.MovePlayerResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCmd.MovePlayerCommand, *playerCmd.MovePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to move player", "error", err, "player_id", playerID)
 		HandleError(c, err)
@@ -367,8 +367,8 @@ func (h *PlayerHandler) LevelUpPlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行玩家升级命令
-	cmd := &player.LevelUpPlayerCommand{PlayerID: playerID}
-	result, err := handlers.ExecuteTyped[*player.LevelUpPlayerCommand, *player.LevelUpPlayerResult](ctx, h.commandBus, cmd)
+	cmd := &playerCmd.LevelUpPlayerCommand{PlayerID: playerID}
+	result, err := handlers.ExecuteTyped[*playerCmd.LevelUpPlayerCommand, *playerCmd.LevelUpPlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to level up player", "error", err, "player_id", playerID)
 		HandleError(c, err)
@@ -397,8 +397,8 @@ func (h *PlayerHandler) GetPlayerStats(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 查询玩家统计信息
-	query := &player.GetPlayerStatsQuery{PlayerID: playerID}
-	result, err := handlers.ExecuteQueryTyped[*player.GetPlayerStatsQuery, *player.GetPlayerStatsResult](ctx, h.queryBus, query)
+	query := &playerQuery.GetPlayerStatsQuery{PlayerID: playerID}
+	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerStatsQuery, *playerQuery.GetPlayerStatsResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player stats", "error", err, "player_id", playerID)
 		HandleError(c, err)

@@ -394,7 +394,7 @@ func NewRedisCacheFromConfig(config *CacheConfig, logger logger.Logger) (Cache, 
 		DialTimeout:  config.DialTimeout,
 		ReadTimeout:  config.ReadTimeout,
 		WriteTimeout: config.WriteTimeout,
-		IdleTimeout:  config.IdleTimeout,
+		ConnMaxIdleTime: config.IdleTimeout,
 	})
 
 	// 测试连接

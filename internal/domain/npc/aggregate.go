@@ -199,7 +199,7 @@ func (n *NPCAggregate) AddDialogue(dialogue *Dialogue) error {
 	n.version++
 
 	// 发布对话添加事件
-	event := NewDialogueAddedEvent(n.id, dialogue.GetID(), dialogue.GetType())
+	event := NewDialogueAddedEvent(n.id, dialogue.GetID())
 	n.addEvent(event)
 
 	return nil
@@ -217,7 +217,7 @@ func (n *NPCAggregate) RemoveDialogue(dialogueID string) error {
 	n.version++
 
 	// 发布对话移除事件
-	event := NewDialogueRemovedEvent(n.id, dialogueID, dialogue.GetType())
+	event := NewDialogueRemovedEvent(n.id, dialogueID)
 	n.addEvent(event)
 
 	return nil
@@ -242,7 +242,7 @@ func (n *NPCAggregate) StartDialogue(dialogueID, playerID string) (*DialogueSess
 	n.version++
 
 	// 发布对话开始事�?
-	event := NewDialogueStartedEvent(n.id, dialogueID, playerID)
+	event := NewDialogueStartedEvent(n.id, playerID, dialogueID, session.GetID())
 	n.addEvent(event)
 
 	return session, nil
@@ -667,6 +667,31 @@ type NPCStatistics struct {
 	AverageRelationship float64
 	CreatedAt           time.Time
 	LastActiveAt        time.Time
+}
+
+// NewNPCStatistics 创建NPC统计信息
+func NewNPCStatistics(npcID string) *NPCStatistics {
+	return &NPCStatistics{
+		NPCID:     npcID,
+		CreatedAt: time.Now(),
+	}
+}
+
+// AddDialogueSession 添加对话会话
+func (ns *NPCStatistics) AddDialogueSession(playerID string, duration time.Duration) {
+	ns.TotalDialogues++
+	ns.LastActiveAt = time.Now()
+}
+
+// UpdateLastInteractionTime 更新最后交互时间
+func (ns *NPCStatistics) UpdateLastInteractionTime(t time.Time) {
+	ns.LastActiveAt = t
+}
+
+// AddQuestCompletion 添加任务完成
+func (ns *NPCStatistics) AddQuestCompletion(playerID string, questID string, totalValue int) {
+	ns.TotalQuests++
+	ns.LastActiveAt = time.Now()
 }
 
 // 相关错误定义

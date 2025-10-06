@@ -39,6 +39,9 @@ var (
 	ErrDialogueNodeNotFound     = fmt.Errorf("dialogue node not found")
 	ErrDialogueInvalidChoice    = fmt.Errorf("invalid dialogue choice")
 	ErrInvalidDialogue          = fmt.Errorf("invalid dialogue")
+	ErrInvalidQuest             = fmt.Errorf("invalid quest")
+	ErrInvalidShop              = fmt.Errorf("invalid shop")
+	ErrNPCCannotHaveShop        = fmt.Errorf("NPC cannot have shop")
 
 	// 任务相关错误
 	ErrQuestNotFound          = fmt.Errorf("quest not found")
@@ -673,4 +676,13 @@ func GetErrorSeverity(err error) string {
 	default:
 		return "unknown"
 	}
+}
+
+// IsNotFoundError 检查是否为未找到错误
+func IsNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	category := CategorizeError(err)
+	return category == ErrorCategoryNotFound
 }

@@ -772,27 +772,27 @@ const (
 // Validate 验证小游戏聚合
 func (mg *MinigameAggregate) Validate() error {
 	if mg.GameID == "" {
-		return NewMinigameValidationError("game_id", mg.GameID, "game_id cannot be empty", "required")
+		return NewMinigameValidationError("game_id cannot be empty")
 	}
 
 	if !mg.GameType.IsValid() {
-		return NewMinigameValidationError("game_type", mg.GameType, "invalid game type", "enum")
+		return NewMinigameValidationError("invalid game type")
 	}
 
 	if !mg.Category.IsValid() {
-		return NewMinigameValidationError("category", mg.Category, "invalid category", "enum")
+		return NewMinigameValidationError("invalid category")
 	}
 
 	if mg.MaxPlayers < mg.MinPlayers {
-		return NewMinigameValidationError("max_players", mg.MaxPlayers, "max_players must be greater than or equal to min_players", "range")
+		return NewMinigameValidationError("max_players must be greater than or equal to min_players")
 	}
 
 	if mg.MaxPlayers > MaxPlayersLimit {
-		return NewMinigameValidationError("max_players", mg.MaxPlayers, fmt.Sprintf("max_players cannot exceed %d", MaxPlayersLimit), "max")
+		return NewMinigameValidationError(fmt.Sprintf("max_players cannot exceed %d", MaxPlayersLimit))
 	}
 
 	if mg.MinPlayers < MinPlayersLimit {
-		return NewMinigameValidationError("min_players", mg.MinPlayers, fmt.Sprintf("min_players cannot be less than %d", MinPlayersLimit), "min")
+		return NewMinigameValidationError(fmt.Sprintf("min_players cannot be less than %d", MinPlayersLimit))
 	}
 
 	return nil

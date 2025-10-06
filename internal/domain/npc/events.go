@@ -784,18 +784,47 @@ func NewDialogueRemovedEvent(npcID, dialogueID string) *BaseDomainEvent {
 	}
 }
 
-// NewDialogueStartedEvent 创建对话开始事件
-func NewDialogueStartedEvent(npcID, dialogueID, playerID, dialogueText string) *BaseDomainEvent {
+// 注意：NewDialogueStartedEvent已经在文件前面定义，这里删除重复定义
+
+// NewQuestAddedEvent 创建任务添加事件
+func NewQuestAddedEvent(npcID, questID string) *BaseDomainEvent {
 	return &BaseDomainEvent{
-		EventID:     fmt.Sprintf("dialogue_started_%d", time.Now().UnixNano()),
-		EventType:   "DialogueStarted",
+		EventID:     fmt.Sprintf("quest_added_%d", time.Now().UnixNano()),
+		EventType:   "QuestAdded",
 		AggregateID: npcID,
 		OccurredAt:  time.Now(),
 		Version:     1,
 		Data: map[string]interface{}{
-			"dialogue_id":   dialogueID,
-			"player_id":     playerID,
-			"dialogue_text": dialogueText,
+			"quest_id": questID,
+		},
+	}
+}
+
+// NewQuestRemovedEvent 创建任务移除事件
+func NewQuestRemovedEvent(npcID, questID string) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("quest_removed_%d", time.Now().UnixNano()),
+		EventType:   "QuestRemoved",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"quest_id": questID,
+		},
+	}
+}
+
+// NewQuestGivenEvent 创建任务给予事件
+func NewQuestGivenEvent(npcID, questID, playerID string) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("quest_given_%d", time.Now().UnixNano()),
+		EventType:   "QuestGiven",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"quest_id":  questID,
+			"player_id": playerID,
 		},
 	}
 }

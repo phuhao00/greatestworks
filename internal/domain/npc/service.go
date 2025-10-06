@@ -26,11 +26,11 @@ func NewNPCService() *NPCService {
 		relationshipRules: NewRelationshipRules(),
 		aiEngine:          NewAIEngine(),
 	}
-	
+
 	// 初始化默认模板和规则
 	service.initializeDefaultTemplates()
 	service.initializeBehaviorRules()
-	
+
 	return service
 }
 
@@ -39,25 +39,25 @@ func (s *NPCService) CreateNPC(id, name, description string, npcType NPCType, lo
 	if id == "" || name == "" {
 		return nil, fmt.Errorf("invalid parameters for NPC creation")
 	}
-	
+
 	npc := NewNPCAggregate(id, name, description, npcType)
-	
+
 	// 设置位置
 	if location != nil {
 		npc.MoveTo(location)
 	}
-	
+
 	// 应用模板
 	if template, exists := s.npcTemplates[npcType]; exists {
 		s.applyTemplate(npc, template)
 	}
-	
+
 	// 生成默认对话
 	defaultDialogues := s.generateDefaultDialogues(npcType)
 	for _, dialogue := range defaultDialogues {
 		npc.AddDialogue(dialogue)
 	}
-	
+
 	// 生成默认任务（如果适用）
 	if npcType.CanGiveQuests() {
 		defaultQuests := s.generateDefaultQuests(npcType)
@@ -65,13 +65,13 @@ func (s *NPCService) CreateNPC(id, name, description string, npcType NPCType, lo
 			npc.AddQuest(quest)
 		}
 	}
-	
+
 	// 创建商店（如果适用）
 	if npcType.CanHaveShop() {
 		shop := s.createDefaultShop(npcType, id)
 		npc.SetShop(shop)
 	}
-	
+
 	return npc, nil
 }
 
@@ -81,10 +81,10 @@ func (s *NPCService) GenerateDialogue(dialogueType DialogueType, npcType NPCType
 	if !exists {
 		return nil, fmt.Errorf("dialogue template not found for type: %s", dialogueType.String())
 	}
-	
+
 	// 生成唯一ID
 	id := fmt.Sprintf("dialogue_%s_%s_%d", dialogueType.String(), npcType.String(), time.Now().UnixNano())
-	
+
 	// 根据模板创建对话
 	dialogue := NewDialogue(
 		id,
@@ -92,29 +92,29 @@ func (s *NPCService) GenerateDialogue(dialogueType DialogueType, npcType NPCType
 		template.GenerateDescription(npcType, context),
 		dialogueType,
 	)
-	
+
 	// 生成对话节点
 	nodes := template.GenerateNodes(npcType, context)
 	for _, node := range nodes {
 		dialogue.AddNode(node)
 	}
-	
+
 	// 设置开始节点
 	if len(nodes) > 0 {
 		dialogue.SetStartNode(nodes[0].GetID())
 	}
-	
+
 	// 添加条件
 	conditions := template.GenerateConditions(npcType, context)
 	for _, condition := range conditions {
 		dialogue.AddCondition(condition)
 	}
-	
+
 	// 设置奖励
 	if reward := template.GenerateReward(npcType, context); reward != nil {
 		dialogue.SetReward(reward)
 	}
-	
+
 	return dialogue, nil
 }
 
@@ -124,10 +124,10 @@ func (s *NPCService) GenerateQuest(questType QuestType, npcType NPCType, playerL
 	if !exists {
 		return nil, fmt.Errorf("quest template not found for type: %s", questType.String())
 	}
-	
+
 	// 生成唯一ID
 	id := fmt.Sprintf("quest_%s_%s_%d", questType.String(), npcType.String(), time.Now().UnixNano())
-	
+
 	// 根据模板创建任务
 	quest := NewQuest(
 		id,
@@ -135,32 +135,32 @@ func (s *NPCService) GenerateQuest(questType QuestType, npcType NPCType, playerL
 		template.GenerateDescription(npcType, playerLevel),
 		questType,
 	)
-	
+
 	// 生成目标
 	objectives := template.GenerateObjectives(npcType, playerLevel)
 	for _, objective := range objectives {
 		quest.AddObjective(objective)
 	}
-	
+
 	// 设置奖励
 	reward := template.GenerateReward(npcType, playerLevel)
 	quest.SetReward(reward)
-	
+
 	// 添加前置条件
 	prerequisites := template.GeneratePrerequisites(npcType, playerLevel)
 	for _, prerequisite := range prerequisites {
 		quest.AddPrerequisite(prerequisite)
 	}
-	
+
 	// 设置时间限制
 	if timeLimit := template.GetTimeLimit(playerLevel); timeLimit > 0 {
 		quest.SetTimeLimit(timeLimit)
 	}
-	
+
 	// 设置重复性
 	quest.SetRepeatable(template.IsRepeatable())
 	quest.SetDailyReset(template.IsDailyReset())
-	
+
 	return quest, nil
 }
 
@@ -170,28 +170,28 @@ func (s *NPCService) ProcessDialogue(npc *NPCAggregate, playerID string, dialogu
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 检查是否可以开始对话
 	if !dialogue.CanStart(playerID) {
 		return nil, fmt.Errorf("cannot start dialogue")
 	}
-	
+
 	// 开始对话会话
 	session, err := npc.StartDialogue(dialogueID, playerID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 获取当前节点
 	currentNode := dialogue.GetStartNode()
 	if session.GetCurrentNode() != "" {
 		currentNode = dialogue.GetNode(session.GetCurrentNode())
 	}
-	
+
 	if currentNode == nil {
 		return nil, fmt.Errorf("dialogue node not found")
 	}
-	
+
 	// 处理选项
 	if optionID != "" {
 		for _, option := range currentNode.GetOptions() {
@@ -200,7 +200,7 @@ func (s *NPCService) ProcessDialogue(npc *NPCAggregate, playerID string, dialogu
 				if err := option.Execute(playerID); err != nil {
 					return nil, err
 				}
-				
+
 				// 移动到目标节点
 				if option.GetTargetNode() != "" {
 					currentNode = dialogue.GetNode(option.GetTargetNode())
@@ -210,15 +210,15 @@ func (s *NPCService) ProcessDialogue(npc *NPCAggregate, playerID string, dialogu
 			}
 		}
 	}
-	
+
 	// 执行节点动作
 	if err := currentNode.ExecuteActions(playerID); err != nil {
 		return nil, err
 	}
-	
+
 	// 使用对话
 	dialogue.Use(playerID)
-	
+
 	// 创建响应
 	response := &DialogueResponse{
 		NPCID:       npc.GetID(),
@@ -230,7 +230,7 @@ func (s *NPCService) ProcessDialogue(npc *NPCAggregate, playerID string, dialogu
 		CanContinue: currentNode.GetNextNode() != "",
 		Completed:   currentNode.GetNextNode() == "",
 	}
-	
+
 	return response, nil
 }
 
@@ -241,13 +241,13 @@ func (s *NPCService) UpdateNPCBehavior(npc *NPCAggregate, deltaTime time.Duratio
 	if !exists {
 		return fmt.Errorf("behavior rule not found for type: %s", behavior.Type.String())
 	}
-	
+
 	// 应用行为规则
 	behaviorRule.Apply(npc, deltaTime)
-	
+
 	// 更新NPC
 	npc.Update(deltaTime)
-	
+
 	return nil
 }
 
@@ -280,33 +280,33 @@ func (s *NPCService) ValidateQuestCompletion(quest *Quest, questInstance *QuestI
 func (s *NPCService) GetRecommendedQuests(npc *NPCAggregate, playerID string, playerLevel int) []*Quest {
 	availableQuests := npc.GetAvailableQuests(playerID)
 	var recommended []*Quest
-	
+
 	for _, quest := range availableQuests {
 		// 根据玩家等级和任务类型推荐
 		if s.isQuestRecommended(quest, playerLevel) {
 			recommended = append(recommended, quest)
 		}
 	}
-	
+
 	return recommended
 }
 
 // GetOptimalDialogue 获取最佳对话
 func (s *NPCService) GetOptimalDialogue(npc *NPCAggregate, playerID string, context map[string]interface{}) *Dialogue {
 	availableDialogues := npc.GetAvailableDialogues(playerID)
-	
+
 	// 根据上下文选择最合适的对话
 	for _, dialogue := range availableDialogues {
 		if s.isDialogueOptimal(dialogue, context) {
 			return dialogue
 		}
 	}
-	
+
 	// 返回默认对话
 	if len(availableDialogues) > 0 {
 		return availableDialogues[0]
 	}
-	
+
 	return nil
 }
 
@@ -325,7 +325,7 @@ func (s *NPCService) applyTemplate(npc *NPCAggregate, template *NPCTemplate) {
 	attributes.MoveSpeed = template.Attributes.MoveSpeed
 	attributes.ViewRange = template.Attributes.ViewRange
 	attributes.HearRange = template.Attributes.HearRange
-	
+
 	// 设置行为
 	behavior := npc.GetBehavior()
 	behavior.SetBehaviorType(template.DefaultBehavior)
@@ -333,7 +333,7 @@ func (s *NPCService) applyTemplate(npc *NPCAggregate, template *NPCTemplate) {
 	behavior.CanMove = template.CanMove
 	behavior.CanTalk = template.CanTalk
 	behavior.CanFight = template.CanFight
-	
+
 	// 设置巡逻点
 	for _, point := range template.PatrolPoints {
 		behavior.AddPatrolPoint(point)
@@ -343,12 +343,12 @@ func (s *NPCService) applyTemplate(npc *NPCAggregate, template *NPCTemplate) {
 // generateDefaultDialogues 生成默认对话
 func (s *NPCService) generateDefaultDialogues(npcType NPCType) []*Dialogue {
 	var dialogues []*Dialogue
-	
+
 	// 生成问候对话
 	if greeting, err := s.GenerateDialogue(DialogueTypeGreeting, npcType, nil); err == nil {
 		dialogues = append(dialogues, greeting)
 	}
-	
+
 	// 根据NPC类型生成特定对话
 	switch npcType {
 	case NPCTypeMerchant:
@@ -367,14 +367,14 @@ func (s *NPCService) generateDefaultDialogues(npcType NPCType) []*Dialogue {
 			dialogues = append(dialogues, rumor)
 		}
 	}
-	
+
 	return dialogues
 }
 
 // generateDefaultQuests 生成默认任务
 func (s *NPCService) generateDefaultQuests(npcType NPCType) []*Quest {
 	var quests []*Quest
-	
+
 	// 根据NPC类型生成不同的任务
 	switch npcType {
 	case NPCTypeQuestGiver:
@@ -396,7 +396,7 @@ func (s *NPCService) generateDefaultQuests(npcType NPCType) []*Quest {
 			quests = append(quests, quest)
 		}
 	}
-	
+
 	return quests
 }
 
@@ -404,7 +404,7 @@ func (s *NPCService) generateDefaultQuests(npcType NPCType) []*Quest {
 func (s *NPCService) createDefaultShop(npcType NPCType, npcID string) *Shop {
 	shopID := fmt.Sprintf("shop_%s_%s", npcType.String(), npcID)
 	shop := NewShop(shopID, fmt.Sprintf("%s商店", npcType.String()), "默认商店")
-	
+
 	// 根据NPC类型添加商品
 	switch npcType {
 	case NPCTypeMerchant:
@@ -420,7 +420,7 @@ func (s *NPCService) createDefaultShop(npcType NPCType, npcID string) *Shop {
 		shop.AddItem(NewShopItem("food_bread", "面包", "基础食物", 10, 20))
 		shop.AddItem(NewShopItem("service_room", "房间", "住宿服务", 25, 10))
 	}
-	
+
 	return shop
 }
 
@@ -461,7 +461,7 @@ func (s *NPCService) isDialogueOptimal(dialogue *Dialogue, context map[string]in
 			return true
 		}
 	}
-	
+
 	// 默认返回false，使用第一个可用对话
 	return false
 }
@@ -478,7 +478,7 @@ func (s *NPCService) initializeDefaultTemplates() {
 		CanFight:        false,
 		PatrolPoints:    make([]*Location, 0),
 	}
-	
+
 	s.npcTemplates[NPCTypeMerchant] = &NPCTemplate{
 		Level:           5,
 		Attributes:      NewNPCAttributes(),
@@ -488,7 +488,7 @@ func (s *NPCService) initializeDefaultTemplates() {
 		CanFight:        false,
 		PatrolPoints:    make([]*Location, 0),
 	}
-	
+
 	s.npcTemplates[NPCTypeGuard] = &NPCTemplate{
 		Level:           10,
 		Attributes:      NewNPCAttributes(),
@@ -498,39 +498,39 @@ func (s *NPCService) initializeDefaultTemplates() {
 		CanFight:        true,
 		PatrolPoints:    make([]*Location, 0),
 	}
-	
+
 	// 初始化对话模板
 	s.dialogueTemplates[DialogueTypeGreeting] = &DialogueTemplate{
 		Name:        "问候",
 		Description: "基础问候对话",
 		Nodes:       make([]*DialogueNodeTemplate, 0),
 	}
-	
+
 	s.dialogueTemplates[DialogueTypeTrade] = &DialogueTemplate{
 		Name:        "交易",
 		Description: "商店交易对话",
 		Nodes:       make([]*DialogueNodeTemplate, 0),
 	}
-	
+
 	// 初始化任务模板
 	s.questTemplates[QuestTypeKill] = &QuestTemplate{
-		Name:         "击杀任务",
-		Description:  "击杀指定目标",
-		Objectives:   make([]*QuestObjectiveTemplate, 0),
-		BaseReward:   NewQuestReward(),
-		TimeLimit:    time.Hour * 24,
-		Repeatable:   false,
-		DailyReset:   false,
+		Name:        "击杀任务",
+		Description: "击杀指定目标",
+		Objectives:  make([]*QuestObjectiveTemplate, 0),
+		BaseReward:  NewQuestReward(),
+		TimeLimit:   time.Hour * 24,
+		Repeatable:  false,
+		DailyReset:  false,
 	}
-	
+
 	s.questTemplates[QuestTypeCollect] = &QuestTemplate{
-		Name:         "收集任务",
-		Description:  "收集指定物品",
-		Objectives:   make([]*QuestObjectiveTemplate, 0),
-		BaseReward:   NewQuestReward(),
-		TimeLimit:    time.Hour * 12,
-		Repeatable:   true,
-		DailyReset:   true,
+		Name:        "收集任务",
+		Description: "收集指定物品",
+		Objectives:  make([]*QuestObjectiveTemplate, 0),
+		BaseReward:  NewQuestReward(),
+		TimeLimit:   time.Hour * 12,
+		Repeatable:  true,
+		DailyReset:  true,
 	}
 }
 
@@ -543,7 +543,7 @@ func (s *NPCService) initializeBehaviorRules() {
 			// 空闲状态不需要特殊处理
 		},
 	}
-	
+
 	s.behaviorRules[BehaviorTypePatrol] = &BehaviorRule{
 		Type:        BehaviorTypePatrol,
 		Description: "巡逻行为",
@@ -552,14 +552,14 @@ func (s *NPCService) initializeBehaviorRules() {
 			behavior.Update(deltaTime)
 		},
 	}
-	
+
 	s.behaviorRules[BehaviorTypeWander] = &BehaviorRule{
 		Type:        BehaviorTypeWander,
 		Description: "漫游行为",
 		ApplyFunc: func(npc *NPCAggregate, deltaTime time.Duration) {
 			behavior := npc.GetBehavior()
 			behavior.Update(deltaTime)
-			
+
 			// 随机移动逻辑
 			if rand.Float64() < 0.1 { // 10%概率改变方向
 				currentLocation := npc.GetLocation()
@@ -570,7 +570,7 @@ func (s *NPCService) initializeBehaviorRules() {
 			}
 		},
 	}
-	
+
 	s.behaviorRules[BehaviorTypeStationary] = &BehaviorRule{
 		Type:        BehaviorTypeStationary,
 		Description: "固定行为",
@@ -613,20 +613,20 @@ func (dt *DialogueTemplate) GenerateDescription(npcType NPCType, context map[str
 // GenerateNodes 生成节点
 func (dt *DialogueTemplate) GenerateNodes(npcType NPCType, context map[string]interface{}) []*DialogueNode {
 	var nodes []*DialogueNode
-	
+
 	// 根据模板生成节点
 	for i, nodeTemplate := range dt.Nodes {
 		nodeID := fmt.Sprintf("node_%d", i)
 		node := NewDialogueNode(nodeID, nodeTemplate.Text, nodeTemplate.Speaker)
 		nodes = append(nodes, node)
 	}
-	
+
 	// 如果没有模板节点，生成默认节点
 	if len(nodes) == 0 {
 		defaultNode := NewDialogueNode("node_0", s.getDefaultDialogueText(npcType), "NPC")
 		nodes = append(nodes, defaultNode)
 	}
-	
+
 	return nodes
 }
 
@@ -675,13 +675,13 @@ type DialogueOptionTemplate struct {
 
 // QuestTemplate 任务模板
 type QuestTemplate struct {
-	Name         string
-	Description  string
-	Objectives   []*QuestObjectiveTemplate
-	BaseReward   *QuestReward
-	TimeLimit    time.Duration
-	Repeatable   bool
-	DailyReset   bool
+	Name        string
+	Description string
+	Objectives  []*QuestObjectiveTemplate
+	BaseReward  *QuestReward
+	TimeLimit   time.Duration
+	Repeatable  bool
+	DailyReset  bool
 }
 
 // GenerateName 生成名称
@@ -697,7 +697,7 @@ func (qt *QuestTemplate) GenerateDescription(npcType NPCType, playerLevel int) s
 // GenerateObjectives 生成目标
 func (qt *QuestTemplate) GenerateObjectives(npcType NPCType, playerLevel int) []*QuestObjective {
 	var objectives []*QuestObjective
-	
+
 	for i, objTemplate := range qt.Objectives {
 		objID := fmt.Sprintf("obj_%d", i)
 		objective := NewQuestObjective(
@@ -709,24 +709,24 @@ func (qt *QuestTemplate) GenerateObjectives(npcType NPCType, playerLevel int) []
 		)
 		objectives = append(objectives, objective)
 	}
-	
+
 	return objectives
 }
 
 // GenerateReward 生成奖励
 func (qt *QuestTemplate) GenerateReward(npcType NPCType, playerLevel int) *QuestReward {
 	reward := NewQuestReward()
-	
+
 	// 根据玩家等级调整奖励
 	multiplier := float64(playerLevel)
 	reward.AddGold(int(float64(qt.BaseReward.gold) * multiplier))
 	reward.AddExperience(int(float64(qt.BaseReward.experience) * multiplier))
-	
+
 	// 复制物品奖励
 	for itemID, quantity := range qt.BaseReward.items {
 		reward.AddItem(itemID, quantity)
 	}
-	
+
 	return reward
 }
 
@@ -783,13 +783,13 @@ func NewRelationshipRules() *RelationshipRules {
 	rules := &RelationshipRules{
 		rules: make(map[string]*RelationshipRule),
 	}
-	
+
 	// 初始化默认规则
 	rules.rules["quest_complete"] = &RelationshipRule{Action: "quest_complete", BaseChange: 10}
 	rules.rules["quest_fail"] = &RelationshipRule{Action: "quest_fail", BaseChange: -5}
 	rules.rules["trade"] = &RelationshipRule{Action: "trade", BaseChange: 1}
 	rules.rules["dialogue"] = &RelationshipRule{Action: "dialogue", BaseChange: 1}
-	
+
 	return rules
 }
 
@@ -799,9 +799,9 @@ func (rr *RelationshipRules) CalculateChange(npcType NPCType, action string, con
 	if !exists {
 		return 0
 	}
-	
+
 	change := rule.BaseChange
-	
+
 	// 根据NPC类型调整
 	switch npcType {
 	case NPCTypeMerchant:
@@ -813,7 +813,7 @@ func (rr *RelationshipRules) CalculateChange(npcType NPCType, action string, con
 			change *= 2 // 任务发布者更重视任务完成
 		}
 	}
-	
+
 	return change
 }
 
@@ -833,20 +833,20 @@ func NewAIEngine() *AIEngine {
 	engine := &AIEngine{
 		responseTemplates: make(map[string][]string),
 	}
-	
+
 	// 初始化响应模板
 	engine.responseTemplates["greeting"] = []string{
 		"你好！",
 		"欢迎！",
 		"很高兴见到你！",
 	}
-	
+
 	engine.responseTemplates["farewell"] = []string{
 		"再见！",
 		"祝你好运！",
 		"期待下次见面！",
 	}
-	
+
 	return engine
 }
 
@@ -857,8 +857,99 @@ func (ai *AIEngine) GenerateResponse(npc *NPCAggregate, playerID string, input s
 		index := rand.Intn(len(templates))
 		return templates[index], nil
 	}
-	
+
 	return "我不明白你在说什么。", nil
+}
+
+// StartDialogue 开始对话
+func (s *NPCService) StartDialogue(playerID string, npcAggregate *NPCAggregate) (*DialogueSession, error) {
+	// 获取NPC的第一个对话
+	dialogues := npcAggregate.dialogues
+	if len(dialogues) == 0 {
+		return nil, fmt.Errorf("NPC has no dialogues")
+	}
+
+	// 选择第一个对话
+	var firstDialogue *Dialogue
+	for _, d := range dialogues {
+		if d.CanStart(playerID) {
+			firstDialogue = d
+			break
+		}
+	}
+
+	if firstDialogue == nil {
+		return nil, fmt.Errorf("no available dialogues for player")
+	}
+
+	// 创建对话会话
+	session, err := npcAggregate.StartDialogue(firstDialogue.GetID(), playerID)
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
+// ProcessDialogueChoice 处理对话选择
+func (s *NPCService) ProcessDialogueChoice(session *DialogueSession, choiceID int) (*DialogueResponse, error) {
+	// 简化实现：返回一个响应
+	response := &DialogueResponse{
+		NPCID:       session.GetNPCID(),
+		DialogueID:  session.GetDialogueID(),
+		NodeID:      session.GetCurrentNodeID(),
+		Text:        "谢谢你的选择。",
+		Options:     make([]*DialogueOption, 0),
+		CanContinue: false,
+		Completed:   true,
+	}
+
+	return response, nil
+}
+
+// EndDialogue 结束对话
+func (s *NPCService) EndDialogue(session *DialogueSession) error {
+	session.End()
+	return nil
+}
+
+// IsQuestAvailable 检查任务是否可用
+func (s *NPCService) IsQuestAvailable(playerID string, quest *Quest) bool {
+	return quest.CanAccept(playerID)
+}
+
+// AcceptQuest 接受任务
+func (s *NPCService) AcceptQuest(playerID string, quest *Quest) (*QuestInstance, error) {
+	if !quest.CanAccept(playerID) {
+		return nil, fmt.Errorf("quest not available")
+	}
+
+	instance := NewQuestInstance(quest.GetID(), playerID, "")
+	return instance, nil
+}
+
+// CompleteQuest 完成任务
+func (s *NPCService) CompleteQuest(questInstance *QuestInstance) (*QuestReward, error) {
+	if questInstance.GetStatus() != QuestStatusCompleted {
+		return nil, fmt.Errorf("quest not completed")
+	}
+
+	reward := NewQuestReward()
+	reward.AddGold(100)
+	reward.AddExperience(50)
+
+	return reward, nil
+}
+
+// BuyItem 购买物品
+func (s *NPCService) BuyItem(playerID string, shop *Shop, itemID string, quantity int) (interface{}, error) {
+	// 简化实现
+	result := map[string]interface{}{
+		"success":  true,
+		"itemID":   itemID,
+		"quantity": quantity,
+	}
+	return result, nil
 }
 
 // DialogueResponse 对话响应
@@ -871,4 +962,19 @@ type DialogueResponse struct {
 	Options     []*DialogueOption
 	CanContinue bool
 	Completed   bool
+}
+
+// GetNodeID 获取节点ID
+func (dr *DialogueResponse) GetNodeID() string {
+	return dr.NodeID
+}
+
+// GetText 获取文本
+func (dr *DialogueResponse) GetText() string {
+	return dr.Text
+}
+
+// GetChoices 获取选项
+func (dr *DialogueResponse) GetChoices() []*DialogueOption {
+	return dr.Options
 }

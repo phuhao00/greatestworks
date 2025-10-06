@@ -13,11 +13,61 @@ import (
 	"greatestworks/internal/infrastructure/logger"
 )
 
+// GaugeInterface 仪表盘指标接口
+type GaugeInterface interface {
+	Set(value float64)
+	Inc()
+	Dec()
+	Add(value float64)
+	Sub(value float64)
+	GetName() string
+	GetType() MetricType
+	GetValue() interface{}
+	GetLabels() map[string]string
+	GetTimestamp() time.Time
+}
+
+// HistogramInterface 直方图指标接口
+type HistogramInterface interface {
+	Observe(value float64)
+	GetName() string
+	GetType() MetricType
+	GetValue() interface{}
+	GetLabels() map[string]string
+	GetTimestamp() time.Time
+}
+
+// Summary 摘要指标接口
+type Summary interface {
+	Observe(value float64)
+	GetName() string
+	GetType() MetricType
+	GetValue() interface{}
+	GetLabels() map[string]string
+	GetTimestamp() time.Time
+}
+
+// Timer 计时器接口
+type Timer interface {
+	Start() time.Time
+	Stop(start time.Time) time.Duration
+	Observe(duration time.Duration)
+}
+
+// Config 监控配置
+type Config struct {
+	Enabled    bool   `json:"enabled"`
+	Port       int    `json:"port"`
+	Path       string `json:"path"`
+	Namespace  string `json:"namespace"`
+	Subsystem  string `json:"subsystem"`
+}
+
 // Factory 指标工厂接口
 type Factory interface {
 	NewCounter(name, help string, labels Labels) Counter
-	NewGauge(name, help string, labels Labels) Gauge
-	NewHistogram(name, help string, buckets []float64, labels Labels) Histogram
+	NewGauge(name, help string, labels Labels) GaugeInterface
+	NewHistogram(name, help string, buckets []float64, labels Labels) HistogramInterface
 	NewSummary(name, help string, objectives map[float64]float64, labels Labels) Summary
 }
 
@@ -254,6 +304,14 @@ func (g *Gauge) Add(value float64) {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 	g.value += value
+	g.timestamp = time.Now()
+}
+
+// Sub 减少指定值
+func (g *Gauge) Sub(value float64) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	g.value -= value
 	g.timestamp = time.Now()
 }
 

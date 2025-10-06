@@ -16,6 +16,19 @@ type GamePlayer struct {
 	Rank     int       `json:"rank"`
 }
 
+// Clone 克隆游戏玩家
+func (gp *GamePlayer) Clone() *GamePlayer {
+	return &GamePlayer{
+		PlayerID: gp.PlayerID,
+		Username: gp.Username,
+		Score:    gp.Score,
+		JoinTime: gp.JoinTime,
+		IsActive: gp.IsActive,
+		IsWinner: gp.IsWinner,
+		Rank:     gp.Rank,
+	}
+}
+
 // GameData 游戏数据
 type GameData struct {
 	GameID      string                 `json:"game_id"`
@@ -185,16 +198,24 @@ func (rp *RewardPool) CalculateRewards(rank int, score int64, isWinner bool) []R
 	return rewards
 }
 
-// GameReward 游戏奖励
-type GameReward struct {
-	RewardID   string    `json:"reward_id"`
-	PlayerID   string    `json:"player_id"`
-	RewardType string    `json:"reward_type"`
-	Amount     int64     `json:"amount"`
-	ItemID     string    `json:"item_id,omitempty"`
-	ItemCount  int       `json:"item_count,omitempty"`
-	GameID     string    `json:"game_id"`
-	Timestamp  time.Time `json:"timestamp"`
+// Clone 克隆奖励池
+func (rp *RewardPool) Clone() *RewardPool {
+	clone := &RewardPool{
+		PoolID:      rp.PoolID,
+		GameID:      rp.GameID,
+		TotalReward: rp.TotalReward,
+		CreatedAt:   rp.CreatedAt,
+		UpdatedAt:   rp.UpdatedAt,
+		Rewards:     make([]Reward, len(rp.Rewards)),
+	}
+
+	// 复制奖励列表
+	for i, reward := range rp.Rewards {
+		clone.Rewards[i] = reward
+	}
+
+	return clone
 }
 
+// 注意：GameReward已经在entity.go中定义，不需要重复定义
 // 注意：GameStatistics和GameResult已经在文件开头定义，这里只是添加了缺失的字段

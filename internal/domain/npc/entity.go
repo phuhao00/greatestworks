@@ -637,6 +637,11 @@ func (qr *QuestReward) AddChoice(choice *RewardChoice) {
 	qr.choices = append(qr.choices, choice)
 }
 
+// GetTotalValue 获取总价值
+func (qr *QuestReward) GetTotalValue() int {
+	return qr.gold + qr.experience*10
+}
+
 // RewardChoice 奖励选择
 type RewardChoice struct {
 	id          string
@@ -747,6 +752,11 @@ func (qi *QuestInstance) Complete() {
 // Fail 失败任务
 func (qi *QuestInstance) Fail() {
 	qi.status = QuestStatusFailed
+}
+
+// GetCompletedAt 获取完成时间
+func (qi *QuestInstance) GetCompletedAt() time.Time {
+	return qi.completedAt
 }
 
 // GiveReward 给予奖励
