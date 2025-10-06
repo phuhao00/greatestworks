@@ -27,15 +27,21 @@ check-go-plugins:
 
 # 生成Go Proto文件
 proto-go: check-protoc check-go-plugins
-	@echo "生成Go Proto文件..."
+	@echo "生成Go Proto文件（只生成消息定义，不生成gRPC服务）..."
 	@mkdir -p internal/proto/player
 	@mkdir -p internal/proto/battle
 	@mkdir -p internal/proto/pet
 	@mkdir -p internal/proto/common
-	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/common.proto
-	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/player.proto
-	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/battle.proto
-	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/pet.proto
+	@protoc --go_out=. --go_opt=paths=source_relative proto/common.proto
+	@protoc --go_out=. --go_opt=paths=source_relative proto/player.proto
+	@protoc --go_out=. --go_opt=paths=source_relative proto/battle.proto
+	@protoc --go_out=. --go_opt=paths=source_relative proto/pet.proto
+	@echo "移动生成的文件到正确位置..."
+	@mv proto/common.pb.go internal/proto/common/ 2>/dev/null || true
+	@mv proto/player.pb.go internal/proto/player/ 2>/dev/null || true
+	@mv proto/battle.pb.go internal/proto/battle/ 2>/dev/null || true
+	@mv proto/pet.pb.go internal/proto/pet/ 2>/dev/null || true
+	@rm -f proto/*_grpc.pb.go
 	@echo "Go Proto文件生成完成"
 
 # 生成C# Proto文件

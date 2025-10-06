@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Proto文件生成脚本
-# 支持Go和C#代码生成
+# 支持Go和C#代码生成，只生成消息定义，不生成gRPC服务
 
 set -e
 
@@ -17,9 +17,9 @@ echo -e "${GREEN}开始生成Proto文件...${NC}"
 if ! command -v protoc &> /dev/null; then
     echo -e "${RED}错误: protoc未安装，请先安装Protocol Buffers编译器${NC}"
     echo "安装方法:"
-    echo "  Windows: https://github.com/protocolbuffers/protobuf/releases"
     echo "  macOS: brew install protobuf"
     echo "  Ubuntu: sudo apt-get install protobuf-compiler"
+    echo "  CentOS: sudo yum install protobuf-compiler"
     exit 1
 fi
 
@@ -47,36 +47,39 @@ mkdir -p csharp/GreatestWorks/Battle
 mkdir -p csharp/GreatestWorks/Pet
 mkdir -p csharp/GreatestWorks/Common
 
-echo -e "${GREEN}生成Go代码...${NC}"
+echo -e "${GREEN}生成Go代码（只生成消息定义，不生成gRPC服务）...${NC}"
 
-# 生成Go代码
+# 生成Go代码 - 只生成消息定义，不生成gRPC服务
 protoc \
     --go_out=. \
     --go_opt=paths=source_relative \
-    --go-grpc_out=. \
-    --go-grpc_opt=paths=source_relative \
     proto/common.proto
 
 protoc \
     --go_out=. \
     --go_opt=paths=source_relative \
-    --go-grpc_out=. \
-    --go-grpc_opt=paths=source_relative \
     proto/player.proto
 
 protoc \
     --go_out=. \
     --go_opt=paths=source_relative \
-    --go-grpc_out=. \
-    --go-grpc_opt=paths=source_relative \
     proto/battle.proto
 
 protoc \
     --go_out=. \
     --go_opt=paths=source_relative \
-    --go-grpc_out=. \
-    --go-grpc_opt=paths=source_relative \
     proto/pet.proto
+
+echo -e "${GREEN}移动生成的文件到正确位置...${NC}"
+
+# 移动生成的文件到正确位置
+mv proto/common.pb.go internal/proto/common/ 2>/dev/null || true
+mv proto/player.pb.go internal/proto/player/ 2>/dev/null || true
+mv proto/battle.pb.go internal/proto/battle/ 2>/dev/null || true
+mv proto/pet.pb.go internal/proto/pet/ 2>/dev/null || true
+
+# 删除可能生成的gRPC文件
+rm -f proto/*_grpc.pb.go
 
 echo -e "${GREEN}生成C#代码...${NC}"
 
@@ -112,3 +115,6 @@ find internal/proto -name "*.pb.go" -type f
 
 echo -e "${YELLOW}C#生成的文件:${NC}"
 find csharp -name "*.g.cs" -type f
+
+echo -e "${YELLOW}注意: 只生成了protobuf消息定义，没有生成gRPC服务文件${NC}"
+echo -e "${YELLOW}项目使用netcore-go RPC架构，不使用gRPC${NC}"

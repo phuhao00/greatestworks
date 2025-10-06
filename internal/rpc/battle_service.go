@@ -7,7 +7,6 @@ import (
 
 	"greatestworks/application/services"
 	"greatestworks/internal/infrastructure/logger"
-	"greatestworks/internal/proto/battle"
 )
 
 // BattleRPCService 战斗RPC服务
