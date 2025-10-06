@@ -7,13 +7,13 @@ package protocol
 // 消息类型常量定义
 const (
 	// 系统消息 (0x0000 - 0x00FF)
-	MsgHeartbeat  uint16 = 0x0001 // 心跳消息
-	MsgHandshake  uint16 = 0x0002 // 握手消息
-	MsgAuth       uint16 = 0x0003 // 认证消息
-	MsgDisconnect uint16 = 0x0004 // 断开连接
-	MsgError      uint16 = 0x0005 // 错误消息
-	MsgPing       uint16 = 0x0006 // Ping消息
-	MsgPong       uint16 = 0x0007 // Pong消息
+	MsgHeartbeat  uint32 = 0x0001 // 心跳消息
+	MsgHandshake  uint32 = 0x0002 // 握手消息
+	MsgAuth       uint32 = 0x0003 // 认证消息
+	MsgDisconnect uint32 = 0x0004 // 断开连接
+	MsgError      uint32 = 0x0005 // 错误消息
+	MsgPing       uint32 = 0x0006 // Ping消息
+	MsgPong       uint32 = 0x0007 // Pong消息
 
 	// 玩家相关消息 (0x0100 - 0x01FF) - 定义在game_protocol.go中
 	// MsgPlayerLogin   uint16 = 0x0101 // 玩家登录
@@ -113,7 +113,7 @@ const MessageMagic uint32 = 0x47574B53 // "GWKS" - GreatestWorks
 type MessageHeader struct {
 	Magic       uint32 `json:"magic"`        // 魔数标识
 	MessageID   uint32 `json:"message_id"`   // 消息ID（用于请求响应匹配）
-	MessageType uint16 `json:"message_type"` // 消息类型
+	MessageType uint32 `json:"message_type"` // 消息类型
 	Flags       uint16 `json:"flags"`        // 标志位
 	PlayerID    uint64 `json:"player_id"`    // 玩家ID
 	Timestamp   int64  `json:"timestamp"`    // 时间戳

@@ -9,31 +9,37 @@ import (
 // 基础错误变量
 var (
 	// NPC相关错误
-	ErrNPCNotFound         = fmt.Errorf("NPC not found")
-	ErrNPCAlreadyExists    = fmt.Errorf("NPC already exists")
-	ErrNPCInvalidID        = fmt.Errorf("invalid NPC ID")
-	ErrNPCInvalidName      = fmt.Errorf("invalid NPC name")
-	ErrNPCInvalidType      = fmt.Errorf("invalid NPC type")
-	ErrNPCInvalidStatus    = fmt.Errorf("invalid NPC status")
-	ErrNPCInvalidLocation  = fmt.Errorf("invalid NPC location")
-	ErrNPCNotActive        = fmt.Errorf("NPC is not active")
-	ErrNPCBusy             = fmt.Errorf("NPC is busy")
-	ErrNPCUnavailable      = fmt.Errorf("NPC is unavailable")
-	ErrNPCMaxInteractions  = fmt.Errorf("NPC has reached maximum interactions")
-	
+	ErrNPCNotFound        = fmt.Errorf("NPC not found")
+	ErrNPCAlreadyExists   = fmt.Errorf("NPC already exists")
+	ErrNPCInvalidID       = fmt.Errorf("invalid NPC ID")
+	ErrNPCInvalidName     = fmt.Errorf("invalid NPC name")
+	ErrInvalidNPCName     = fmt.Errorf("invalid NPC name")
+	ErrNPCInvalidType     = fmt.Errorf("invalid NPC type")
+	ErrNPCInvalidStatus   = fmt.Errorf("invalid NPC status")
+	ErrInvalidNPCStatus   = fmt.Errorf("invalid NPC status")
+	ErrNPCInvalidLocation = fmt.Errorf("invalid NPC location")
+	ErrInvalidLocation    = fmt.Errorf("invalid location")
+	ErrNPCCannotMove      = fmt.Errorf("NPC cannot move")
+	ErrNPCNotActive       = fmt.Errorf("NPC is not active")
+	ErrNPCBusy            = fmt.Errorf("NPC is busy")
+	ErrNPCUnavailable     = fmt.Errorf("NPC is unavailable")
+	ErrNPCMaxInteractions = fmt.Errorf("NPC has reached maximum interactions")
+
 	// 对话相关错误
-	ErrDialogueNotFound       = fmt.Errorf("dialogue not found")
-	ErrDialogueAlreadyExists  = fmt.Errorf("dialogue already exists")
-	ErrDialogueInvalidID      = fmt.Errorf("invalid dialogue ID")
-	ErrDialogueInvalidType    = fmt.Errorf("invalid dialogue type")
-	ErrDialogueNotAvailable   = fmt.Errorf("dialogue not available")
-	ErrDialogueConditionFailed = fmt.Errorf("dialogue condition not met")
-	ErrDialogueSessionExpired = fmt.Errorf("dialogue session expired")
-	ErrDialogueSessionNotFound = fmt.Errorf("dialogue session not found")
-	ErrDialogueInProgress     = fmt.Errorf("dialogue already in progress")
-	ErrDialogueNodeNotFound   = fmt.Errorf("dialogue node not found")
-	ErrDialogueInvalidChoice  = fmt.Errorf("invalid dialogue choice")
-	
+	ErrDialogueNotFound         = fmt.Errorf("dialogue not found")
+	ErrDialogueAlreadyExists    = fmt.Errorf("dialogue already exists")
+	ErrDialogueInvalidID        = fmt.Errorf("invalid dialogue ID")
+	ErrDialogueInvalidType      = fmt.Errorf("invalid dialogue type")
+	ErrDialogueNotAvailable     = fmt.Errorf("dialogue not available")
+	ErrDialogueConditionFailed  = fmt.Errorf("dialogue condition not met")
+	ErrDialogueConditionsNotMet = fmt.Errorf("dialogue conditions not met")
+	ErrDialogueSessionExpired   = fmt.Errorf("dialogue session expired")
+	ErrDialogueSessionNotFound  = fmt.Errorf("dialogue session not found")
+	ErrDialogueInProgress       = fmt.Errorf("dialogue already in progress")
+	ErrDialogueNodeNotFound     = fmt.Errorf("dialogue node not found")
+	ErrDialogueInvalidChoice    = fmt.Errorf("invalid dialogue choice")
+	ErrInvalidDialogue          = fmt.Errorf("invalid dialogue")
+
 	// 任务相关错误
 	ErrQuestNotFound          = fmt.Errorf("quest not found")
 	ErrQuestAlreadyExists     = fmt.Errorf("quest already exists")
@@ -50,48 +56,48 @@ var (
 	ErrQuestExpired           = fmt.Errorf("quest has expired")
 	ErrQuestCooldown          = fmt.Errorf("quest is on cooldown")
 	ErrQuestMaxAttempts       = fmt.Errorf("quest maximum attempts reached")
-	
+
 	// 商店相关错误
-	ErrShopNotFound        = fmt.Errorf("shop not found")
-	ErrShopAlreadyExists   = fmt.Errorf("shop already exists")
-	ErrShopInvalidID       = fmt.Errorf("invalid shop ID")
-	ErrShopNotOpen         = fmt.Errorf("shop is not open")
-	ErrShopItemNotFound    = fmt.Errorf("shop item not found")
-	ErrShopItemOutOfStock  = fmt.Errorf("shop item out of stock")
+	ErrShopNotFound          = fmt.Errorf("shop not found")
+	ErrShopAlreadyExists     = fmt.Errorf("shop already exists")
+	ErrShopInvalidID         = fmt.Errorf("invalid shop ID")
+	ErrShopNotOpen           = fmt.Errorf("shop is not open")
+	ErrShopItemNotFound      = fmt.Errorf("shop item not found")
+	ErrShopItemOutOfStock    = fmt.Errorf("shop item out of stock")
 	ErrShopInsufficientFunds = fmt.Errorf("insufficient funds")
-	ErrShopInvalidQuantity = fmt.Errorf("invalid quantity")
-	ErrShopInvalidPrice    = fmt.Errorf("invalid price")
+	ErrShopInvalidQuantity   = fmt.Errorf("invalid quantity")
+	ErrShopInvalidPrice      = fmt.Errorf("invalid price")
 	ErrShopTransactionFailed = fmt.Errorf("shop transaction failed")
-	ErrShopInventoryFull   = fmt.Errorf("shop inventory is full")
-	
+	ErrShopInventoryFull     = fmt.Errorf("shop inventory is full")
+
 	// 关系相关错误
-	ErrRelationshipNotFound    = fmt.Errorf("relationship not found")
+	ErrRelationshipNotFound      = fmt.Errorf("relationship not found")
 	ErrRelationshipAlreadyExists = fmt.Errorf("relationship already exists")
-	ErrRelationshipInvalidValue = fmt.Errorf("invalid relationship value")
-	ErrRelationshipInvalidLevel = fmt.Errorf("invalid relationship level")
-	ErrRelationshipMaxValue    = fmt.Errorf("relationship value at maximum")
-	ErrRelationshipMinValue    = fmt.Errorf("relationship value at minimum")
-	ErrRelationshipLocked      = fmt.Errorf("relationship is locked")
-	
+	ErrRelationshipInvalidValue  = fmt.Errorf("invalid relationship value")
+	ErrRelationshipInvalidLevel  = fmt.Errorf("invalid relationship level")
+	ErrRelationshipMaxValue      = fmt.Errorf("relationship value at maximum")
+	ErrRelationshipMinValue      = fmt.Errorf("relationship value at minimum")
+	ErrRelationshipLocked        = fmt.Errorf("relationship is locked")
+
 	// 行为相关错误
-	ErrBehaviorNotFound     = fmt.Errorf("behavior not found")
-	ErrBehaviorInvalidType  = fmt.Errorf("invalid behavior type")
-	ErrBehaviorInvalidState = fmt.Errorf("invalid behavior state")
-	ErrBehaviorCooldown     = fmt.Errorf("behavior is on cooldown")
+	ErrBehaviorNotFound        = fmt.Errorf("behavior not found")
+	ErrBehaviorInvalidType     = fmt.Errorf("invalid behavior type")
+	ErrBehaviorInvalidState    = fmt.Errorf("invalid behavior state")
+	ErrBehaviorCooldown        = fmt.Errorf("behavior is on cooldown")
 	ErrBehaviorConditionFailed = fmt.Errorf("behavior condition not met")
-	
+
 	// 位置相关错误
-	ErrLocationInvalid     = fmt.Errorf("invalid location")
-	ErrLocationOutOfBounds = fmt.Errorf("location out of bounds")
+	ErrLocationInvalid       = fmt.Errorf("invalid location")
+	ErrLocationOutOfBounds   = fmt.Errorf("location out of bounds")
 	ErrLocationNotAccessible = fmt.Errorf("location not accessible")
-	ErrLocationOccupied    = fmt.Errorf("location is occupied")
-	
+	ErrLocationOccupied      = fmt.Errorf("location is occupied")
+
 	// 权限相关错误
-	ErrPermissionDenied    = fmt.Errorf("permission denied")
-	ErrUnauthorized        = fmt.Errorf("unauthorized access")
-	ErrInsufficientLevel   = fmt.Errorf("insufficient level")
+	ErrPermissionDenied       = fmt.Errorf("permission denied")
+	ErrUnauthorized           = fmt.Errorf("unauthorized access")
+	ErrInsufficientLevel      = fmt.Errorf("insufficient level")
 	ErrInsufficientReputation = fmt.Errorf("insufficient reputation")
-	
+
 	// 系统相关错误
 	ErrSystemBusy          = fmt.Errorf("system is busy")
 	ErrSystemMaintenance   = fmt.Errorf("system under maintenance")
@@ -170,7 +176,7 @@ func (e *ValidationErrors) Error() string {
 	if len(e.Errors) == 0 {
 		return "no validation errors"
 	}
-	
+
 	var messages []string
 	for _, err := range e.Errors {
 		messages = append(messages, err.Error())
@@ -217,16 +223,16 @@ func (e *BusinessRuleError) WithContext(key string, value interface{}) *Business
 
 // ConcurrencyError 并发错误
 type ConcurrencyError struct {
-	Resource    string
-	Operation   string
-	ConflictID  string
+	Resource        string
+	Operation       string
+	ConflictID      string
 	ExpectedVersion int
 	ActualVersion   int
 }
 
 // Error 实现error接口
 func (e *ConcurrencyError) Error() string {
-	return fmt.Sprintf("concurrency conflict on %s during %s: expected version %d, got %d (conflict ID: %s)", 
+	return fmt.Sprintf("concurrency conflict on %s during %s: expected version %d, got %d (conflict ID: %s)",
 		e.Resource, e.Operation, e.ExpectedVersion, e.ActualVersion, e.ConflictID)
 }
 
@@ -253,7 +259,7 @@ type RateLimitError struct {
 
 // Error 实现error接口
 func (e *RateLimitError) Error() string {
-	return fmt.Sprintf("rate limit exceeded for %s: %d/%d requests in %v, retry after %v", 
+	return fmt.Sprintf("rate limit exceeded for %s: %d/%d requests in %v, retry after %v",
 		e.Resource, e.CurrentRate, e.Limit, e.Window, e.RetryAfter)
 }
 
@@ -389,7 +395,7 @@ func CategorizeError(err error) ErrorCategory {
 	if err == nil {
 		return ErrorCategoryUnknown
 	}
-	
+
 	switch {
 	case IsValidationError(err):
 		return ErrorCategoryValidation
@@ -423,17 +429,17 @@ func CategorizeError(err error) ErrorCategory {
 type RecoveryStrategy string
 
 const (
-	RecoveryStrategyRetry     RecoveryStrategy = "retry"
-	RecoveryStrategyFallback  RecoveryStrategy = "fallback"
-	RecoveryStrategyCircuit   RecoveryStrategy = "circuit_breaker"
-	RecoveryStrategyIgnore    RecoveryStrategy = "ignore"
-	RecoveryStrategyEscalate  RecoveryStrategy = "escalate"
+	RecoveryStrategyRetry    RecoveryStrategy = "retry"
+	RecoveryStrategyFallback RecoveryStrategy = "fallback"
+	RecoveryStrategyCircuit  RecoveryStrategy = "circuit_breaker"
+	RecoveryStrategyIgnore   RecoveryStrategy = "ignore"
+	RecoveryStrategyEscalate RecoveryStrategy = "escalate"
 )
 
 // GetRecoveryStrategy 获取恢复策略
 func GetRecoveryStrategy(err error) RecoveryStrategy {
 	category := CategorizeError(err)
-	
+
 	switch category {
 	case ErrorCategoryTimeout, ErrorCategoryRateLimit:
 		return RecoveryStrategyRetry
@@ -454,13 +460,13 @@ func GetRecoveryStrategy(err error) RecoveryStrategy {
 
 // ErrorStats 错误统计
 type ErrorStats struct {
-	TotalErrors    int64
-	ErrorsByType   map[string]int64
-	ErrorsByCode   map[string]int64
-	LastError      error
-	LastErrorTime  time.Time
-	ErrorRate      float64
-	RecoveryRate   float64
+	TotalErrors   int64
+	ErrorsByType  map[string]int64
+	ErrorsByCode  map[string]int64
+	LastError     error
+	LastErrorTime time.Time
+	ErrorRate     float64
+	RecoveryRate  float64
 }
 
 // NewErrorStats 创建错误统计
@@ -476,11 +482,11 @@ func (s *ErrorStats) RecordError(err error) {
 	s.TotalErrors++
 	s.LastError = err
 	s.LastErrorTime = time.Now()
-	
+
 	// 按类型统计
 	category := string(CategorizeError(err))
 	s.ErrorsByType[category]++
-	
+
 	// 按错误码统计
 	if npcErr, ok := err.(*NPCError); ok {
 		s.ErrorsByCode[npcErr.Code]++
@@ -493,14 +499,14 @@ func (s *ErrorStats) RecordError(err error) {
 func (s *ErrorStats) GetMostCommonError() (string, int64) {
 	var maxType string
 	var maxCount int64
-	
+
 	for errorType, count := range s.ErrorsByType {
 		if count > maxCount {
 			maxType = errorType
 			maxCount = count
 		}
 	}
-	
+
 	return maxType, maxCount
 }
 
@@ -557,13 +563,13 @@ func (h *DefaultErrorHandler) GetHandlerName() string {
 
 // ErrorContext 错误上下文
 type ErrorContext struct {
-	OperationID   string
-	UserID        string
-	NPCID         string
-	RequestID     string
-	SessionID     string
-	Timestamp     time.Time
-	StackTrace    string
+	OperationID    string
+	UserID         string
+	NPCID          string
+	RequestID      string
+	SessionID      string
+	Timestamp      time.Time
+	StackTrace     string
 	AdditionalInfo map[string]interface{}
 }
 
@@ -626,7 +632,7 @@ func WrapErrorWithContext(err error, message string, context *ErrorContext) erro
 	if err == nil {
 		return nil
 	}
-	
+
 	npcErr := NewNPCError("WRAPPED_ERROR", message).WithCause(err)
 	if context != nil {
 		npcErr.WithContext("operation_id", context.OperationID)
@@ -635,7 +641,7 @@ func WrapErrorWithContext(err error, message string, context *ErrorContext) erro
 		npcErr.WithContext("request_id", context.RequestID)
 		npcErr.WithContext("session_id", context.SessionID)
 	}
-	
+
 	return npcErr
 }
 
@@ -654,7 +660,7 @@ func IsFatalError(err error) bool {
 // GetErrorSeverity 获取错误严重程度
 func GetErrorSeverity(err error) string {
 	category := CategorizeError(err)
-	
+
 	switch category {
 	case ErrorCategoryValidation:
 		return "low"

@@ -57,12 +57,14 @@ type RewardPool struct {
 
 // Reward 奖励
 type Reward struct {
-	RewardID   string `json:"reward_id"`
-	PlayerID   string `json:"player_id"`
-	RewardType string `json:"reward_type"`
-	Amount     int64  `json:"amount"`
-	ItemID     string `json:"item_id,omitempty"`
-	ItemCount  int    `json:"item_count,omitempty"`
+	RewardID   string    `json:"reward_id"`
+	PlayerID   string    `json:"player_id"`
+	RewardType string    `json:"reward_type"`
+	Amount     int64     `json:"amount"`
+	ItemID     string    `json:"item_id,omitempty"`
+	ItemCount  int       `json:"item_count,omitempty"`
+	GameID     string    `json:"game_id"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // GameStatistics 游戏统计
@@ -163,7 +165,7 @@ func (gs *GameStatistics) Clone() *GameStatistics {
 func (rp *RewardPool) CalculateRewards(rank int, score int64, isWinner bool) []Reward {
 	// 简单的奖励计算逻辑
 	rewards := make([]Reward, 0)
-	
+
 	if isWinner {
 		// 获胜者获得基础奖励
 		rewards = append(rewards, Reward{
@@ -171,7 +173,7 @@ func (rp *RewardPool) CalculateRewards(rank int, score int64, isWinner bool) []R
 			Amount: int64(100 * rank),
 		})
 	}
-	
+
 	// 根据分数给予额外奖励
 	if score > 1000 {
 		rewards = append(rewards, Reward{
@@ -179,8 +181,20 @@ func (rp *RewardPool) CalculateRewards(rank int, score int64, isWinner bool) []R
 			Amount: score / 10,
 		})
 	}
-	
+
 	return rewards
+}
+
+// GameReward 游戏奖励
+type GameReward struct {
+	RewardID   string    `json:"reward_id"`
+	PlayerID   string    `json:"player_id"`
+	RewardType string    `json:"reward_type"`
+	Amount     int64     `json:"amount"`
+	ItemID     string    `json:"item_id,omitempty"`
+	ItemCount  int       `json:"item_count,omitempty"`
+	GameID     string    `json:"game_id"`
+	Timestamp  time.Time `json:"timestamp"`
 }
 
 // 注意：GameStatistics和GameResult已经在文件开头定义，这里只是添加了缺失的字段

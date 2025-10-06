@@ -11,6 +11,16 @@ const (
 	BuildingTypeRecreational BuildingType = "recreational"
 )
 
+// IsValid 检查建筑类型是否有效
+func (bt BuildingType) IsValid() bool {
+	switch bt {
+	case BuildingTypeResidential, BuildingTypeCommercial, BuildingTypeIndustrial, BuildingTypePublic, BuildingTypeRecreational:
+		return true
+	default:
+		return false
+	}
+}
+
 // BuildingConfig 建筑配置
 type BuildingConfig struct {
 	Type         BuildingType           `json:"type"`

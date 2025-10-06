@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"greatestworks/application/commands/player"
-	"greatestworks/application/commands/battle"
-	"greatestworks/application/queries/player"
+	playerCmd "greatestworks/application/commands/player"
+	battleCmd "greatestworks/application/commands/battle"
+	playerQuery "greatestworks/application/queries/player"
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/interfaces/tcp/protocol"
@@ -66,17 +66,17 @@ func (h *GameHandler) HandleMessage(conn *connection.Connection, msg *protocol.M
 	case protocol.MsgStartBattle:
 		return h.handleStartBattle(ctx, conn, msg)
 	case protocol.MsgBattleAction:
-		return h.handleBattleAction(ctx, conn, msg)
+		return h.handleBattleAction(conn, msg)
 	case protocol.MsgLeaveBattle:
-		return h.handleLeaveBattle(ctx, conn, msg)
+		return h.handleLeaveBattle(conn, msg)
 
 	// 查询相关
 	case protocol.MsgGetPlayerInfo:
-		return h.handleGetPlayerInfo(ctx, conn, msg)
+		return h.handleGetPlayerInfo(conn, msg)
 	case protocol.MsgGetOnlinePlayers:
-		return h.handleGetOnlinePlayers(ctx, conn, msg)
+		return h.handleGetOnlinePlayers(conn, msg)
 	case protocol.MsgGetBattleInfo:
-		return h.handleGetBattleInfo(ctx, conn, msg)
+		return h.handleGetBattleInfo(conn, msg)
 
 	default:
 		h.logger.Warn("Unknown message type", "message_type", msg.Header.MessageType, "conn_id", conn.ID)
@@ -100,8 +100,8 @@ func (h *GameHandler) handleAuth(ctx context.Context, conn *connection.Connectio
 	}
 
 	// 查询玩家信息
-	query := &player.GetPlayerQuery{PlayerID: req.PlayerID}
-	result, err := handlers.ExecuteQueryTyped[*player.GetPlayerQuery, *player.GetPlayerResult](ctx, h.queryBus, query)
+	query := &playerQuery.GetPlayerQuery{PlayerID: req.PlayerID}
+	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player info", "error", err, "player_id", req.PlayerID)
 		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Player not found")
@@ -175,8 +175,8 @@ func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn *connection.Co
 	}
 
 	// 查询玩家信息
-	query := &player.GetPlayerQuery{PlayerID: req.PlayerID}
-	result, err := handlers.ExecuteQueryTyped[*player.GetPlayerQuery, *player.GetPlayerResult](ctx, h.queryBus, query)
+	query := &playerQuery.GetPlayerQuery{PlayerID: req.PlayerID}
+	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player info", "error", err, "player_id", req.PlayerID)
 		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Failed to get player info")
@@ -186,14 +186,14 @@ func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn *connection.Co
 		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Player not found")
 	}
 
-	// 更新玩家登录状态
-	cmd := &player.UpdatePlayerStatusCommand{
-		PlayerID: req.PlayerID,
-		Status:   "online",
-		LoginTime: time.Now(),
-	}
+	// 更新玩家登录状态 - 暂时注释掉，因为UpdatePlayerStatusCommand不存在
+	// cmd := &playerCmd.UpdatePlayerStatusCommand{
+	//	PlayerID: req.PlayerID,
+	//	Status:   "online",
+	//	LoginTime: time.Now(),
+	// }
 
-	_, err = handlers.ExecuteTyped[*player.UpdatePlayerStatusCommand, *player.UpdatePlayerStatusResult](ctx, h.commandBus, cmd)
+	// _, err = handlers.ExecuteTyped[*playerCmd.UpdatePlayerStatusCommand, *playerCmd.UpdatePlayerStatusResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to update player status", "error", err, "player_id", req.PlayerID)
 		// 不返回错误，继续处理
@@ -249,9 +249,9 @@ func (h *GameHandler) handlePlayerMove(ctx context.Context, conn *connection.Con
 	}
 
 	// 执行移动命令
-	cmd := &player.MovePlayerCommand{
+	cmd := &playerCmd.MovePlayerCommand{
 		PlayerID: conn.PlayerID,
-		Position: player.Position{
+		Position: playerCmd.Position{
 			X: req.Position.X,
 			Y: req.Position.Y,
 			Z: req.Position.Z,
@@ -259,7 +259,7 @@ func (h *GameHandler) handlePlayerMove(ctx context.Context, conn *connection.Con
 		Speed: req.Speed,
 	}
 
-	result, err := handlers.ExecuteTyped[*player.MovePlayerCommand, *player.MovePlayerResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCmd.MovePlayerCommand, *playerCmd.MovePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to move player", "error", err, "player_id", conn.PlayerID)
 		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Failed to move player")
@@ -301,11 +301,11 @@ func (h *GameHandler) handleCreateBattle(ctx context.Context, conn *connection.C
 	}
 
 	// 执行创建战斗命令
-	cmd := &battle.CreateBattleCommand{
+	cmd := &battleCmd.CreateBattleCommand{
 		CreatorID:  conn.PlayerID,
 		BattleType: req.BattleType,
 		MaxPlayers: req.MaxPlayers,
-		Settings: battle.BattleSettings{
+		Settings: battleCmd.BattleSettings{
 			TimeLimit:    req.Settings.TimeLimit,
 			AllowPets:    req.Settings.AllowPets,
 			AllowItems:   req.Settings.AllowItems,
@@ -313,7 +313,7 @@ func (h *GameHandler) handleCreateBattle(ctx context.Context, conn *connection.C
 		},
 	}
 
-	result, err := handlers.ExecuteTyped[*battle.CreateBattleCommand, *battle.CreateBattleResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*battleCmd.CreateBattleCommand, *battleCmd.CreateBattleResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to create battle", "error", err, "player_id", conn.PlayerID)
 		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Failed to create battle")
@@ -359,7 +359,7 @@ func (h *GameHandler) sendResponse(conn *connection.Connection, messageID uint32
 			MessageID:   messageID,
 			MessageType: messageType,
 			Flags:       protocol.FlagResponse,
-			PlayerID:    msg.Header.PlayerID,
+			PlayerID:    conn.PlayerID,
 			Timestamp:   time.Now().Unix(),
 			Sequence:    0,
 		},
@@ -390,7 +390,7 @@ func (h *GameHandler) sendErrorResponse(conn *connection.Connection, messageID u
 	return conn.SendMessage(response)
 }
 
-func (h *GameHandler) broadcastPlayerOnline(player *player.PlayerInfo) {
+func (h *GameHandler) broadcastPlayerOnline(player *playerQuery.PlayerInfo) {
 	// 构造玩家上线广播消息
 	broadcastMsg := &protocol.Message{
 		Header: protocol.MessageHeader{
@@ -410,7 +410,7 @@ func (h *GameHandler) broadcastPlayerOnline(player *player.PlayerInfo) {
 	h.connMgr.BroadcastMessage(broadcastMsg)
 }
 
-func (h *GameHandler) broadcastPlayerMove(playerID string, newPosition player.Position) {
+func (h *GameHandler) broadcastPlayerMove(playerID string, newPosition playerCmd.Position) {
 	// 构造玩家移动广播消息
 	broadcastMsg := &protocol.Message{
 		Header: protocol.MessageHeader{

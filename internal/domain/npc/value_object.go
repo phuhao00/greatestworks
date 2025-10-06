@@ -189,6 +189,31 @@ func (l *Location) ToMap() map[string]interface{} {
 	}
 }
 
+// GetX 获取X坐标
+func (l *Location) GetX() float64 {
+	return l.X
+}
+
+// GetY 获取Y坐标
+func (l *Location) GetY() float64 {
+	return l.Y
+}
+
+// GetZ 获取Z坐标
+func (l *Location) GetZ() float64 {
+	return l.Z
+}
+
+// GetRegion 获取区域
+func (l *Location) GetRegion() string {
+	return l.Region
+}
+
+// GetZone 获取区域
+func (l *Location) GetZone() string {
+	return l.Zone
+}
+
 // NPCAttributes NPC属性值对象
 type NPCAttributes struct {
 	Level        int
@@ -289,6 +314,41 @@ func (na *NPCAttributes) ToMap() map[string]interface{} {
 		"view_range":   na.ViewRange,
 		"hear_range":   na.HearRange,
 	}
+}
+
+// GetLevel 获取等级
+func (na *NPCAttributes) GetLevel() int {
+	return na.Level
+}
+
+// GetHealth 获取生命值
+func (na *NPCAttributes) GetHealth() int {
+	return na.Health
+}
+
+// GetMaxHealth 获取最大生命值
+func (na *NPCAttributes) GetMaxHealth() int {
+	return na.MaxHealth
+}
+
+// GetAttack 获取攻击力
+func (na *NPCAttributes) GetAttack() int {
+	return na.Strength
+}
+
+// GetDefense 获取防御力
+func (na *NPCAttributes) GetDefense() int {
+	return na.Agility
+}
+
+// GetSpeed 获取速度
+func (na *NPCAttributes) GetSpeed() float64 {
+	return na.MoveSpeed
+}
+
+// GetIntelligence 获取智力
+func (na *NPCAttributes) GetIntelligence() int {
+	return na.Intelligence
 }
 
 // NPCBehavior NPC行为值对象
@@ -411,6 +471,26 @@ func (nb *NPCBehavior) updateFollow(deltaTime time.Duration) {
 // updateIdle 更新空闲行为
 func (nb *NPCBehavior) updateIdle(deltaTime time.Duration) {
 	// 空闲状态不需要特殊处理
+}
+
+// GetCurrentAction 获取当前动作
+func (nb *NPCBehavior) GetCurrentAction() BehaviorType {
+	return nb.Type
+}
+
+// GetNextAction 获取下一个动作
+func (nb *NPCBehavior) GetNextAction() BehaviorType {
+	return nb.Type
+}
+
+// GetCooldown 获取冷却时间
+func (nb *NPCBehavior) GetCooldown() time.Duration {
+	return nb.PauseTime
+}
+
+// IsActive 是否激活
+func (nb *NPCBehavior) IsActive() bool {
+	return nb.State != BehaviorStateIdle && nb.State != BehaviorStatePaused
 }
 
 // BehaviorType 行为类型

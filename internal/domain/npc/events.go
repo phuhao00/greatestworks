@@ -755,3 +755,47 @@ func NewNPCMovedEvent(npcID string, oldLocation, newLocation *Location) *NPCMove
 		NewLocation: newLocation,
 	}
 }
+
+// NewDialogueAddedEvent 创建对话添加事件
+func NewDialogueAddedEvent(npcID, dialogueID string) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("dialogue_added_%d", time.Now().UnixNano()),
+		EventType:   "DialogueAdded",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"dialogue_id": dialogueID,
+		},
+	}
+}
+
+// NewDialogueRemovedEvent 创建对话移除事件
+func NewDialogueRemovedEvent(npcID, dialogueID string) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("dialogue_removed_%d", time.Now().UnixNano()),
+		EventType:   "DialogueRemoved",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"dialogue_id": dialogueID,
+		},
+	}
+}
+
+// NewDialogueStartedEvent 创建对话开始事件
+func NewDialogueStartedEvent(npcID, dialogueID, playerID, dialogueText string) *BaseDomainEvent {
+	return &BaseDomainEvent{
+		EventID:     fmt.Sprintf("dialogue_started_%d", time.Now().UnixNano()),
+		EventType:   "DialogueStarted",
+		AggregateID: npcID,
+		OccurredAt:  time.Now(),
+		Version:     1,
+		Data: map[string]interface{}{
+			"dialogue_id":   dialogueID,
+			"player_id":     playerID,
+			"dialogue_text": dialogueText,
+		},
+	}
+}

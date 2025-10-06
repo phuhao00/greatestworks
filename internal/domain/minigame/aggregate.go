@@ -674,7 +674,7 @@ func (mg *MinigameAggregate) updateStatistics() {
 	}
 
 	mg.Statistics.TotalGames++
-	mg.Statistics.TotalPlayers += int64(len(mg.Players))
+	mg.Statistics.TotalPlayers += len(mg.Players)
 
 	if len(mg.Results) > 0 {
 		mg.Statistics.AverageScore = mg.calculateAverageScore()
@@ -682,7 +682,7 @@ func (mg *MinigameAggregate) updateStatistics() {
 		mg.Statistics.LowestScore = mg.getLowestScore()
 	}
 
-	mg.Statistics.AverageGameDuration = mg.Duration
+	mg.Statistics.AverageGameDuration = float64(mg.Duration.Nanoseconds()) / 1e9
 	mg.Statistics.LastPlayedAt = time.Now()
 	mg.Statistics.UpdatedAt = time.Now()
 }

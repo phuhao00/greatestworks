@@ -99,7 +99,7 @@ func (d *Dialogue) CanStart(playerID string) bool {
 	if d.maxUses > 0 && d.useCount[playerID] >= d.maxUses {
 		return false
 	}
-	
+
 	// 检查冷却时间
 	if d.cooldown > 0 {
 		if lastUsed, exists := d.lastUsed[playerID]; exists {
@@ -108,14 +108,14 @@ func (d *Dialogue) CanStart(playerID string) bool {
 			}
 		}
 	}
-	
+
 	// 检查条件
 	for _, condition := range d.conditions {
 		if !condition.Check(playerID) {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -410,20 +410,45 @@ func (ds *DialogueSession) GetDuration() time.Duration {
 	return ds.lastUpdate.Sub(ds.startTime)
 }
 
+// GetID 获取会话ID
+func (ds *DialogueSession) GetID() string {
+	return ds.npcID + "_" + ds.dialogueID + "_" + ds.playerID
+}
+
+// GetCurrentNodeID 获取当前节点ID
+func (ds *DialogueSession) GetCurrentNodeID() string {
+	return ds.currentNode
+}
+
+// GetStartTime 获取开始时间
+func (ds *DialogueSession) GetStartTime() time.Time {
+	return ds.startTime
+}
+
+// GetEndTime 获取结束时间
+func (ds *DialogueSession) GetEndTime() time.Time {
+	return ds.lastUpdate
+}
+
+// GetContext 获取上下文
+func (ds *DialogueSession) GetContext() map[string]interface{} {
+	return ds.context
+}
+
 // Quest 任务实体
 type Quest struct {
-	id          string
-	name        string
-	description string
-	type_       QuestType
-	objectives  []*QuestObjective
-	rewards     *QuestReward
+	id            string
+	name          string
+	description   string
+	type_         QuestType
+	objectives    []*QuestObjective
+	rewards       *QuestReward
 	prerequisites []*QuestPrerequisite
-	timeLimit   time.Duration
-	repeatable  bool
-	dailyReset  bool
-	createdAt   time.Time
-	updatedAt   time.Time
+	timeLimit     time.Duration
+	repeatable    bool
+	dailyReset    bool
+	createdAt     time.Time
+	updatedAt     time.Time
 }
 
 // NewQuest 创建任务
@@ -674,11 +699,11 @@ type QuestInstance struct {
 func NewQuestInstance(questID, playerID, npcID string) *QuestInstance {
 	now := time.Now()
 	return &QuestInstance{
-		questID:  questID,
-		playerID: playerID,
-		npcID:    npcID,
-		status:   QuestStatusActive,
-		progress: make(map[string]int),
+		questID:   questID,
+		playerID:  playerID,
+		npcID:     npcID,
+		status:    QuestStatusActive,
+		progress:  make(map[string]int),
 		startTime: now,
 	}
 }
@@ -826,30 +851,30 @@ func (s *Shop) ExecuteTrade(playerID string, request *TradeRequest) (*TradeResul
 	if !s.IsOpen() {
 		return nil, fmt.Errorf("shop is closed")
 	}
-	
+
 	item := s.GetItem(request.ItemID)
 	if item == nil {
 		return nil, fmt.Errorf("item not found")
 	}
-	
+
 	if !item.IsAvailable() {
 		return nil, fmt.Errorf("item not available")
 	}
-	
+
 	if request.Quantity > item.GetStock() {
 		return nil, fmt.Errorf("insufficient stock")
 	}
-	
+
 	// 计算价格（包括折扣）
 	totalPrice := item.GetPrice() * request.Quantity
 	if discount := s.getDiscount(playerID, request.ItemID); discount != nil {
 		totalPrice = discount.Apply(totalPrice)
 	}
-	
+
 	// 执行交易
 	item.Purchase(request.Quantity)
 	s.updatedAt = time.Now()
-	
+
 	return &TradeResult{
 		ItemID:     request.ItemID,
 		Quantity:   request.Quantity,

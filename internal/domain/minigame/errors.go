@@ -1004,3 +1004,14 @@ func LogError(err error, context map[string]interface{}) {
 		fmt.Printf("ERROR: %s\n", err.Error())
 	}
 }
+
+// NewMinigameValidationError 创建小游戏验证错误
+func NewMinigameValidationError(message string) error {
+	return &MinigameError{
+		Code:      "VALIDATION_ERROR",
+		Message:   message,
+		Severity:  ErrorSeverityMedium,
+		Retryable: false,
+		Details:   make(map[string]interface{}),
+	}
+}

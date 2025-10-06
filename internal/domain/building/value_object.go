@@ -88,17 +88,17 @@ func (bs BuildingStatus) CanTransitionTo(target BuildingStatus) bool {
 type BuildingCategory int32
 
 const (
-	BuildingCategoryResidential BuildingCategory = iota + 1 // 住宅
-	BuildingCategoryCommercial                              // 商业
-	BuildingCategoryIndustrial                              // 工业
-	BuildingCategoryMilitary                                // 军事
-	BuildingCategoryReligious                               // 宗教
-	BuildingCategoryEducational                             // 教育
-	BuildingCategoryMedical                                 // 医疗
-	BuildingCategoryEntertainment                           // 娱乐
-	BuildingCategoryUtility                                 // 公用设施
-	BuildingCategoryDecoration                              // 装饰
-	BuildingCategorySpecial                                 // 特殊
+	BuildingCategoryResidential   BuildingCategory = iota + 1 // 住宅
+	BuildingCategoryCommercial                                // 商业
+	BuildingCategoryIndustrial                                // 工业
+	BuildingCategoryMilitary                                  // 军事
+	BuildingCategoryReligious                                 // 宗教
+	BuildingCategoryEducational                               // 教育
+	BuildingCategoryMedical                                   // 医疗
+	BuildingCategoryEntertainment                             // 娱乐
+	BuildingCategoryUtility                                   // 公用设施
+	BuildingCategoryDecoration                                // 装饰
+	BuildingCategorySpecial                                   // 特殊
 )
 
 // String 返回建筑分类的字符串表示
@@ -217,6 +217,28 @@ func (s *Size) IsValid() bool {
 // Clone 克隆尺寸
 func (s *Size) Clone() *Size {
 	return &Size{Width: s.Width, Height: s.Height, Depth: s.Depth}
+}
+
+// Position 位置
+type Position struct {
+	X int32 `json:"x" bson:"x"`
+	Y int32 `json:"y" bson:"y"`
+	Z int32 `json:"z" bson:"z"`
+}
+
+// NewPosition 创建新位置
+func NewPosition(x, y, z int32) *Position {
+	return &Position{X: x, Y: y, Z: z}
+}
+
+// IsValid 检查位置是否有效
+func (p *Position) IsValid() bool {
+	return p != nil
+}
+
+// Clone 克隆位置
+func (p *Position) Clone() *Position {
+	return &Position{X: p.X, Y: p.Y, Z: p.Z}
 }
 
 // BoundingBox 边界框
@@ -358,12 +380,12 @@ type RequirementType int32
 
 const (
 	RequirementTypeLevel      RequirementType = iota + 1 // 等级要求
-	RequirementTypeResource                               // 资源要求
-	RequirementTypeBuilding                               // 建筑要求
-	RequirementTypeTechnology                             // 科技要求
-	RequirementTypePopulation                             // 人口要求
-	RequirementTypeTime                                   // 时间要求
-	RequirementTypeCustom                                 // 自定义要求
+	RequirementTypeResource                              // 资源要求
+	RequirementTypeBuilding                              // 建筑要求
+	RequirementTypeTechnology                            // 科技要求
+	RequirementTypePopulation                            // 人口要求
+	RequirementTypeTime                                  // 时间要求
+	RequirementTypeCustom                                // 自定义要求
 )
 
 // String 返回要求类型的字符串表示
@@ -460,16 +482,16 @@ func (r *Requirement) Clone() *Requirement {
 type EffectType int32
 
 const (
-	EffectTypeProduction  EffectType = iota + 1 // 生产效果
-	EffectTypeDefense                            // 防御效果
-	EffectTypeEfficiency                         // 效率效果
-	EffectTypeCapacity                           // 容量效果
-	EffectTypeSpeed                              // 速度效果
-	EffectTypeCost                               // 成本效果
-	EffectTypeHealth                             // 生命值效果
-	EffectTypeDurability                         // 耐久度效果
-	EffectTypeRange                              // 范围效果
-	EffectTypeCustom                             // 自定义效果
+	EffectTypeProduction EffectType = iota + 1 // 生产效果
+	EffectTypeDefense                          // 防御效果
+	EffectTypeEfficiency                       // 效率效果
+	EffectTypeCapacity                         // 容量效果
+	EffectTypeSpeed                            // 速度效果
+	EffectTypeCost                             // 成本效果
+	EffectTypeHealth                           // 生命值效果
+	EffectTypeDurability                       // 耐久度效果
+	EffectTypeRange                            // 范围效果
+	EffectTypeCustom                           // 自定义效果
 )
 
 // String 返回效果类型的字符串表示
@@ -542,16 +564,16 @@ func (be *BuildingEffect) IsActive() bool {
 	if be.Permanent {
 		return true
 	}
-	
+
 	if be.EndTime != nil {
 		return time.Now().Before(*be.EndTime)
 	}
-	
+
 	if be.StartTime != nil && be.Duration != nil {
 		endTime := be.StartTime.Add(*be.Duration)
 		return time.Now().Before(endTime)
 	}
-	
+
 	return true
 }
 
@@ -600,12 +622,12 @@ func (be *BuildingEffect) Clone() *BuildingEffect {
 		CreatedAt:   be.CreatedAt,
 		UpdatedAt:   be.UpdatedAt,
 	}
-	
+
 	// 深拷贝map
 	for k, v := range be.Conditions {
 		clone.Conditions[k] = v
 	}
-	
+
 	// 深拷贝指针
 	if be.Duration != nil {
 		duration := *be.Duration
@@ -619,7 +641,7 @@ func (be *BuildingEffect) Clone() *BuildingEffect {
 		endTime := *be.EndTime
 		clone.EndTime = &endTime
 	}
-	
+
 	return clone
 }
 
@@ -630,10 +652,10 @@ type ProductionType int32
 
 const (
 	ProductionTypeResource ProductionType = iota + 1 // 资源生产
-	ProductionTypeItem                                // 物品生产
-	ProductionTypeUnit                                // 单位生产
-	ProductionTypeService                             // 服务生产
-	ProductionTypeCustom                              // 自定义生产
+	ProductionTypeItem                               // 物品生产
+	ProductionTypeUnit                               // 单位生产
+	ProductionTypeService                            // 服务生产
+	ProductionTypeCustom                             // 自定义生产
 )
 
 // String 返回生产类型的字符串表示
@@ -716,7 +738,7 @@ func (pi *ProductionInfo) StartNextTask() *ProductionTask {
 	if len(pi.Queue) == 0 {
 		return nil
 	}
-	
+
 	task := pi.Queue[0]
 	pi.Queue = pi.Queue[1:]
 	pi.CurrentTask = task
@@ -730,7 +752,7 @@ func (pi *ProductionInfo) CompleteCurrentTask() *ProductionTask {
 	if pi.CurrentTask == nil {
 		return nil
 	}
-	
+
 	task := pi.CurrentTask
 	task.Complete()
 	pi.CurrentTask = nil
@@ -814,10 +836,10 @@ type ProductionTaskStatus int32
 
 const (
 	ProductionTaskStatusPending    ProductionTaskStatus = iota + 1 // 等待中
-	ProductionTaskStatusInProgress                                   // 进行中
-	ProductionTaskStatusCompleted                                    // 已完成
-	ProductionTaskStatusCancelled                                    // 已取消
-	ProductionTaskStatusFailed                                       // 失败
+	ProductionTaskStatusInProgress                                 // 进行中
+	ProductionTaskStatusCompleted                                  // 已完成
+	ProductionTaskStatusCancelled                                  // 已取消
+	ProductionTaskStatusFailed                                     // 失败
 )
 
 // String 返回生产任务状态的字符串表示
@@ -890,7 +912,7 @@ func (pt *ProductionTask) UpdateProgress(progress float64) {
 	}
 	pt.Progress = progress
 	pt.UpdatedAt = time.Now()
-	
+
 	if progress >= 100 {
 		pt.Complete()
 	}
@@ -902,15 +924,15 @@ func (pt *ProductionTask) UpdateProgress(progress float64) {
 type StorageType int32
 
 const (
-	StorageTypeGeneral   StorageType = iota + 1 // 通用存储
-	StorageTypeResource                          // 资源存储
-	StorageTypeItem                              // 物品存储
-	StorageTypeFood                              // 食物存储
-	StorageTypeWeapon                            // 武器存储
-	StorageTypeArmor                             // 装备存储
-	StorageTypeLiquid                            // 液体存储
-	StorageTypeGas                               // 气体存储
-	StorageTypeSpecial                           // 特殊存储
+	StorageTypeGeneral  StorageType = iota + 1 // 通用存储
+	StorageTypeResource                        // 资源存储
+	StorageTypeItem                            // 物品存储
+	StorageTypeFood                            // 食物存储
+	StorageTypeWeapon                          // 武器存储
+	StorageTypeArmor                           // 装备存储
+	StorageTypeLiquid                          // 液体存储
+	StorageTypeGas                             // 气体存储
+	StorageTypeSpecial                         // 特殊存储
 )
 
 // String 返回存储类型的字符串表示
@@ -946,18 +968,18 @@ func (st StorageType) IsValid() bool {
 
 // StorageInfo 存储信息
 type StorageInfo struct {
-	Type         StorageType            `json:"type" bson:"type"`
-	Capacity     int64                  `json:"capacity" bson:"capacity"`
-	Used         int64                  `json:"used" bson:"used"`
-	Reserved     int64                  `json:"reserved" bson:"reserved"`
-	Items        []*StorageItem         `json:"items" bson:"items"`
-	Filters      []string               `json:"filters" bson:"filters"`
-	AutoSort     bool                   `json:"auto_sort" bson:"auto_sort"`
-	AutoCompact  bool                   `json:"auto_compact" bson:"auto_compact"`
-	AccessRules  []*AccessRule          `json:"access_rules" bson:"access_rules"`
-	Conditions   map[string]interface{} `json:"conditions" bson:"conditions"`
-	CreatedAt    time.Time              `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at" bson:"updated_at"`
+	Type        StorageType            `json:"type" bson:"type"`
+	Capacity    int64                  `json:"capacity" bson:"capacity"`
+	Used        int64                  `json:"used" bson:"used"`
+	Reserved    int64                  `json:"reserved" bson:"reserved"`
+	Items       []*StorageItem         `json:"items" bson:"items"`
+	Filters     []string               `json:"filters" bson:"filters"`
+	AutoSort    bool                   `json:"auto_sort" bson:"auto_sort"`
+	AutoCompact bool                   `json:"auto_compact" bson:"auto_compact"`
+	AccessRules []*AccessRule          `json:"access_rules" bson:"access_rules"`
+	Conditions  map[string]interface{} `json:"conditions" bson:"conditions"`
+	CreatedAt   time.Time              `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
 // NewStorageInfo 创建新存储信息
@@ -1002,7 +1024,7 @@ func (si *StorageInfo) CanStore(itemType string, quantity int64) bool {
 	if si.GetAvailable() < quantity {
 		return false
 	}
-	
+
 	// 检查过滤器
 	if len(si.Filters) > 0 {
 		allowed := false
@@ -1016,7 +1038,7 @@ func (si *StorageInfo) CanStore(itemType string, quantity int64) bool {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -1025,7 +1047,7 @@ func (si *StorageInfo) AddItem(item *StorageItem) error {
 	if !si.CanStore(item.ItemType, item.Quantity) {
 		return fmt.Errorf("cannot store item: insufficient space or not allowed")
 	}
-	
+
 	// 查找是否已存在相同物品
 	for _, existing := range si.Items {
 		if existing.ItemType == item.ItemType && existing.CanStack(item) {
@@ -1036,7 +1058,7 @@ func (si *StorageInfo) AddItem(item *StorageItem) error {
 			return nil
 		}
 	}
-	
+
 	// 添加新物品
 	si.Items = append(si.Items, item)
 	si.Used += item.Quantity
@@ -1051,21 +1073,21 @@ func (si *StorageInfo) RemoveItem(itemType string, quantity int64) error {
 			if item.Quantity < quantity {
 				return fmt.Errorf("insufficient quantity: have %d, need %d", item.Quantity, quantity)
 			}
-			
+
 			item.Quantity -= quantity
 			item.UpdatedAt = time.Now()
 			si.Used -= quantity
-			
+
 			// 如果数量为0，移除物品
 			if item.Quantity <= 0 {
 				si.Items = append(si.Items[:i], si.Items[i+1:]...)
 			}
-			
+
 			si.UpdatedAt = time.Now()
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("item not found: %s", itemType)
 }
 
@@ -1148,16 +1170,16 @@ func NewAccessRule(permission string) *AccessRule {
 type DamageType int32
 
 const (
-	DamageTypePhysical DamageType = iota + 1 // 物理伤害
-	DamageTypeFire                           // 火焰伤害
-	DamageTypeIce                            // 冰霜伤害
-	DamageTypeLightning                      // 闪电伤害
-	DamageTypePoison                         // 毒素伤害
-	DamageTypeAcid                           // 酸性伤害
-	DamageTypeMagic                          // 魔法伤害
-	DamageTypeHoly                           // 神圣伤害
-	DamageTypeDark                           // 黑暗伤害
-	DamageTypeCustom                         // 自定义伤害
+	DamageTypePhysical  DamageType = iota + 1 // 物理伤害
+	DamageTypeFire                            // 火焰伤害
+	DamageTypeIce                             // 冰霜伤害
+	DamageTypeLightning                       // 闪电伤害
+	DamageTypePoison                          // 毒素伤害
+	DamageTypeAcid                            // 酸性伤害
+	DamageTypeMagic                           // 魔法伤害
+	DamageTypeHoly                            // 神圣伤害
+	DamageTypeDark                            // 黑暗伤害
+	DamageTypeCustom                          // 自定义伤害
 )
 
 // String 返回伤害类型的字符串表示
@@ -1195,18 +1217,18 @@ func (dt DamageType) IsValid() bool {
 
 // DefenseInfo 防御信息
 type DefenseInfo struct {
-	Armor        int32                  `json:"armor" bson:"armor"`
-	Resistances  map[DamageType]int32   `json:"resistances" bson:"resistances"`
-	Immunities   []DamageType           `json:"immunities" bson:"immunities"`
-	Weaknesses   []DamageType           `json:"weaknesses" bson:"weaknesses"`
-	Shield       int32                  `json:"shield" bson:"shield"`
-	MaxShield    int32                  `json:"max_shield" bson:"max_shield"`
-	RegenRate    float64                `json:"regen_rate" bson:"regen_rate"`
-	Absorption   float64                `json:"absorption" bson:"absorption"`
-	Reflection   float64                `json:"reflection" bson:"reflection"`
-	Conditions   map[string]interface{} `json:"conditions" bson:"conditions"`
-	CreatedAt    time.Time              `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at" bson:"updated_at"`
+	Armor       int32                  `json:"armor" bson:"armor"`
+	Resistances map[DamageType]int32   `json:"resistances" bson:"resistances"`
+	Immunities  []DamageType           `json:"immunities" bson:"immunities"`
+	Weaknesses  []DamageType           `json:"weaknesses" bson:"weaknesses"`
+	Shield      int32                  `json:"shield" bson:"shield"`
+	MaxShield   int32                  `json:"max_shield" bson:"max_shield"`
+	RegenRate   float64                `json:"regen_rate" bson:"regen_rate"`
+	Absorption  float64                `json:"absorption" bson:"absorption"`
+	Reflection  float64                `json:"reflection" bson:"reflection"`
+	Conditions  map[string]interface{} `json:"conditions" bson:"conditions"`
+	CreatedAt   time.Time              `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
 // NewDefenseInfo 创建新防御信息
@@ -1236,20 +1258,20 @@ func (di *DefenseInfo) GetDefenseValue(damageType DamageType) int32 {
 			return 999999 // 免疫，返回极高防御值
 		}
 	}
-	
+
 	// 检查弱点
 	for _, weakness := range di.Weaknesses {
 		if weakness == damageType {
 			return -di.Armor // 弱点，负防御
 		}
 	}
-	
+
 	// 基础护甲 + 特定抗性
 	defenseValue := di.Armor
 	if resistance, exists := di.Resistances[damageType]; exists {
 		defenseValue += resistance
 	}
-	
+
 	return defenseValue
 }
 
@@ -1324,12 +1346,12 @@ type WorkerRole int32
 
 const (
 	WorkerRoleGeneral     WorkerRole = iota + 1 // 通用工人
-	WorkerRoleBuilder                            // 建造工人
-	WorkerRoleMaintenance                        // 维护工人
-	WorkerRoleOperator                           // 操作工人
-	WorkerRoleGuard                              // 守卫
-	WorkerRoleManager                            // 管理员
-	WorkerRoleSpecialist                         // 专家
+	WorkerRoleBuilder                           // 建造工人
+	WorkerRoleMaintenance                       // 维护工人
+	WorkerRoleOperator                          // 操作工人
+	WorkerRoleGuard                             // 守卫
+	WorkerRoleManager                           // 管理员
+	WorkerRoleSpecialist                        // 专家
 )
 
 // String 返回工人角色的字符串表示
@@ -1363,13 +1385,13 @@ func (wr WorkerRole) IsValid() bool {
 type WorkerStatus int32
 
 const (
-	WorkerStatusActive      WorkerStatus = iota + 1 // 活跃
-	WorkerStatusIdle                                 // 空闲
-	WorkerStatusBusy                                 // 忙碌
-	WorkerStatusResting                              // 休息
-	WorkerStatusSick                                 // 生病
-	WorkerStatusOnLeave                              // 请假
-	WorkerStatusDismissed                            // 解雇
+	WorkerStatusActive    WorkerStatus = iota + 1 // 活跃
+	WorkerStatusIdle                              // 空闲
+	WorkerStatusBusy                              // 忙碌
+	WorkerStatusResting                           // 休息
+	WorkerStatusSick                              // 生病
+	WorkerStatusOnLeave                           // 请假
+	WorkerStatusDismissed                         // 解雇
 )
 
 // String 返回工人状态的字符串表示
@@ -1432,12 +1454,12 @@ func NewWorkerInfo(workerID uint64, role WorkerRole) *WorkerInfo {
 
 // VisitorInfo 访客信息
 type VisitorInfo struct {
-	VisitorID uint64    `json:"visitor_id" bson:"visitor_id"`
-	Purpose   string    `json:"purpose" bson:"purpose"`
-	ArrivedAt time.Time `json:"arrived_at" bson:"arrived_at"`
-	LeftAt    *time.Time `json:"left_at,omitempty" bson:"left_at,omitempty"`
+	VisitorID uint64        `json:"visitor_id" bson:"visitor_id"`
+	Purpose   string        `json:"purpose" bson:"purpose"`
+	ArrivedAt time.Time     `json:"arrived_at" bson:"arrived_at"`
+	LeftAt    *time.Time    `json:"left_at,omitempty" bson:"left_at,omitempty"`
 	Duration  time.Duration `json:"duration" bson:"duration"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	CreatedAt time.Time     `json:"created_at" bson:"created_at"`
 }
 
 // NewVisitorInfo 创建新访客信息
@@ -1465,7 +1487,7 @@ func (vi *VisitorInfo) Leave() {
 type MaintenanceType int32
 
 const (
-	MaintenanceTypeRoutine   MaintenanceType = iota + 1 // 常规维护
+	MaintenanceTypeRoutine    MaintenanceType = iota + 1 // 常规维护
 	MaintenanceTypePreventive                            // 预防性维护
 	MaintenanceTypeEmergency                             // 紧急维护
 	MaintenanceTypeRepair                                // 修理维护
@@ -1503,13 +1525,13 @@ func (mt MaintenanceType) IsValid() bool {
 
 // MaintenanceInfo 维护信息
 type MaintenanceInfo struct {
-	LastMaintenanceAt *time.Time            `json:"last_maintenance_at,omitempty" bson:"last_maintenance_at,omitempty"`
-	NextMaintenanceAt time.Time             `json:"next_maintenance_at" bson:"next_maintenance_at"`
-	MaintenanceLevel  int32                 `json:"maintenance_level" bson:"maintenance_level"`
-	Costs             []*ResourceCost       `json:"costs" bson:"costs"`
-	History           []*MaintenanceRecord  `json:"history" bson:"history"`
-	CreatedAt         time.Time             `json:"created_at" bson:"created_at"`
-	UpdatedAt         time.Time             `json:"updated_at" bson:"updated_at"`
+	LastMaintenanceAt *time.Time           `json:"last_maintenance_at,omitempty" bson:"last_maintenance_at,omitempty"`
+	NextMaintenanceAt time.Time            `json:"next_maintenance_at" bson:"next_maintenance_at"`
+	MaintenanceLevel  int32                `json:"maintenance_level" bson:"maintenance_level"`
+	Costs             []*ResourceCost      `json:"costs" bson:"costs"`
+	History           []*MaintenanceRecord `json:"history" bson:"history"`
+	CreatedAt         time.Time            `json:"created_at" bson:"created_at"`
+	UpdatedAt         time.Time            `json:"updated_at" bson:"updated_at"`
 }
 
 // NewMaintenanceInfo 创建新维护信息

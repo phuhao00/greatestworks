@@ -181,7 +181,7 @@ func (n *NPCAggregate) MoveTo(location *Location) error {
 
 // CanMove 检查是否可以移�?
 func (n *NPCAggregate) CanMove() bool {
-	return n.status == NPCStatusActive && n.behavior.CanMove()
+	return n.status == NPCStatusActive && n.behavior.CanMoveNow()
 }
 
 // AddDialogue 添加对话
@@ -589,6 +589,31 @@ func (n *NPCAggregate) ToMap() map[string]interface{} {
 		"updated_at":    n.updatedAt,
 		"version":       n.version,
 	}
+}
+
+// HasDialogue 检查是否有对话
+func (n *NPCAggregate) HasDialogue() bool {
+	return len(n.dialogues) > 0
+}
+
+// HasQuests 检查是否有任务
+func (n *NPCAggregate) HasQuests() bool {
+	return len(n.quests) > 0
+}
+
+// HasShop 检查是否有商店
+func (n *NPCAggregate) HasShop() bool {
+	return n.shop != nil
+}
+
+// GetCreatedAt 获取创建时间
+func (n *NPCAggregate) GetCreatedAt() time.Time {
+	return n.createdAt
+}
+
+// GetUpdatedAt 获取更新时间
+func (n *NPCAggregate) GetUpdatedAt() time.Time {
+	return n.updatedAt
 }
 
 // InteractionOption 交互选项
