@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package greatestworks.pet;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/pet";
+option csharp_namespace = "GreatestWorks.Pet";
+
+// 宠物服务定义
+service PetService {
+  // 创建宠物
+  rpc CreatePet(CreatePetRequest) returns (CreatePetResponse);
+  
+  // 获取宠物信息
+  rpc GetPetInfo(GetPetInfoRequest) returns (GetPetInfoResponse);
+  
+  // 更新宠物信息
+  rpc UpdatePet(UpdatePetRequest) returns (UpdatePetResponse);
+  
+  // 宠物升级
+  rpc LevelUpPet(LevelUpPetRequest) returns (LevelUpPetResponse);
+  
+  // 宠物进化
+  rpc EvolvePet(EvolvePetRequest) returns (EvolvePetResponse);
+  
+  // 获取玩家宠物列表
+  rpc GetPlayerPets(GetPlayerPetsRequest) returns (GetPlayerPetsResponse);
+}
+
+// 创建宠物请求
+message CreatePetRequest {
+  string player_id = 1;
+  string species_id = 2;
+  string name = 3;
+  int32 initial_level = 4;
+  string rarity = 5;
+}
+
+// 创建宠物响应
+message CreatePetResponse {
+  greatestworks.common.CommonResponse common = 1;
+  PetInfo pet = 2;
+}
+
+// 获取宠物信息请求
+message GetPetInfoRequest {
+  string pet_id = 1;
+}
+
+// 获取宠物信息响应
+message GetPetInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  PetInfo pet = 2;
+}
+
+// 更新宠物信息请求
+message UpdatePetRequest {
+  string pet_id = 1;
+  map<string, string> updates = 2;
+}
+
+// 更新宠物信息响应
+message UpdatePetResponse {
+  greatestworks.common.CommonResponse common = 1;
+  PetInfo pet = 2;
+}
+
+// 宠物升级请求
+message LevelUpPetRequest {
+  string pet_id = 1;
+  int32 experience_points = 2;
+}
+
+// 宠物升级响应
+message LevelUpPetResponse {
+  greatestworks.common.CommonResponse common = 1;
+  PetInfo pet = 2;
+  bool leveled_up = 3;
+  int32 new_level = 4;
+}
+
+// 宠物进化请求
+message EvolvePetRequest {
+  string pet_id = 1;
+  string target_species_id = 2;
+  repeated string required_items = 3;
+}
+
+// 宠物进化响应
+message EvolvePetResponse {
+  greatestworks.common.CommonResponse common = 1;
+  PetInfo pet = 2;
+  bool evolved = 3;
+  string new_species = 4;
+}
+
+// 获取玩家宠物列表请求
+message GetPlayerPetsRequest {
+  string player_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// 获取玩家宠物列表响应
+message GetPlayerPetsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated PetInfo pets = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 宠物信息
+message PetInfo {
+  string pet_id = 1;
+  string player_id = 2;
+  string species_id = 3;
+  string name = 4;
+  int32 level = 5;
+  int32 experience = 6;
+  int32 max_experience = 7;
+  string rarity = 8;
+  PetStats stats = 9;
+  PetSkills skills = 10;
+  int64 created_at = 11;
+  int64 last_fed = 12;
+  bool is_active = 13;
+}
+
+// 宠物属性
+message PetStats {
+  int32 health = 1;
+  int32 max_health = 2;
+  int32 attack = 3;
+  int32 defense = 4;
+  int32 speed = 5;
+  int32 intelligence = 6;
+  int32 loyalty = 7;
+  int32 happiness = 8;
+}
+
+// 宠物技能
+message PetSkills {
+  repeated PetSkill skills = 1;
+  int32 skill_points = 2;
+}
+
+// 宠物技能详情
+message PetSkill {
+  string skill_id = 1;
+  string name = 2;
+  string description = 3;
+  int32 level = 4;
+  int32 max_level = 5;
+  string skill_type = 6;
+  int32 cooldown = 7;
+  int32 mana_cost = 8;
+}

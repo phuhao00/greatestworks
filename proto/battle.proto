@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package greatestworks.battle;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/battle";
+option csharp_namespace = "GreatestWorks.Battle";
+
+// 战斗服务定义
+service BattleService {
+  // 创建战斗
+  rpc CreateBattle(CreateBattleRequest) returns (CreateBattleResponse);
+  
+  // 加入战斗
+  rpc JoinBattle(JoinBattleRequest) returns (JoinBattleResponse);
+  
+  // 离开战斗
+  rpc LeaveBattle(LeaveBattleRequest) returns (LeaveBattleResponse);
+  
+  // 执行战斗动作
+  rpc ExecuteAction(ExecuteActionRequest) returns (ExecuteActionResponse);
+  
+  // 获取战斗信息
+  rpc GetBattleInfo(GetBattleInfoRequest) returns (GetBattleInfoResponse);
+  
+  // 获取战斗列表
+  rpc GetBattleList(GetBattleListRequest) returns (GetBattleListResponse);
+}
+
+// 创建战斗请求
+message CreateBattleRequest {
+  string creator_id = 1;
+  string battle_type = 2;
+  int32 max_players = 3;
+  string map_id = 4;
+  map<string, string> settings = 5;
+}
+
+// 创建战斗响应
+message CreateBattleResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string battle_id = 2;
+  BattleInfo battle = 3;
+}
+
+// 加入战斗请求
+message JoinBattleRequest {
+  string battle_id = 1;
+  string player_id = 2;
+  string team_id = 3;
+}
+
+// 加入战斗响应
+message JoinBattleResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string battle_id = 2;
+  string team_id = 3;
+  int32 position = 4;
+}
+
+// 离开战斗请求
+message LeaveBattleRequest {
+  string battle_id = 1;
+  string player_id = 2;
+}
+
+// 离开战斗响应
+message LeaveBattleResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string battle_id = 2;
+}
+
+// 执行战斗动作请求
+message ExecuteActionRequest {
+  string battle_id = 1;
+  string player_id = 2;
+  string action_type = 3;
+  map<string, string> parameters = 4;
+  greatestworks.common.Position target_position = 5;
+}
+
+// 执行战斗动作响应
+message ExecuteActionResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string action_id = 2;
+  BattleResult result = 3;
+}
+
+// 获取战斗信息请求
+message GetBattleInfoRequest {
+  string battle_id = 1;
+}
+
+// 获取战斗信息响应
+message GetBattleInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  BattleInfo battle = 2;
+}
+
+// 获取战斗列表请求
+message GetBattleListRequest {
+  string battle_type = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// 获取战斗列表响应
+message GetBattleListResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated BattleInfo battles = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 战斗信息
+message BattleInfo {
+  string battle_id = 1;
+  string battle_type = 2;
+  string map_id = 3;
+  BattleStatus status = 4;
+  int32 max_players = 5;
+  int32 current_players = 6;
+  repeated BattlePlayer players = 7;
+  int64 created_at = 8;
+  int64 started_at = 9;
+  int64 ended_at = 10;
+}
+
+// 战斗状态
+enum BattleStatus {
+  BATTLE_STATUS_WAITING = 0;
+  BATTLE_STATUS_STARTING = 1;
+  BATTLE_STATUS_ACTIVE = 2;
+  BATTLE_STATUS_ENDING = 3;
+  BATTLE_STATUS_FINISHED = 4;
+}
+
+// 战斗玩家
+message BattlePlayer {
+  string player_id = 1;
+  string name = 2;
+  string team_id = 3;
+  int32 position = 4;
+  PlayerBattleStats stats = 5;
+  bool is_ready = 6;
+}
+
+// 玩家战斗属性
+message PlayerBattleStats {
+  int32 health = 1;
+  int32 max_health = 2;
+  int32 mana = 3;
+  int32 max_mana = 4;
+  int32 attack = 5;
+  int32 defense = 6;
+  int32 speed = 7;
+  int32 level = 8;
+}
+
+// 战斗结果
+message BattleResult {
+  string action_id = 1;
+  string result_type = 2;
+  map<string, string> effects = 3;
+  repeated BattleEvent events = 4;
+  int64 timestamp = 5;
+}
+
+// 战斗事件
+message BattleEvent {
+  string event_type = 1;
+  string source_id = 2;
+  string target_id = 3;
+  map<string, string> data = 4;
+  int64 timestamp = 5;
+}

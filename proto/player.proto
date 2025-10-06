@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package greatestworks.player;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/player";
+option csharp_namespace = "GreatestWorks.Player";
+
+// 玩家服务定义
+service PlayerService {
+  // 创建玩家
+  rpc CreatePlayer(CreatePlayerRequest) returns (CreatePlayerResponse);
+  
+  // 玩家登录
+  rpc Login(LoginRequest) returns (LoginResponse);
+  
+  // 玩家登出
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // 获取玩家信息
+  rpc GetPlayerInfo(GetPlayerInfoRequest) returns (GetPlayerInfoResponse);
+  
+  // 更新玩家信息
+  rpc UpdatePlayer(UpdatePlayerRequest) returns (UpdatePlayerResponse);
+  
+  // 移动玩家
+  rpc MovePlayer(MovePlayerRequest) returns (MovePlayerResponse);
+  
+  // 获取在线玩家列表
+  rpc GetOnlinePlayers(GetOnlinePlayersRequest) returns (GetOnlinePlayersResponse);
+}
+
+// 创建玩家请求
+message CreatePlayerRequest {
+  string name = 1;
+  string account_id = 2;
+  int32 initial_level = 3;
+  greatestworks.common.Position initial_position = 4;
+}
+
+// 创建玩家响应
+message CreatePlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+  greatestworks.common.PlayerBasicInfo player = 2;
+}
+
+// 登录请求
+message LoginRequest {
+  string player_id = 1;
+  string session_id = 2;
+  string client_version = 3;
+}
+
+// 登录响应
+message LoginResponse {
+  greatestworks.common.CommonResponse common = 1;
+  greatestworks.common.PlayerBasicInfo player = 2;
+  string session_token = 3;
+  int64 login_time = 4;
+}
+
+// 登出请求
+message LogoutRequest {
+  string player_id = 1;
+  string session_id = 2;
+}
+
+// 登出响应
+message LogoutResponse {
+  greatestworks.common.CommonResponse common = 1;
+  int64 logout_time = 2;
+}
+
+// 获取玩家信息请求
+message GetPlayerInfoRequest {
+  string player_id = 1;
+}
+
+// 获取玩家信息响应
+message GetPlayerInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  greatestworks.common.PlayerBasicInfo player = 2;
+  PlayerStats stats = 3;
+  PlayerInventory inventory = 4;
+}
+
+// 更新玩家信息请求
+message UpdatePlayerRequest {
+  string player_id = 1;
+  map<string, string> updates = 2;
+}
+
+// 更新玩家信息响应
+message UpdatePlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+  greatestworks.common.PlayerBasicInfo player = 2;
+}
+
+// 移动玩家请求
+message MovePlayerRequest {
+  string player_id = 1;
+  greatestworks.common.Position position = 2;
+  string scene_id = 3;
+}
+
+// 移动玩家响应
+message MovePlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+  greatestworks.common.Position new_position = 2;
+}
+
+// 获取在线玩家列表请求
+message GetOnlinePlayersRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+// 获取在线玩家列表响应
+message GetOnlinePlayersResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated greatestworks.common.PlayerBasicInfo players = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 玩家属性
+message PlayerStats {
+  int32 health = 1;
+  int32 max_health = 2;
+  int32 mana = 3;
+  int32 max_mana = 4;
+  int32 attack = 5;
+  int32 defense = 6;
+  int32 speed = 7;
+  int32 gold = 8;
+  int32 diamonds = 9;
+}
+
+// 玩家背包
+message PlayerInventory {
+  int32 capacity = 1;
+  int32 used_slots = 2;
+  repeated InventoryItem items = 3;
+}
+
+// 背包物品
+message InventoryItem {
+  string item_id = 1;
+  string name = 2;
+  int32 quantity = 3;
+  int32 max_stack = 4;
+  string item_type = 5;
+  int32 rarity = 6;
+}

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package greatestworks.common;
+
+option go_package = "greatestworks/internal/proto/common";
+option csharp_namespace = "GreatestWorks.Common";
+
+// 通用响应结构
+message CommonResponse {
+  bool success = 1;
+  string message = 2;
+  int32 code = 3;
+  int64 timestamp = 4;
+}
+
+// 通用请求结构
+message CommonRequest {
+  string request_id = 1;
+  int64 timestamp = 2;
+  map<string, string> metadata = 3;
+}
+
+// 分页信息
+message PaginationInfo {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+}
+
+// 位置信息
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// 玩家基础信息
+message PlayerBasicInfo {
+  string player_id = 1;
+  string name = 2;
+  int32 level = 3;
+  int32 experience = 4;
+  Position position = 5;
+  int64 last_login = 6;
+  int64 created_at = 7;
+}
+
+// 服务器信息
+message ServerInfo {
+  string server_id = 1;
+  string name = 2;
+  string version = 3;
+  int32 max_players = 4;
+  int32 current_players = 5;
+  bool is_online = 6;
+}
