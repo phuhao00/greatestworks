@@ -77,9 +77,9 @@ func NewFileLogger(config *Config) (*FileLogger, error) {
 		maxAge:     time.Duration(config.MaxAge) * 24 * time.Hour, // days to duration
 		compress:   config.Compress,
 	}
-
+	var formatter Formatter
 	// 创建格式化器
-	formatter := NewTextFormatter()
+	formatter = NewTextFormatter()
 	if config.Format == "json" {
 		formatter = NewJSONFormatter()
 	}

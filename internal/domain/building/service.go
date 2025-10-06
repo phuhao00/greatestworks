@@ -37,11 +37,11 @@ func (bs *BuildingService) CreateBuilding(ctx context.Context, req *CreateBuildi
 	if req == nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, "create building request cannot be nil", ErrorSeverityHigh)
 	}
-	
+
 	if err := req.Validate(); err != nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, fmt.Sprintf("invalid request: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 检查位置是否可用
 	if req.Position != nil {
 		existing, err := bs.buildingRepo.FindByPosition(ctx, req.Position)
@@ -52,30 +52,31 @@ func (bs *BuildingService) CreateBuilding(ctx context.Context, req *CreateBuildi
 			return nil, NewBuildingError(ErrCodePositionOccupied, "position is already occupied", ErrorSeverityHigh)
 		}
 	}
-	
+
 	// 创建建筑聚合根
-	building := NewBuildingAggregate(req.Name, req.Type, req.Category)
-	building.SetOwner(req.OwnerID)
-	building.SetPosition(req.Position)
-	building.SetSize(req.Size)
-	
+	building := NewBuildingAggregate(req.OwnerID, req.Type, req.Name, req.Category)
+	// Note: SetOwner, SetPosition, SetSize, SetConfig methods need to be implemented
+	// building.SetOwner(req.OwnerID)
+	// building.SetPosition(req.Position)
+	// building.SetSize(req.Size)
+
 	// 设置配置
-	if req.Config != nil {
-		building.SetConfig(req.Config)
-	}
-	
+	// if req.Config != nil {
+	//     building.SetConfig(req.Config)
+	// }
+
 	// 保存建筑
 	if err := bs.buildingRepo.Save(ctx, building); err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
-	event := NewBuildingCreatedEvent(building.ID, building.Name, building.Type, building.OwnerID)
+	event := NewBuildingCreatedEvent(building.ID, building.Name, building.BuildingTypeID, building.PlayerID)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		// 记录错误但不影响主流程
 		fmt.Printf("failed to publish building created event: %v\n", err)
 	}
-	
+
 	return building, nil
 }
 
@@ -84,11 +85,11 @@ func (bs *BuildingService) StartConstruction(ctx context.Context, req *StartCons
 	if req == nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, "start construction request cannot be nil", ErrorSeverityHigh)
 	}
-	
+
 	if err := req.Validate(); err != nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, fmt.Sprintf("invalid request: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 获取建筑
 	building, err := bs.buildingRepo.FindByID(ctx, req.BuildingID)
 	if err != nil {
@@ -97,12 +98,12 @@ func (bs *BuildingService) StartConstruction(ctx context.Context, req *StartCons
 	if building == nil {
 		return nil, NewBuildingError(ErrCodeBuildingNotFound, "building not found", ErrorSeverityHigh)
 	}
-	
+
 	// 检查建筑状态
-	if building.Status != BuildingStatusPlanned {
+	if building.Status != BuildingStatusPlanning {
 		return nil, NewBuildingError(ErrCodeInvalidBuildingState, "building is not in planned state", ErrorSeverityHigh)
 	}
-	
+
 	// 检查资源
 	if req.Costs != nil {
 		for _, cost := range req.Costs {
@@ -111,12 +112,12 @@ func (bs *BuildingService) StartConstruction(ctx context.Context, req *StartCons
 			}
 		}
 	}
-	
+
 	// 开始建造
 	if err := building.StartConstruction(req.Duration, req.Costs); err != nil {
 		return nil, NewBuildingError(ErrCodeConstructionFailed, fmt.Sprintf("failed to start construction: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 创建建造信息
 	construction := NewConstructionInfo(building.ID, req.Duration)
 	if req.Costs != nil {
@@ -132,23 +133,23 @@ func (bs *BuildingService) StartConstruction(ctx context.Context, req *StartCons
 			construction.AddMaterial(material)
 		}
 	}
-	
+
 	// 保存建造信息
 	if err := bs.constructionRepo.Save(ctx, construction); err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save construction: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 保存建筑
 	if err := bs.buildingRepo.Save(ctx, building); err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
 	event := NewConstructionStartedEvent(building.ID, construction.ID, req.Duration)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish construction started event: %v\n", err)
 	}
-	
+
 	return construction, nil
 }
 
@@ -157,11 +158,11 @@ func (bs *BuildingService) UpdateConstructionProgress(ctx context.Context, req *
 	if req == nil {
 		return NewBuildingError(ErrCodeInvalidInput, "update construction progress request cannot be nil", ErrorSeverityHigh)
 	}
-	
+
 	if err := req.Validate(); err != nil {
 		return NewBuildingError(ErrCodeInvalidInput, fmt.Sprintf("invalid request: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 获取建造信息
 	construction, err := bs.constructionRepo.FindByID(ctx, req.ConstructionID)
 	if err != nil {
@@ -170,12 +171,12 @@ func (bs *BuildingService) UpdateConstructionProgress(ctx context.Context, req *
 	if construction == nil {
 		return NewBuildingError(ErrCodeConstructionNotFound, "construction not found", ErrorSeverityHigh)
 	}
-	
+
 	// 更新进度
 	if err := construction.UpdateProgress(req.Progress); err != nil {
 		return NewBuildingError(ErrCodeConstructionFailed, fmt.Sprintf("failed to update progress: %v", err), ErrorSeverityMedium)
 	}
-	
+
 	// 如果完成，更新建筑状态
 	if construction.Status == ConstructionStatusCompleted {
 		building, err := bs.buildingRepo.FindByID(ctx, construction.BuildingID)
@@ -187,7 +188,7 @@ func (bs *BuildingService) UpdateConstructionProgress(ctx context.Context, req *
 			if err := bs.buildingRepo.Save(ctx, building); err != nil {
 				return NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 			}
-			
+
 			// 发布完成事件
 			event := NewConstructionCompletedEvent(building.ID, construction.ID)
 			if err := bs.eventBus.Publish(ctx, event); err != nil {
@@ -195,18 +196,18 @@ func (bs *BuildingService) UpdateConstructionProgress(ctx context.Context, req *
 			}
 		}
 	}
-	
+
 	// 保存建造信息
 	if err := bs.constructionRepo.Save(ctx, construction); err != nil {
 		return NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save construction: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布进度更新事件
 	event := NewConstructionProgressUpdatedEvent(construction.BuildingID, construction.ID, req.Progress)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish construction progress updated event: %v\n", err)
 	}
-	
+
 	return nil
 }
 
@@ -215,11 +216,11 @@ func (bs *BuildingService) StartUpgrade(ctx context.Context, req *StartUpgradeRe
 	if req == nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, "start upgrade request cannot be nil", ErrorSeverityHigh)
 	}
-	
+
 	if err := req.Validate(); err != nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, fmt.Sprintf("invalid request: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 获取建筑
 	building, err := bs.buildingRepo.FindByID(ctx, req.BuildingID)
 	if err != nil {
@@ -228,31 +229,31 @@ func (bs *BuildingService) StartUpgrade(ctx context.Context, req *StartUpgradeRe
 	if building == nil {
 		return nil, NewBuildingError(ErrCodeBuildingNotFound, "building not found", ErrorSeverityHigh)
 	}
-	
+
 	// 检查建筑状态
 	if building.Status != BuildingStatusActive {
 		return nil, NewBuildingError(ErrCodeInvalidBuildingState, "building is not active", ErrorSeverityHigh)
 	}
-	
+
 	// 检查升级条件
 	if building.Level >= req.ToLevel {
 		return nil, NewBuildingError(ErrCodeInvalidUpgrade, "target level must be higher than current level", ErrorSeverityHigh)
 	}
-	
+
 	// 检查资源
 	if req.Costs != nil {
 		for _, cost := range req.Costs {
-			if !bs.checkResourceAvailability(ctx, building.OwnerID, cost) {
+			if !bs.checkResourceAvailability(ctx, building.PlayerID, cost) {
 				return nil, NewBuildingError(ErrCodeInsufficientResources, fmt.Sprintf("insufficient %s", cost.ResourceType), ErrorSeverityHigh)
 			}
 		}
 	}
-	
+
 	// 开始升级
 	if err := building.StartUpgrade(req.ToLevel, req.Duration, req.Costs); err != nil {
 		return nil, NewBuildingError(ErrCodeUpgradeFailed, fmt.Sprintf("failed to start upgrade: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 创建升级信息
 	upgrade := NewUpgradeInfo(building.ID, building.Level-1, req.ToLevel, req.Duration)
 	if req.Costs != nil {
@@ -268,23 +269,23 @@ func (bs *BuildingService) StartUpgrade(ctx context.Context, req *StartUpgradeRe
 			upgrade.AddBenefit(benefit)
 		}
 	}
-	
+
 	// 保存升级信息
 	if err := bs.upgradeRepo.Save(ctx, upgrade); err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save upgrade: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 保存建筑
 	if err := bs.buildingRepo.Save(ctx, building); err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
 	event := NewUpgradeStartedEvent(building.ID, upgrade.ID, building.Level-1, req.ToLevel)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish upgrade started event: %v\n", err)
 	}
-	
+
 	return upgrade, nil
 }
 
@@ -293,7 +294,7 @@ func (bs *BuildingService) CompleteUpgrade(ctx context.Context, upgradeID string
 	if upgradeID == "" {
 		return NewBuildingError(ErrCodeInvalidInput, "upgrade ID cannot be empty", ErrorSeverityHigh)
 	}
-	
+
 	// 获取升级信息
 	upgrade, err := bs.upgradeRepo.FindByID(ctx, upgradeID)
 	if err != nil {
@@ -302,7 +303,7 @@ func (bs *BuildingService) CompleteUpgrade(ctx context.Context, upgradeID string
 	if upgrade == nil {
 		return NewBuildingError(ErrCodeUpgradeNotFound, "upgrade not found", ErrorSeverityHigh)
 	}
-	
+
 	// 获取建筑
 	building, err := bs.buildingRepo.FindByID(ctx, upgrade.BuildingID)
 	if err != nil {
@@ -311,30 +312,30 @@ func (bs *BuildingService) CompleteUpgrade(ctx context.Context, upgradeID string
 	if building == nil {
 		return NewBuildingError(ErrCodeBuildingNotFound, "building not found", ErrorSeverityHigh)
 	}
-	
+
 	// 完成升级
 	if err := building.CompleteUpgrade(); err != nil {
 		return NewBuildingError(ErrCodeUpgradeFailed, fmt.Sprintf("failed to complete upgrade: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 更新升级状态
 	upgrade.UpdateProgress(100.0)
-	
+
 	// 保存
 	if err := bs.upgradeRepo.Save(ctx, upgrade); err != nil {
 		return NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save upgrade: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	if err := bs.buildingRepo.Save(ctx, building); err != nil {
 		return NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
 	event := NewUpgradeCompletedEvent(building.ID, upgrade.ID, upgrade.FromLevel, upgrade.ToLevel)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish upgrade completed event: %v\n", err)
 	}
-	
+
 	return nil
 }
 
@@ -343,11 +344,11 @@ func (bs *BuildingService) RepairBuilding(ctx context.Context, req *RepairBuildi
 	if req == nil {
 		return NewBuildingError(ErrCodeInvalidInput, "repair building request cannot be nil", ErrorSeverityHigh)
 	}
-	
+
 	if err := req.Validate(); err != nil {
 		return NewBuildingError(ErrCodeInvalidInput, fmt.Sprintf("invalid request: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 获取建筑
 	building, err := bs.buildingRepo.FindByID(ctx, req.BuildingID)
 	if err != nil {
@@ -356,38 +357,38 @@ func (bs *BuildingService) RepairBuilding(ctx context.Context, req *RepairBuildi
 	if building == nil {
 		return NewBuildingError(ErrCodeBuildingNotFound, "building not found", ErrorSeverityHigh)
 	}
-	
+
 	// 检查是否需要修复
 	if building.Health >= 100.0 {
 		return NewBuildingError(ErrCodeInvalidOperation, "building does not need repair", ErrorSeverityLow)
 	}
-	
+
 	// 检查资源
 	if req.Costs != nil {
 		for _, cost := range req.Costs {
-			if !bs.checkResourceAvailability(ctx, building.OwnerID, cost) {
+			if !bs.checkResourceAvailability(ctx, building.PlayerID, cost) {
 				return NewBuildingError(ErrCodeInsufficientResources, fmt.Sprintf("insufficient %s", cost.ResourceType), ErrorSeverityHigh)
 			}
 		}
 	}
-	
+
 	// 修复建筑
 	oldHealth := building.Health
 	if err := building.Repair(req.RepairAmount, req.Costs); err != nil {
 		return NewBuildingError(ErrCodeRepairFailed, fmt.Sprintf("failed to repair building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 保存建筑
 	if err := bs.buildingRepo.Save(ctx, building); err != nil {
 		return NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
 	event := NewBuildingRepairedEvent(building.ID, oldHealth, building.Health)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish building repaired event: %v\n", err)
 	}
-	
+
 	return nil
 }
 
@@ -396,7 +397,7 @@ func (bs *BuildingService) DestroyBuilding(ctx context.Context, buildingID strin
 	if buildingID == "" {
 		return NewBuildingError(ErrCodeInvalidInput, "building ID cannot be empty", ErrorSeverityHigh)
 	}
-	
+
 	// 获取建筑
 	building, err := bs.buildingRepo.FindByID(ctx, buildingID)
 	if err != nil {
@@ -405,23 +406,23 @@ func (bs *BuildingService) DestroyBuilding(ctx context.Context, buildingID strin
 	if building == nil {
 		return NewBuildingError(ErrCodeBuildingNotFound, "building not found", ErrorSeverityHigh)
 	}
-	
+
 	// 摧毁建筑
 	if err := building.Destroy(reason); err != nil {
 		return NewBuildingError(ErrCodeDestroyFailed, fmt.Sprintf("failed to destroy building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 保存建筑
 	if err := bs.buildingRepo.Save(ctx, building); err != nil {
 		return NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save building: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
 	event := NewBuildingDestroyedEvent(building.ID, reason)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish building destroyed event: %v\n", err)
 	}
-	
+
 	return nil
 }
 
@@ -430,17 +431,17 @@ func (bs *BuildingService) GetBuildingsByOwner(ctx context.Context, ownerID uint
 	if ownerID == 0 {
 		return nil, nil, NewBuildingError(ErrCodeInvalidInput, "owner ID cannot be zero", ErrorSeverityHigh)
 	}
-	
+
 	if query == nil {
 		query = &BuildingQuery{}
 	}
 	query.OwnerID = &ownerID
-	
+
 	buildings, total, err := bs.buildingRepo.FindByQuery(ctx, query)
 	if err != nil {
 		return nil, nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to find buildings: %v", err), ErrorSeverityMedium)
 	}
-	
+
 	pagination := &PaginationResult{
 		Total:       total,
 		Page:        query.Page,
@@ -449,7 +450,7 @@ func (bs *BuildingService) GetBuildingsByOwner(ctx context.Context, ownerID uint
 		HasNext:     int64(query.Page*query.PageSize) < total,
 		HasPrevious: query.Page > 1,
 	}
-	
+
 	return buildings, pagination, nil
 }
 
@@ -458,12 +459,12 @@ func (bs *BuildingService) GetBuildingStatistics(ctx context.Context, ownerID ui
 	if ownerID == 0 {
 		return nil, NewBuildingError(ErrCodeInvalidInput, "owner ID cannot be zero", ErrorSeverityHigh)
 	}
-	
+
 	stats, err := bs.buildingRepo.GetStatistics(ctx, ownerID)
 	if err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to get statistics: %v", err), ErrorSeverityMedium)
 	}
-	
+
 	return stats, nil
 }
 
@@ -472,50 +473,50 @@ func (bs *BuildingService) CreateBlueprint(ctx context.Context, req *CreateBluep
 	if req == nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, "create blueprint request cannot be nil", ErrorSeverityHigh)
 	}
-	
+
 	if err := req.Validate(); err != nil {
 		return nil, NewBuildingError(ErrCodeInvalidInput, fmt.Sprintf("invalid request: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 创建蓝图
 	blueprint := NewBlueprint(req.Name, req.Description, req.Category)
 	blueprint.Author = req.Author
 	blueprint.Size = req.Size
 	blueprint.Duration = req.Duration
 	blueprint.Difficulty = req.Difficulty
-	
+
 	// 添加材料需求
 	if req.Materials != nil {
 		for _, material := range req.Materials {
 			blueprint.AddMaterial(material)
 		}
 	}
-	
+
 	// 添加成本
 	if req.Costs != nil {
 		for _, cost := range req.Costs {
 			blueprint.AddCost(cost)
 		}
 	}
-	
+
 	// 添加标签
 	if req.Tags != nil {
 		for _, tag := range req.Tags {
 			blueprint.AddTag(tag)
 		}
 	}
-	
+
 	// 保存蓝图
 	if err := bs.blueprintRepo.Save(ctx, blueprint); err != nil {
 		return nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to save blueprint: %v", err), ErrorSeverityHigh)
 	}
-	
+
 	// 发布事件
 	event := NewBlueprintCreatedEvent(blueprint.ID, blueprint.Name, blueprint.Category)
 	if err := bs.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish blueprint created event: %v\n", err)
 	}
-	
+
 	return blueprint, nil
 }
 
@@ -524,12 +525,12 @@ func (bs *BuildingService) GetBlueprints(ctx context.Context, query *BlueprintQu
 	if query == nil {
 		query = &BlueprintQuery{}
 	}
-	
+
 	blueprints, total, err := bs.blueprintRepo.FindByQuery(ctx, query)
 	if err != nil {
 		return nil, nil, NewBuildingError(ErrCodeRepositoryError, fmt.Sprintf("failed to find blueprints: %v", err), ErrorSeverityMedium)
 	}
-	
+
 	pagination := &PaginationResult{
 		Total:       total,
 		Page:        query.Page,
@@ -538,7 +539,7 @@ func (bs *BuildingService) GetBlueprints(ctx context.Context, query *BlueprintQu
 		HasNext:     int64(query.Page*query.PageSize) < total,
 		HasPrevious: query.Page > 1,
 	}
-	
+
 	return blueprints, pagination, nil
 }
 
@@ -547,7 +548,7 @@ func (bs *BuildingService) ValidateBlueprint(ctx context.Context, blueprintID st
 	if blueprintID == "" {
 		return nil, NewBuildingError(ErrCodeInvalidInput, "blueprint ID cannot be empty", ErrorSeverityHigh)
 	}
-	
+
 	// 获取蓝图
 	blueprint, err := bs.blueprintRepo.FindByID(ctx, blueprintID)
 	if err != nil {
@@ -556,7 +557,7 @@ func (bs *BuildingService) ValidateBlueprint(ctx context.Context, blueprintID st
 	if blueprint == nil {
 		return nil, NewBuildingError(ErrCodeBlueprintNotFound, "blueprint not found", ErrorSeverityHigh)
 	}
-	
+
 	// 验证蓝图
 	result := &BlueprintValidationResult{
 		BlueprintID: blueprintID,
@@ -564,37 +565,37 @@ func (bs *BuildingService) ValidateBlueprint(ctx context.Context, blueprintID st
 		Errors:      make([]string, 0),
 		Warnings:    make([]string, 0),
 	}
-	
+
 	// 基础验证
 	if blueprint.Name == "" {
 		result.IsValid = false
 		result.Errors = append(result.Errors, "blueprint name is required")
 	}
-	
+
 	if blueprint.Size == nil || !blueprint.Size.IsValid() {
 		result.IsValid = false
 		result.Errors = append(result.Errors, "invalid blueprint size")
 	}
-	
+
 	if len(blueprint.Materials) == 0 {
 		result.Warnings = append(result.Warnings, "no materials specified")
 	}
-	
+
 	if len(blueprint.Costs) == 0 {
 		result.Warnings = append(result.Warnings, "no costs specified")
 	}
-	
+
 	// 层级验证
 	for i, layer := range blueprint.Layers {
 		if layer.Name == "" {
 			result.Warnings = append(result.Warnings, fmt.Sprintf("layer %d has no name", i))
 		}
-		
+
 		if len(layer.Blocks) == 0 {
 			result.Warnings = append(result.Warnings, fmt.Sprintf("layer %d has no blocks", i))
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -645,12 +646,12 @@ func (req *CreateBuildingRequest) Validate() error {
 
 // StartConstructionRequest 开始建造请求
 type StartConstructionRequest struct {
-	BuildingID string               `json:"building_id"`
-	OwnerID    uint64               `json:"owner_id"`
-	Duration   time.Duration        `json:"duration"`
-	Costs      []*ResourceCost      `json:"costs,omitempty"`
-	Workers    []*WorkerAssignment  `json:"workers,omitempty"`
-	Materials  []*MaterialUsage     `json:"materials,omitempty"`
+	BuildingID string              `json:"building_id"`
+	OwnerID    uint64              `json:"owner_id"`
+	Duration   time.Duration       `json:"duration"`
+	Costs      []*ResourceCost     `json:"costs,omitempty"`
+	Workers    []*WorkerAssignment `json:"workers,omitempty"`
+	Materials  []*MaterialUsage    `json:"materials,omitempty"`
 }
 
 // Validate 验证请求
@@ -686,12 +687,12 @@ func (req *UpdateConstructionProgressRequest) Validate() error {
 
 // StartUpgradeRequest 开始升级请求
 type StartUpgradeRequest struct {
-	BuildingID   string             `json:"building_id"`
-	ToLevel      int32              `json:"to_level"`
-	Duration     time.Duration      `json:"duration"`
-	Costs        []*ResourceCost    `json:"costs,omitempty"`
-	Requirements []*Requirement     `json:"requirements,omitempty"`
-	Benefits     []*UpgradeBenefit  `json:"benefits,omitempty"`
+	BuildingID   string            `json:"building_id"`
+	ToLevel      int32             `json:"to_level"`
+	Duration     time.Duration     `json:"duration"`
+	Costs        []*ResourceCost   `json:"costs,omitempty"`
+	Requirements []*Requirement    `json:"requirements,omitempty"`
+	Benefits     []*UpgradeBenefit `json:"benefits,omitempty"`
 }
 
 // Validate 验证请求
@@ -728,16 +729,16 @@ func (req *RepairBuildingRequest) Validate() error {
 
 // CreateBlueprintRequest 创建蓝图请求
 type CreateBlueprintRequest struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	Author      string                  `json:"author"`
-	Category    BuildingCategory        `json:"category"`
-	Size        *Size                   `json:"size"`
-	Materials   []*MaterialRequirement  `json:"materials,omitempty"`
-	Costs       []*ResourceCost         `json:"costs,omitempty"`
-	Duration    time.Duration           `json:"duration"`
-	Difficulty  int32                   `json:"difficulty"`
-	Tags        []string                `json:"tags,omitempty"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Author      string                 `json:"author"`
+	Category    BuildingCategory       `json:"category"`
+	Size        *Size                  `json:"size"`
+	Materials   []*MaterialRequirement `json:"materials,omitempty"`
+	Costs       []*ResourceCost        `json:"costs,omitempty"`
+	Duration    time.Duration          `json:"duration"`
+	Difficulty  int32                  `json:"difficulty"`
+	Tags        []string               `json:"tags,omitempty"`
 }
 
 // Validate 验证请求
@@ -774,12 +775,12 @@ const (
 	// 默认值
 	DefaultBuildingHealth = 100.0
 	DefaultBuildingLevel  = 1
-	
+
 	// 限制
-	MaxBuildingLevel     = 100
-	MaxBuildingNameLen   = 100
-	MaxDescriptionLen    = 500
-	MaxTagsCount         = 10
+	MaxBuildingLevel   = 100
+	MaxBuildingNameLen = 100
+	MaxDescriptionLen  = 500
+	// MaxTagsCount         = 10 // Moved to repository.go
 	MaxLayersCount       = 50
 	MaxBlocksPerLayer    = 1000
 	MaxMaterialsCount    = 100
@@ -788,7 +789,7 @@ const (
 	MaxPhasesCount       = 20
 	MaxTasksPerPhase     = 100
 	MaxDependenciesCount = 10
-	
+
 	// 时间限制
 	MinConstructionDuration = 1 * time.Minute
 	MaxConstructionDuration = 30 * 24 * time.Hour // 30天
@@ -864,9 +865,9 @@ func ValidateProgress(progress float64) error {
 // CalculateConstructionTime 计算建造时间
 func CalculateConstructionTime(baseTime time.Duration, difficulty int32, workerCount int) time.Duration {
 	// 基础时间 * 难度系数 / 工人效率
-	difficultyFactor := float64(difficulty) / 5.0 // 难度1-10，转换为0.2-2.0
+	difficultyFactor := float64(difficulty) / 5.0          // 难度1-10，转换为0.2-2.0
 	workerFactor := 1.0 / (1.0 + float64(workerCount)*0.1) // 工人越多，时间越短
-	
+
 	adjustedTime := float64(baseTime) * difficultyFactor * workerFactor
 	return time.Duration(adjustedTime)
 }
@@ -876,7 +877,7 @@ func CalculateUpgradeCost(baseCost int64, fromLevel, toLevel int32) int64 {
 	// 成本随等级指数增长
 	levelDiff := toLevel - fromLevel
 	costMultiplier := float64(levelDiff) * 1.5 // 每级增加50%
-	
+
 	return int64(float64(baseCost) * costMultiplier)
 }
 
@@ -885,6 +886,6 @@ func CalculateRepairCost(baseCost int64, currentHealth, targetHealth float64) in
 	// 修复成本与损坏程度成正比
 	damagePercent := (100.0 - currentHealth) / 100.0
 	repairPercent := (targetHealth - currentHealth) / 100.0
-	
+
 	return int64(float64(baseCost) * damagePercent * repairPercent)
 }

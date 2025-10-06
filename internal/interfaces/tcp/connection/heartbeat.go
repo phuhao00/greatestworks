@@ -11,10 +11,10 @@ import (
 
 // HeartbeatConfig 心跳配置
 type HeartbeatConfig struct {
-	Interval    time.Duration // 心跳间隔
-	Timeout     time.Duration // 心跳超时时间
-	MaxMissed   int           // 最大丢失心跳次数
-	Enabled     bool          // 是否启用心跳
+	Interval  time.Duration // 心跳间隔
+	Timeout   time.Duration // 心跳超时时间
+	MaxMissed int           // 最大丢失心跳次数
+	Enabled   bool          // 是否启用心跳
 }
 
 // DefaultHeartbeatConfig 默认心跳配置
@@ -69,7 +69,7 @@ func NewHeartbeatManager(config *HeartbeatConfig, logger logger.Logger) *Heartbe
 	if config.Enabled {
 		hm.ticker = time.NewTicker(config.Interval)
 		go hm.heartbeatRoutine()
-		hm.logger.Info("Heartbeat manager started", 
+		hm.logger.Info("Heartbeat manager started",
 			"interval", config.Interval,
 			"timeout", config.Timeout,
 			"max_missed", config.MaxMissed)
@@ -123,7 +123,7 @@ func (hm *HeartbeatManager) HandleHeartbeatRequest(conn *Connection, msg *protoc
 		status.LastReceived = time.Now()
 		status.MissedCount = 0
 		status.IsAlive = true
-		
+
 		// 计算RTT
 		if !status.LastSent.IsZero() {
 			status.RTT = time.Since(status.LastSent)
@@ -158,7 +158,7 @@ func (hm *HeartbeatManager) HandleHeartbeatResponse(conn *Connection, msg *proto
 		status.RTT = time.Since(status.LastSent)
 	}
 
-	hm.logger.Debug("Heartbeat response received", 
+	hm.logger.Debug("Heartbeat response received",
 		"conn_id", conn.ID,
 		"rtt", status.RTT)
 
@@ -169,7 +169,6 @@ func (hm *HeartbeatManager) HandleHeartbeatResponse(conn *Connection, msg *proto
 func (hm *HeartbeatManager) sendHeartbeatResponse(conn *Connection, requestMsg *protocol.Message) error {
 	heartbeatResp := &protocol.HeartbeatResponse{
 		BaseResponse: protocol.NewBaseResponse(true, "pong"),
-		Timestamp:    time.Now().Unix(),
 		ServerTime:   time.Now().Unix(),
 	}
 
@@ -192,9 +191,9 @@ func (hm *HeartbeatManager) sendHeartbeatResponse(conn *Connection, requestMsg *
 // sendHeartbeatRequest 发送心跳请求
 func (hm *HeartbeatManager) sendHeartbeatRequest(conn *Connection) error {
 	heartbeatReq := &protocol.HeartbeatRequest{
-		Timestamp:  time.Now().Unix(),
 		ClientTime: time.Now().Unix(),
 	}
+	heartbeatReq.Timestamp = time.Now().Unix()
 
 	request := &protocol.Message{
 		Header: protocol.MessageHeader{
@@ -239,7 +238,7 @@ func (hm *HeartbeatManager) checkHeartbeats() {
 	hm.mutex.Lock()
 	connections := make([]*Connection, 0, len(hm.connections))
 	heartbeats := make(map[string]*HeartbeatStatus)
-	
+
 	for connID, conn := range hm.connections {
 		connections = append(connections, conn)
 		if status, exists := hm.heartbeats[connID]; exists {
@@ -263,7 +262,7 @@ func (hm *HeartbeatManager) checkHeartbeats() {
 			status.MissedCount++
 			status.IsAlive = false
 
-			hm.logger.Warn("Heartbeat timeout", 
+			hm.logger.Warn("Heartbeat timeout",
 				"conn_id", conn.ID,
 				"player_id", conn.PlayerID,
 				"missed_count", status.MissedCount,
@@ -278,7 +277,7 @@ func (hm *HeartbeatManager) checkHeartbeats() {
 
 		// 发送心跳请求
 		if err := hm.sendHeartbeatRequest(conn); err != nil {
-			hm.logger.Error("Failed to send heartbeat request", 
+			hm.logger.Error("Failed to send heartbeat request",
 				"error", err,
 				"conn_id", conn.ID,
 				"player_id", conn.PlayerID)
@@ -307,17 +306,12 @@ func (hm *HeartbeatManager) handleDeadConnection(connID string) {
 	hm.mutex.Unlock()
 
 	if exists {
-		hm.logger.Warn("Connection marked as dead due to heartbeat failure", 
+		hm.logger.Warn("Connection marked as dead due to heartbeat failure",
 			"conn_id", connID,
 			"player_id", conn.PlayerID)
 
 		// 关闭连接
-		if err := conn.Close(); err != nil {
-			hm.logger.Error("Failed to close dead connection", 
-				"error", err,
-				"conn_id", connID)
-		}
-
+		conn.Close()
 		// 调用断线回调
 		if hm.onDisconnect != nil {
 			hm.onDisconnect(connID)
@@ -399,15 +393,15 @@ func (hm *HeartbeatManager) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"enabled":            hm.config.Enabled,
-		"interval":           hm.config.Interval.String(),
-		"timeout":            hm.config.Timeout.String(),
-		"max_missed":         hm.config.MaxMissed,
-		"total_connections":  totalConnections,
-		"alive_connections":  aliveConnections,
-		"dead_connections":   deadConnections,
-		"average_rtt":        averageRTT.String(),
-		"valid_rtt_count":    validRTTCount,
+		"enabled":           hm.config.Enabled,
+		"interval":          hm.config.Interval.String(),
+		"timeout":           hm.config.Timeout.String(),
+		"max_missed":        hm.config.MaxMissed,
+		"total_connections": totalConnections,
+		"alive_connections": aliveConnections,
+		"dead_connections":  deadConnections,
+		"average_rtt":       averageRTT.String(),
+		"valid_rtt_count":   validRTTCount,
 	}
 }
 
@@ -455,7 +449,7 @@ func (hm *HeartbeatManager) UpdateConfig(config *HeartbeatConfig) {
 		hm.ticker.Reset(config.Interval)
 	}
 
-	hm.logger.Info("Heartbeat configuration updated", 
+	hm.logger.Info("Heartbeat configuration updated",
 		"enabled", config.Enabled,
 		"interval", config.Interval,
 		"timeout", config.Timeout,

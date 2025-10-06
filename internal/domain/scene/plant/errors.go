@@ -9,107 +9,119 @@ import (
 // 基础错误变量
 var (
 	// 种子相关错误
-	ErrInvalidSeedType     = fmt.Errorf("invalid seed type")
-	ErrSeedNotFound        = fmt.Errorf("seed not found")
-	ErrInsufficientSeeds   = fmt.Errorf("insufficient seeds")
-	ErrSeedExpired         = fmt.Errorf("seed has expired")
-	ErrSeedAlreadyPlanted  = fmt.Errorf("seed already planted")
-	ErrSeedNotCompatible   = fmt.Errorf("seed not compatible with soil")
+	ErrInvalidSeedType    = fmt.Errorf("invalid seed type")
+	ErrSeedNotFound       = fmt.Errorf("seed not found")
+	ErrInsufficientSeeds  = fmt.Errorf("insufficient seeds")
+	ErrSeedExpired        = fmt.Errorf("seed has expired")
+	ErrSeedAlreadyPlanted = fmt.Errorf("seed already planted")
+	ErrSeedNotCompatible  = fmt.Errorf("seed not compatible with soil")
 
 	// 作物相关错误
-	ErrCropNotFound        = fmt.Errorf("crop not found")
-	ErrCropNotMature       = fmt.Errorf("crop is not mature")
+	ErrCropNotFound         = fmt.Errorf("crop not found")
+	ErrCropNotMature        = fmt.Errorf("crop is not mature")
 	ErrCropAlreadyHarvested = fmt.Errorf("crop already harvested")
-	ErrCropDead            = fmt.Errorf("crop is dead")
-	ErrCropDiseased        = fmt.Errorf("crop is diseased")
-	ErrCropNotHealthy      = fmt.Errorf("crop is not healthy")
-	ErrCropOverwatered     = fmt.Errorf("crop is overwatered")
-	ErrCropUnderwatered    = fmt.Errorf("crop is underwatered")
+	ErrCropDead             = fmt.Errorf("crop is dead")
+	ErrCropDiseased         = fmt.Errorf("crop is diseased")
+	ErrCropNotHealthy       = fmt.Errorf("crop is not healthy")
+	ErrCropOverwatered      = fmt.Errorf("crop is overwatered")
+	ErrCropUnderwatered     = fmt.Errorf("crop is underwatered")
 
 	// 地块相关错误
-	ErrPlotNotFound        = fmt.Errorf("plot not found")
-	ErrPlotOccupied        = fmt.Errorf("plot is occupied")
-	ErrPlotNotEmpty        = fmt.Errorf("plot is not empty")
-	ErrPlotNotReady        = fmt.Errorf("plot is not ready for planting")
-	ErrPlotTooSmall        = fmt.Errorf("plot is too small")
-	ErrPlotDamaged         = fmt.Errorf("plot is damaged")
+	ErrPlotNotFound       = fmt.Errorf("plot not found")
+	ErrPlotOccupied       = fmt.Errorf("plot is occupied")
+	ErrPlotNotEmpty       = fmt.Errorf("plot is not empty")
+	ErrPlotNotReady       = fmt.Errorf("plot is not ready for planting")
+	ErrPlotTooSmall       = fmt.Errorf("plot is too small")
+	ErrPlotDamaged        = fmt.Errorf("plot is damaged")
+	ErrInvalidPlotID      = fmt.Errorf("invalid plot ID")
+	ErrPlotNotAvailable   = fmt.Errorf("plot is not available")
+	ErrInvalidQuantity    = fmt.Errorf("invalid quantity")
+	ErrSoilNotSuitable    = fmt.Errorf("soil is not suitable")
+	ErrInvalidWaterAmount = fmt.Errorf("invalid water amount")
+	ErrInvalidCropID      = fmt.Errorf("invalid crop ID")
+	ErrCropNotHarvestable = fmt.Errorf("crop is not harvestable")
+	ErrInvalidPlot        = fmt.Errorf("invalid plot")
+	ErrMaxPlotsReached    = fmt.Errorf("max plots reached")
+	ErrPlotHasCrop        = fmt.Errorf("plot has crop")
+	ErrInvalidTool        = fmt.Errorf("invalid tool")
+	ErrToolNotUsable      = fmt.Errorf("tool not usable")
 
 	// 土壤相关错误
-	ErrInvalidSoilType     = fmt.Errorf("invalid soil type")
-	ErrSoilTooAcidic       = fmt.Errorf("soil is too acidic")
-	ErrSoilTooAlkaline     = fmt.Errorf("soil is too alkaline")
-	ErrSoilPoorFertility   = fmt.Errorf("soil has poor fertility")
-	ErrSoilContaminated    = fmt.Errorf("soil is contaminated")
-	ErrSoilTooWet          = fmt.Errorf("soil is too wet")
-	ErrSoilTooDry          = fmt.Errorf("soil is too dry")
+	ErrInvalidSoilType   = fmt.Errorf("invalid soil type")
+	ErrSoilTooAcidic     = fmt.Errorf("soil is too acidic")
+	ErrSoilTooAlkaline   = fmt.Errorf("soil is too alkaline")
+	ErrSoilPoorFertility = fmt.Errorf("soil has poor fertility")
+	ErrSoilContaminated  = fmt.Errorf("soil is contaminated")
+	ErrSoilTooWet        = fmt.Errorf("soil is too wet")
+	ErrSoilTooDry        = fmt.Errorf("soil is too dry")
 
 	// 肥料相关错误
-	ErrInvalidFertilizer   = fmt.Errorf("invalid fertilizer")
-	ErrInsufficientFertilizer = fmt.Errorf("insufficient fertilizer")
-	ErrFertilizerExpired   = fmt.Errorf("fertilizer has expired")
-	ErrOverFertilization   = fmt.Errorf("over fertilization")
+	ErrInvalidFertilizer       = fmt.Errorf("invalid fertilizer")
+	ErrInsufficientFertilizer  = fmt.Errorf("insufficient fertilizer")
+	ErrFertilizerExpired       = fmt.Errorf("fertilizer has expired")
+	ErrOverFertilization       = fmt.Errorf("over fertilization")
 	ErrFertilizerNotCompatible = fmt.Errorf("fertilizer not compatible")
 
 	// 工具相关错误
-	ErrToolNotFound        = fmt.Errorf("tool not found")
-	ErrToolBroken          = fmt.Errorf("tool is broken")
-	ErrToolNotSuitable     = fmt.Errorf("tool is not suitable for this operation")
-	ErrToolInUse           = fmt.Errorf("tool is in use")
+	ErrToolNotFound           = fmt.Errorf("tool not found")
+	ErrToolBroken             = fmt.Errorf("tool is broken")
+	ErrToolNotSuitable        = fmt.Errorf("tool is not suitable for this operation")
+	ErrToolInUse              = fmt.Errorf("tool is in use")
 	ErrInsufficientDurability = fmt.Errorf("insufficient tool durability")
 
 	// 农场相关错误
-	ErrFarmNotFound        = fmt.Errorf("farm not found")
-	ErrFarmFull            = fmt.Errorf("farm is full")
-	ErrFarmLocked          = fmt.Errorf("farm is locked")
-	ErrInsufficientSpace   = fmt.Errorf("insufficient space")
-	ErrFarmNotOwned        = fmt.Errorf("farm is not owned by player")
+	ErrFarmNotFound      = fmt.Errorf("farm not found")
+	ErrFarmFull          = fmt.Errorf("farm is full")
+	ErrFarmLocked        = fmt.Errorf("farm is locked")
+	ErrInsufficientSpace = fmt.Errorf("insufficient space")
+	ErrFarmNotOwned      = fmt.Errorf("farm is not owned by player")
 
 	// 季节相关错误
-	ErrInvalidSeason       = fmt.Errorf("invalid season")
-	ErrSeasonNotSuitable   = fmt.Errorf("season is not suitable for this crop")
-	ErrSeasonTransition    = fmt.Errorf("season transition in progress")
+	ErrInvalidSeason     = fmt.Errorf("invalid season")
+	ErrSeasonNotSuitable = fmt.Errorf("season is not suitable for this crop")
+	ErrSeasonTransition  = fmt.Errorf("season transition in progress")
 
 	// 天气相关错误
-	ErrBadWeather          = fmt.Errorf("bad weather conditions")
-	ErrWeatherNotSuitable  = fmt.Errorf("weather not suitable for operation")
-	ErrExtremeWeather      = fmt.Errorf("extreme weather conditions")
+	ErrBadWeather         = fmt.Errorf("bad weather conditions")
+	ErrWeatherNotSuitable = fmt.Errorf("weather not suitable for operation")
+	ErrExtremeWeather     = fmt.Errorf("extreme weather conditions")
 
 	// 时间相关错误
-	ErrInvalidTime         = fmt.Errorf("invalid time")
-	ErrTooEarly            = fmt.Errorf("too early for this operation")
-	ErrTooLate             = fmt.Errorf("too late for this operation")
-	ErrTimeExpired         = fmt.Errorf("time has expired")
+	ErrInvalidTime = fmt.Errorf("invalid time")
+	ErrTooEarly    = fmt.Errorf("too early for this operation")
+	ErrTooLate     = fmt.Errorf("too late for this operation")
+	ErrTimeExpired = fmt.Errorf("time has expired")
 
 	// 资源相关错误
 	ErrInsufficientResources = fmt.Errorf("insufficient resources")
-	ErrInsufficientWater   = fmt.Errorf("insufficient water")
-	ErrInsufficientGold    = fmt.Errorf("insufficient gold")
-	ErrResourceNotFound    = fmt.Errorf("resource not found")
+	ErrInsufficientWater     = fmt.Errorf("insufficient water")
+	ErrInsufficientGold      = fmt.Errorf("insufficient gold")
+	ErrResourceNotFound      = fmt.Errorf("resource not found")
 
 	// 权限相关错误
-	ErrPermissionDenied    = fmt.Errorf("permission denied")
-	ErrUnauthorized        = fmt.Errorf("unauthorized operation")
-	ErrAccessRestricted    = fmt.Errorf("access restricted")
+	ErrPermissionDenied = fmt.Errorf("permission denied")
+	ErrUnauthorized     = fmt.Errorf("unauthorized operation")
+	ErrAccessRestricted = fmt.Errorf("access restricted")
 
 	// 配置相关错误
-	ErrInvalidConfiguration = fmt.Errorf("invalid configuration")
-	ErrConfigurationNotFound = fmt.Errorf("configuration not found")
+	ErrInvalidConfiguration   = fmt.Errorf("invalid configuration")
+	ErrConfigurationNotFound  = fmt.Errorf("configuration not found")
 	ErrConfigurationCorrupted = fmt.Errorf("configuration corrupted")
 
 	// 数据相关错误
-	ErrDataCorrupted       = fmt.Errorf("data corrupted")
-	ErrDataNotFound        = fmt.Errorf("data not found")
-	ErrDataInconsistent    = fmt.Errorf("data inconsistent")
+	ErrDataCorrupted    = fmt.Errorf("data corrupted")
+	ErrDataNotFound     = fmt.Errorf("data not found")
+	ErrDataInconsistent = fmt.Errorf("data inconsistent")
 
 	// 系统相关错误
-	ErrSystemError         = fmt.Errorf("system error")
-	ErrServiceUnavailable  = fmt.Errorf("service unavailable")
-	ErrTimeout             = fmt.Errorf("operation timeout")
+	ErrSystemError        = fmt.Errorf("system error")
+	ErrServiceUnavailable = fmt.Errorf("service unavailable")
+	ErrTimeout            = fmt.Errorf("operation timeout")
 
 	// 并发相关错误
 	ErrConcurrentModification = fmt.Errorf("concurrent modification")
-	ErrResourceLocked      = fmt.Errorf("resource is locked")
-	ErrDeadlock            = fmt.Errorf("deadlock detected")
+	ErrResourceLocked         = fmt.Errorf("resource is locked")
+	ErrDeadlock               = fmt.Errorf("deadlock detected")
 )
 
 // PlantError 种植系统错误
@@ -182,11 +194,11 @@ func NewValidationError(field, constraint, rule string, value interface{}) *Vali
 // BusinessRuleError 业务规则错误
 type BusinessRuleError struct {
 	*PlantError
-	Rule        string
-	Violation   string
-	Expected    interface{}
-	Actual      interface{}
-	Suggestion  string
+	Rule       string
+	Violation  string
+	Expected   interface{}
+	Actual     interface{}
+	Suggestion string
 }
 
 // NewBusinessRuleError 创建业务规则错误
@@ -215,10 +227,10 @@ func (e *BusinessRuleError) WithSuggestion(suggestion string) *BusinessRuleError
 // ConcurrencyError 并发错误
 type ConcurrencyError struct {
 	*PlantError
-	Resource    string
-	Operation   string
-	ConflictID  string
-	RetryAfter  time.Duration
+	Resource   string
+	Operation  string
+	ConflictID string
+	RetryAfter time.Duration
 }
 
 // NewConcurrencyError 创建并发错误
@@ -246,10 +258,10 @@ func (e *ConcurrencyError) WithRetryAfter(duration time.Duration) *ConcurrencyEr
 // ConfigurationError 配置错误
 type ConfigurationError struct {
 	*PlantError
-	ConfigKey   string
-	ConfigValue interface{}
+	ConfigKey    string
+	ConfigValue  interface{}
 	ExpectedType string
-	ValidValues []interface{}
+	ValidValues  []interface{}
 }
 
 // NewConfigurationError 创建配置错误
@@ -358,12 +370,12 @@ func (ec *ErrorCollection) Error() string {
 	if len(ec.Errors) == 0 {
 		return "no errors"
 	}
-	
+
 	var messages []string
 	for i, err := range ec.Errors {
 		messages = append(messages, fmt.Sprintf("%d: %v", i+1, err))
 	}
-	
+
 	return fmt.Sprintf("multiple errors in %s: [%s]", ec.Context, strings.Join(messages, "; "))
 }
 
@@ -522,27 +534,27 @@ func FormatError(err error) string {
 	if err == nil {
 		return "no error"
 	}
-	
+
 	if plantErr, ok := err.(*PlantError); ok {
 		var parts []string
 		parts = append(parts, fmt.Sprintf("Code: %s", plantErr.Code))
 		parts = append(parts, fmt.Sprintf("Message: %s", plantErr.Message))
 		parts = append(parts, fmt.Sprintf("Time: %s", plantErr.Timestamp.Format(time.RFC3339)))
-		
+
 		if len(plantErr.Details) > 0 {
 			parts = append(parts, fmt.Sprintf("Details: %+v", plantErr.Details))
 		}
-		
+
 		if len(plantErr.Context) > 0 {
 			parts = append(parts, fmt.Sprintf("Context: %+v", plantErr.Context))
 		}
-		
+
 		if plantErr.Cause != nil {
 			parts = append(parts, fmt.Sprintf("Cause: %v", plantErr.Cause))
 		}
-		
+
 		return strings.Join(parts, ", ")
 	}
-	
+
 	return err.Error()
 }

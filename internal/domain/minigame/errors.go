@@ -183,7 +183,7 @@ type GameNotJoinableError struct {
 // GameFullError 游戏已满错误
 type GameFullError struct {
 	*BaseMinigameError
-	GameID        string `json:"game_id"`
+	GameID         string `json:"game_id"`
 	CurrentPlayers int32  `json:"current_players"`
 	MaxPlayers     int32  `json:"max_players"`
 }
@@ -266,18 +266,18 @@ type PermissionDeniedError struct {
 // RateLimitExceededError 速率限制超出错误
 type RateLimitExceededError struct {
 	*BaseMinigameError
-	UserID      uint64        `json:"user_id"`
-	Operation   string        `json:"operation"`
-	Limit       int64         `json:"limit"`
-	WindowSize  time.Duration `json:"window_size"`
-	ResetTime   time.Time     `json:"reset_time"`
+	UserID     uint64        `json:"user_id"`
+	Operation  string        `json:"operation"`
+	Limit      int64         `json:"limit"`
+	WindowSize time.Duration `json:"window_size"`
+	ResetTime  time.Time     `json:"reset_time"`
 }
 
 // ConcurrencyLimitError 并发限制错误
 type ConcurrencyLimitError struct {
 	*BaseMinigameError
-	CurrentCount int64 `json:"current_count"`
-	MaxCount     int64 `json:"max_count"`
+	CurrentCount int64  `json:"current_count"`
+	MaxCount     int64  `json:"max_count"`
 	ResourceType string `json:"resource_type"`
 }
 
@@ -343,7 +343,7 @@ const (
 	ErrorCodeResourceExhausted = "MINIGAME_RESOURCE_EXHAUSTED"
 	ErrorCodeTimeout           = "MINIGAME_TIMEOUT"
 	ErrorCodeNetworkError      = "MINIGAME_NETWORK_ERROR"
-	
+
 	// 游戏相关错误代码
 	ErrorCodeGameNotFound      = "MINIGAME_GAME_NOT_FOUND"
 	ErrorCodeInvalidGameType   = "MINIGAME_INVALID_GAME_TYPE"
@@ -353,32 +353,32 @@ const (
 	ErrorCodeGameNotRunning    = "MINIGAME_GAME_NOT_RUNNING"
 	ErrorCodeInvalidOperation  = "MINIGAME_INVALID_OPERATION"
 	ErrorCodeInvalidConfig     = "MINIGAME_INVALID_CONFIG"
-	
+
 	// 玩家相关错误代码
-	ErrorCodePlayerNotFound       = "MINIGAME_PLAYER_NOT_FOUND"
-	ErrorCodeInvalidPlayer        = "MINIGAME_INVALID_PLAYER"
-	ErrorCodeInvalidPlayerStatus  = "MINIGAME_INVALID_PLAYER_STATUS"
-	ErrorCodePlayerAlreadyInGame  = "MINIGAME_PLAYER_ALREADY_IN_GAME"
-	ErrorCodePlayerNotInGame      = "MINIGAME_PLAYER_NOT_IN_GAME"
-	
+	ErrorCodePlayerNotFound      = "MINIGAME_PLAYER_NOT_FOUND"
+	ErrorCodeInvalidPlayer       = "MINIGAME_INVALID_PLAYER"
+	ErrorCodeInvalidPlayerStatus = "MINIGAME_INVALID_PLAYER_STATUS"
+	ErrorCodePlayerAlreadyInGame = "MINIGAME_PLAYER_ALREADY_IN_GAME"
+	ErrorCodePlayerNotInGame     = "MINIGAME_PLAYER_NOT_IN_GAME"
+
 	// 会话相关错误代码
 	ErrorCodeSessionNotFound = "MINIGAME_SESSION_NOT_FOUND"
 	ErrorCodeInvalidSession  = "MINIGAME_INVALID_SESSION"
-	
+
 	// 分数相关错误代码
 	ErrorCodeScoreNotFound = "MINIGAME_SCORE_NOT_FOUND"
 	ErrorCodeInvalidScore  = "MINIGAME_INVALID_SCORE"
-	
+
 	// 奖励相关错误代码
 	ErrorCodeRewardNotFound       = "MINIGAME_REWARD_NOT_FOUND"
 	ErrorCodeInvalidReward        = "MINIGAME_INVALID_REWARD"
 	ErrorCodeRewardAlreadyClaimed = "MINIGAME_REWARD_ALREADY_CLAIMED"
 	ErrorCodeRewardExpired        = "MINIGAME_REWARD_EXPIRED"
-	
+
 	// 成就相关错误代码
 	ErrorCodeAchievementNotFound = "MINIGAME_ACHIEVEMENT_NOT_FOUND"
 	ErrorCodeInvalidAchievement  = "MINIGAME_INVALID_ACHIEVEMENT"
-	
+
 	// 仓储相关错误代码
 	ErrorCodeRepositoryError = "MINIGAME_REPOSITORY_ERROR"
 	ErrorCodeDatabaseError   = "MINIGAME_DATABASE_ERROR"
@@ -396,6 +396,42 @@ func NewMinigameError(code, message string, cause error) *BaseMinigameError {
 		Timestamp: time.Now(),
 		Context:   make(map[string]interface{}),
 		Cause:     cause,
+		Retryable: false,
+	}
+}
+
+// NewMinigameInvalidStateError 创建无效状态错误
+func NewMinigameInvalidStateError(gameID string, currentStatus, expectedStatus GameStatus, operation string) *BaseMinigameError {
+	return &BaseMinigameError{
+		Code:      ErrorCodeInvalidState,
+		Message:   fmt.Sprintf("Invalid state for operation %s: current=%s, expected=%s", operation, currentStatus, expectedStatus),
+		Severity:  ErrorSeverityMedium,
+		Timestamp: time.Now(),
+		Context:   map[string]interface{}{"game_id": gameID, "current_status": currentStatus, "expected_status": expectedStatus, "operation": operation},
+		Retryable: false,
+	}
+}
+
+// NewMinigameInsufficientPlayersError 创建玩家不足错误
+func NewMinigameInsufficientPlayersError(gameID string, currentPlayers, minPlayers int32) *BaseMinigameError {
+	return &BaseMinigameError{
+		Code:      ErrorCodeInsufficientPlayers,
+		Message:   fmt.Sprintf("Insufficient players: current=%d, minimum=%d", currentPlayers, minPlayers),
+		Severity:  ErrorSeverityMedium,
+		Timestamp: time.Now(),
+		Context:   map[string]interface{}{"game_id": gameID, "current_players": currentPlayers, "min_players": minPlayers},
+		Retryable: false,
+	}
+}
+
+// NewPlayerAlreadyInGameError 创建玩家已在游戏中错误
+func NewPlayerAlreadyInGameError(playerID uint64, gameID string) *BaseMinigameError {
+	return &BaseMinigameError{
+		Code:      ErrorCodePlayerAlreadyInGame,
+		Message:   fmt.Sprintf("Player %d is already in game %s", playerID, gameID),
+		Severity:  ErrorSeverityMedium,
+		Timestamp: time.Now(),
+		Context:   map[string]interface{}{"player_id": playerID, "game_id": gameID},
 		Retryable: false,
 	}
 }
@@ -494,21 +530,7 @@ func NewGameFullError(gameID string, currentPlayers, maxPlayers int32) *GameFull
 	}
 }
 
-// NewPlayerAlreadyInGameError 创建玩家已在游戏中错误
-func NewPlayerAlreadyInGameError(gameID string, playerID uint64) *PlayerAlreadyInGameError {
-	return &PlayerAlreadyInGameError{
-		BaseMinigameError: &BaseMinigameError{
-			Code:      ErrorCodePlayerAlreadyInGame,
-			Message:   fmt.Sprintf("Player %d is already in game %s", playerID, gameID),
-			Severity:  ErrorSeverityMedium,
-			Timestamp: time.Now(),
-			Context:   make(map[string]interface{}),
-			Retryable: false,
-		},
-		GameID:   gameID,
-		PlayerID: playerID,
-	}
-}
+// NewPlayerAlreadyInGameError 创建玩家已在游戏中错误 (duplicate removed - see line 428)
 
 // NewPlayerNotInGameError 创建玩家不在游戏中错误
 func NewPlayerNotInGameError(gameID string, playerID uint64) *PlayerNotInGameError {
@@ -671,7 +693,7 @@ func NewInternalError(component, function string, cause error) *InternalError {
 func IsNotFoundError(err error) bool {
 	switch err.(type) {
 	case *GameNotFoundError, *PlayerNotFoundError, *SessionNotFoundError,
-		 *ScoreNotFoundError, *RewardNotFoundError, *AchievementNotFoundError:
+		*ScoreNotFoundError, *RewardNotFoundError, *AchievementNotFoundError:
 		return true
 	default:
 		return false
@@ -682,7 +704,7 @@ func IsNotFoundError(err error) bool {
 func IsValidationError(err error) bool {
 	switch err.(type) {
 	case *InvalidGameTypeError, *InvalidGameStatusError, *InvalidPlayerStatusError,
-		 *InvalidScoreError, *InvalidRewardError, *InvalidConfigError, *InvalidSessionError, *ValidationError:
+		*InvalidScoreError, *InvalidRewardError, *InvalidConfigError, *InvalidSessionError, *ValidationError:
 		return true
 	default:
 		return false
@@ -741,11 +763,11 @@ func IsCriticalError(err error) bool {
 type ErrorRecoveryStrategy int32
 
 const (
-	RecoveryStrategyNone        ErrorRecoveryStrategy = iota + 1 // 无恢复策略
-	RecoveryStrategyRetry                                         // 重试
-	RecoveryStrategyFallback                                      // 降级
-	RecoveryStrategyCircuitBreaker                                // 熔断
-	RecoveryStrategyGracefulDegradation                           // 优雅降级
+	RecoveryStrategyNone                ErrorRecoveryStrategy = iota + 1 // 无恢复策略
+	RecoveryStrategyRetry                                                // 重试
+	RecoveryStrategyFallback                                             // 降级
+	RecoveryStrategyCircuitBreaker                                       // 熔断
+	RecoveryStrategyGracefulDegradation                                  // 优雅降级
 )
 
 // String 返回恢复策略的字符串表示
@@ -790,13 +812,13 @@ func GetRecoveryStrategy(err error) ErrorRecoveryStrategy {
 func GetRetryDelay(err error, attempt int) time.Duration {
 	baseDelay := time.Second
 	maxDelay := 30 * time.Second
-	
+
 	// 指数退避
 	delay := time.Duration(attempt) * baseDelay
 	if delay > maxDelay {
 		delay = maxDelay
 	}
-	
+
 	// 特殊错误类型的延迟调整
 	switch e := err.(type) {
 	case *RateLimitExceededError:
@@ -810,7 +832,7 @@ func GetRetryDelay(err error, attempt int) time.Duration {
 		// 网络错误使用较短的延迟
 		delay = delay / 2
 	}
-	
+
 	return delay
 }
 
@@ -836,16 +858,16 @@ func GetMaxRetryAttempts(err error) int {
 
 // ErrorStatistics 错误统计
 type ErrorStatistics struct {
-	TotalErrors      int64                    `json:"total_errors"`
-	ErrorsByCode     map[string]int64         `json:"errors_by_code"`
-	ErrorsBySeverity map[ErrorSeverity]int64  `json:"errors_by_severity"`
-	ErrorsByType     map[string]int64         `json:"errors_by_type"`
-	RetryableErrors  int64                    `json:"retryable_errors"`
-	CriticalErrors   int64                    `json:"critical_errors"`
-	LastError        *time.Time               `json:"last_error,omitempty"`
-	ErrorRate        float64                  `json:"error_rate"`
-	CreatedAt        time.Time                `json:"created_at"`
-	UpdatedAt        time.Time                `json:"updated_at"`
+	TotalErrors      int64                   `json:"total_errors"`
+	ErrorsByCode     map[string]int64        `json:"errors_by_code"`
+	ErrorsBySeverity map[ErrorSeverity]int64 `json:"errors_by_severity"`
+	ErrorsByType     map[string]int64        `json:"errors_by_type"`
+	RetryableErrors  int64                   `json:"retryable_errors"`
+	CriticalErrors   int64                   `json:"critical_errors"`
+	LastError        *time.Time              `json:"last_error,omitempty"`
+	ErrorRate        float64                 `json:"error_rate"`
+	CreatedAt        time.Time               `json:"created_at"`
+	UpdatedAt        time.Time               `json:"updated_at"`
 }
 
 // NewErrorStatistics 创建错误统计
@@ -870,27 +892,27 @@ func (es *ErrorStatistics) RecordError(err error) {
 	now := time.Now()
 	es.LastError = &now
 	es.UpdatedAt = now
-	
+
 	if minigameErr, ok := err.(MinigameError); ok {
 		// 按错误代码统计
 		code := minigameErr.GetCode()
 		es.ErrorsByCode[code]++
-		
+
 		// 按严重程度统计
 		severity := minigameErr.GetSeverity()
 		es.ErrorsBySeverity[severity]++
-		
+
 		// 统计可重试错误
 		if minigameErr.IsRetryable() {
 			es.RetryableErrors++
 		}
-		
+
 		// 统计严重错误
 		if severity == ErrorSeverityCritical {
 			es.CriticalErrors++
 		}
 	}
-	
+
 	// 按错误类型统计
 	errorType := fmt.Sprintf("%T", err)
 	es.ErrorsByType[errorType]++
@@ -926,11 +948,11 @@ func WrapError(err error, code, message string) MinigameError {
 	if err == nil {
 		return nil
 	}
-	
+
 	if minigameErr, ok := err.(MinigameError); ok {
 		return minigameErr
 	}
-	
+
 	return NewMinigameError(code, message, err)
 }
 
@@ -961,7 +983,7 @@ func LogError(err error, context map[string]interface{}) {
 		for k, v := range context {
 			minigameErr.SetContext(k, v)
 		}
-		
+
 		// 根据严重程度记录日志
 		switch minigameErr.GetSeverity() {
 		case ErrorSeverityCritical:

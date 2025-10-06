@@ -7,43 +7,22 @@ package config
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
-// ConfigLoader 配置加载器
-type ConfigLoader struct {
-	configDir   string
-	environment string
-	validators  []ConfigValidator
-}
-
 // ConfigValidator 配置验证器接口
 type ConfigValidator interface {
 	Validate(config *Config) error
 }
 
-// NewConfigLoader 创建配置加载器
-func NewConfigLoader(configDir string) *ConfigLoader {
-	return &ConfigLoader{
-		configDir:   configDir,
-		environment: getEnvironment(),
-		validators:  make([]ConfigValidator, 0),
-	}
-}
-
-// AddValidator 添加配置验证器
-func (cl *ConfigLoader) AddValidator(validator ConfigValidator) {
-	cl.validators = append(cl.validators, validator)
-}
-
 // Load 加载配置
 func (cl *ConfigLoader) Load() (*Config, error) {
 	// 构建配置文件路径
-	configFile := cl.getConfigFilePath()
+	//todo complete  it
+	configFile := cl.getConfigFilePath("")
 
 	// 检查配置文件是否存在
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
@@ -97,27 +76,6 @@ func (cl *ConfigLoader) LoadFromFile(filePath string) (*Config, error) {
 	}
 
 	return &config, nil
-}
-
-// getConfigFilePath 获取配置文件路径
-func (cl *ConfigLoader) getConfigFilePath() string {
-	// 优先级：环境变量 > 环境特定文件 > 默认文件
-	if configFile := os.Getenv("CONFIG_FILE"); configFile != "" {
-		if filepath.IsAbs(configFile) {
-			return configFile
-		}
-		return filepath.Join(cl.configDir, configFile)
-	}
-
-	// 尝试环境特定的配置文件
-	envConfigFile := fmt.Sprintf("config.%s.yaml", cl.environment)
-	envConfigPath := filepath.Join(cl.configDir, envConfigFile)
-	if _, err := os.Stat(envConfigPath); err == nil {
-		return envConfigPath
-	}
-
-	// 默认配置文件
-	return filepath.Join(cl.configDir, "config.yaml")
 }
 
 // expandEnvVars 展开环境变量

@@ -2,6 +2,7 @@ package minigame
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -418,6 +419,40 @@ type PlayerStatisticsEvent struct {
 	Period         string                 `json:"period" bson:"period"`
 }
 
+// PlayerJoinedGameEvent 玩家加入游戏事件
+type PlayerJoinedGameEvent struct {
+	BaseMinigameEvent
+	PlayerID   uint64 `json:"player_id" bson:"player_id"`
+	PlayerName string `json:"player_name" bson:"player_name"`
+}
+
+// PlayerLeftGameEvent 玩家离开游戏事件
+type PlayerLeftGameEvent struct {
+	BaseMinigameEvent
+	PlayerID   uint64 `json:"player_id" bson:"player_id"`
+	PlayerName string `json:"player_name" bson:"player_name"`
+	Reason     string `json:"reason" bson:"reason"`
+}
+
+// PlayerScoreUpdatedEvent 玩家分数更新事件
+type PlayerScoreUpdatedEvent struct {
+	BaseMinigameEvent
+	PlayerID  uint64    `json:"player_id" bson:"player_id"`
+	OldScore  int64     `json:"old_score" bson:"old_score"`
+	NewScore  int64     `json:"new_score" bson:"new_score"`
+	ScoreType ScoreType `json:"score_type" bson:"score_type"`
+}
+
+// GameDataUpdatedEvent 游戏数据更新事件
+type GameDataUpdatedEvent struct {
+	BaseMinigameEvent
+	Key   string      `json:"key" bson:"key"`
+	Value interface{} `json:"value" bson:"value"`
+}
+
+// GamePausedEvent 游戏暂停事件 (duplicate removed - see line 91)
+// GameResumedEvent 游戏恢复事件 (duplicate removed - see line 97)
+
 // LeaderboardUpdatedEvent 排行榜更新事件
 type LeaderboardUpdatedEvent struct {
 	BaseMinigameEvent
@@ -439,58 +474,62 @@ const (
 	EventTypeGameCancelled   = "game.cancelled"
 	EventTypeGameReset       = "game.reset"
 	EventTypeGameDeleted     = "game.deleted"
-	
+
 	// 游戏状态事件类型
-	EventTypeGameStatusChanged  = "game.status_changed"
-	EventTypeGamePhaseChanged   = "game.phase_changed"
-	EventTypeGameConfigUpdated  = "game.config_updated"
-	EventTypeGameRulesUpdated   = "game.rules_updated"
+	EventTypeGameStatusChanged   = "game.status_changed"
+	EventTypeGamePhaseChanged    = "game.phase_changed"
+	EventTypeGameConfigUpdated   = "game.config_updated"
+	EventTypeGameRulesUpdated    = "game.rules_updated"
 	EventTypeGameSettingsUpdated = "game.settings_updated"
-	
+
 	// 玩家相关事件类型
 	EventTypePlayerJoined       = "player.joined"
 	EventTypePlayerLeft         = "player.left"
-	EventTypePlayerKicked       = "player.kicked"
+	EventTypePlayerScoreUpdated = "player.score_updated"
+	EventTypeGameDataUpdated    = "game.data_updated"
+	// EventTypeGamePaused         = "game.paused" // Duplicate removed - see line 480
+	// EventTypeGameResumed        = "game.resumed" // Duplicate removed - see line 481
+	EventTypePlayerKicked        = "player.kicked"
 	EventTypePlayerStatusChanged = "player.status_changed"
-	EventTypePlayerReady        = "player.ready"
-	EventTypePlayerNotReady     = "player.not_ready"
-	EventTypePlayerDisconnected = "player.disconnected"
-	EventTypePlayerReconnected  = "player.reconnected"
-	
+	EventTypePlayerReady         = "player.ready"
+	EventTypePlayerNotReady      = "player.not_ready"
+	EventTypePlayerDisconnected  = "player.disconnected"
+	EventTypePlayerReconnected   = "player.reconnected"
+
 	// 分数和进度事件类型
-	EventTypeScoreUpdated       = "score.updated"
-	EventTypeHighScoreAchieved  = "score.high_score_achieved"
-	EventTypeLevelUp            = "progress.level_up"
-	EventTypeProgressUpdated    = "progress.updated"
-	EventTypeMilestoneReached   = "progress.milestone_reached"
-	
+	EventTypeScoreUpdated      = "score.updated"
+	EventTypeHighScoreAchieved = "score.high_score_achieved"
+	EventTypeLevelUp           = "progress.level_up"
+	EventTypeProgressUpdated   = "progress.updated"
+	EventTypeMilestoneReached  = "progress.milestone_reached"
+
 	// 奖励相关事件类型
 	EventTypeRewardGranted = "reward.granted"
 	EventTypeRewardClaimed = "reward.claimed"
 	EventTypeRewardExpired = "reward.expired"
 	EventTypeBonusReward   = "reward.bonus"
-	
+
 	// 成就相关事件类型
 	EventTypeAchievementUnlocked  = "achievement.unlocked"
 	EventTypeAchievementCompleted = "achievement.completed"
 	EventTypeAchievementProgress  = "achievement.progress"
-	
+
 	// 游戏操作事件类型
 	EventTypeGameAction = "game.action"
 	EventTypeGameMove   = "game.move"
 	EventTypeGameInput  = "game.input"
 	EventTypeGameOutput = "game.output"
-	
+
 	// 系统事件类型
 	EventTypeGameError       = "system.error"
 	EventTypeGameWarning     = "system.warning"
 	EventTypeGameMaintenance = "system.maintenance"
 	EventTypeGameUpdate      = "system.update"
-	
+
 	// 统计事件类型
-	EventTypeGameStatistics      = "statistics.game"
-	EventTypePlayerStatistics    = "statistics.player"
-	EventTypeLeaderboardUpdated  = "statistics.leaderboard_updated"
+	EventTypeGameStatistics     = "statistics.game"
+	EventTypePlayerStatistics   = "statistics.player"
+	EventTypeLeaderboardUpdated = "statistics.leaderboard_updated"
 )
 
 // 事件工厂函数
@@ -535,6 +574,97 @@ func NewGameEndedEvent(gameID string, endReason GameEndReason, operatorID uint64
 			Metadata:  make(map[string]interface{}),
 		},
 		EndReason:  endReason,
+		OperatorID: operatorID,
+	}
+}
+
+// NewPlayerJoinedGameEvent 创建玩家加入游戏事件
+func NewPlayerJoinedGameEvent(gameID string, playerID uint64, playerName string) *PlayerJoinedGameEvent {
+	return &PlayerJoinedGameEvent{
+		BaseMinigameEvent: BaseMinigameEvent{
+			EventID:   generateEventID(),
+			EventType: EventTypePlayerJoined,
+			GameID:    gameID,
+			Timestamp: time.Now(),
+			Metadata:  make(map[string]interface{}),
+		},
+		PlayerID:   playerID,
+		PlayerName: playerName,
+	}
+}
+
+// NewPlayerLeftGameEvent 创建玩家离开游戏事件
+func NewPlayerLeftGameEvent(gameID string, playerID uint64, playerName string, reason string) *PlayerLeftGameEvent {
+	return &PlayerLeftGameEvent{
+		BaseMinigameEvent: BaseMinigameEvent{
+			EventID:   generateEventID(),
+			EventType: EventTypePlayerLeft,
+			GameID:    gameID,
+			Timestamp: time.Now(),
+			Metadata:  make(map[string]interface{}),
+		},
+		PlayerID:   playerID,
+		PlayerName: playerName,
+		Reason:     reason,
+	}
+}
+
+// NewPlayerScoreUpdatedEvent 创建玩家分数更新事件
+func NewPlayerScoreUpdatedEvent(gameID string, playerID uint64, oldScore, newScore int64, scoreType ScoreType) *PlayerScoreUpdatedEvent {
+	return &PlayerScoreUpdatedEvent{
+		BaseMinigameEvent: BaseMinigameEvent{
+			EventID:   generateEventID(),
+			EventType: EventTypePlayerScoreUpdated,
+			GameID:    gameID,
+			Timestamp: time.Now(),
+			Metadata:  make(map[string]interface{}),
+		},
+		PlayerID:  playerID,
+		OldScore:  oldScore,
+		NewScore:  newScore,
+		ScoreType: scoreType,
+	}
+}
+
+// NewGameDataUpdatedEvent 创建游戏数据更新事件
+func NewGameDataUpdatedEvent(gameID string, key string, value interface{}) *GameDataUpdatedEvent {
+	return &GameDataUpdatedEvent{
+		BaseMinigameEvent: BaseMinigameEvent{
+			EventID:   generateEventID(),
+			EventType: EventTypeGameDataUpdated,
+			GameID:    gameID,
+			Timestamp: time.Now(),
+			Metadata:  make(map[string]interface{}),
+		},
+		Key:   key,
+		Value: value,
+	}
+}
+
+// NewGamePausedEvent 创建游戏暂停事件
+func NewGamePausedEvent(gameID string, operatorID uint64) *GamePausedEvent {
+	return &GamePausedEvent{
+		BaseMinigameEvent: BaseMinigameEvent{
+			EventID:   generateEventID(),
+			EventType: EventTypeGamePaused,
+			GameID:    gameID,
+			Timestamp: time.Now(),
+			Metadata:  make(map[string]interface{}),
+		},
+		OperatorID: operatorID,
+	}
+}
+
+// NewGameResumedEvent 创建游戏恢复事件
+func NewGameResumedEvent(gameID string, operatorID uint64) *GameResumedEvent {
+	return &GameResumedEvent{
+		BaseMinigameEvent: BaseMinigameEvent{
+			EventID:   generateEventID(),
+			EventType: EventTypeGameResumed,
+			GameID:    gameID,
+			Timestamp: time.Now(),
+			Metadata:  make(map[string]interface{}),
+		},
 		OperatorID: operatorID,
 	}
 }
@@ -766,7 +896,7 @@ func IsGameLifecycleEvent(eventType string) bool {
 		EventTypeGameReset,
 		EventTypeGameDeleted,
 	}
-	
+
 	for _, event := range lifecycleEvents {
 		if event == eventType {
 			return true
@@ -787,7 +917,7 @@ func IsPlayerEvent(eventType string) bool {
 		EventTypePlayerDisconnected,
 		EventTypePlayerReconnected,
 	}
-	
+
 	for _, event := range playerEvents {
 		if event == eventType {
 			return true
@@ -805,7 +935,7 @@ func IsScoreEvent(eventType string) bool {
 		EventTypeProgressUpdated,
 		EventTypeMilestoneReached,
 	}
-	
+
 	for _, event := range scoreEvents {
 		if event == eventType {
 			return true
@@ -822,7 +952,7 @@ func IsRewardEvent(eventType string) bool {
 		EventTypeRewardExpired,
 		EventTypeBonusReward,
 	}
-	
+
 	for _, event := range rewardEvents {
 		if event == eventType {
 			return true
@@ -838,7 +968,7 @@ func IsAchievementEvent(eventType string) bool {
 		EventTypeAchievementCompleted,
 		EventTypeAchievementProgress,
 	}
-	
+
 	for _, event := range achievementEvents {
 		if event == eventType {
 			return true
@@ -855,7 +985,7 @@ func IsSystemEvent(eventType string) bool {
 		EventTypeGameMaintenance,
 		EventTypeGameUpdate,
 	}
-	
+
 	for _, event := range systemEvents {
 		if event == eventType {
 			return true

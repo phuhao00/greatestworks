@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,9 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/domain/player/hangup"
 	"greatestworks/internal/infrastructure/cache"
+	"greatestworks/internal/infrastructure/logger"
 )
 
 // MongoHangupRepository MongoDB挂机仓储实现
@@ -20,16 +21,6 @@ type MongoHangupRepository struct {
 	cache      cache.Cache
 	logger     logger.Logger
 	collection *mongo.Collection
-}
-
-// NewMongoHangupRepository 创建MongoDB挂机仓储
-func NewMongoHangupRepository(db *mongo.Database, cache cache.Cache, logger logger.Logger) hangup.HangupRepository {
-	return &MongoHangupRepository{
-		db:         db,
-		cache:      cache,
-		logger:     logger,
-		collection: db.Collection("hangups"),
-	}
 }
 
 // HangupDocument MongoDB挂机文档结构
@@ -67,7 +58,7 @@ func (r *MongoHangupRepository) Save(hangupAggregate *hangup.HangupAggregate) er
 		doc.CreatedAt = time.Now()
 		result, err := r.collection.InsertOne(ctx, doc)
 		if err != nil {
-			r.logger.Error("Failed to insert hangup", "error", err, "hangup_id", hangupAggregate.GetID())
+			r.logger.Error("Failed to insert hangup", "error", err, "player_id", hangupAggregate.GetPlayerID())
 			return fmt.Errorf("failed to insert hangup: %w", err)
 		}
 
@@ -75,20 +66,20 @@ func (r *MongoHangupRepository) Save(hangupAggregate *hangup.HangupAggregate) er
 			doc.ID = oid
 		}
 	} else {
-		filter := bson.M{"hangup_id": hangupAggregate.GetID()}
+		filter := bson.M{"player_id": hangupAggregate.GetPlayerID()}
 		update := bson.M{"$set": doc}
 
 		_, err := r.collection.UpdateOne(ctx, filter, update)
 		if err != nil {
-			r.logger.Error("Failed to update hangup", "error", err, "hangup_id", hangupAggregate.GetID())
+			r.logger.Error("Failed to update hangup", "error", err, "player_id", hangupAggregate.GetPlayerID())
 			return fmt.Errorf("failed to update hangup: %w", err)
 		}
 	}
 
 	// 更新缓存
-	cacheKey := fmt.Sprintf("hangup:%s", hangupAggregate.GetID())
+	cacheKey := fmt.Sprintf("player:%s", hangupAggregate.GetPlayerID())
 	if err := r.cache.Set(ctx, cacheKey, hangupAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache hangup", "error", err, "hangup_id", hangupAggregate.GetID())
+		r.logger.Warn("Failed to cache hangup", "error", err, "player_id", hangupAggregate.GetPlayerID())
 	}
 
 	return nil
@@ -111,7 +102,7 @@ func (r *MongoHangupRepository) FindByID(hangupID string) (*hangup.HangupAggrega
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, hangup.ErrHangupNotFound
+			return nil, errors.New("hangup not found")
 		}
 		r.logger.Error("Failed to find hangup", "error", err, "hangup_id", hangupID)
 		return nil, fmt.Errorf("failed to find hangup: %w", err)
@@ -127,7 +118,8 @@ func (r *MongoHangupRepository) FindByID(hangupID string) (*hangup.HangupAggrega
 	return hangupAggregate, nil
 }
 
-// FindActiveByPlayer 查找玩家的活跃挂机记�?func (r *MongoHangupRepository) FindActiveByPlayer(playerID string) (*hangup.HangupAggregate, error) {
+// FindActiveByPlayer 查找玩家的活跃挂机记录
+func (r *MongoHangupRepository) FindActiveByPlayer(playerID string) (*hangup.HangupAggregate, error) {
 	ctx := context.Background()
 
 	// 先从缓存获取
@@ -149,21 +141,23 @@ func (r *MongoHangupRepository) FindByID(hangupID string) (*hangup.HangupAggrega
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil // 没有活跃的挂机记�?		}
-		r.logger.Error("Failed to find active hangup", "error", err, "player_id", playerID)
-		return nil, fmt.Errorf("failed to find active hangup: %w", err)
+			r.logger.Error("Failed to find active hangup", "error", err, "player_id", playerID)
+			return nil, fmt.Errorf("failed to find active hangup: %w", err)
+		}
+
+		hangupAggregate := r.documentToAggregate(&doc)
+
+		// 更新缓存
+		if err := r.cache.Set(ctx, cacheKey, hangupAggregate, time.Minute*30); err != nil {
+			r.logger.Warn("Failed to cache active hangup", "error", err, "player_id", playerID)
+		}
+
+		return hangupAggregate, nil
 	}
-
-	hangupAggregate := r.documentToAggregate(&doc)
-
-	// 更新缓存
-	if err := r.cache.Set(ctx, cacheKey, hangupAggregate, time.Minute*30); err != nil {
-		r.logger.Warn("Failed to cache active hangup", "error", err, "player_id", playerID)
-	}
-
-	return hangupAggregate, nil
 }
 
-// FindHistoryByPlayer 查找玩家的挂机历�?func (r *MongoHangupRepository) FindHistoryByPlayer(playerID string, limit int) ([]*hangup.HangupAggregate, error) {
+// FindHistoryByPlayer 查找玩家的挂机历�?
+func (r *MongoHangupRepository) FindHistoryByPlayer(playerID string, limit int) ([]*hangup.HangupAggregate, error) {
 	ctx := context.Background()
 
 	filter := bson.M{

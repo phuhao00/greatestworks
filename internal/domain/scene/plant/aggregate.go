@@ -180,7 +180,7 @@ func (f *FarmAggregate) PlantCrop(plotID string, seedType SeedType, quantity int
 	}
 
 	// 检查地块是否可用
-	if !plot.IsAvailable() {
+	if !plot.IsAvailable {
 		return ErrPlotNotAvailable
 	}
 
@@ -522,7 +522,7 @@ func (f *FarmAggregate) CalculateProductivity() float64 {
 
 	// 农具影响
 	for _, tool := range f.tools {
-		if tool.IsActive() {
+		if tool.IsActive {
 			productivity *= tool.GetProductivityBonus()
 		}
 	}

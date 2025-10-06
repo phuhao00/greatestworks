@@ -47,19 +47,19 @@ type ConfigChangeHandler func(event ConfigChangeEvent)
 
 // HotReloader 配置热重载器
 type HotReloader struct {
-	configLoader *ConfigLoader
-	watcher      *fsnotify.Watcher
-	handlers     []ConfigChangeHandler
-	configPaths  []string
+	configLoader  *ConfigLoader
+	watcher       *fsnotify.Watcher
+	handlers      []ConfigChangeHandler
+	configPaths   []string
 	currentConfig *Config
-	mutex        sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
-	debounceTime time.Duration
-	lastReload   time.Time
-	reloadChan   chan string
-	errorChan    chan error
-	logger       Logger
+	mutex         sync.RWMutex
+	ctx           context.Context
+	cancel        context.CancelFunc
+	debounceTime  time.Duration
+	lastReload    time.Time
+	reloadChan    chan string
+	errorChan     chan error
+	logger        Logger
 }
 
 // Logger 日志接口
@@ -419,18 +419,6 @@ type ConfigWatcher struct {
 	reloader *HotReloader
 }
 
-// NewConfigWatcher 创建配置监听器
-func NewConfigWatcher(configLoader *ConfigLoader) (*ConfigWatcher, error) {
-	reloader, err := NewHotReloader(configLoader)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ConfigWatcher{
-		reloader: reloader,
-	}, nil
-}
-
 // Watch 监听配置文件
 func (cw *ConfigWatcher) Watch(configPath string, handler ConfigChangeHandler) error {
 	if err := cw.reloader.AddConfigPath(configPath); err != nil {
@@ -450,37 +438,4 @@ func (cw *ConfigWatcher) Stop() error {
 // GetConfig 获取当前配置
 func (cw *ConfigWatcher) GetConfig() *Config {
 	return cw.reloader.GetCurrentConfig()
-}
-
-// 便捷函数
-
-// WatchConfig 监听配置文件变化（便捷函数）
-func WatchConfig(configPath string, handler ConfigChangeHandler) (*ConfigWatcher, error) {
-	loader := NewConfigLoader(filepath.Dir(configPath))
-	watcher, err := NewConfigWatcher(loader)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := watcher.Watch(configPath, handler); err != nil {
-		return nil, err
-	}
-
-	return watcher, nil
-}
-
-// DefaultConfigChangeHandler 默认配置变更处理器
-func DefaultConfigChangeHandler(event ConfigChangeEvent) {
-	switch event.Type {
-	case ConfigModified:
-		log.Printf("Configuration modified: %s", event.FilePath)
-	case ConfigCreated:
-		log.Printf("Configuration created: %s", event.FilePath)
-	case ConfigDeleted:
-		log.Printf("Configuration deleted: %s", event.FilePath)
-	case ConfigRenamed:
-		log.Printf("Configuration renamed: %s", event.FilePath)
-	case ConfigError:
-		log.Printf("Configuration error: %v", event.Error)
-	}
 }

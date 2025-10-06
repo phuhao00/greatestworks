@@ -2,11 +2,11 @@ package connection
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"greatestworks/internal/infrastructure/logger"
-	"greatestworks/internal/interfaces/tcp/protocol"
 )
 
 // SessionState 会话状态
@@ -46,17 +46,17 @@ func (s SessionState) String() string {
 
 // Session 会话信息
 type Session struct {
-	ID            string
-	ConnectionID  string
-	PlayerID      string
-	State         SessionState
-	CreatedAt     time.Time
-	LastActivity  time.Time
-	AuthTime      time.Time
-	IdleTimeout   time.Duration
-	SessionData   map[string]interface{}
-	mutex         sync.RWMutex
-	logger        logger.Logger
+	ID           string
+	ConnectionID string
+	PlayerID     string
+	State        SessionState
+	CreatedAt    time.Time
+	LastActivity time.Time
+	AuthTime     time.Time
+	IdleTimeout  time.Duration
+	SessionData  map[string]interface{}
+	mutex        sync.RWMutex
+	logger       logger.Logger
 }
 
 // NewSession 创建新会话
@@ -98,7 +98,7 @@ func (s *Session) SetState(state SessionState) {
 		s.AuthTime = time.Now()
 	}
 
-	s.logger.Debug("Session state changed", 
+	s.logger.Debug("Session state changed",
 		"session_id", s.ID,
 		"old_state", oldState.String(),
 		"new_state", state.String())
@@ -188,29 +188,29 @@ func (s *Session) GetSessionInfo() map[string]interface{} {
 	defer s.mutex.RUnlock()
 
 	return map[string]interface{}{
-		"id":             s.ID,
-		"connection_id":  s.ConnectionID,
-		"player_id":      s.PlayerID,
-		"state":          s.State.String(),
-		"created_at":     s.CreatedAt.Unix(),
-		"last_activity":  s.LastActivity.Unix(),
-		"auth_time":      s.AuthTime.Unix(),
-		"idle_duration":  s.GetIdleDuration().Seconds(),
+		"id":               s.ID,
+		"connection_id":    s.ConnectionID,
+		"player_id":        s.PlayerID,
+		"state":            s.State.String(),
+		"created_at":       s.CreatedAt.Unix(),
+		"last_activity":    s.LastActivity.Unix(),
+		"auth_time":        s.AuthTime.Unix(),
+		"idle_duration":    s.GetIdleDuration().Seconds(),
 		"is_authenticated": s.IsAuthenticated(),
-		"is_active":      s.IsActive(),
-		"is_idle":        s.IsIdle(),
+		"is_active":        s.IsActive(),
+		"is_idle":          s.IsIdle(),
 	}
 }
 
 // SessionManager 会话管理器
 type SessionManager struct {
-	sessions      map[string]*Session
+	sessions       map[string]*Session
 	playerSessions map[string]*Session // 玩家ID到会话的映射
-	mutex         sync.RWMutex
-	logger        logger.Logger
-	cleanupTicker *time.Ticker
-	ctx           context.Context
-	cancel        context.CancelFunc
+	mutex          sync.RWMutex
+	logger         logger.Logger
+	cleanupTicker  *time.Ticker
+	ctx            context.Context
+	cancel         context.CancelFunc
 }
 
 // NewSessionManager 创建会话管理器
@@ -281,7 +281,7 @@ func (sm *SessionManager) BindPlayerToSession(sessionID, playerID string) error 
 		// 断开旧会话
 		existingSession.SetState(SessionStateDisconnecting)
 		delete(sm.playerSessions, playerID)
-		sm.logger.Warn("Player switched sessions", 
+		sm.logger.Warn("Player switched sessions",
 			"player_id", playerID,
 			"old_session", existingSession.ID,
 			"new_session", sessionID)
@@ -315,13 +315,13 @@ func (sm *SessionManager) RemoveSession(sessionID string) {
 		if session.PlayerID != "" {
 			delete(sm.playerSessions, session.PlayerID)
 		}
-		
+
 		// 设置会话状态为已断开
 		session.SetState(SessionStateDisconnected)
-		
+
 		// 移除会话
 		delete(sm.sessions, sessionID)
-		
+
 		sm.logger.Info("Session removed", "session_id", sessionID, "player_id", session.PlayerID)
 	}
 }
@@ -406,11 +406,11 @@ func (sm *SessionManager) cleanupIdleSessions() {
 			if session.PlayerID != "" {
 				delete(sm.playerSessions, session.PlayerID)
 			}
-			
+
 			// 移除会话
 			delete(sm.sessions, sessionID)
-			
-			sm.logger.Info("Idle session cleaned up", 
+
+			sm.logger.Info("Idle session cleaned up",
 				"session_id", sessionID,
 				"player_id", session.PlayerID,
 				"idle_duration", session.GetIdleDuration().String())
@@ -452,10 +452,10 @@ func (sm *SessionManager) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_sessions":        totalSessions,
-		"active_sessions":       activeSessions,
-		"idle_sessions":         idleSessions,
+		"total_sessions":         totalSessions,
+		"active_sessions":        activeSessions,
+		"idle_sessions":          idleSessions,
 		"authenticated_sessions": authenticatedSessions,
-		"bound_players":         len(sm.playerSessions),
+		"bound_players":          len(sm.playerSessions),
 	}
 }

@@ -19,30 +19,30 @@ import (
 
 // ConfigLoader 配置加载器
 type ConfigLoader struct {
-	logger    logger.Logger
-	mu        sync.RWMutex
-	configs   map[string]interface{}
-	watchers  map[string]*FileWatcher
+	logger     logger.Logger
+	mu         sync.RWMutex
+	configs    map[string]interface{}
+	watchers   map[string]*FileWatcher
 	validators map[string]Validator
-	env       string
-	basePath  string
+	env        string
+	basePath   string
 }
 
 // LoaderConfig 加载器配置
 type LoaderConfig struct {
-	Environment   string   `json:"environment" yaml:"environment"`
-	BasePath      string   `json:"base_path" yaml:"base_path"`
-	ConfigFiles   []string `json:"config_files" yaml:"config_files"`
-	WatchFiles    bool     `json:"watch_files" yaml:"watch_files"`
-	EnvPrefix     string   `json:"env_prefix" yaml:"env_prefix"`
-	ValidateOnLoad bool    `json:"validate_on_load" yaml:"validate_on_load"`
+	Environment    string   `json:"environment" yaml:"environment"`
+	BasePath       string   `json:"base_path" yaml:"base_path"`
+	ConfigFiles    []string `json:"config_files" yaml:"config_files"`
+	WatchFiles     bool     `json:"watch_files" yaml:"watch_files"`
+	EnvPrefix      string   `json:"env_prefix" yaml:"env_prefix"`
+	ValidateOnLoad bool     `json:"validate_on_load" yaml:"validate_on_load"`
 }
 
 // Validator 配置验证器接口
 type Validator interface {
 	// Validate 验证配置
 	Validate(config interface{}) error
-	
+
 	// GetConfigName 获取配置名称
 	GetConfigName() string
 }
@@ -51,37 +51,37 @@ type Validator interface {
 type Loader interface {
 	// LoadConfig 加载配置
 	LoadConfig(name string, config interface{}) error
-	
+
 	// LoadConfigFromFile 从文件加载配置
 	LoadConfigFromFile(filePath string, config interface{}) error
-	
+
 	// LoadConfigFromEnv 从环境变量加载配置
 	LoadConfigFromEnv(prefix string, config interface{}) error
-	
+
 	// SaveConfig 保存配置
 	SaveConfig(name string, config interface{}) error
-	
+
 	// GetConfig 获取配置
 	GetConfig(name string) (interface{}, error)
-	
+
 	// SetConfig 设置配置
 	SetConfig(name string, config interface{}) error
-	
+
 	// RegisterValidator 注册验证器
 	RegisterValidator(validator Validator) error
-	
+
 	// WatchConfig 监听配置变化
 	WatchConfig(name string, callback func(interface{})) error
-	
+
 	// GetEnvironment 获取环境
 	GetEnvironment() string
-	
+
 	// SetEnvironment 设置环境
 	SetEnvironment(env string)
-	
+
 	// Reload 重新加载所有配置
 	Reload() error
-	
+
 	// Close 关闭加载器
 	Close() error
 }
@@ -98,7 +98,7 @@ func NewConfigLoader(config *LoaderConfig, logger logger.Logger) Loader {
 			ValidateOnLoad: true,
 		}
 	}
-	
+
 	loader := &ConfigLoader{
 		logger:     logger,
 		configs:    make(map[string]interface{}),
@@ -107,12 +107,12 @@ func NewConfigLoader(config *LoaderConfig, logger logger.Logger) Loader {
 		env:        config.Environment,
 		basePath:   config.BasePath,
 	}
-	
+
 	// 创建配置目录
 	if err := os.MkdirAll(config.BasePath, 0755); err != nil {
 		logger.Error("Failed to create config directory", "error", err, "path", config.BasePath)
 	}
-	
+
 	// 加载默认配置文件
 	for _, configFile := range config.ConfigFiles {
 		filePath := filepath.Join(config.BasePath, configFile)
@@ -123,7 +123,7 @@ func NewConfigLoader(config *LoaderConfig, logger logger.Logger) Loader {
 				logger.Error("Failed to load config file", "error", err, "file", configFile)
 			} else {
 				loader.SetConfig(name, configData)
-				
+
 				// 启动文件监听
 				if config.WatchFiles {
 					loader.WatchConfig(name, func(newConfig interface{}) {
@@ -133,7 +133,7 @@ func NewConfigLoader(config *LoaderConfig, logger logger.Logger) Loader {
 			}
 		}
 	}
-	
+
 	logger.Info("Config loader initialized successfully", "environment", config.Environment, "base_path", config.BasePath)
 	return loader
 }
@@ -151,13 +151,13 @@ func (l *ConfigLoader) LoadConfig(name string, config interface{}) error {
 		// 文件不存在，使用默认配置
 		l.logger.Debug("Config file not found, using defaults", "name", name, "file", filePath)
 	}
-	
+
 	// 从环境变量覆盖配置
 	if err := l.LoadConfigFromEnv(strings.ToUpper(name), config); err != nil {
 		l.logger.Error("Failed to load config from environment", "error", err, "name", name)
 		return err
 	}
-	
+
 	// 验证配置
 	if validator, exists := l.validators[name]; exists {
 		if err := validator.Validate(config); err != nil {
@@ -165,10 +165,10 @@ func (l *ConfigLoader) LoadConfig(name string, config interface{}) error {
 			return fmt.Errorf("config validation failed for %s: %w", name, err)
 		}
 	}
-	
+
 	// 存储配置
 	l.SetConfig(name, config)
-	
+
 	l.logger.Info("Config loaded successfully", "name", name)
 	return nil
 }
@@ -179,7 +179,7 @@ func (l *ConfigLoader) LoadConfigFromFile(filePath string, config interface{}) e
 	if err != nil {
 		return fmt.Errorf("failed to read config file %s: %w", filePath, err)
 	}
-	
+
 	ext := strings.ToLower(filepath.Ext(filePath))
 	switch ext {
 	case ".json":
@@ -189,11 +189,11 @@ func (l *ConfigLoader) LoadConfigFromFile(filePath string, config interface{}) e
 	default:
 		return fmt.Errorf("unsupported config file format: %s", ext)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal config file %s: %w", filePath, err)
 	}
-	
+
 	l.logger.Debug("Config loaded from file", "file", filePath)
 	return nil
 }
@@ -204,53 +204,53 @@ func (l *ConfigLoader) LoadConfigFromEnv(prefix string, config interface{}) erro
 	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("config must be a pointer to struct")
 	}
-	
+
 	v = v.Elem()
 	t := v.Type()
-	
+
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		fieldType := t.Field(i)
-		
+
 		// 跳过非导出字段
 		if !field.CanSet() {
 			continue
 		}
-		
+
 		// 获取环境变量名
 		envName := l.getEnvName(prefix, fieldType)
 		envValue := os.Getenv(envName)
-		
+
 		if envValue == "" {
 			continue
 		}
-		
+
 		// 设置字段值
 		if err := l.setFieldValue(field, envValue); err != nil {
 			l.logger.Error("Failed to set field value from env", "error", err, "field", fieldType.Name, "env", envName)
 			continue
 		}
-		
+
 		l.logger.Debug("Field set from environment", "field", fieldType.Name, "env", envName)
 	}
-	
+
 	return nil
 }
 
 // SaveConfig 保存配置
 func (l *ConfigLoader) SaveConfig(name string, config interface{}) error {
 	filePath := l.getConfigFilePath(name)
-	
+
 	// 创建目录
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	// 序列化配置
 	var data []byte
 	var err error
-	
+
 	ext := strings.ToLower(filepath.Ext(filePath))
 	switch ext {
 	case ".json":
@@ -262,16 +262,16 @@ func (l *ConfigLoader) SaveConfig(name string, config interface{}) error {
 		filePath = strings.TrimSuffix(filePath, filepath.Ext(filePath)) + ".yaml"
 		data, err = yaml.Marshal(config)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	// 写入文件
 	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	l.logger.Info("Config saved successfully", "name", name, "file", filePath)
 	return nil
 }
@@ -280,12 +280,12 @@ func (l *ConfigLoader) SaveConfig(name string, config interface{}) error {
 func (l *ConfigLoader) GetConfig(name string) (interface{}, error) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	
+
 	config, exists := l.configs[name]
 	if !exists {
 		return nil, fmt.Errorf("config %s not found", name)
 	}
-	
+
 	return config, nil
 }
 
@@ -293,9 +293,9 @@ func (l *ConfigLoader) GetConfig(name string) (interface{}, error) {
 func (l *ConfigLoader) SetConfig(name string, config interface{}) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	l.configs[name] = config
-	
+
 	l.logger.Debug("Config set successfully", "name", name)
 	return nil
 }
@@ -303,12 +303,12 @@ func (l *ConfigLoader) SetConfig(name string, config interface{}) error {
 // RegisterValidator 注册验证器
 func (l *ConfigLoader) RegisterValidator(validator Validator) error {
 	name := validator.GetConfigName()
-	
+
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	l.validators[name] = validator
-	
+
 	l.logger.Info("Validator registered successfully", "config_name", name)
 	return nil
 }
@@ -316,45 +316,45 @@ func (l *ConfigLoader) RegisterValidator(validator Validator) error {
 // WatchConfig 监听配置变化
 func (l *ConfigLoader) WatchConfig(name string, callback func(interface{})) error {
 	filePath := l.getConfigFilePath(name)
-	
+
 	// 检查文件是否存在
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return fmt.Errorf("config file %s does not exist", filePath)
 	}
-	
+
 	// 创建文件监听器
 	watcher, err := NewFileWatcher(filePath, func(path string) {
 		l.logger.Info("Config file changed, reloading", "name", name, "file", path)
-		
+
 		// 重新加载配置
 		var newConfig interface{}
 		if err := l.LoadConfigFromFile(filePath, &newConfig); err != nil {
 			l.logger.Error("Failed to reload config", "error", err, "name", name)
 			return
 		}
-		
+
 		// 更新配置
 		l.SetConfig(name, newConfig)
-		
+
 		// 调用回调
 		if callback != nil {
 			callback(newConfig)
 		}
 	}, l.logger)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to create file watcher: %w", err)
 	}
-	
+
 	// 启动监听
 	if err := watcher.Start(); err != nil {
 		return fmt.Errorf("failed to start file watcher: %w", err)
 	}
-	
+
 	l.mu.Lock()
 	l.watchers[name] = watcher
 	l.mu.Unlock()
-	
+
 	l.logger.Info("Config watcher started", "name", name, "file", filePath)
 	return nil
 }
@@ -378,7 +378,7 @@ func (l *ConfigLoader) Reload() error {
 		configNames = append(configNames, name)
 	}
 	l.mu.RUnlock()
-	
+
 	for _, name := range configNames {
 		var config interface{}
 		if err := l.LoadConfig(name, &config); err != nil {
@@ -386,7 +386,7 @@ func (l *ConfigLoader) Reload() error {
 			continue
 		}
 	}
-	
+
 	l.logger.Info("All configs reloaded successfully")
 	return nil
 }
@@ -395,19 +395,19 @@ func (l *ConfigLoader) Reload() error {
 func (l *ConfigLoader) Close() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	
+
 	// 停止所有文件监听器
 	for name, watcher := range l.watchers {
 		if err := watcher.Stop(); err != nil {
 			l.logger.Error("Failed to stop file watcher", "error", err, "name", name)
 		}
 	}
-	
+
 	// 清空数据
 	l.configs = make(map[string]interface{})
 	l.watchers = make(map[string]*FileWatcher)
 	l.validators = make(map[string]Validator)
-	
+
 	l.logger.Info("Config loader closed successfully")
 	return nil
 }
@@ -418,14 +418,14 @@ func (l *ConfigLoader) Close() error {
 func (l *ConfigLoader) getConfigFilePath(name string) string {
 	// 尝试不同的文件扩展名
 	extensions := []string{".yaml", ".yml", ".json"}
-	
+
 	for _, ext := range extensions {
 		filePath := filepath.Join(l.basePath, l.env, name+ext)
 		if _, err := os.Stat(filePath); err == nil {
 			return filePath
 		}
 	}
-	
+
 	// 如果环境特定的文件不存在，尝试通用文件
 	for _, ext := range extensions {
 		filePath := filepath.Join(l.basePath, name+ext)
@@ -433,7 +433,7 @@ func (l *ConfigLoader) getConfigFilePath(name string) string {
 			return filePath
 		}
 	}
-	
+
 	// 默认返回YAML格式的环境特定文件路径
 	return filepath.Join(l.basePath, l.env, name+".yaml")
 }
@@ -444,18 +444,18 @@ func (l *ConfigLoader) getEnvName(prefix string, field reflect.StructField) stri
 	if envTag := field.Tag.Get("env"); envTag != "" {
 		return envTag
 	}
-	
+
 	// 使用字段名生成环境变量名
 	fieldName := field.Name
-	
+
 	// 转换为大写并添加下划线
 	envName := strings.ToUpper(prefix + "_" + fieldName)
-	
+
 	// 处理驼峰命名
 	envName = strings.ReplaceAll(envName, "ID", "_ID")
 	envName = strings.ReplaceAll(envName, "URL", "_URL")
 	envName = strings.ReplaceAll(envName, "API", "_API")
-	
+
 	return envName
 }
 
@@ -511,7 +511,7 @@ func (l *ConfigLoader) setFieldValue(field reflect.Value, value string) error {
 	default:
 		return fmt.Errorf("unsupported field type: %s", field.Kind())
 	}
-	
+
 	return nil
 }
 
@@ -525,38 +525,12 @@ func getEnvOrDefault(key, defaultValue string) string {
 
 // 配置结构体示例
 type AppConfig struct {
-	Name        string        `json:"name" yaml:"name" env:"APP_NAME"`
-	Version     string        `json:"version" yaml:"version" env:"APP_VERSION"`
-	Port        int           `json:"port" yaml:"port" env:"APP_PORT"`
-	Host        string        `json:"host" yaml:"host" env:"APP_HOST"`
-	Debug       bool          `json:"debug" yaml:"debug" env:"APP_DEBUG"`
-	Timeout     time.Duration `json:"timeout" yaml:"timeout" env:"APP_TIMEOUT"`
-	Features    []string      `json:"features" yaml:"features" env:"APP_FEATURES"`
-	MaxWorkers  int           `json:"max_workers" yaml:"max_workers" env:"APP_MAX_WORKERS"`
-}
-
-// DatabaseConfig 数据库配置
-type DatabaseConfig struct {
-	Host         string        `json:"host" yaml:"host" env:"DB_HOST"`
-	Port         int           `json:"port" yaml:"port" env:"DB_PORT"`
-	Username     string        `json:"username" yaml:"username" env:"DB_USERNAME"`
-	Password     string        `json:"password" yaml:"password" env:"DB_PASSWORD"`
-	Database     string        `json:"database" yaml:"database" env:"DB_DATABASE"`
-	SSLMode      string        `json:"ssl_mode" yaml:"ssl_mode" env:"DB_SSL_MODE"`
-	MaxOpenConns int           `json:"max_open_conns" yaml:"max_open_conns" env:"DB_MAX_OPEN_CONNS"`
-	MaxIdleConns int           `json:"max_idle_conns" yaml:"max_idle_conns" env:"DB_MAX_IDLE_CONNS"`
-	ConnMaxLifetime time.Duration `json:"conn_max_lifetime" yaml:"conn_max_lifetime" env:"DB_CONN_MAX_LIFETIME"`
-}
-
-// RedisConfig Redis配置
-type RedisConfig struct {
-	Host         string        `json:"host" yaml:"host" env:"REDIS_HOST"`
-	Port         int           `json:"port" yaml:"port" env:"REDIS_PORT"`
-	Password     string        `json:"password" yaml:"password" env:"REDIS_PASSWORD"`
-	Database     int           `json:"database" yaml:"database" env:"REDIS_DATABASE"`
-	PoolSize     int           `json:"pool_size" yaml:"pool_size" env:"REDIS_POOL_SIZE"`
-	MinIdleConns int           `json:"min_idle_conns" yaml:"min_idle_conns" env:"REDIS_MIN_IDLE_CONNS"`
-	DialTimeout  time.Duration `json:"dial_timeout" yaml:"dial_timeout" env:"REDIS_DIAL_TIMEOUT"`
-	ReadTimeout  time.Duration `json:"read_timeout" yaml:"read_timeout" env:"REDIS_READ_TIMEOUT"`
-	WriteTimeout time.Duration `json:"write_timeout" yaml:"write_timeout" env:"REDIS_WRITE_TIMEOUT"`
+	Name       string        `json:"name" yaml:"name" env:"APP_NAME"`
+	Version    string        `json:"version" yaml:"version" env:"APP_VERSION"`
+	Port       int           `json:"port" yaml:"port" env:"APP_PORT"`
+	Host       string        `json:"host" yaml:"host" env:"APP_HOST"`
+	Debug      bool          `json:"debug" yaml:"debug" env:"APP_DEBUG"`
+	Timeout    time.Duration `json:"timeout" yaml:"timeout" env:"APP_TIMEOUT"`
+	Features   []string      `json:"features" yaml:"features" env:"APP_FEATURES"`
+	MaxWorkers int           `json:"max_workers" yaml:"max_workers" env:"APP_MAX_WORKERS"`
 }
