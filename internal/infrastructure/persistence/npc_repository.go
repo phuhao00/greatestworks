@@ -42,7 +42,7 @@ type NPCDocument struct {
 	Type        string             `bson:"type"`
 	Status      string             `bson:"status"`
 	Location    LocationDoc        `bson:"location"`
-	Attributes  AttributesDoc      `bson:"attributes"`
+	Attributes  NPCAttributesDoc   `bson:"attributes"`
 	Behavior    BehaviorDoc        `bson:"behavior"`
 	Dialogues   []string           `bson:"dialogues"`
 	Quests      []string           `bson:"quests"`
@@ -61,8 +61,8 @@ type LocationDoc struct {
 	Zone   string  `bson:"zone"`
 }
 
-// AttributesDoc 属性文档
-type AttributesDoc struct {
+// NPCAttributesDoc NPC属性文档
+type NPCAttributesDoc struct {
 	Level        int     `bson:"level"`
 	Health       int64   `bson:"health"`
 	MaxHealth    int64   `bson:"max_health"`

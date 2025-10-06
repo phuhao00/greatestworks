@@ -4,9 +4,18 @@ package inventory
 import (
 	"errors"
 	"fmt"
-	"time"
-	"github.com/google/uuid"
 	"greatestworks/internal/domain/player"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+// 错误定义
+var (
+	ErrInsufficientItems = errors.New("insufficient items")
+	ErrInvalidSlot       = errors.New("invalid slot")
+	ErrSlotEmpty         = errors.New("slot is empty")
+	ErrSlotLocked        = errors.New("slot is locked")
 )
 
 // InventoryID 背包ID值对象
@@ -146,13 +155,13 @@ func (s *InventorySlot) CanStack(itemID ItemID, item *Item) bool {
 
 // Inventory 背包聚合根
 type Inventory struct {
-	id       InventoryID
-	playerID player.PlayerID
-	slots    []*InventorySlot
-	capacity int
+	id        InventoryID
+	playerID  player.PlayerID
+	slots     []*InventorySlot
+	capacity  int
 	createdAt time.Time
 	updatedAt time.Time
-	version  int64
+	version   int64
 }
 
 // NewInventory 创建新背包
@@ -166,15 +175,15 @@ func NewInventory(playerID player.PlayerID, capacity int) *Inventory {
 			Locked:    false,
 		}
 	}
-	
+
 	return &Inventory{
-		id:       NewInventoryID(),
-		playerID: playerID,
-		slots:    slots,
-		capacity: capacity,
+		id:        NewInventoryID(),
+		playerID:  playerID,
+		slots:     slots,
+		capacity:  capacity,
 		createdAt: now,
 		updatedAt: now,
-		version:  1,
+		version:   1,
 	}
 }
 
@@ -185,7 +194,7 @@ func (inv *Inventory) ID() InventoryID {
 
 // PlayerID 获取玩家ID
 func (inv *Inventory) PlayerID() string {
-	return inv.playerID
+	return inv.playerID.String()
 }
 
 // Capacity 获取背包容量
@@ -219,9 +228,9 @@ func (inv *Inventory) AddItem(item *Item, quantity int) error {
 	if quantity <= 0 {
 		return ErrInvalidQuantity
 	}
-	
+
 	remainingQuantity := quantity
-	
+
 	// 首先尝试堆叠到现有槽位
 	for _, slot := range inv.slots {
 		if slot.CanStack(item.ID(), item) && !slot.Locked {
@@ -246,17 +255,17 @@ func (inv *Inventory) AddItem(item *Item, quantity int) error {
 					remainingQuantity -= addQuantity
 				}
 			}
-			
+
 			if remainingQuantity <= 0 {
 				break
 			}
 		}
 	}
-	
+
 	if remainingQuantity > 0 {
 		return ErrInventoryFull
 	}
-	
+
 	inv.updatedAt = time.Now()
 	inv.version++
 	return nil
@@ -267,15 +276,15 @@ func (inv *Inventory) RemoveItem(itemID ItemID, quantity int) error {
 	if quantity <= 0 {
 		return ErrInvalidQuantity
 	}
-	
+
 	// 检查是否有足够的物品
 	totalQuantity := inv.GetItemQuantity(itemID)
 	if totalQuantity < quantity {
 		return ErrInsufficientItems
 	}
-	
+
 	remainingToRemove := quantity
-	
+
 	// 从槽位中移除物品
 	for _, slot := range inv.slots {
 		if !slot.IsEmpty() && slot.ItemID != nil && *slot.ItemID == itemID && !slot.Locked {
@@ -289,13 +298,13 @@ func (inv *Inventory) RemoveItem(itemID ItemID, quantity int) error {
 				slot.Quantity -= remainingToRemove
 				remainingToRemove = 0
 			}
-			
+
 			if remainingToRemove <= 0 {
 				break
 			}
 		}
 	}
-	
+
 	inv.updatedAt = time.Now()
 	inv.version++
 	return nil
@@ -338,26 +347,26 @@ func (inv *Inventory) MoveItem(fromSlot, toSlot int) error {
 	if fromSlot < 0 || fromSlot >= inv.capacity || toSlot < 0 || toSlot >= inv.capacity {
 		return ErrInvalidSlot
 	}
-	
+
 	if fromSlot == toSlot {
 		return nil
 	}
-	
+
 	from := inv.slots[fromSlot]
 	to := inv.slots[toSlot]
-	
+
 	if from.IsEmpty() {
 		return ErrSlotEmpty
 	}
-	
+
 	if from.Locked || to.Locked {
 		return ErrSlotLocked
 	}
-	
+
 	// 交换槽位内容
 	from.ItemID, to.ItemID = to.ItemID, from.ItemID
 	from.Quantity, to.Quantity = to.Quantity, from.Quantity
-	
+
 	inv.updatedAt = time.Now()
 	inv.version++
 	return nil
@@ -368,7 +377,7 @@ func (inv *Inventory) LockSlot(slotIndex int) error {
 	if slotIndex < 0 || slotIndex >= inv.capacity {
 		return ErrInvalidSlot
 	}
-	
+
 	inv.slots[slotIndex].Locked = true
 	inv.updatedAt = time.Now()
 	inv.version++
@@ -380,7 +389,7 @@ func (inv *Inventory) UnlockSlot(slotIndex int) error {
 	if slotIndex < 0 || slotIndex >= inv.capacity {
 		return ErrInvalidSlot
 	}
-	
+
 	inv.slots[slotIndex].Locked = false
 	inv.updatedAt = time.Now()
 	inv.version++

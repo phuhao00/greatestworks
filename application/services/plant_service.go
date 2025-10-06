@@ -4,39 +4,39 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"greatestworks/internal/domain/scene/plant"
 )
 
 // PlantService 种植应用服务
 type PlantService struct {
-	farmRepo       plant.FarmRepository
-	cropRepo       plant.CropRepository
-	seedRepo       plant.SeedRepository
-	harvestRepo    plant.HarvestRepository
-	statisticsRepo plant.StatisticsRepository
-	cacheRepo      plant.CacheRepository
-	plantService   *plant.PlantService
+	farmRepo plant.FarmRepository
+	cropRepo plant.CropRepository
+	// seedRepo       plant.SeedRepository // TODO: Define SeedRepository
+	harvestRepo plant.HarvestRepository
+	// statisticsRepo plant.StatisticsRepository // TODO: Define StatisticsRepository
+	cacheRepo    plant.PlantCacheRepository
+	plantService *plant.PlantService
 }
 
 // NewPlantService 创建种植应用服务
 func NewPlantService(
 	farmRepo plant.FarmRepository,
 	cropRepo plant.CropRepository,
-	seedRepo plant.SeedRepository,
+	// seedRepo plant.SeedRepository,
 	harvestRepo plant.HarvestRepository,
-	statisticsRepo plant.StatisticsRepository,
-	cacheRepo plant.CacheRepository,
+	// statisticsRepo plant.StatisticsRepository,
+	cacheRepo plant.PlantCacheRepository,
 	plantService *plant.PlantService,
 ) *PlantService {
 	return &PlantService{
-		farmRepo:       farmRepo,
-		cropRepo:       cropRepo,
-		seedRepo:       seedRepo,
-		harvestRepo:    harvestRepo,
-		statisticsRepo: statisticsRepo,
-		cacheRepo:      cacheRepo,
-		plantService:   plantService,
+		farmRepo: farmRepo,
+		cropRepo: cropRepo,
+		// seedRepo:       seedRepo,
+		harvestRepo: harvestRepo,
+		// statisticsRepo: statisticsRepo,
+		cacheRepo:    cacheRepo,
+		plantService: plantService,
 	}
 }
 
@@ -47,19 +47,19 @@ func (s *PlantService) GetFarmInfo(ctx context.Context, playerID string) (*FarmD
 	if err == nil && cachedFarm != nil {
 		return s.buildFarmDTO(cachedFarm), nil
 	}
-	
+
 	// 从数据库获取
 	farm, err := s.farmRepo.FindByPlayer(playerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get farm info: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetFarm(playerID, farm, time.Hour); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildFarmDTO(farm), nil
 }
 
@@ -70,41 +70,41 @@ func (s *PlantService) PlantSeed(ctx context.Context, playerID string, plotID st
 	if err != nil {
 		return fmt.Errorf("failed to get farm info: %w", err)
 	}
-	
+
 	// 获取种子信息
 	seed, err := s.seedRepo.FindByID(seedID)
 	if err != nil {
 		return fmt.Errorf("failed to get seed info: %w", err)
 	}
-	
+
 	// 种植种子
 	crop, err := s.plantService.PlantSeed(farm, plotID, seed)
 	if err != nil {
 		return fmt.Errorf("failed to plant seed: %w", err)
 	}
-	
+
 	// 保存作物
 	if err := s.cropRepo.Save(crop); err != nil {
 		return fmt.Errorf("failed to save crop: %w", err)
 	}
-	
+
 	// 更新农场
 	if err := s.farmRepo.Update(farm); err != nil {
 		return fmt.Errorf("failed to update farm: %w", err)
 	}
-	
+
 	// 更新统计数据
 	if err := s.updatePlantingStatistics(ctx, playerID, seedID); err != nil {
 		// 统计更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	// 清除缓存
 	if err := s.cacheRepo.DeleteFarm(playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -115,27 +115,27 @@ func (s *PlantService) WaterCrop(ctx context.Context, playerID string, cropID st
 	if err != nil {
 		return fmt.Errorf("failed to get crop info: %w", err)
 	}
-	
+
 	if crop.GetPlayerID() != playerID {
 		return plant.ErrUnauthorized
 	}
-	
+
 	// 浇水
 	if err := crop.Water(); err != nil {
 		return fmt.Errorf("failed to water crop: %w", err)
 	}
-	
+
 	// 更新作物
 	if err := s.cropRepo.Update(crop); err != nil {
 		return fmt.Errorf("failed to update crop: %w", err)
 	}
-	
+
 	// 清除相关缓存
 	if err := s.cacheRepo.DeleteFarm(playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -146,27 +146,27 @@ func (s *PlantService) FertilizeCrop(ctx context.Context, playerID string, cropI
 	if err != nil {
 		return fmt.Errorf("failed to get crop info: %w", err)
 	}
-	
+
 	if crop.GetPlayerID() != playerID {
 		return plant.ErrUnauthorized
 	}
-	
+
 	// 施肥
 	if err := crop.Fertilize(fertilizerType); err != nil {
 		return fmt.Errorf("failed to fertilize crop: %w", err)
 	}
-	
+
 	// 更新作物
 	if err := s.cropRepo.Update(crop); err != nil {
 		return fmt.Errorf("failed to update crop: %w", err)
 	}
-	
+
 	// 清除相关缓存
 	if err := s.cacheRepo.DeleteFarm(playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -177,39 +177,39 @@ func (s *PlantService) HarvestCrop(ctx context.Context, playerID string, cropID 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get crop info: %w", err)
 	}
-	
+
 	if crop.GetPlayerID() != playerID {
 		return nil, plant.ErrUnauthorized
 	}
-	
+
 	// 收获作物
 	harvestResult, err := s.plantService.HarvestCrop(crop)
 	if err != nil {
 		return nil, fmt.Errorf("failed to harvest crop: %w", err)
 	}
-	
+
 	// 保存收获记录
 	if err := s.harvestRepo.Save(harvestResult); err != nil {
 		return nil, fmt.Errorf("failed to save harvest record: %w", err)
 	}
-	
+
 	// 删除作物（已收获）
 	if err := s.cropRepo.Delete(cropID); err != nil {
 		return nil, fmt.Errorf("failed to delete harvested crop: %w", err)
 	}
-	
+
 	// 更新统计数据
 	if err := s.updateHarvestStatistics(ctx, playerID, harvestResult); err != nil {
 		// 统计更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	// 清除相关缓存
 	if err := s.cacheRepo.DeleteFarm(playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildHarvestResultDTO(harvestResult), nil
 }
 
@@ -220,11 +220,11 @@ func (s *PlantService) GetCropInfo(ctx context.Context, playerID string, cropID 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get crop info: %w", err)
 	}
-	
+
 	if crop.GetPlayerID() != playerID {
 		return nil, plant.ErrUnauthorized
 	}
-	
+
 	return s.buildCropDTO(crop), nil
 }
 
@@ -235,7 +235,7 @@ func (s *PlantService) GetPlayerCrops(ctx context.Context, playerID string) ([]*
 	if err != nil {
 		return nil, fmt.Errorf("failed to get player crops: %w", err)
 	}
-	
+
 	return s.buildCropDTOs(crops), nil
 }
 
@@ -246,19 +246,19 @@ func (s *PlantService) GetAvailableSeeds(ctx context.Context, playerID string) (
 	if err == nil && len(cachedSeeds) > 0 {
 		return s.buildSeedDTOs(cachedSeeds), nil
 	}
-	
+
 	// 从数据库获取
 	seeds, err := s.seedRepo.FindAvailableForPlayer(playerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get available seeds: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetAvailableSeeds(playerID, seeds, time.Hour*2); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildSeedDTOs(seeds), nil
 }
 
@@ -268,7 +268,7 @@ func (s *PlantService) GetHarvestHistory(ctx context.Context, playerID string, l
 	if err != nil {
 		return nil, fmt.Errorf("failed to get harvest history: %w", err)
 	}
-	
+
 	return s.buildHarvestHistoryDTOs(history), nil
 }
 
@@ -278,7 +278,7 @@ func (s *PlantService) GetPlantingStatistics(ctx context.Context, playerID strin
 	if err != nil {
 		return nil, fmt.Errorf("failed to get planting statistics: %w", err)
 	}
-	
+
 	return s.buildStatisticsDTO(stats), nil
 }
 
@@ -289,7 +289,7 @@ func (s *PlantService) UpdateCropGrowth(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get growing crops: %w", err)
 	}
-	
+
 	for _, crop := range crops {
 		// 更新作物成长
 		if err := s.plantService.UpdateCropGrowth(crop); err != nil {
@@ -297,14 +297,14 @@ func (s *PlantService) UpdateCropGrowth(ctx context.Context) error {
 			// TODO: 添加日志记录
 			continue
 		}
-		
+
 		// 保存更新后的作物
 		if err := s.cropRepo.Update(crop); err != nil {
 			// TODO: 添加日志记录
 			continue
 		}
 	}
-	
+
 	return nil
 }
 
@@ -315,23 +315,23 @@ func (s *PlantService) UpgradeFarmPlot(ctx context.Context, playerID string, plo
 	if err != nil {
 		return fmt.Errorf("failed to get farm info: %w", err)
 	}
-	
+
 	// 升级地块
 	if err := farm.UpgradePlot(plotID); err != nil {
 		return fmt.Errorf("failed to upgrade plot: %w", err)
 	}
-	
+
 	// 更新农场
 	if err := s.farmRepo.Update(farm); err != nil {
 		return fmt.Errorf("failed to update farm: %w", err)
 	}
-	
+
 	// 清除缓存
 	if err := s.cacheRepo.DeleteFarm(playerID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -343,15 +343,15 @@ func (s *PlantService) updatePlantingStatistics(ctx context.Context, playerID st
 	if err != nil && !plant.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = plant.NewPlantingStatistics(playerID)
 	}
-	
+
 	// 更新统计数据
 	stats.AddPlantedSeed(seedID)
 	stats.UpdateLastPlantTime(time.Now())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.Save(stats)
 }
@@ -362,15 +362,15 @@ func (s *PlantService) updateHarvestStatistics(ctx context.Context, playerID str
 	if err != nil && !plant.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = plant.NewPlantingStatistics(playerID)
 	}
-	
+
 	// 更新统计数据
 	stats.AddHarvestResult(harvestResult.GetCropType(), harvestResult.GetQuantity(), harvestResult.GetQuality())
 	stats.UpdateLastHarvestTime(harvestResult.GetHarvestTime())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.Save(stats)
 }
@@ -380,47 +380,47 @@ func (s *PlantService) buildFarmDTO(farm *plant.FarmAggregate) *FarmDTO {
 	plots := make([]*PlotDTO, 0)
 	for _, plot := range farm.GetPlots() {
 		plots = append(plots, &PlotDTO{
-			ID:       plot.GetID(),
-			Level:    plot.GetLevel(),
-			SoilType: string(plot.GetSoilType()),
-			Fertility: plot.GetFertility(),
-			Moisture: plot.GetMoisture(),
+			ID:         plot.GetID(),
+			Level:      plot.GetLevel(),
+			SoilType:   string(plot.GetSoilType()),
+			Fertility:  plot.GetFertility(),
+			Moisture:   plot.GetMoisture(),
 			IsOccupied: plot.IsOccupied(),
-			CropID:   plot.GetCropID(),
+			CropID:     plot.GetCropID(),
 		})
 	}
-	
+
 	return &FarmDTO{
-		PlayerID:    farm.GetPlayerID(),
-		Level:       farm.GetLevel(),
-		Experience:  farm.GetExperience(),
-		Plots:       plots,
-		TotalPlots:  farm.GetTotalPlots(),
-		UsedPlots:   farm.GetUsedPlots(),
-		CreatedAt:   farm.GetCreatedAt(),
-		UpdatedAt:   farm.GetUpdatedAt(),
+		PlayerID:   farm.GetPlayerID(),
+		Level:      farm.GetLevel(),
+		Experience: farm.GetExperience(),
+		Plots:      plots,
+		TotalPlots: farm.GetTotalPlots(),
+		UsedPlots:  farm.GetUsedPlots(),
+		CreatedAt:  farm.GetCreatedAt(),
+		UpdatedAt:  farm.GetUpdatedAt(),
 	}
 }
 
 // buildCropDTO 构建作物DTO
 func (s *PlantService) buildCropDTO(crop *plant.CropAggregate) *CropDTO {
 	return &CropDTO{
-		ID:           crop.GetID(),
-		PlayerID:     crop.GetPlayerID(),
-		PlotID:       crop.GetPlotID(),
-		SeedID:       crop.GetSeedID(),
-		CropType:     string(crop.GetCropType()),
-		CurrentStage: string(crop.GetCurrentStage()),
-		GrowthProgress: crop.GetGrowthProgress(),
-		Health:       crop.GetHealth(),
-		Moisture:     crop.GetMoisture(),
-		Nutrition:    crop.GetNutrition(),
-		Quality:      crop.GetQuality(),
-		PlantedAt:    crop.GetPlantedAt(),
-		LastWatered:  crop.GetLastWatered(),
-		LastFertilized: crop.GetLastFertilized(),
+		ID:                   crop.GetID(),
+		PlayerID:             crop.GetPlayerID(),
+		PlotID:               crop.GetPlotID(),
+		SeedID:               crop.GetSeedID(),
+		CropType:             string(crop.GetCropType()),
+		CurrentStage:         string(crop.GetCurrentStage()),
+		GrowthProgress:       crop.GetGrowthProgress(),
+		Health:               crop.GetHealth(),
+		Moisture:             crop.GetMoisture(),
+		Nutrition:            crop.GetNutrition(),
+		Quality:              crop.GetQuality(),
+		PlantedAt:            crop.GetPlantedAt(),
+		LastWatered:          crop.GetLastWatered(),
+		LastFertilized:       crop.GetLastFertilized(),
 		EstimatedHarvestTime: crop.GetEstimatedHarvestTime(),
-		IsReadyToHarvest: crop.IsReadyToHarvest(),
+		IsReadyToHarvest:     crop.IsReadyToHarvest(),
 	}
 }
 
@@ -438,15 +438,15 @@ func (s *PlantService) buildSeedDTOs(seeds []*plant.Seed) []*SeedDTO {
 	dtos := make([]*SeedDTO, len(seeds))
 	for i, seed := range seeds {
 		dtos[i] = &SeedDTO{
-			ID:          seed.GetID(),
-			Name:        seed.GetName(),
-			CropType:    string(seed.GetCropType()),
-			GrowthTime:  seed.GetGrowthTime(),
+			ID:            seed.GetID(),
+			Name:          seed.GetName(),
+			CropType:      string(seed.GetCropType()),
+			GrowthTime:    seed.GetGrowthTime(),
 			RequiredLevel: seed.GetRequiredLevel(),
-			Price:       seed.GetPrice(),
-			Yield:       seed.GetYield(),
-			Quality:     seed.GetQuality(),
-			Description: seed.GetDescription(),
+			Price:         seed.GetPrice(),
+			Yield:         seed.GetYield(),
+			Quality:       seed.GetQuality(),
+			Description:   seed.GetDescription(),
 		}
 	}
 	return dtos
@@ -484,15 +484,15 @@ func (s *PlantService) buildHarvestHistoryDTOs(history []*plant.HarvestResult) [
 // buildStatisticsDTO 构建统计DTO
 func (s *PlantService) buildStatisticsDTO(stats *plant.PlantingStatistics) *PlantingStatisticsDTO {
 	return &PlantingStatisticsDTO{
-		PlayerID:         stats.GetPlayerID(),
-		TotalPlanted:     stats.GetTotalPlanted(),
-		TotalHarvested:   stats.GetTotalHarvested(),
-		TotalExperience:  stats.GetTotalExperience(),
-		CropTypeStats:    stats.GetCropTypeStats(),
-		AverageQuality:   stats.GetAverageQuality(),
-		FavoriteCrop:     string(stats.GetFavoriteCrop()),
-		LastPlantTime:    stats.GetLastPlantTime(),
-		LastHarvestTime:  stats.GetLastHarvestTime(),
+		PlayerID:        stats.GetPlayerID(),
+		TotalPlanted:    stats.GetTotalPlanted(),
+		TotalHarvested:  stats.GetTotalHarvested(),
+		TotalExperience: stats.GetTotalExperience(),
+		CropTypeStats:   stats.GetCropTypeStats(),
+		AverageQuality:  stats.GetAverageQuality(),
+		FavoriteCrop:    string(stats.GetFavoriteCrop()),
+		LastPlantTime:   stats.GetLastPlantTime(),
+		LastHarvestTime: stats.GetLastHarvestTime(),
 	}
 }
 
@@ -556,13 +556,13 @@ type SeedDTO struct {
 
 // HarvestResultDTO 收获结果DTO
 type HarvestResultDTO struct {
-	CropID      string                 `json:"crop_id"`
-	CropType    string                 `json:"crop_type"`
-	Quantity    int                    `json:"quantity"`
-	Quality     float64                `json:"quality"`
-	Experience  int64                  `json:"experience"`
-	HarvestTime time.Time              `json:"harvest_time"`
-	Items       map[string]int         `json:"items"`
+	CropID      string         `json:"crop_id"`
+	CropType    string         `json:"crop_type"`
+	Quantity    int            `json:"quantity"`
+	Quality     float64        `json:"quality"`
+	Experience  int64          `json:"experience"`
+	HarvestTime time.Time      `json:"harvest_time"`
+	Items       map[string]int `json:"items"`
 }
 
 // HarvestHistoryDTO 收获历史DTO

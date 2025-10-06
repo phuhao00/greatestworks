@@ -4,34 +4,34 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"greatestworks/internal/domain/scene/weather"
 )
 
 // WeatherService 天气应用服务
 type WeatherService struct {
-	weatherRepo    weather.WeatherRepository
-	forecastRepo   weather.ForecastRepository
-	effectRepo     weather.EffectRepository
-	statisticsRepo weather.StatisticsRepository
-	cacheRepo      weather.CacheRepository
+	weatherRepo  weather.WeatherRepository
+	forecastRepo weather.WeatherForecastRepository
+	effectRepo   weather.WeatherEffectRepository
+	// statisticsRepo weather.StatisticsRepository // TODO: Define StatisticsRepository
+	cacheRepo      weather.WeatherCacheRepository
 	weatherService *weather.WeatherService
 }
 
 // NewWeatherService 创建天气应用服务
 func NewWeatherService(
 	weatherRepo weather.WeatherRepository,
-	forecastRepo weather.ForecastRepository,
-	effectRepo weather.EffectRepository,
-	statisticsRepo weather.StatisticsRepository,
-	cacheRepo weather.CacheRepository,
+	forecastRepo weather.WeatherForecastRepository,
+	effectRepo weather.WeatherEffectRepository,
+	// statisticsRepo weather.StatisticsRepository,
+	cacheRepo weather.WeatherCacheRepository,
 	weatherService *weather.WeatherService,
 ) *WeatherService {
 	return &WeatherService{
-		weatherRepo:    weatherRepo,
-		forecastRepo:   forecastRepo,
-		effectRepo:     effectRepo,
-		statisticsRepo: statisticsRepo,
+		weatherRepo:  weatherRepo,
+		forecastRepo: forecastRepo,
+		effectRepo:   effectRepo,
+		// statisticsRepo: statisticsRepo,
 		cacheRepo:      cacheRepo,
 		weatherService: weatherService,
 	}
@@ -44,19 +44,19 @@ func (s *WeatherService) GetCurrentWeather(ctx context.Context, regionID string)
 	if err == nil && cachedWeather != nil {
 		return s.buildWeatherDTO(cachedWeather), nil
 	}
-	
+
 	// 从数据库获取
 	currentWeather, err := s.weatherRepo.FindCurrentByRegion(regionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current weather: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetCurrentWeather(regionID, currentWeather, time.Minute*10); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildWeatherDTO(currentWeather), nil
 }
 
@@ -67,13 +67,13 @@ func (s *WeatherService) GetWeatherForecast(ctx context.Context, regionID string
 	if err == nil && len(cachedForecast) > 0 {
 		return s.buildForecastDTOs(cachedForecast), nil
 	}
-	
+
 	// 生成天气预报
 	forecasts, err := s.weatherService.GenerateForecast(regionID, days)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate weather forecast: %w", err)
 	}
-	
+
 	// 保存预报数据
 	for _, forecast := range forecasts {
 		if err := s.forecastRepo.Save(forecast); err != nil {
@@ -81,13 +81,13 @@ func (s *WeatherService) GetWeatherForecast(ctx context.Context, regionID string
 			// TODO: 添加日志记录
 		}
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetWeatherForecast(regionID, forecasts, time.Hour); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildForecastDTOs(forecasts), nil
 }
 
@@ -98,13 +98,13 @@ func (s *WeatherService) GetWeatherEffects(ctx context.Context, regionID string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current weather: %w", err)
 	}
-	
+
 	// 获取天气影响
 	effects, err := s.weatherService.CalculateEffects(currentWeather, targetType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate weather effects: %w", err)
 	}
-	
+
 	return s.buildEffectDTOs(effects), nil
 }
 
@@ -115,30 +115,30 @@ func (s *WeatherService) UpdateWeather(ctx context.Context, regionID string) err
 	if err != nil && !weather.IsNotFoundError(err) {
 		return fmt.Errorf("failed to get current weather: %w", err)
 	}
-	
+
 	// 生成新天气
 	newWeather, err := s.weatherService.GenerateNextWeather(regionID, currentWeather)
 	if err != nil {
 		return fmt.Errorf("failed to generate new weather: %w", err)
 	}
-	
+
 	// 保存新天气
 	if err := s.weatherRepo.Save(newWeather); err != nil {
 		return fmt.Errorf("failed to save new weather: %w", err)
 	}
-	
+
 	// 更新统计数据
 	if err := s.updateStatistics(ctx, regionID, newWeather); err != nil {
 		// 统计更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	// 清除相关缓存
 	if err := s.cacheRepo.DeleteCurrentWeather(regionID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -148,7 +148,7 @@ func (s *WeatherService) GetWeatherHistory(ctx context.Context, regionID string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get weather history: %w", err)
 	}
-	
+
 	return s.buildHistoryDTOs(weatherHistory), nil
 }
 
@@ -158,7 +158,7 @@ func (s *WeatherService) GetWeatherStatistics(ctx context.Context, regionID stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to get weather statistics: %w", err)
 	}
-	
+
 	return s.buildStatisticsDTO(stats), nil
 }
 
@@ -169,22 +169,22 @@ func (s *WeatherService) GetGlobalWeatherInfo(ctx context.Context) (*GlobalWeath
 	if err == nil && cachedGlobal != nil {
 		return cachedGlobal, nil
 	}
-	
+
 	// 获取所有区域的当前天气
 	allWeather, err := s.weatherRepo.FindAllCurrent()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all current weather: %w", err)
 	}
-	
+
 	// 构建全局天气信息
 	globalInfo := s.buildGlobalWeatherDTO(allWeather)
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetGlobalWeatherInfo(globalInfo, time.Minute*5); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return globalInfo, nil
 }
 
@@ -195,18 +195,18 @@ func (s *WeatherService) TriggerSpecialWeather(ctx context.Context, regionID str
 	if err != nil {
 		return fmt.Errorf("failed to create special weather: %w", err)
 	}
-	
+
 	// 保存特殊天气
 	if err := s.weatherRepo.Save(specialWeather); err != nil {
 		return fmt.Errorf("failed to save special weather: %w", err)
 	}
-	
+
 	// 清除相关缓存
 	if err := s.cacheRepo.DeleteCurrentWeather(regionID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -217,21 +217,21 @@ func (s *WeatherService) GetSeasonInfo(ctx context.Context, regionID string) (*S
 	if err == nil && cachedSeason != nil {
 		return cachedSeason, nil
 	}
-	
+
 	// 计算当前季节信息
 	seasonInfo, err := s.weatherService.GetCurrentSeason(regionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get season info: %w", err)
 	}
-	
+
 	seasonDTO := s.buildSeasonInfoDTO(seasonInfo)
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetSeasonInfo(regionID, seasonDTO, time.Hour*6); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return seasonDTO, nil
 }
 
@@ -243,15 +243,15 @@ func (s *WeatherService) updateStatistics(ctx context.Context, regionID string, 
 	if err != nil && !weather.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = weather.NewWeatherStatistics(regionID)
 	}
-	
+
 	// 更新统计数据
 	stats.AddWeatherRecord(newWeather.GetWeatherType(), newWeather.GetIntensity())
 	stats.UpdateLastWeatherTime(newWeather.GetStartTime())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.Save(stats)
 }
@@ -298,12 +298,12 @@ func (s *WeatherService) buildEffectDTOs(effects []*weather.WeatherEffect) []*We
 	dtos := make([]*WeatherEffectDTO, len(effects))
 	for i, effect := range effects {
 		dtos[i] = &WeatherEffectDTO{
-			EffectType:   string(effect.GetEffectType()),
-			TargetType:   string(effect.GetTargetType()),
-			Modifier:     effect.GetModifier(),
-			Duration:     effect.GetDuration(),
-			IsPositive:   effect.IsPositive(),
-			Description:  effect.GetDescription(),
+			EffectType:  string(effect.GetEffectType()),
+			TargetType:  string(effect.GetTargetType()),
+			Modifier:    effect.GetModifier(),
+			Duration:    effect.GetDuration(),
+			IsPositive:  effect.IsPositive(),
+			Description: effect.GetDescription(),
 		}
 	}
 	return dtos
@@ -330,15 +330,15 @@ func (s *WeatherService) buildHistoryDTOs(history []*weather.WeatherAggregate) [
 // buildStatisticsDTO 构建统计DTO
 func (s *WeatherService) buildStatisticsDTO(stats *weather.WeatherStatistics) *WeatherStatisticsDTO {
 	return &WeatherStatisticsDTO{
-		RegionID:           stats.GetRegionID(),
-		TotalRecords:       stats.GetTotalRecords(),
-		WeatherTypeStats:   stats.GetWeatherTypeStats(),
-		AverageTemperature: stats.GetAverageTemperature(),
-		AverageHumidity:    stats.GetAverageHumidity(),
-		AverageWindSpeed:   stats.GetAverageWindSpeed(),
-		MostCommonWeather:  string(stats.GetMostCommonWeather()),
+		RegionID:            stats.GetRegionID(),
+		TotalRecords:        stats.GetTotalRecords(),
+		WeatherTypeStats:    stats.GetWeatherTypeStats(),
+		AverageTemperature:  stats.GetAverageTemperature(),
+		AverageHumidity:     stats.GetAverageHumidity(),
+		AverageWindSpeed:    stats.GetAverageWindSpeed(),
+		MostCommonWeather:   string(stats.GetMostCommonWeather()),
 		SpecialWeatherCount: stats.GetSpecialWeatherCount(),
-		LastWeatherTime:    stats.GetLastWeatherTime(),
+		LastWeatherTime:     stats.GetLastWeatherTime(),
 	}
 }
 
@@ -348,7 +348,7 @@ func (s *WeatherService) buildGlobalWeatherDTO(allWeather []*weather.WeatherAggr
 	weatherTypeCount := make(map[string]int)
 	totalRegions := len(allWeather)
 	specialWeatherCount := 0
-	
+
 	for _, w := range allWeather {
 		regionWeather[w.GetRegionID()] = s.buildWeatherDTO(w)
 		weatherType := string(w.GetWeatherType())
@@ -357,7 +357,7 @@ func (s *WeatherService) buildGlobalWeatherDTO(allWeather []*weather.WeatherAggr
 			specialWeatherCount++
 		}
 	}
-	
+
 	return &GlobalWeatherDTO{
 		RegionWeather:       regionWeather,
 		TotalRegions:        totalRegions,
@@ -435,15 +435,15 @@ type WeatherHistoryDTO struct {
 
 // WeatherStatisticsDTO 天气统计DTO
 type WeatherStatisticsDTO struct {
-	RegionID            string             `json:"region_id"`
-	TotalRecords        int64              `json:"total_records"`
-	WeatherTypeStats    map[string]int64   `json:"weather_type_stats"`
-	AverageTemperature  float64            `json:"average_temperature"`
-	AverageHumidity     float64            `json:"average_humidity"`
-	AverageWindSpeed    float64            `json:"average_wind_speed"`
-	MostCommonWeather   string             `json:"most_common_weather"`
-	SpecialWeatherCount int64              `json:"special_weather_count"`
-	LastWeatherTime     time.Time          `json:"last_weather_time"`
+	RegionID            string           `json:"region_id"`
+	TotalRecords        int64            `json:"total_records"`
+	WeatherTypeStats    map[string]int64 `json:"weather_type_stats"`
+	AverageTemperature  float64          `json:"average_temperature"`
+	AverageHumidity     float64          `json:"average_humidity"`
+	AverageWindSpeed    float64          `json:"average_wind_speed"`
+	MostCommonWeather   string           `json:"most_common_weather"`
+	SpecialWeatherCount int64            `json:"special_weather_count"`
+	LastWeatherTime     time.Time        `json:"last_weather_time"`
 }
 
 // GlobalWeatherDTO 全局天气DTO
@@ -457,11 +457,11 @@ type GlobalWeatherDTO struct {
 
 // SeasonInfoDTO 季节信息DTO
 type SeasonInfoDTO struct {
-	CurrentSeason    string                 `json:"current_season"`
-	SeasonProgress   float64                `json:"season_progress"`
-	DaysRemaining    int                    `json:"days_remaining"`
-	NextSeason       string                 `json:"next_season"`
-	SeasonEffects    map[string]float64     `json:"season_effects"`
-	TemperatureRange map[string]float64     `json:"temperature_range"`
-	WeatherTendency  map[string]float64     `json:"weather_tendency"`
+	CurrentSeason    string             `json:"current_season"`
+	SeasonProgress   float64            `json:"season_progress"`
+	DaysRemaining    int                `json:"days_remaining"`
+	NextSeason       string             `json:"next_season"`
+	SeasonEffects    map[string]float64 `json:"season_effects"`
+	TemperatureRange map[string]float64 `json:"temperature_range"`
+	WeatherTendency  map[string]float64 `json:"weather_tendency"`
 }

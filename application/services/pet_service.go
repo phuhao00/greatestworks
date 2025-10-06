@@ -10,13 +10,14 @@ import (
 
 // PetApplicationService 宠物应用服务
 type PetApplicationService struct {
-	petRepo         pet.PetRepository
-	fragmentRepo    pet.PetFragmentRepository
-	skinRepo        pet.PetSkinRepository
-	bondRepo        pet.PetBondRepository
-	pictorialRepo   pet.PetPictorialRepository
-	petService      *pet.PetService
-	eventBus        pet.PetEventBus
+	petRepo      pet.PetRepository
+	fragmentRepo pet.PetFragmentRepository
+	skinRepo     pet.PetSkinRepository
+	// TODO: 实现这些仓储接口
+	// bondRepo        pet.PetBondRepository
+	pictorialRepo pet.PetPictorialRepository
+	petService    *pet.PetService
+	eventBus      pet.PetEventBus
 }
 
 // NewPetApplicationService 创建宠物应用服务
@@ -24,16 +25,18 @@ func NewPetApplicationService(
 	petRepo pet.PetRepository,
 	fragmentRepo pet.PetFragmentRepository,
 	skinRepo pet.PetSkinRepository,
-	bondRepo pet.PetBondRepository,
+	// TODO: 实现这些仓储接口
+	// bondRepo pet.PetBondRepository,
 	pictorialRepo pet.PetPictorialRepository,
 	petService *pet.PetService,
 	eventBus pet.PetEventBus,
 ) *PetApplicationService {
 	return &PetApplicationService{
-		petRepo:       petRepo,
-		fragmentRepo:  fragmentRepo,
-		skinRepo:      skinRepo,
-		bondRepo:      bondRepo,
+		petRepo:      petRepo,
+		fragmentRepo: fragmentRepo,
+		skinRepo:     skinRepo,
+		// TODO: 实现这些仓储接口
+		// bondRepo:      bondRepo,
 		pictorialRepo: pictorialRepo,
 		petService:    petService,
 		eventBus:      eventBus,
@@ -42,11 +45,11 @@ func NewPetApplicationService(
 
 // CreatePetRequest 创建宠物请求
 type CreatePetRequest struct {
-	OwnerID   uint64 `json:"owner_id"`
-	PetType   string `json:"pet_type"`
-	Name      string `json:"name"`
-	Rarity    string `json:"rarity"`
-	Source    string `json:"source"`
+	OwnerID uint64 `json:"owner_id"`
+	PetType string `json:"pet_type"`
+	Name    string `json:"name"`
+	Rarity  string `json:"rarity"`
+	Source  string `json:"source"`
 }
 
 // CreatePetResponse 创建宠物响应
@@ -65,40 +68,40 @@ func (s *PetApplicationService) CreatePet(ctx context.Context, req *CreatePetReq
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	
+
 	if err := s.validateCreatePetRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// 转换稀有度
 	rarity, err := s.parseRarity(req.Rarity)
 	if err != nil {
 		return nil, fmt.Errorf("invalid rarity: %w", err)
 	}
-	
+
 	// 转换来源
 	source, err := s.parseSource(req.Source)
 	if err != nil {
 		return nil, fmt.Errorf("invalid source: %w", err)
 	}
-	
+
 	// 创建宠物聚合根
 	petAggregate := pet.NewPetAggregate(req.OwnerID, req.PetType, req.Name)
 	petAggregate.SetRarity(rarity)
 	petAggregate.SetSource(source)
-	
+
 	// 保存宠物
 	if err := s.petRepo.Save(ctx, petAggregate); err != nil {
 		return nil, fmt.Errorf("failed to save pet: %w", err)
 	}
-	
+
 	// 发布事件
 	event := pet.NewPetCreatedEvent(petAggregate.GetID(), req.OwnerID, req.PetType, req.Name)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		// 记录错误但不影响主流程
 		fmt.Printf("failed to publish pet created event: %v\n", err)
 	}
-	
+
 	return &CreatePetResponse{
 		PetID:     petAggregate.GetID(),
 		Name:      petAggregate.GetName(),
@@ -119,12 +122,12 @@ type FeedPetRequest struct {
 
 // FeedPetResponse 喂养宠物响应
 type FeedPetResponse struct {
-	PetID       string `json:"pet_id"`
-	ExpGained   int64  `json:"exp_gained"`
-	LeveledUp   bool   `json:"leveled_up"`
-	NewLevel    int32  `json:"new_level"`
-	NewExp      int64  `json:"new_exp"`
-	Happiness   int32  `json:"happiness"`
+	PetID     string `json:"pet_id"`
+	ExpGained int64  `json:"exp_gained"`
+	LeveledUp bool   `json:"leveled_up"`
+	NewLevel  int32  `json:"new_level"`
+	NewExp    int64  `json:"new_exp"`
+	Happiness int32  `json:"happiness"`
 }
 
 // FeedPet 喂养宠物
@@ -132,11 +135,11 @@ func (s *PetApplicationService) FeedPet(ctx context.Context, req *FeedPetRequest
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	
+
 	if err := s.validateFeedPetRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// 获取宠物
 	petAggregate, err := s.petRepo.FindByID(ctx, req.PetID)
 	if err != nil {
@@ -145,32 +148,32 @@ func (s *PetApplicationService) FeedPet(ctx context.Context, req *FeedPetRequest
 	if petAggregate == nil {
 		return nil, fmt.Errorf("pet not found")
 	}
-	
+
 	// 计算经验值
 	expGained := s.calculateFoodExp(req.FoodType, req.Amount)
-	
+
 	// 喂养宠物
 	leveledUp := petAggregate.AddExp(expGained)
 	petAggregate.Feed(req.FoodType, req.Amount)
-	
+
 	// 保存宠物
 	if err := s.petRepo.Save(ctx, petAggregate); err != nil {
 		return nil, fmt.Errorf("failed to save pet: %w", err)
 	}
-	
+
 	// 发布事件
 	event := pet.NewPetFedEvent(petAggregate.GetID(), req.FoodType, req.Amount, expGained)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish pet fed event: %v\n", err)
 	}
-	
+
 	if leveledUp {
 		levelUpEvent := pet.NewPetLevelUpEvent(petAggregate.GetID(), petAggregate.GetLevel()-1, petAggregate.GetLevel())
 		if err := s.eventBus.Publish(ctx, levelUpEvent); err != nil {
 			fmt.Printf("failed to publish pet level up event: %v\n", err)
 		}
 	}
-	
+
 	return &FeedPetResponse{
 		PetID:     petAggregate.GetID(),
 		ExpGained: expGained,
@@ -190,13 +193,13 @@ type TrainPetRequest struct {
 
 // TrainPetResponse 训练宠物响应
 type TrainPetResponse struct {
-	PetID           string            `json:"pet_id"`
-	TrainingType    string            `json:"training_type"`
-	AttributeGains  map[string]int32  `json:"attribute_gains"`
-	ExpGained       int64             `json:"exp_gained"`
-	LeveledUp       bool              `json:"leveled_up"`
-	NewLevel        int32             `json:"new_level"`
-	SkillsLearned   []string          `json:"skills_learned"`
+	PetID          string           `json:"pet_id"`
+	TrainingType   string           `json:"training_type"`
+	AttributeGains map[string]int32 `json:"attribute_gains"`
+	ExpGained      int64            `json:"exp_gained"`
+	LeveledUp      bool             `json:"leveled_up"`
+	NewLevel       int32            `json:"new_level"`
+	SkillsLearned  []string         `json:"skills_learned"`
 }
 
 // TrainPet 训练宠物
@@ -204,11 +207,11 @@ func (s *PetApplicationService) TrainPet(ctx context.Context, req *TrainPetReque
 	if req == nil {
 		return nil, fmt.Errorf("request cannot be nil")
 	}
-	
+
 	if err := s.validateTrainPetRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
-	
+
 	// 获取宠物
 	petAggregate, err := s.petRepo.FindByID(ctx, req.PetID)
 	if err != nil {
@@ -217,34 +220,34 @@ func (s *PetApplicationService) TrainPet(ctx context.Context, req *TrainPetReque
 	if petAggregate == nil {
 		return nil, fmt.Errorf("pet not found")
 	}
-	
+
 	// 计算训练收益
 	attributeGains := s.calculateTrainingGains(req.TrainingType, req.Duration, petAggregate.GetLevel())
 	expGained := s.calculateTrainingExp(req.TrainingType, req.Duration)
-	
+
 	// 训练宠物
 	leveledUp := petAggregate.AddExp(expGained)
 	for attr, gain := range attributeGains {
 		petAggregate.AddAttribute(attr, gain)
 	}
-	
+
 	// 检查是否学会新技能
 	skillsLearned := s.checkSkillLearning(petAggregate, req.TrainingType)
 	for _, skill := range skillsLearned {
 		petAggregate.LearnSkill(skill)
 	}
-	
+
 	// 保存宠物
 	if err := s.petRepo.Save(ctx, petAggregate); err != nil {
 		return nil, fmt.Errorf("failed to save pet: %w", err)
 	}
-	
+
 	// 发布事件
 	event := pet.NewPetTrainedEvent(petAggregate.GetID(), req.TrainingType, attributeGains, expGained)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		fmt.Printf("failed to publish pet trained event: %v\n", err)
 	}
-	
+
 	return &TrainPetResponse{
 		PetID:          petAggregate.GetID(),
 		TrainingType:   req.TrainingType,
@@ -263,24 +266,24 @@ type GetPetRequest struct {
 
 // GetPetResponse 获取宠物响应
 type GetPetResponse struct {
-	PetID      string            `json:"pet_id"`
-	OwnerID    uint64            `json:"owner_id"`
-	Name       string            `json:"name"`
-	PetType    string            `json:"pet_type"`
-	Rarity     string            `json:"rarity"`
-	Level      int32             `json:"level"`
-	Exp        int64             `json:"exp"`
-	MaxExp     int64             `json:"max_exp"`
-	Happiness  int32             `json:"happiness"`
-	Health     int32             `json:"health"`
-	Attributes map[string]int32  `json:"attributes"`
-	Skills     []string          `json:"skills"`
-	Skins      []string          `json:"skins"`
+	PetID       string           `json:"pet_id"`
+	OwnerID     uint64           `json:"owner_id"`
+	Name        string           `json:"name"`
+	PetType     string           `json:"pet_type"`
+	Rarity      string           `json:"rarity"`
+	Level       int32            `json:"level"`
+	Exp         int64            `json:"exp"`
+	MaxExp      int64            `json:"max_exp"`
+	Happiness   int32            `json:"happiness"`
+	Health      int32            `json:"health"`
+	Attributes  map[string]int32 `json:"attributes"`
+	Skills      []string         `json:"skills"`
+	Skins       []string         `json:"skins"`
 	CurrentSkin string           `json:"current_skin"`
-	Bonds      []string          `json:"bonds"`
-	Status     string            `json:"status"`
-	CreatedAt  time.Time         `json:"created_at"`
-	UpdatedAt  time.Time         `json:"updated_at"`
+	Bonds       []string         `json:"bonds"`
+	Status      string           `json:"status"`
+	CreatedAt   time.Time        `json:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at"`
 }
 
 // GetPet 获取宠物信息
@@ -288,7 +291,7 @@ func (s *PetApplicationService) GetPet(ctx context.Context, req *GetPetRequest) 
 	if req == nil || req.PetID == "" {
 		return nil, fmt.Errorf("pet ID is required")
 	}
-	
+
 	// 获取宠物
 	petAggregate, err := s.petRepo.FindByID(ctx, req.PetID)
 	if err != nil {
@@ -297,7 +300,7 @@ func (s *PetApplicationService) GetPet(ctx context.Context, req *GetPetRequest) 
 	if petAggregate == nil {
 		return nil, fmt.Errorf("pet not found")
 	}
-	
+
 	return &GetPetResponse{
 		PetID:       petAggregate.GetID(),
 		OwnerID:     petAggregate.GetOwnerID(),
@@ -322,10 +325,10 @@ func (s *PetApplicationService) GetPet(ctx context.Context, req *GetPetRequest) 
 
 // GetPlayerPetsRequest 获取玩家宠物列表请求
 type GetPlayerPetsRequest struct {
-	OwnerID  uint64 `json:"owner_id"`
-	Page     int    `json:"page"`
-	PageSize int    `json:"page_size"`
-	SortBy   string `json:"sort_by"`   // level, exp, happiness, created_at
+	OwnerID   uint64 `json:"owner_id"`
+	Page      int    `json:"page"`
+	PageSize  int    `json:"page_size"`
+	SortBy    string `json:"sort_by"`    // level, exp, happiness, created_at
 	SortOrder string `json:"sort_order"` // asc, desc
 }
 
@@ -343,7 +346,7 @@ func (s *PetApplicationService) GetPlayerPets(ctx context.Context, req *GetPlaye
 	if req == nil || req.OwnerID == 0 {
 		return nil, fmt.Errorf("owner ID is required")
 	}
-	
+
 	// 设置默认值
 	if req.Page <= 0 {
 		req.Page = 1
@@ -357,19 +360,19 @@ func (s *PetApplicationService) GetPlayerPets(ctx context.Context, req *GetPlaye
 	if req.SortOrder == "" {
 		req.SortOrder = "desc"
 	}
-	
+
 	// 构建查询
 	query := pet.NewPetQuery().
 		WithOwner(req.OwnerID).
 		WithSort(req.SortBy, req.SortOrder).
 		WithPagination(req.Page, req.PageSize)
-	
+
 	// 查询宠物
 	pets, total, err := s.petRepo.FindByQuery(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pets: %w", err)
 	}
-	
+
 	// 转换响应
 	petResponses := make([]*GetPetResponse, len(pets))
 	for i, petAggregate := range pets {
@@ -394,9 +397,9 @@ func (s *PetApplicationService) GetPlayerPets(ctx context.Context, req *GetPlaye
 			UpdatedAt:   petAggregate.GetUpdatedAt(),
 		}
 	}
-	
+
 	totalPages := (total + int64(req.PageSize) - 1) / int64(req.PageSize)
-	
+
 	return &GetPlayerPetsResponse{
 		Pets:       petResponses,
 		Total:      total,
@@ -497,19 +500,19 @@ func (s *PetApplicationService) calculateFoodExp(foodType string, amount int32) 
 		"luxury_food":  50,
 		"special_food": 100,
 	}
-	
+
 	exp, exists := baseExp[foodType]
 	if !exists {
 		exp = 10 // 默认经验值
 	}
-	
+
 	return exp * int64(amount)
 }
 
 // calculateTrainingGains 计算训练收益
 func (s *PetApplicationService) calculateTrainingGains(trainingType string, duration int32, level int32) map[string]int32 {
 	gains := make(map[string]int32)
-	
+
 	baseGains := map[string]map[string]int32{
 		"strength": {
 			"attack":  2,
@@ -524,7 +527,7 @@ func (s *PetApplicationService) calculateTrainingGains(trainingType string, dura
 			"mana":         1,
 		},
 	}
-	
+
 	if baseGain, exists := baseGains[trainingType]; exists {
 		for attr, gain := range baseGain {
 			// 基础收益 * 时长倍数 * 等级倍数
@@ -532,7 +535,7 @@ func (s *PetApplicationService) calculateTrainingGains(trainingType string, dura
 			gains[attr] = int32(float64(gain) * multiplier)
 		}
 	}
-	
+
 	return gains
 }
 
@@ -545,18 +548,18 @@ func (s *PetApplicationService) calculateTrainingExp(trainingType string, durati
 // checkSkillLearning 检查技能学习
 func (s *PetApplicationService) checkSkillLearning(petAggregate *pet.PetAggregate, trainingType string) []string {
 	skills := make([]string, 0)
-	
+
 	// 简单的技能学习逻辑
 	level := petAggregate.GetLevel()
 	learnedSkills := petAggregate.GetSkills()
-	
+
 	// 根据等级和训练类型判断可学习的技能
 	potentialSkills := map[string][]string{
-		"strength": {"power_strike", "berserker_rage", "iron_defense"},
-		"agility":  {"quick_attack", "dodge", "critical_strike"},
+		"strength":     {"power_strike", "berserker_rage", "iron_defense"},
+		"agility":      {"quick_attack", "dodge", "critical_strike"},
 		"intelligence": {"magic_missile", "heal", "mana_shield"},
 	}
-	
+
 	if skillList, exists := potentialSkills[trainingType]; exists {
 		for i, skill := range skillList {
 			requiredLevel := int32((i + 1) * 10) // 10, 20, 30级学习
@@ -575,6 +578,6 @@ func (s *PetApplicationService) checkSkillLearning(petAggregate *pet.PetAggregat
 			}
 		}
 	}
-	
+
 	return skills
 }

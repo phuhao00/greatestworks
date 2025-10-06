@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	playerCmd "greatestworks/application/commands/player"
 	battleCmd "greatestworks/application/commands/battle"
-	playerQuery "greatestworks/application/queries/player"
+	playerCmd "greatestworks/application/commands/player"
 	"greatestworks/application/handlers"
+	playerQuery "greatestworks/application/queries/player"
 	"greatestworks/internal/infrastructure/logger"
-	"greatestworks/internal/interfaces/tcp/protocol"
 	"greatestworks/internal/interfaces/tcp/connection"
+	"greatestworks/internal/interfaces/tcp/protocol"
 )
 
 // GameHandler 游戏处理器
@@ -66,17 +66,17 @@ func (h *GameHandler) HandleMessage(conn *connection.Connection, msg *protocol.M
 	case protocol.MsgStartBattle:
 		return h.handleStartBattle(ctx, conn, msg)
 	case protocol.MsgBattleAction:
-		return h.handleBattleAction(conn, msg)
+		return h.handleBattleAction(ctx, conn, msg)
 	case protocol.MsgLeaveBattle:
-		return h.handleLeaveBattle(conn, msg)
+		return h.handleLeaveBattle(ctx, conn, msg)
 
 	// 查询相关
 	case protocol.MsgGetPlayerInfo:
-		return h.handleGetPlayerInfo(conn, msg)
+		return h.handleGetPlayerInfo(ctx, conn, msg)
 	case protocol.MsgGetOnlinePlayers:
-		return h.handleGetOnlinePlayers(conn, msg)
+		return h.handleGetOnlinePlayers(ctx, conn, msg)
 	case protocol.MsgGetBattleInfo:
-		return h.handleGetBattleInfo(conn, msg)
+		return h.handleGetBattleInfo(ctx, conn, msg)
 
 	default:
 		h.logger.Warn("Unknown message type", "message_type", msg.Header.MessageType, "conn_id", conn.ID)
@@ -324,9 +324,9 @@ func (h *GameHandler) handleCreateBattle(ctx context.Context, conn *connection.C
 		BaseResponse: protocol.NewBaseResponse(true, "Battle created successfully"),
 		BattleID:     result.BattleID,
 		BattleInfo: &protocol.BattleInfo{
-			ID:     result.BattleID,
-			Type:   req.BattleType,
-			Status: "waiting",
+			ID:      result.BattleID,
+			Type:    req.BattleType,
+			Status:  "waiting",
 			Players: []protocol.PlayerInfo{}, // 初始为空
 			Settings: protocol.BattleSettings{
 				TimeLimit:    req.Settings.TimeLimit,
@@ -390,7 +390,7 @@ func (h *GameHandler) sendErrorResponse(conn *connection.Connection, messageID u
 	return conn.SendMessage(response)
 }
 
-func (h *GameHandler) broadcastPlayerOnline(player *playerQuery.PlayerInfo) {
+func (h *GameHandler) broadcastPlayerOnline(player *playerQuery.PlayerDTO) {
 	// 构造玩家上线广播消息
 	broadcastMsg := &protocol.Message{
 		Header: protocol.MessageHeader{
@@ -400,10 +400,10 @@ func (h *GameHandler) broadcastPlayerOnline(player *playerQuery.PlayerInfo) {
 			Timestamp:   time.Now().Unix(),
 		},
 		Payload: map[string]interface{}{
-			"event":     "player_online",
-			"player_id": player.ID,
+			"event":       "player_online",
+			"player_id":   player.ID,
 			"player_name": player.Name,
-			"timestamp": time.Now().Unix(),
+			"timestamp":   time.Now().Unix(),
 		},
 	}
 

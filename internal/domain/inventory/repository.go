@@ -5,6 +5,18 @@ import (
 	"time"
 )
 
+// Quality 物品品质
+type Quality int
+
+const (
+	QualityCommon    Quality = iota + 1 // 普通
+	QualityUncommon                     // 不常见
+	QualityRare                         // 稀有
+	QualityEpic                         // 史诗
+	QualityLegendary                    // 传说
+	QualityMythic                       // 神话
+)
+
 // Repository 背包仓储接口
 type Repository interface {
 	// 基础CRUD操作

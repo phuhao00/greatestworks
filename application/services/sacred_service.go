@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"greatestworks/internal/domain/scene/sacred"
 )
 
 // SacredService 圣地应用服务
 type SacredService struct {
-	sacredRepo     sacred.SacredPlaceRepository
-	challengeRepo  sacred.ChallengeRepository
-	blessingRepo   sacred.BlessingRepository
-	artifactRepo   sacred.ArtifactRepository
-	statisticsRepo sacred.StatisticsRepository
-	cacheRepo      sacred.CacheRepository
-	sacredService  *sacred.SacredService
+	sacredRepo    sacred.SacredPlaceRepository
+	challengeRepo sacred.ChallengeRepository
+	blessingRepo  sacred.BlessingRepository
+	// TODO: 实现这些仓储接口
+	// artifactRepo   sacred.ArtifactRepository
+	// statisticsRepo sacred.StatisticsRepository
+	// cacheRepo      sacred.CacheRepository
+	sacredService *sacred.SacredService
 }
 
 // NewSacredService 创建圣地应用服务
@@ -24,16 +25,17 @@ func NewSacredService(
 	sacredRepo sacred.SacredPlaceRepository,
 	challengeRepo sacred.ChallengeRepository,
 	blessingRepo sacred.BlessingRepository,
-	artifactRepo sacred.ArtifactRepository,
-	statisticsRepo sacred.StatisticsRepository,
-	cacheRepo sacred.CacheRepository,
+	// TODO: 实现这些仓储接口
+	// artifactRepo sacred.ArtifactRepository,
+	// statisticsRepo sacred.StatisticsRepository,
+	// cacheRepo sacred.CacheRepository,
 	sacredService *sacred.SacredService,
 ) *SacredService {
 	return &SacredService{
-		sacredRepo:     sacredRepo,
-		challengeRepo:  challengeRepo,
-		blessingRepo:   blessingRepo,
-		artifactRepo:   artifactRepo,
+		sacredRepo:    sacredRepo,
+		challengeRepo: challengeRepo,
+		blessingRepo:  blessingRepo,
+		// artifactRepo:   artifactRepo,
 		statisticsRepo: statisticsRepo,
 		cacheRepo:      cacheRepo,
 		sacredService:  sacredService,
@@ -47,19 +49,19 @@ func (s *SacredService) GetSacredPlace(ctx context.Context, sacredID string) (*S
 	if err == nil && cachedSacred != nil {
 		return s.buildSacredPlaceDTO(cachedSacred), nil
 	}
-	
+
 	// 从数据库获取
 	sacredPlace, err := s.sacredRepo.FindByID(sacredID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sacred place: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetSacredPlace(sacredID, sacredPlace, time.Hour); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildSacredPlaceDTO(sacredPlace), nil
 }
 
@@ -70,19 +72,19 @@ func (s *SacredService) GetAvailableSacredPlaces(ctx context.Context, playerID s
 	if err == nil && len(cachedPlaces) > 0 {
 		return s.buildSacredPlaceDTOs(cachedPlaces), nil
 	}
-	
+
 	// 从数据库获取
 	sacredPlaces, err := s.sacredRepo.FindAvailableForPlayer(playerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get available sacred places: %w", err)
 	}
-	
+
 	// 更新缓存
 	if err := s.cacheRepo.SetAvailableSacredPlaces(playerID, sacredPlaces, time.Hour*2); err != nil {
 		// 缓存更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildSacredPlaceDTOs(sacredPlaces), nil
 }
 
@@ -93,28 +95,28 @@ func (s *SacredService) EnterSacredPlace(ctx context.Context, playerID string, s
 	if err != nil {
 		return fmt.Errorf("failed to get sacred place: %w", err)
 	}
-	
+
 	// 检查进入条件
 	if err := s.sacredService.CheckEnterConditions(playerID, sacredPlace); err != nil {
 		return fmt.Errorf("failed to check enter conditions: %w", err)
 	}
-	
+
 	// 记录进入
 	if err := sacredPlace.AddVisitor(playerID); err != nil {
 		return fmt.Errorf("failed to add visitor: %w", err)
 	}
-	
+
 	// 更新圣地
 	if err := s.sacredRepo.Update(sacredPlace); err != nil {
 		return fmt.Errorf("failed to update sacred place: %w", err)
 	}
-	
+
 	// 清除相关缓存
 	if err := s.cacheRepo.DeleteSacredPlace(sacredID); err != nil {
 		// 缓存清除失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return nil
 }
 
@@ -125,18 +127,18 @@ func (s *SacredService) StartChallenge(ctx context.Context, playerID string, cha
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenge: %w", err)
 	}
-	
+
 	// 开始挑战
 	challengeInstance, err := s.sacredService.StartChallenge(playerID, challenge)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start challenge: %w", err)
 	}
-	
+
 	// 保存挑战实例
 	if err := s.challengeRepo.SaveInstance(challengeInstance); err != nil {
 		return nil, fmt.Errorf("failed to save challenge instance: %w", err)
 	}
-	
+
 	return s.buildChallengeInstanceDTO(challengeInstance), nil
 }
 
@@ -147,28 +149,28 @@ func (s *SacredService) CompleteChallenge(ctx context.Context, playerID string, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenge instance: %w", err)
 	}
-	
+
 	if instance.GetPlayerID() != playerID {
 		return nil, sacred.ErrUnauthorized
 	}
-	
+
 	// 完成挑战
 	reward, err := s.sacredService.CompleteChallenge(instance, result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to complete challenge: %w", err)
 	}
-	
+
 	// 更新挑战实例
 	if err := s.challengeRepo.UpdateInstance(instance); err != nil {
 		return nil, fmt.Errorf("failed to update challenge instance: %w", err)
 	}
-	
+
 	// 更新统计数据
 	if err := s.updateChallengeStatistics(ctx, playerID, instance, reward); err != nil {
 		// 统计更新失败不影响主流程
 		// TODO: 添加日志记录
 	}
-	
+
 	return s.buildChallengeRewardDTO(reward), nil
 }
 
@@ -179,17 +181,17 @@ func (s *SacredService) ActivateBlessing(ctx context.Context, playerID string, b
 	if err != nil {
 		return fmt.Errorf("failed to get blessing: %w", err)
 	}
-	
+
 	// 激活祝福
 	if err := s.sacredService.ActivateBlessing(playerID, blessing); err != nil {
 		return fmt.Errorf("failed to activate blessing: %w", err)
 	}
-	
+
 	// 保存祝福状态
 	if err := s.blessingRepo.SavePlayerBlessing(playerID, blessing); err != nil {
 		return fmt.Errorf("failed to save player blessing: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -199,7 +201,7 @@ func (s *SacredService) GetPlayerBlessings(ctx context.Context, playerID string)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get player blessings: %w", err)
 	}
-	
+
 	return s.buildPlayerBlessingDTOs(blessings), nil
 }
 
@@ -209,7 +211,7 @@ func (s *SacredService) GetAvailableArtifacts(ctx context.Context, sacredID stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to get artifacts: %w", err)
 	}
-	
+
 	return s.buildArtifactDTOs(artifacts), nil
 }
 
@@ -220,18 +222,18 @@ func (s *SacredService) UseArtifact(ctx context.Context, playerID string, artifa
 	if err != nil {
 		return nil, fmt.Errorf("failed to get artifact: %w", err)
 	}
-	
+
 	// 使用圣物
 	effect, err := s.sacredService.UseArtifact(playerID, artifact)
 	if err != nil {
 		return nil, fmt.Errorf("failed to use artifact: %w", err)
 	}
-	
+
 	// 更新圣物状态
 	if err := s.artifactRepo.Update(artifact); err != nil {
 		return nil, fmt.Errorf("failed to update artifact: %w", err)
 	}
-	
+
 	return s.buildArtifactEffectDTO(effect), nil
 }
 
@@ -241,7 +243,7 @@ func (s *SacredService) GetSacredStatistics(ctx context.Context, playerID string
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sacred statistics: %w", err)
 	}
-	
+
 	return s.buildStatisticsDTO(stats), nil
 }
 
@@ -251,7 +253,7 @@ func (s *SacredService) GetChallengeHistory(ctx context.Context, playerID string
 	if err != nil {
 		return nil, fmt.Errorf("failed to get challenge history: %w", err)
 	}
-	
+
 	return s.buildChallengeHistoryDTOs(history), nil
 }
 
@@ -263,15 +265,15 @@ func (s *SacredService) updateChallengeStatistics(ctx context.Context, playerID 
 	if err != nil && !sacred.IsNotFoundError(err) {
 		return err
 	}
-	
+
 	if stats == nil {
 		stats = sacred.NewSacredStatistics(playerID)
 	}
-	
+
 	// 更新统计数据
 	stats.AddChallengeResult(instance.GetChallengeID(), instance.IsCompleted(), reward.GetTotalValue())
 	stats.UpdateLastChallengeTime(instance.GetCompletedAt())
-	
+
 	// 保存统计数据
 	return s.statisticsRepo.Save(stats)
 }
@@ -279,19 +281,19 @@ func (s *SacredService) updateChallengeStatistics(ctx context.Context, playerID 
 // buildSacredPlaceDTO 构建圣地DTO
 func (s *SacredService) buildSacredPlaceDTO(sacredPlace *sacred.SacredPlaceAggregate) *SacredPlaceDTO {
 	return &SacredPlaceDTO{
-		ID:          sacredPlace.GetID(),
-		Name:        sacredPlace.GetName(),
-		Description: sacredPlace.GetDescription(),
-		Level:       sacredPlace.GetLevel(),
-		Status:      string(sacredPlace.GetStatus()),
+		ID:            sacredPlace.GetID(),
+		Name:          sacredPlace.GetName(),
+		Description:   sacredPlace.GetDescription(),
+		Level:         sacredPlace.GetLevel(),
+		Status:        string(sacredPlace.GetStatus()),
 		RequiredLevel: sacredPlace.GetRequiredLevel(),
-		VisitorCount: sacredPlace.GetVisitorCount(),
-		MaxVisitors:  sacredPlace.GetMaxVisitors(),
-		Challenges:   sacredPlace.GetChallengeIDs(),
-		Blessings:    sacredPlace.GetBlessingIDs(),
-		Artifacts:    sacredPlace.GetArtifactIDs(),
-		CreatedAt:    sacredPlace.GetCreatedAt(),
-		UpdatedAt:    sacredPlace.GetUpdatedAt(),
+		VisitorCount:  sacredPlace.GetVisitorCount(),
+		MaxVisitors:   sacredPlace.GetMaxVisitors(),
+		Challenges:    sacredPlace.GetChallengeIDs(),
+		Blessings:     sacredPlace.GetBlessingIDs(),
+		Artifacts:     sacredPlace.GetArtifactIDs(),
+		CreatedAt:     sacredPlace.GetCreatedAt(),
+		UpdatedAt:     sacredPlace.GetUpdatedAt(),
 	}
 }
 
@@ -307,16 +309,16 @@ func (s *SacredService) buildSacredPlaceDTOs(sacredPlaces []*sacred.SacredPlaceA
 // buildChallengeInstanceDTO 构建挑战实例DTO
 func (s *SacredService) buildChallengeInstanceDTO(instance *sacred.ChallengeInstance) *ChallengeInstanceDTO {
 	return &ChallengeInstanceDTO{
-		ID:           instance.GetID(),
-		PlayerID:     instance.GetPlayerID(),
-		ChallengeID:  instance.GetChallengeID(),
-		Status:       string(instance.GetStatus()),
-		StartTime:    instance.GetStartTime(),
-		EndTime:      instance.GetEndTime(),
-		Duration:     instance.GetDuration(),
-		Difficulty:   instance.GetDifficulty(),
-		Progress:     instance.GetProgress(),
-		IsCompleted:  instance.IsCompleted(),
+		ID:          instance.GetID(),
+		PlayerID:    instance.GetPlayerID(),
+		ChallengeID: instance.GetChallengeID(),
+		Status:      string(instance.GetStatus()),
+		StartTime:   instance.GetStartTime(),
+		EndTime:     instance.GetEndTime(),
+		Duration:    instance.GetDuration(),
+		Difficulty:  instance.GetDifficulty(),
+		Progress:    instance.GetProgress(),
+		IsCompleted: instance.IsCompleted(),
 	}
 }
 
@@ -335,15 +337,15 @@ func (s *SacredService) buildPlayerBlessingDTOs(blessings []*sacred.PlayerBlessi
 	dtos := make([]*PlayerBlessingDTO, len(blessings))
 	for i, blessing := range blessings {
 		dtos[i] = &PlayerBlessingDTO{
-			BlessingID:   blessing.GetBlessingID(),
-			Name:         blessing.GetName(),
-			Description:  blessing.GetDescription(),
-			EffectType:   string(blessing.GetEffectType()),
-			EffectValue:  blessing.GetEffectValue(),
-			Duration:     blessing.GetDuration(),
+			BlessingID:    blessing.GetBlessingID(),
+			Name:          blessing.GetName(),
+			Description:   blessing.GetDescription(),
+			EffectType:    string(blessing.GetEffectType()),
+			EffectValue:   blessing.GetEffectValue(),
+			Duration:      blessing.GetDuration(),
 			RemainingTime: blessing.GetRemainingTime(),
-			IsActive:     blessing.IsActive(),
-			ActivatedAt:  blessing.GetActivatedAt(),
+			IsActive:      blessing.IsActive(),
+			ActivatedAt:   blessing.GetActivatedAt(),
 		}
 	}
 	return dtos
@@ -400,16 +402,16 @@ func (s *SacredService) buildChallengeHistoryDTOs(history []*sacred.ChallengeIns
 // buildStatisticsDTO 构建统计DTO
 func (s *SacredService) buildStatisticsDTO(stats *sacred.SacredStatistics) *SacredStatisticsDTO {
 	return &SacredStatisticsDTO{
-		PlayerID:           stats.GetPlayerID(),
-		TotalChallenges:    stats.GetTotalChallenges(),
+		PlayerID:            stats.GetPlayerID(),
+		TotalChallenges:     stats.GetTotalChallenges(),
 		CompletedChallenges: stats.GetCompletedChallenges(),
-		FailedChallenges:   stats.GetFailedChallenges(),
-		CompletionRate:     stats.GetCompletionRate(),
-		TotalReward:        stats.GetTotalReward(),
-		AverageReward:      stats.GetAverageReward(),
-		FavoriteChallenge:  stats.GetFavoriteChallenge(),
-		ActiveBlessings:    stats.GetActiveBlessings(),
-		LastChallengeTime:  stats.GetLastChallengeTime(),
+		FailedChallenges:    stats.GetFailedChallenges(),
+		CompletionRate:      stats.GetCompletionRate(),
+		TotalReward:         stats.GetTotalReward(),
+		AverageReward:       stats.GetAverageReward(),
+		FavoriteChallenge:   stats.GetFavoriteChallenge(),
+		ActiveBlessings:     stats.GetActiveBlessings(),
+		LastChallengeTime:   stats.GetLastChallengeTime(),
 	}
 }
 
@@ -448,10 +450,10 @@ type ChallengeInstanceDTO struct {
 
 // ChallengeRewardDTO 挑战奖励DTO
 type ChallengeRewardDTO struct {
-	Experience int64             `json:"experience"`
-	Items      map[string]int    `json:"items"`
-	Blessings  []string          `json:"blessings"`
-	TotalValue int64             `json:"total_value"`
+	Experience int64          `json:"experience"`
+	Items      map[string]int `json:"items"`
+	Blessings  []string       `json:"blessings"`
+	TotalValue int64          `json:"total_value"`
 }
 
 // PlayerBlessingDTO 玩家祝福DTO
@@ -517,8 +519,8 @@ type SacredStatisticsDTO struct {
 
 // ChallengeResultData 挑战结果数据
 type ChallengeResultData struct {
-	Score       int64             `json:"score"`
-	TimeUsed    time.Duration     `json:"time_used"`
-	Actions     []string          `json:"actions"`
+	Score       int64              `json:"score"`
+	TimeUsed    time.Duration      `json:"time_used"`
+	Actions     []string           `json:"actions"`
 	Performance map[string]float64 `json:"performance"`
 }

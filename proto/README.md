@@ -43,7 +43,6 @@ scripts\generate_proto.bat
 ```bash
 # 生成Go代码
 protoc --go_out=. --go_opt=paths=source_relative \
-       --go-grpc_out=. --go-grpc_opt=paths=source_relative \
        proto/*.proto
 
 # 生成C#代码
@@ -100,33 +99,23 @@ protoc --csharp_out=csharp --csharp_opt=file_extension=.g.cs \
 package main
 
 import (
-    "context"
     "log"
     
     pb "greatestworks/internal/proto/player"
-    "google.golang.org/grpc"
 )
 
 func main() {
-    conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer conn.Close()
+    // 使用netcore-go RPC客户端
+    // 具体实现请参考项目中的RPC客户端代码
     
-    client := pb.NewPlayerServiceClient(conn)
-    
-    // 创建玩家
-    resp, err := client.CreatePlayer(context.Background(), &pb.CreatePlayerRequest{
+    // 创建玩家请求
+    request := &pb.CreatePlayerRequest{
         Name: "测试玩家",
         AccountId: "account123",
         InitialLevel: 1,
-    })
-    if err != nil {
-        log.Fatal(err)
     }
     
-    log.Printf("创建玩家成功: %s", resp.Player.Name)
+    log.Printf("创建玩家请求: %s", request.Name)
 }
 ```
 
@@ -134,16 +123,15 @@ func main() {
 
 ```csharp
 using GreatestWorks.Player;
-using Grpc.Core;
 
 class Program
 {
     static void Main(string[] args)
     {
-        var channel = new Channel("localhost:8080", ChannelCredentials.Insecure);
-        var client = new PlayerService.PlayerServiceClient(channel);
+        // 使用netcore-go RPC客户端
+        // 具体实现请参考项目中的RPC客户端代码
         
-        // 创建玩家
+        // 创建玩家请求
         var request = new CreatePlayerRequest
         {
             Name = "测试玩家",
@@ -151,10 +139,7 @@ class Program
             InitialLevel = 1
         };
         
-        var response = client.CreatePlayer(request);
-        Console.WriteLine($"创建玩家成功: {response.Player.Name}");
-        
-        channel.ShutdownAsync().Wait();
+        Console.WriteLine($"创建玩家请求: {request.Name}");
     }
 }
 ```
@@ -181,7 +166,6 @@ class Program
 2. **Go插件未找到**
    ```bash
    go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
    ```
 
 3. **C#插件未找到**

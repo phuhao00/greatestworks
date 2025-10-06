@@ -1,6 +1,6 @@
 @echo off
 REM Proto文件生成脚本 (Windows版本)
-REM 支持Go和C#代码生成，只生成消息定义，不生成gRPC服务
+REM 支持Go和C#代码生成
 
 setlocal enabledelayedexpansion
 
@@ -24,7 +24,6 @@ where protoc-gen-go >nul 2>nul
 if %errorlevel% neq 0 (
     echo 安装Go插件...
     go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 )
 
 REM 创建输出目录
@@ -37,9 +36,9 @@ if not exist "csharp\GreatestWorks\Battle" mkdir "csharp\GreatestWorks\Battle"
 if not exist "csharp\GreatestWorks\Pet" mkdir "csharp\GreatestWorks\Pet"
 if not exist "csharp\GreatestWorks\Common" mkdir "csharp\GreatestWorks\Common"
 
-echo 生成Go代码（只生成消息定义，不生成gRPC服务）...
+echo 生成Go代码...
 
-REM 生成Go代码 - 只生成消息定义，不生成gRPC服务
+REM 生成Go代码
 protoc --go_out=. --go_opt=paths=source_relative proto\common.proto
 protoc --go_out=. --go_opt=paths=source_relative proto\player.proto
 protoc --go_out=. --go_opt=paths=source_relative proto\battle.proto
@@ -53,8 +52,7 @@ move proto\player.pb.go internal\proto\player\ >nul 2>nul
 move proto\battle.pb.go internal\proto\battle\ >nul 2>nul
 move proto\pet.pb.go internal\proto\pet\ >nul 2>nul
 
-REM 删除可能生成的gRPC文件
-del proto\*_grpc.pb.go >nul 2>nul
+
 
 echo 生成C#代码...
 
@@ -77,7 +75,6 @@ echo C#生成的文件:
 dir /s /b csharp\*.g.cs
 
 echo.
-echo 注意: 只生成了protobuf消息定义，没有生成gRPC服务文件
-echo 项目使用netcore-go RPC架构，不使用gRPC
+
 
 pause
