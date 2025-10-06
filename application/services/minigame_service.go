@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/greatestworks/internal/domain/minigame"
+	"greatestworks/internal/domain/minigame"
 )
 
 // MinigameApplicationService 小游戏应用服务

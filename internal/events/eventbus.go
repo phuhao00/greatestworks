@@ -12,9 +12,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/phuhao00/netcore-go/core"
 	"github.com/nats-io/nats.go"
+	// "github.com/phuhao00/netcore-go/core" // 暂时注释掉缺失的包
 )
+
+// Logger 简单的日志接口
+type Logger interface {
+	Info(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+}
 
 // Event 事件接口
 type Event interface {
@@ -30,7 +37,7 @@ type Handler func(ctx context.Context, event Event) error
 type EventBus struct {
 	handlers map[string][]Handler
 	mutex    sync.RWMutex
-	logger   core.Logger
+	logger   Logger
 	nats     *nats.Conn
 }
 
@@ -59,7 +66,7 @@ func (e *BaseEvent) GetTimestamp() time.Time {
 }
 
 // NewEventBus 创建事件总线
-func NewEventBus(logger core.Logger) *EventBus {
+func NewEventBus(logger Logger) *EventBus {
 	return &EventBus{
 		handlers: make(map[string][]Handler),
 		logger:   logger,
@@ -72,7 +79,7 @@ func (eb *EventBus) ConnectNATS(url string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to NATS: %w", err)
 	}
-	
+
 	eb.nats = nc
 	eb.logger.Info("Connected to NATS", "url", url)
 	return nil
@@ -82,7 +89,7 @@ func (eb *EventBus) ConnectNATS(url string) error {
 func (eb *EventBus) Subscribe(eventType string, handler Handler) {
 	eb.mutex.Lock()
 	defer eb.mutex.Unlock()
-	
+
 	eb.handlers[eventType] = append(eb.handlers[eventType], handler)
 	eb.logger.Debug("Event handler subscribed", "type", eventType)
 }
@@ -91,7 +98,7 @@ func (eb *EventBus) Subscribe(eventType string, handler Handler) {
 func (eb *EventBus) Unsubscribe(eventType string, handler Handler) {
 	eb.mutex.Lock()
 	defer eb.mutex.Unlock()
-	
+
 	handlers := eb.handlers[eventType]
 	for i, h := range handlers {
 		if reflect.ValueOf(h).Pointer() == reflect.ValueOf(handler).Pointer() {
@@ -99,7 +106,7 @@ func (eb *EventBus) Unsubscribe(eventType string, handler Handler) {
 			break
 		}
 	}
-	
+
 	eb.logger.Debug("Event handler unsubscribed", "type", eventType)
 }
 
@@ -109,7 +116,7 @@ func (eb *EventBus) Publish(ctx context.Context, event Event) error {
 	if err := eb.publishLocal(ctx, event); err != nil {
 		eb.logger.Error("Local event publish failed", "error", err)
 	}
-	
+
 	// 远程发布（通过NATS）
 	if eb.nats != nil {
 		if err := eb.publishRemote(event); err != nil {
@@ -117,7 +124,7 @@ func (eb *EventBus) Publish(ctx context.Context, event Event) error {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -126,7 +133,7 @@ func (eb *EventBus) publishLocal(ctx context.Context, event Event) error {
 	eb.mutex.RLock()
 	handlers := eb.handlers[event.GetType()]
 	eb.mutex.RUnlock()
-	
+
 	for _, handler := range handlers {
 		go func(h Handler) {
 			if err := h(ctx, event); err != nil {
@@ -134,7 +141,7 @@ func (eb *EventBus) publishLocal(ctx context.Context, event Event) error {
 			}
 		}(handler)
 	}
-	
+
 	eb.logger.Debug("Event published locally", "type", event.GetType())
 	return nil
 }
@@ -145,12 +152,12 @@ func (eb *EventBus) publishRemote(event Event) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
-	
+
 	subject := fmt.Sprintf("events.%s", event.GetType())
 	if err := eb.nats.Publish(subject, data); err != nil {
 		return fmt.Errorf("failed to publish event to NATS: %w", err)
 	}
-	
+
 	eb.logger.Debug("Event published remotely", "type", event.GetType(), "subject", subject)
 	return nil
 }
@@ -160,7 +167,7 @@ func (eb *EventBus) SubscribeRemote(eventType string, handler Handler) error {
 	if eb.nats == nil {
 		return fmt.Errorf("NATS connection not established")
 	}
-	
+
 	subject := fmt.Sprintf("events.%s", eventType)
 	_, err := eb.nats.Subscribe(subject, func(msg *nats.Msg) {
 		var event BaseEvent
@@ -168,17 +175,17 @@ func (eb *EventBus) SubscribeRemote(eventType string, handler Handler) error {
 			eb.logger.Error("Failed to unmarshal remote event", "error", err)
 			return
 		}
-		
+
 		ctx := context.Background()
 		if err := handler(ctx, &event); err != nil {
 			eb.logger.Error("Remote event handler error", "type", eventType, "error", err)
 		}
 	})
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to remote events: %w", err)
 	}
-	
+
 	eb.logger.Info("Subscribed to remote events", "type", eventType, "subject", subject)
 	return nil
 }
@@ -193,16 +200,16 @@ func (eb *EventBus) Close() {
 
 // GameEvents 游戏事件类型常量
 const (
-	EventPlayerLogin    = "player.login"
-	EventPlayerLogout   = "player.logout"
-	EventPlayerMove     = "player.move"
-	EventPlayerChat     = "player.chat"
-	EventBattleStart    = "battle.start"
-	EventBattleEnd      = "battle.end"
-	EventSceneEnter     = "scene.enter"
-	EventSceneLeave     = "scene.leave"
-	EventActivityJoin   = "activity.join"
-	EventActivityLeave  = "activity.leave"
+	EventPlayerLogin   = "player.login"
+	EventPlayerLogout  = "player.logout"
+	EventPlayerMove    = "player.move"
+	EventPlayerChat    = "player.chat"
+	EventBattleStart   = "battle.start"
+	EventBattleEnd     = "battle.end"
+	EventSceneEnter    = "scene.enter"
+	EventSceneLeave    = "scene.leave"
+	EventActivityJoin  = "activity.join"
+	EventActivityLeave = "activity.leave"
 )
 
 // PlayerLoginEvent 玩家登录事件
@@ -295,11 +302,11 @@ func NewBattleStartEvent(battleID string, players []string) *BattleStartEvent {
 // EventManager 事件管理器
 type EventManager struct {
 	eventBus *EventBus
-	logger   core.Logger
+	logger   Logger
 }
 
 // NewEventManager 创建事件管理器
-func NewEventManager(logger core.Logger) *EventManager {
+func NewEventManager(logger Logger) *EventManager {
 	return &EventManager{
 		eventBus: NewEventBus(logger),
 		logger:   logger,
@@ -311,10 +318,10 @@ func (em *EventManager) Initialize(natsURL string) error {
 	if err := em.eventBus.ConnectNATS(natsURL); err != nil {
 		return fmt.Errorf("failed to connect to NATS: %w", err)
 	}
-	
+
 	// 注册默认事件处理器
 	em.registerDefaultHandlers()
-	
+
 	em.logger.Info("Event manager initialized")
 	return nil
 }
@@ -326,13 +333,13 @@ func (em *EventManager) registerDefaultHandlers() {
 		em.logger.Info("Player login event", "event", event.GetData())
 		return nil
 	})
-	
+
 	// 玩家移动事件处理
 	em.eventBus.Subscribe(EventPlayerMove, func(ctx context.Context, event Event) error {
 		em.logger.Debug("Player move event", "event", event.GetData())
 		return nil
 	})
-	
+
 	// 聊天事件处理
 	em.eventBus.Subscribe(EventPlayerChat, func(ctx context.Context, event Event) error {
 		em.logger.Info("Chat event", "event", event.GetData())

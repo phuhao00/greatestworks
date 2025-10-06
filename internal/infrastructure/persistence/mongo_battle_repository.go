@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	
+
 	"greatestworks/internal/domain/battle"
 	"greatestworks/internal/domain/player"
 )
@@ -28,30 +28,30 @@ func NewMongoBattleRepository(db *mongo.Database) battle.Repository {
 
 // BattleDoc MongoDB战斗文档
 type BattleDoc struct {
-	ID           primitive.ObjectID      `bson:"_id,omitempty"`
-	BattleID     string                  `bson:"battle_id"`
-	BattleType   int                     `bson:"battle_type"`
-	Status       int                     `bson:"status"`
+	ID           primitive.ObjectID     `bson:"_id,omitempty"`
+	BattleID     string                 `bson:"battle_id"`
+	BattleType   int                    `bson:"battle_type"`
+	Status       int                    `bson:"status"`
 	Participants []BattleParticipantDoc `bson:"participants"`
-	Rounds       []BattleRoundDoc        `bson:"rounds"`
-	Winner       *string                 `bson:"winner,omitempty"`
-	StartTime    time.Time               `bson:"start_time"`
-	EndTime      *time.Time              `bson:"end_time,omitempty"`
-	CreatedAt    time.Time               `bson:"created_at"`
-	UpdatedAt    time.Time               `bson:"updated_at"`
-	Version      int64                   `bson:"version"`
+	Rounds       []BattleRoundDoc       `bson:"rounds"`
+	Winner       *string                `bson:"winner,omitempty"`
+	StartTime    time.Time              `bson:"start_time"`
+	EndTime      *time.Time             `bson:"end_time,omitempty"`
+	CreatedAt    time.Time              `bson:"created_at"`
+	UpdatedAt    time.Time              `bson:"updated_at"`
+	Version      int64                  `bson:"version"`
 }
 
 // BattleParticipantDoc 战斗参与者文档
 type BattleParticipantDoc struct {
-	PlayerID     string    `bson:"player_id"`
-	Team         int       `bson:"team"`
-	CurrentHP    int       `bson:"current_hp"`
-	CurrentMP    int       `bson:"current_mp"`
-	IsAlive      bool      `bson:"is_alive"`
-	DamageDealt  int       `bson:"damage_dealt"`
-	DamageTaken  int       `bson:"damage_taken"`
-	JoinedAt     time.Time `bson:"joined_at"`
+	PlayerID    string    `bson:"player_id"`
+	Team        int       `bson:"team"`
+	CurrentHP   int       `bson:"current_hp"`
+	CurrentMP   int       `bson:"current_mp"`
+	IsAlive     bool      `bson:"is_alive"`
+	DamageDealt int       `bson:"damage_dealt"`
+	DamageTaken int       `bson:"damage_taken"`
+	JoinedAt    time.Time `bson:"joined_at"`
 }
 
 // BattleRoundDoc 战斗回合文档
@@ -64,37 +64,37 @@ type BattleRoundDoc struct {
 
 // BattleActionDoc 战斗行动文档
 type BattleActionDoc struct {
-	ActionID   string     `bson:"action_id"`
-	ActorID    string     `bson:"actor_id"`
-	TargetID   *string    `bson:"target_id,omitempty"`
-	ActionType int        `bson:"action_type"`
-	SkillID    *string    `bson:"skill_id,omitempty"`
-	Damage     int        `bson:"damage"`
-	Healing    int        `bson:"healing"`
-	Critical   bool       `bson:"critical"`
-	Timestamp  time.Time  `bson:"timestamp"`
+	ActionID   string    `bson:"action_id"`
+	ActorID    string    `bson:"actor_id"`
+	TargetID   *string   `bson:"target_id,omitempty"`
+	ActionType int       `bson:"action_type"`
+	SkillID    *string   `bson:"skill_id,omitempty"`
+	Damage     int       `bson:"damage"`
+	Healing    int       `bson:"healing"`
+	Critical   bool      `bson:"critical"`
+	Timestamp  time.Time `bson:"timestamp"`
 }
 
 // Save 保存战斗
 func (r *MongoBattleRepo) Save(ctx context.Context, b *battle.Battle) error {
 	doc := r.battleToDoc(b)
-	
+
 	filter := bson.M{"battle_id": b.ID().String()}
 	update := bson.M{"$set": doc}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save battle: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindByID 根据ID查找战斗
 func (r *MongoBattleRepo) FindByID(ctx context.Context, id battle.BattleID) (*battle.Battle, error) {
 	filter := bson.M{"battle_id": id.String()}
-	
+
 	var doc BattleDoc
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -103,7 +103,7 @@ func (r *MongoBattleRepo) FindByID(ctx context.Context, id battle.BattleID) (*ba
 		}
 		return nil, fmt.Errorf("failed to find battle: %w", err)
 	}
-	
+
 	return r.docToBattle(&doc), nil
 }
 
@@ -115,16 +115,16 @@ func (r *MongoBattleRepo) Update(ctx context.Context, b *battle.Battle) error {
 // Delete 删除战斗
 func (r *MongoBattleRepo) Delete(ctx context.Context, id battle.BattleID) error {
 	filter := bson.M{"battle_id": id.String()}
-	
+
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to delete battle: %w", err)
 	}
-	
+
 	if result.DeletedCount == 0 {
 		return battle.ErrBattleNotFound
 	}
-	
+
 	return nil
 }
 
@@ -134,23 +134,23 @@ func (r *MongoBattleRepo) FindByPlayerID(ctx context.Context, playerID player.Pl
 		"participants.player_id": playerID.String(),
 	}
 	opts := options.Find().SetLimit(int64(limit)).SetSort(bson.D{{Key: "created_at", Value: -1}})
-	
+
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find battles by player: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var docs []BattleDoc
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, fmt.Errorf("failed to decode battles: %w", err)
 	}
-	
+
 	battles := make([]*battle.Battle, len(docs))
 	for i, doc := range docs {
 		battles[i] = r.docToBattle(&doc)
 	}
-	
+
 	return battles, nil
 }
 
@@ -160,23 +160,23 @@ func (r *MongoBattleRepo) FindActiveBattles(ctx context.Context, limit int) ([]*
 		"status": int(battle.BattleStatusInProgress),
 	}
 	opts := options.Find().SetLimit(int64(limit))
-	
+
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find active battles: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var docs []BattleDoc
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, fmt.Errorf("failed to decode active battles: %w", err)
 	}
-	
+
 	battles := make([]*battle.Battle, len(docs))
 	for i, doc := range docs {
 		battles[i] = r.docToBattle(&doc)
 	}
-	
+
 	return battles, nil
 }
 
@@ -186,23 +186,23 @@ func (r *MongoBattleRepo) FindByStatus(ctx context.Context, status battle.Battle
 		"status": int(status),
 	}
 	opts := options.Find().SetLimit(int64(limit))
-	
+
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find battles by status: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var docs []BattleDoc
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, fmt.Errorf("failed to decode battles by status: %w", err)
 	}
-	
+
 	battles := make([]*battle.Battle, len(docs))
 	for i, doc := range docs {
 		battles[i] = r.docToBattle(&doc)
 	}
-	
+
 	return battles, nil
 }
 
@@ -212,23 +212,23 @@ func (r *MongoBattleRepo) FindByType(ctx context.Context, battleType battle.Batt
 		"battle_type": int(battleType),
 	}
 	opts := options.Find().SetLimit(int64(limit))
-	
+
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find battles by type: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var docs []BattleDoc
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, fmt.Errorf("failed to decode battles by type: %w", err)
 	}
-	
+
 	battles := make([]*battle.Battle, len(docs))
 	for i, doc := range docs {
 		battles[i] = r.docToBattle(&doc)
 	}
-	
+
 	return battles, nil
 }
 
@@ -237,12 +237,12 @@ func (r *MongoBattleRepo) CountByPlayerID(ctx context.Context, playerID player.P
 	filter := bson.M{
 		"participants.player_id": playerID.String(),
 	}
-	
+
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count battles by player: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -252,21 +252,21 @@ func (r *MongoBattleRepo) battleToDoc(b *battle.Battle) *BattleDoc {
 	participants := make([]BattleParticipantDoc, len(b.Participants()))
 	for i, p := range b.Participants() {
 		participants[i] = BattleParticipantDoc{
-			PlayerID:     p.PlayerID.String(),
-			Team:         p.Team,
-			CurrentHP:    p.CurrentHP,
-			CurrentMP:    p.CurrentMP,
-			IsAlive:      p.IsAlive,
-			DamageDealt:  p.DamageDealt,
-			DamageTaken:  p.DamageTaken,
-			JoinedAt:     p.JoinedAt,
+			PlayerID:    p.PlayerID.String(),
+			Team:        p.Team,
+			CurrentHP:   p.CurrentHP,
+			CurrentMP:   p.CurrentMP,
+			IsAlive:     p.IsAlive,
+			DamageDealt: p.DamageDealt,
+			DamageTaken: p.DamageTaken,
+			JoinedAt:    p.JoinedAt,
 		}
 	}
-	
+
 	// 转换回合（这里需要Battle提供获取回合的方法）
 	rounds := make([]BattleRoundDoc, 0)
 	// TODO: 实现回合转换
-	
+
 	doc := &BattleDoc{
 		BattleID:     b.ID().String(),
 		BattleType:   int(b.GetBattleType()),
@@ -278,16 +278,16 @@ func (r *MongoBattleRepo) battleToDoc(b *battle.Battle) *BattleDoc {
 		UpdatedAt:    time.Now(),
 		Version:      b.Version(),
 	}
-	
+
 	if b.Winner() != nil {
 		winnerStr := b.Winner().String()
 		doc.Winner = &winnerStr
 	}
-	
+
 	if b.EndTime() != nil {
 		doc.EndTime = b.EndTime()
 	}
-	
+
 	return doc
 }
 
@@ -296,9 +296,9 @@ func (r *MongoBattleRepo) docToBattle(doc *BattleDoc) *battle.Battle {
 	// 这里需要Battle提供重建方法
 	// 暂时返回新创建的战斗
 	b := battle.NewBattle(battle.BattleType(doc.BattleType))
-	
+
 	// TODO: 设置其他属性
-	
+
 	return b
 }
 
@@ -325,11 +325,11 @@ func (r *MongoBattleRepo) CreateIndexes(ctx context.Context) error {
 			Keys: bson.D{{Key: "start_time", Value: -1}},
 		},
 	}
-	
+
 	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return fmt.Errorf("failed to create battle indexes: %w", err)
 	}
-	
+
 	return nil
 }

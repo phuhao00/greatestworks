@@ -17,4 +17,5 @@ var (
 	ErrPlayerNotInBattle    = errors.New("player not in battle")
 	ErrInsufficientMana     = errors.New("insufficient mana")
 	ErrSkillOnCooldown      = errors.New("skill on cooldown")
-	ErrInvalidAction        = errors.New("invali
+	ErrInvalidAction        = errors.New("invalid action")
+)

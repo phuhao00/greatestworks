@@ -12,12 +12,10 @@ import (
 	"time"
 
 	"greatestworks/application/handlers"
-	"greatestworks/internal/infrastructure/config"
-	"greatestworks/internal/infrastructure/database"
 	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/interfaces/grpc"
 	"greatestworks/internal/interfaces/http"
 	"greatestworks/internal/interfaces/tcp"
-	"greatestworks/internal/interfaces/grpc"
 )
 
 // ServerConfig 服务器配置

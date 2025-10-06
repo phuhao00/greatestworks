@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"github.com/greatestworks/internal/domain/minigame"
+	"greatestworks/internal/domain/minigame"
 )
 
 // MinigameRepository MongoDB小游戏仓储实现
@@ -31,22 +31,22 @@ func NewMinigameRepository(db *mongo.Database) *MinigameRepository {
 
 // MinigameDocument 小游戏文档结构
 type MinigameDocument struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	MinigameID  string             `bson:"minigame_id"`
-	Name        string             `bson:"name"`
-	Description string             `bson:"description"`
-	GameType    string             `bson:"game_type"`
-	Difficulty  string             `bson:"difficulty"`
-	MaxPlayers  int32              `bson:"max_players"`
-	TimeLimit   int32              `bson:"time_limit"`
-	IsActive    bool               `bson:"is_active"`
+	ID          primitive.ObjectID     `bson:"_id,omitempty"`
+	MinigameID  string                 `bson:"minigame_id"`
+	Name        string                 `bson:"name"`
+	Description string                 `bson:"description"`
+	GameType    string                 `bson:"game_type"`
+	Difficulty  string                 `bson:"difficulty"`
+	MaxPlayers  int32                  `bson:"max_players"`
+	TimeLimit   int32                  `bson:"time_limit"`
+	IsActive    bool                   `bson:"is_active"`
 	Rules       map[string]interface{} `bson:"rules"`
-	Rewards     []RewardDocument   `bson:"rewards"`
+	Rewards     []RewardDocument       `bson:"rewards"`
 	Settings    map[string]interface{} `bson:"settings"`
-	Statistics  StatisticsDocument `bson:"statistics"`
-	CreatedAt   time.Time          `bson:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at"`
-	Version     int64              `bson:"version"`
+	Statistics  StatisticsDocument     `bson:"statistics"`
+	CreatedAt   time.Time              `bson:"created_at"`
+	UpdatedAt   time.Time              `bson:"updated_at"`
+	Version     int64                  `bson:"version"`
 }
 
 // RewardDocument 奖励文档结构
@@ -59,11 +59,11 @@ type RewardDocument struct {
 
 // StatisticsDocument 统计文档结构
 type StatisticsDocument struct {
-	TotalPlays    int64   `bson:"total_plays"`
-	TotalPlayers  int64   `bson:"total_players"`
-	AverageScore  float64 `bson:"average_score"`
-	HighestScore  int64   `bson:"highest_score"`
-	AverageTime   float64 `bson:"average_time"`
+	TotalPlays     int64   `bson:"total_plays"`
+	TotalPlayers   int64   `bson:"total_players"`
+	AverageScore   float64 `bson:"average_score"`
+	HighestScore   int64   `bson:"highest_score"`
+	AverageTime    float64 `bson:"average_time"`
 	CompletionRate float64 `bson:"completion_rate"`
 }
 
@@ -90,26 +90,26 @@ type GameSessionDocument struct {
 // Save 保存小游戏聚合根
 func (r *MinigameRepository) Save(ctx context.Context, minigameAggregate *minigame.MinigameAggregate) error {
 	doc := r.toMinigameDocument(minigameAggregate)
-	
+
 	filter := bson.M{"minigame_id": doc.MinigameID}
 	update := bson.M{
 		"$set": doc,
 		"$inc": bson.M{"version": 1},
 	}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.minigameColl.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save minigame: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindByID 根据ID查找小游戏
 func (r *MinigameRepository) FindByID(ctx context.Context, minigameID string) (*minigame.MinigameAggregate, error) {
 	filter := bson.M{"minigame_id": minigameID}
-	
+
 	var doc MinigameDocument
 	err := r.minigameColl.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -118,7 +118,7 @@ func (r *MinigameRepository) FindByID(ctx context.Context, minigameID string) (*
 		}
 		return nil, fmt.Errorf("failed to find minigame: %w", err)
 	}
-	
+
 	return r.fromMinigameDocument(&doc), nil
 }
 
@@ -128,13 +128,13 @@ func (r *MinigameRepository) FindByType(ctx context.Context, gameType minigame.G
 		"game_type": gameType.String(),
 		"is_active": true,
 	}
-	
+
 	cursor, err := r.minigameColl.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find minigames by type: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var minigames []*minigame.MinigameAggregate
 	for cursor.Next(ctx) {
 		var doc MinigameDocument
@@ -143,24 +143,24 @@ func (r *MinigameRepository) FindByType(ctx context.Context, gameType minigame.G
 		}
 		minigames = append(minigames, r.fromMinigameDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return minigames, nil
 }
 
 // FindActive 查找激活的小游戏
 func (r *MinigameRepository) FindActive(ctx context.Context) ([]*minigame.MinigameAggregate, error) {
 	filter := bson.M{"is_active": true}
-	
+
 	cursor, err := r.minigameColl.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find active minigames: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var minigames []*minigame.MinigameAggregate
 	for cursor.Next(ctx) {
 		var doc MinigameDocument
@@ -169,11 +169,11 @@ func (r *MinigameRepository) FindActive(ctx context.Context) ([]*minigame.Miniga
 		}
 		minigames = append(minigames, r.fromMinigameDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return minigames, nil
 }
 
@@ -182,17 +182,17 @@ func (r *MinigameRepository) Delete(ctx context.Context, minigameID string) erro
 	filter := bson.M{"minigame_id": minigameID}
 	update := bson.M{
 		"$set": bson.M{
-			"is_active": false,
+			"is_active":  false,
 			"updated_at": time.Now(),
 		},
 		"$inc": bson.M{"version": 1},
 	}
-	
+
 	_, err := r.minigameColl.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to delete minigame: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -213,23 +213,23 @@ func NewGameSessionRepository(db *mongo.Database) *GameSessionRepository {
 // Save 保存游戏会话
 func (r *GameSessionRepository) Save(ctx context.Context, session *minigame.GameSession) error {
 	doc := r.toGameSessionDocument(session)
-	
+
 	filter := bson.M{"session_id": doc.SessionID}
 	update := bson.M{"$set": doc}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.sessionColl.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save game session: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindByID 根据ID查找游戏会话
 func (r *GameSessionRepository) FindByID(ctx context.Context, sessionID string) (*minigame.GameSession, error) {
 	filter := bson.M{"session_id": sessionID}
-	
+
 	var doc GameSessionDocument
 	err := r.sessionColl.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -238,7 +238,7 @@ func (r *GameSessionRepository) FindByID(ctx context.Context, sessionID string) 
 		}
 		return nil, fmt.Errorf("failed to find game session: %w", err)
 	}
-	
+
 	return r.fromGameSessionDocument(&doc), nil
 }
 
@@ -248,7 +248,7 @@ func (r *GameSessionRepository) FindActiveByPlayer(ctx context.Context, playerID
 		"player_id": playerID,
 		"status":    minigame.SessionStatusActive.String(),
 	}
-	
+
 	var doc GameSessionDocument
 	err := r.sessionColl.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -257,7 +257,7 @@ func (r *GameSessionRepository) FindActiveByPlayer(ctx context.Context, playerID
 		}
 		return nil, fmt.Errorf("failed to find active game session: %w", err)
 	}
-	
+
 	return r.fromGameSessionDocument(&doc), nil
 }
 
@@ -267,13 +267,13 @@ func (r *GameSessionRepository) FindByPlayer(ctx context.Context, playerID uint6
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit))
-	
+
 	cursor, err := r.sessionColl.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find game sessions by player: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var sessions []*minigame.GameSession
 	for cursor.Next(ctx) {
 		var doc GameSessionDocument
@@ -282,11 +282,11 @@ func (r *GameSessionRepository) FindByPlayer(ctx context.Context, playerID uint6
 		}
 		sessions = append(sessions, r.fromGameSessionDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return sessions, nil
 }
 
@@ -296,13 +296,13 @@ func (r *GameSessionRepository) FindByMinigame(ctx context.Context, minigameID s
 	opts := options.Find().
 		SetSort(bson.D{{Key: "score", Value: -1}}).
 		SetLimit(int64(limit))
-	
+
 	cursor, err := r.sessionColl.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find game sessions by minigame: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var sessions []*minigame.GameSession
 	for cursor.Next(ctx) {
 		var doc GameSessionDocument
@@ -311,24 +311,24 @@ func (r *GameSessionRepository) FindByMinigame(ctx context.Context, minigameID s
 		}
 		sessions = append(sessions, r.fromGameSessionDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return sessions, nil
 }
 
 // FindByQuery 根据查询条件查找会话
 func (r *GameSessionRepository) FindByQuery(ctx context.Context, query *minigame.GameSessionQuery) ([]*minigame.GameSession, int64, error) {
 	filter := r.buildGameSessionFilter(query)
-	
+
 	// 计算总数
 	total, err := r.sessionColl.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count game sessions: %w", err)
 	}
-	
+
 	// 构建查询选项
 	opts := options.Find()
 	if query.GetSort() != "" {
@@ -344,13 +344,13 @@ func (r *GameSessionRepository) FindByQuery(ctx context.Context, query *minigame
 	if query.GetOffset() > 0 {
 		opts.SetSkip(int64(query.GetOffset()))
 	}
-	
+
 	cursor, err := r.sessionColl.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find game sessions: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var sessions []*minigame.GameSession
 	for cursor.Next(ctx) {
 		var doc GameSessionDocument
@@ -359,32 +359,32 @@ func (r *GameSessionRepository) FindByQuery(ctx context.Context, query *minigame
 		}
 		sessions = append(sessions, r.fromGameSessionDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, 0, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return sessions, total, nil
 }
 
 // CleanupExpiredSessions 清理过期会话
 func (r *GameSessionRepository) CleanupExpiredSessions(ctx context.Context) (int64, error) {
 	filter := bson.M{
-		"status": minigame.SessionStatusActive.String(),
+		"status":     minigame.SessionStatusActive.String(),
 		"expires_at": bson.M{"$lt": time.Now()},
 	}
 	update := bson.M{
 		"$set": bson.M{
-			"status": minigame.SessionStatusExpired.String(),
+			"status":     minigame.SessionStatusExpired.String(),
 			"updated_at": time.Now(),
 		},
 	}
-	
+
 	result, err := r.sessionColl.UpdateMany(ctx, filter, update)
 	if err != nil {
 		return 0, fmt.Errorf("failed to cleanup expired sessions: %w", err)
 	}
-	
+
 	return result.ModifiedCount, nil
 }
 
@@ -402,7 +402,7 @@ func (r *MinigameRepository) toMinigameDocument(minigameAggregate *minigame.Mini
 			Reason:   reward.GetReason(),
 		})
 	}
-	
+
 	// 转换统计信息
 	stats := minigameAggregate.GetStatistics()
 	statistics := StatisticsDocument{
@@ -413,7 +413,7 @@ func (r *MinigameRepository) toMinigameDocument(minigameAggregate *minigame.Mini
 		AverageTime:    stats.GetAverageTime(),
 		CompletionRate: stats.GetCompletionRate(),
 	}
-	
+
 	return &MinigameDocument{
 		MinigameID:  minigameAggregate.GetID(),
 		Name:        minigameAggregate.GetName(),
@@ -438,7 +438,7 @@ func (r *MinigameRepository) fromMinigameDocument(doc *MinigameDocument) *miniga
 	// 解析枚举值
 	gameType := minigame.ParseGameType(doc.GameType)
 	difficulty := minigame.ParseDifficulty(doc.Difficulty)
-	
+
 	// 重建聚合根
 	minigameAggregate := minigame.NewMinigameAggregate(doc.Name, gameType, difficulty)
 	minigameAggregate.SetID(doc.MinigameID)
@@ -448,14 +448,14 @@ func (r *MinigameRepository) fromMinigameDocument(doc *MinigameDocument) *miniga
 	minigameAggregate.SetRules(doc.Rules)
 	minigameAggregate.SetSettings(doc.Settings)
 	minigameAggregate.SetVersion(doc.Version)
-	
+
 	// 转换奖励
 	for _, rewardDoc := range doc.Rewards {
 		rewardType := minigame.ParseRewardType(rewardDoc.Type)
 		reward := minigame.NewGameReward(rewardType, rewardDoc.ItemID, rewardDoc.Quantity, rewardDoc.Reason)
 		minigameAggregate.AddReward(reward)
 	}
-	
+
 	// 设置统计信息
 	stats := minigame.NewGameStatistics()
 	stats.SetTotalPlays(doc.Statistics.TotalPlays)
@@ -465,13 +465,13 @@ func (r *MinigameRepository) fromMinigameDocument(doc *MinigameDocument) *miniga
 	stats.SetAverageTime(doc.Statistics.AverageTime)
 	stats.SetCompletionRate(doc.Statistics.CompletionRate)
 	minigameAggregate.SetStatistics(stats)
-	
+
 	if doc.IsActive {
 		minigameAggregate.Activate()
 	} else {
 		minigameAggregate.Deactivate()
 	}
-	
+
 	return minigameAggregate
 }
 
@@ -487,7 +487,7 @@ func (r *GameSessionRepository) toGameSessionDocument(session *minigame.GameSess
 			Reason:   reward.GetReason(),
 		})
 	}
-	
+
 	doc := &GameSessionDocument{
 		SessionID:   session.GetID(),
 		MinigameID:  session.GetMinigameID(),
@@ -504,11 +504,11 @@ func (r *GameSessionRepository) toGameSessionDocument(session *minigame.GameSess
 		CreatedAt:   session.GetCreatedAt(),
 		UpdatedAt:   session.GetUpdatedAt(),
 	}
-	
+
 	if !session.GetCompletedAt().IsZero() {
 		doc.CompletedAt = session.GetCompletedAt()
 	}
-	
+
 	return doc
 }
 
@@ -516,7 +516,7 @@ func (r *GameSessionRepository) toGameSessionDocument(session *minigame.GameSess
 func (r *GameSessionRepository) fromGameSessionDocument(doc *GameSessionDocument) *minigame.GameSession {
 	// 解析状态
 	status := minigame.ParseSessionStatus(doc.Status)
-	
+
 	// 重建会话
 	session := minigame.NewGameSession(
 		doc.SessionID,
@@ -524,44 +524,44 @@ func (r *GameSessionRepository) fromGameSessionDocument(doc *GameSessionDocument
 		doc.PlayerID,
 		doc.TimeLimit,
 	)
-	
+
 	session.SetStatus(status)
 	session.SetScore(doc.Score)
 	session.SetTimeElapsed(doc.TimeElapsed)
 	session.SetSettings(doc.Settings)
 	session.SetGameData(doc.GameData)
 	session.SetTimestamps(doc.StartedAt, doc.ExpiresAt, doc.CompletedAt)
-	
+
 	// 转换奖励
 	for _, rewardDoc := range doc.Rewards {
 		rewardType := minigame.ParseRewardType(rewardDoc.Type)
 		reward := minigame.NewGameReward(rewardType, rewardDoc.ItemID, rewardDoc.Quantity, rewardDoc.Reason)
 		session.AddReward(reward)
 	}
-	
+
 	return session
 }
 
 // buildGameSessionFilter 构建游戏会话查询过滤器
 func (r *GameSessionRepository) buildGameSessionFilter(query *minigame.GameSessionQuery) bson.M {
 	filter := bson.M{}
-	
+
 	if query.GetPlayerID() > 0 {
 		filter["player_id"] = query.GetPlayerID()
 	}
-	
+
 	if query.GetMinigameID() != "" {
 		filter["minigame_id"] = query.GetMinigameID()
 	}
-	
+
 	if query.GetStatus() != nil {
 		filter["status"] = query.GetStatus().String()
 	}
-	
+
 	if query.GetMinScore() > 0 {
 		filter["score"] = bson.M{"$gte": query.GetMinScore()}
 	}
-	
+
 	if query.GetMaxScore() > 0 {
 		if scoreFilter, exists := filter["score"]; exists {
 			scoreFilter.(bson.M)["$lte"] = query.GetMaxScore()
@@ -569,11 +569,11 @@ func (r *GameSessionRepository) buildGameSessionFilter(query *minigame.GameSessi
 			filter["score"] = bson.M{"$lte": query.GetMaxScore()}
 		}
 	}
-	
+
 	if !query.GetStartTime().IsZero() {
 		filter["started_at"] = bson.M{"$gte": query.GetStartTime()}
 	}
-	
+
 	if !query.GetEndTime().IsZero() {
 		if timeFilter, exists := filter["started_at"]; exists {
 			timeFilter.(bson.M)["$lte"] = query.GetEndTime()
@@ -581,7 +581,7 @@ func (r *GameSessionRepository) buildGameSessionFilter(query *minigame.GameSessi
 			filter["started_at"] = bson.M{"$lte": query.GetEndTime()}
 		}
 	}
-	
+
 	return filter
 }
 
@@ -590,7 +590,7 @@ func (r *MinigameRepository) CreateIndexes(ctx context.Context) error {
 	// 小游戏索引
 	minigameIndexes := []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "minigame_id", Value: 1}},
+			Keys:    bson.D{{Key: "minigame_id", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{
@@ -603,11 +603,11 @@ func (r *MinigameRepository) CreateIndexes(ctx context.Context) error {
 			Keys: bson.D{{Key: "is_active", Value: 1}},
 		},
 	}
-	
+
 	if _, err := r.minigameColl.Indexes().CreateMany(ctx, minigameIndexes); err != nil {
 		return fmt.Errorf("failed to create minigame indexes: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -616,7 +616,7 @@ func (r *GameSessionRepository) CreateIndexes(ctx context.Context) error {
 	// 游戏会话索引
 	sessionIndexes := []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "session_id", Value: 1}},
+			Keys:    bson.D{{Key: "session_id", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{
@@ -635,10 +635,10 @@ func (r *GameSessionRepository) CreateIndexes(ctx context.Context) error {
 			Keys: bson.D{{Key: "completed_at", Value: -1}},
 		},
 	}
-	
+
 	if _, err := r.sessionColl.Indexes().CreateMany(ctx, sessionIndexes); err != nil {
 		return fmt.Errorf("failed to create game session indexes: %w", err)
 	}
-	
+
 	return nil
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"greatestworks/application/queries/system"
 	"greatestworks/application/handlers"
+	"greatestworks/application/queries"
 	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/interfaces/http/auth"
 )
@@ -29,13 +29,13 @@ func NewServerMonitorHandler(queryBus *handlers.QueryBus, logger logger.Logger) 
 
 // ServerStatusResponse 服务器状态响应
 type ServerStatusResponse struct {
-	ServerInfo    ServerInfo    `json:"server_info"`
-	SystemInfo    SystemInfo    `json:"system_info"`
-	PlayerStats   PlayerStats   `json:"player_stats"`
-	Performance   Performance   `json:"performance"`
-	Connections   Connections   `json:"connections"`
-	GameStats     GameStats     `json:"game_stats"`
-	Timestamp     time.Time     `json:"timestamp"`
+	ServerInfo  ServerInfo  `json:"server_info"`
+	SystemInfo  SystemInfo  `json:"system_info"`
+	PlayerStats PlayerStats `json:"player_stats"`
+	Performance Performance `json:"performance"`
+	Connections Connections `json:"connections"`
+	GameStats   GameStats   `json:"game_stats"`
+	Timestamp   time.Time   `json:"timestamp"`
 }
 
 // ServerInfo 服务器信息
@@ -51,25 +51,25 @@ type ServerInfo struct {
 
 // SystemInfo 系统信息
 type SystemInfo struct {
-	OS           string  `json:"os"`
-	Arch         string  `json:"arch"`
-	GoVersion    string  `json:"go_version"`
-	CPUCores     int     `json:"cpu_cores"`
-	MemoryTotal  uint64  `json:"memory_total"`
-	MemoryUsed   uint64  `json:"memory_used"`
-	MemoryUsage  float64 `json:"memory_usage"`
-	DiskTotal    uint64  `json:"disk_total"`
-	DiskUsed     uint64  `json:"disk_used"`
-	DiskUsage    float64 `json:"disk_usage"`
+	OS          string  `json:"os"`
+	Arch        string  `json:"arch"`
+	GoVersion   string  `json:"go_version"`
+	CPUCores    int     `json:"cpu_cores"`
+	MemoryTotal uint64  `json:"memory_total"`
+	MemoryUsed  uint64  `json:"memory_used"`
+	MemoryUsage float64 `json:"memory_usage"`
+	DiskTotal   uint64  `json:"disk_total"`
+	DiskUsed    uint64  `json:"disk_used"`
+	DiskUsage   float64 `json:"disk_usage"`
 }
 
 // PlayerStats 玩家统计
 type PlayerStats struct {
-	OnlineCount    int `json:"online_count"`
-	TotalCount     int `json:"total_count"`
-	NewToday       int `json:"new_today"`
-	ActiveToday    int `json:"active_today"`
-	PeakOnline     int `json:"peak_online"`
+	OnlineCount    int       `json:"online_count"`
+	TotalCount     int       `json:"total_count"`
+	NewToday       int       `json:"new_today"`
+	ActiveToday    int       `json:"active_today"`
+	PeakOnline     int       `json:"peak_online"`
 	PeakOnlineTime time.Time `json:"peak_online_time"`
 }
 
@@ -87,23 +87,23 @@ type Performance struct {
 
 // Connections 连接统计
 type Connections struct {
-	HTTPConnections int `json:"http_connections"`
-	TCPConnections  int `json:"tcp_connections"`
-	GRPCConnections int `json:"grpc_connections"`
-	WebSocketConns  int `json:"websocket_connections"`
+	HTTPConnections  int `json:"http_connections"`
+	TCPConnections   int `json:"tcp_connections"`
+	GRPCConnections  int `json:"grpc_connections"`
+	WebSocketConns   int `json:"websocket_connections"`
 	TotalConnections int `json:"total_connections"`
 	MaxConnections   int `json:"max_connections"`
 }
 
 // GameStats 游戏统计
 type GameStats struct {
-	ActiveBattles    int `json:"active_battles"`
-	ActiveRooms      int `json:"active_rooms"`
-	MessagesPerSec   int `json:"messages_per_sec"`
-	EventsProcessed  int `json:"events_processed"`
-	QueuedEvents     int `json:"queued_events"`
-	DatabaseQueries  int `json:"database_queries"`
-	CacheHitRate     float64 `json:"cache_hit_rate"`
+	ActiveBattles   int     `json:"active_battles"`
+	ActiveRooms     int     `json:"active_rooms"`
+	MessagesPerSec  int     `json:"messages_per_sec"`
+	EventsProcessed int     `json:"events_processed"`
+	QueuedEvents    int     `json:"queued_events"`
+	DatabaseQueries int     `json:"database_queries"`
+	CacheHitRate    float64 `json:"cache_hit_rate"`
 }
 
 // MetricsHistoryRequest 指标历史请求
@@ -115,9 +115,9 @@ type MetricsHistoryRequest struct {
 
 // MetricsHistoryResponse 指标历史响应
 type MetricsHistoryResponse struct {
-	Metric     string           `json:"metric"`
-	TimeRange  string           `json:"time_range"`
-	Interval   string           `json:"interval"`
+	Metric     string            `json:"metric"`
+	TimeRange  string            `json:"time_range"`
+	Interval   string            `json:"interval"`
 	DataPoints []MetricDataPoint `json:"data_points"`
 }
 
@@ -130,21 +130,21 @@ type MetricDataPoint struct {
 
 // AlertsResponse 告警响应
 type AlertsResponse struct {
-	ActiveAlerts   []Alert `json:"active_alerts"`
-	RecentAlerts   []Alert `json:"recent_alerts"`
-	AlertSummary   AlertSummary `json:"alert_summary"`
+	ActiveAlerts []Alert      `json:"active_alerts"`
+	RecentAlerts []Alert      `json:"recent_alerts"`
+	AlertSummary AlertSummary `json:"alert_summary"`
 }
 
 // Alert 告警信息
 type Alert struct {
-	ID          string    `json:"id"`
-	Level       string    `json:"level"`
-	Type        string    `json:"type"`
-	Message     string    `json:"message"`
-	Source      string    `json:"source"`
-	TriggeredAt time.Time `json:"triggered_at"`
+	ID          string     `json:"id"`
+	Level       string     `json:"level"`
+	Type        string     `json:"type"`
+	Message     string     `json:"message"`
+	Source      string     `json:"source"`
+	TriggeredAt time.Time  `json:"triggered_at"`
 	ResolvedAt  *time.Time `json:"resolved_at,omitempty"`
-	Status      string    `json:"status"`
+	Status      string     `json:"status"`
 }
 
 // AlertSummary 告警摘要
@@ -401,24 +401,24 @@ func (h *ServerMonitorHandler) GetOnlinePlayers(c *gin.Context) {
 	players := make([]map[string]interface{}, len(result.Players))
 	for i, player := range result.Players {
 		players[i] = map[string]interface{}{
-			"id":            player.ID,
-			"username":      player.Username,
-			"name":          player.Name,
-			"level":         player.Level,
-			"status":        player.Status,
-			"login_time":    player.LoginTime,
+			"id":              player.ID,
+			"username":        player.Username,
+			"name":            player.Name,
+			"level":           player.Level,
+			"status":          player.Status,
+			"login_time":      player.LoginTime,
 			"online_duration": time.Since(player.LoginTime).String(),
-			"ip_address":    player.IPAddress,
-			"location":      player.Location,
+			"ip_address":      player.IPAddress,
+			"location":        player.Location,
 		}
 	}
 
 	response := map[string]interface{}{
 		"players": players,
 		"pagination": map[string]interface{}{
-			"page":       page,
-			"page_size":  pageSize,
-			"total":      result.Total,
+			"page":        page,
+			"page_size":   pageSize,
+			"total":       result.Total,
 			"total_pages": (result.Total + int64(pageSize) - 1) / int64(pageSize),
 		},
 		"summary": map[string]interface{}{
@@ -438,9 +438,9 @@ func (h *ServerMonitorHandler) GetOnlinePlayers(c *gin.Context) {
 // RestartServer 重启服务器（仅超级管理员）
 func (h *ServerMonitorHandler) RestartServer(c *gin.Context) {
 	type RestartRequest struct {
-		Reason      string `json:"reason" binding:"required"`
+		Reason       string `json:"reason" binding:"required"`
 		DelayMinutes int    `json:"delay_minutes,omitempty"`
-		NotifyUsers bool   `json:"notify_users"`
+		NotifyUsers  bool   `json:"notify_users"`
 	}
 
 	var req RestartRequest

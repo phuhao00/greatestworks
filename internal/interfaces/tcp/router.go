@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"sync"
 
-	"greatestworks/internal/infrastructure/logger"
-	"greatestworks/internal/interfaces/tcp/protocol"
+	// "greatestworks/internal/infrastructure/logger" // 暂时注释掉
 	"greatestworks/internal/interfaces/tcp/connection"
 	"greatestworks/internal/interfaces/tcp/handlers"
+	"greatestworks/internal/interfaces/tcp/protocol"
 )
+
+// Logger 简单的日志接口
+type Logger interface {
+	Info(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+}
 
 // MessageHandler 消息处理器接口
 type MessageHandler interface {
@@ -19,11 +26,11 @@ type MessageHandler interface {
 type Router struct {
 	handlers map[uint16]MessageHandler
 	mutex    sync.RWMutex
-	logger   logger.Logger
+	logger   Logger
 }
 
 // NewRouter 创建新的路由器
-func NewRouter(logger logger.Logger) *Router {
+func NewRouter(logger Logger) *Router {
 	return &Router{
 		handlers: make(map[uint16]MessageHandler),
 		logger:   logger,
@@ -128,15 +135,15 @@ func (r *Router) RouteMessage(conn *connection.Connection, msg *protocol.Message
 	r.mutex.RUnlock()
 
 	if !exists {
-		r.logger.Warn("No handler found for message type", 
-			"message_type", msg.Header.MessageType, 
+		r.logger.Warn("No handler found for message type",
+			"message_type", msg.Header.MessageType,
 			"conn_id", conn.ID,
 			"player_id", conn.PlayerID)
 		return r.sendUnhandledMessageError(conn, msg)
 	}
 
 	// 记录消息处理日志
-	r.logger.Debug("Routing message", 
+	r.logger.Debug("Routing message",
 		"message_type", msg.Header.MessageType,
 		"message_id", msg.Header.MessageID,
 		"conn_id", conn.ID,
@@ -145,7 +152,7 @@ func (r *Router) RouteMessage(conn *connection.Connection, msg *protocol.Message
 	// 调用处理器
 	err := handler.HandleMessage(conn, msg)
 	if err != nil {
-		r.logger.Error("Message handler error", 
+		r.logger.Error("Message handler error",
 			"error", err,
 			"message_type", msg.Header.MessageType,
 			"message_id", msg.Header.MessageID,
@@ -268,7 +275,7 @@ func (r *Router) LogRouterStats() {
 	}
 	r.mutex.RUnlock()
 
-	r.logger.Info("Router statistics", 
+	r.logger.Info("Router statistics",
 		"handler_count", handlerCount,
 		"message_types", messageTypes)
 }

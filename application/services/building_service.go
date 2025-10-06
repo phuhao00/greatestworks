@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/greatestworks/internal/domain/building"
+	"greatestworks/internal/domain/building"
 )
 
 // BuildingApplicationService 建筑应用服务

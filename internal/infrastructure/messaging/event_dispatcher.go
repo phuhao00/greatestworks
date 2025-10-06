@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
+
 	"greatestworks/aop/logger"
-	"greatestworks/internal/domain/events"
+	"greatestworks/internal/events"
 )
 
 // EventDispatcher 事件分发器

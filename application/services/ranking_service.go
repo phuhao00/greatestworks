@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/greatestworks/internal/domain/ranking"
+	"greatestworks/internal/domain/ranking"
 )
 
 // RankingApplicationService 排行榜应用服务

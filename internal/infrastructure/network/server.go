@@ -13,15 +13,7 @@ import (
 	"github.com/phuhao00/netcore-go/session"
 )
 
-// ServerConfig 服务器配置
-type ServerConfig struct {
-	Host           string        `json:"host"`
-	Port           int           `json:"port"`
-	MaxConnections int           `json:"max_connections"`
-	ReadTimeout    time.Duration `json:"read_timeout"`
-	WriteTimeout   time.Duration `json:"write_timeout"`
-	Heartbeat      time.Duration `json:"heartbeat"`
-}
+// 使用netcore_server.go中定义的ServerConfig
 
 // DefaultServerConfig 默认服务器配置
 func DefaultServerConfig() *ServerConfig {
@@ -62,7 +54,7 @@ type Server struct {
 // NewServer 创建新的TCP服务器
 func NewServer(config *ServerConfig) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &Server{
 		config:   config,
 		handlers: make(map[uint32]MessageHandler),
@@ -87,15 +79,15 @@ func (s *Server) RegisterHandlerFunc(msgType uint32, handler MessageHandlerFunc)
 // Start 启动服务器
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
-	
+
 	// 创建netcore-go TCP服务器
 	s.server = network.NewTCPServer(addr)
-	
+
 	// 设置连接处理器
 	s.server.SetOnConnect(s.onConnect)
 	s.server.SetOnDisconnect(s.onDisconnect)
 	s.server.SetOnMessage(s.onMessage)
-	
+
 	log.Printf("TCP服务器启动在 %s", addr)
 	return s.server.Start()
 }
@@ -113,12 +105,12 @@ func (s *Server) Stop() error {
 func (s *Server) onConnect(sess *session.Session) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	sessionID := sess.ID()
 	s.sessions[sessionID] = sess
-	
+
 	log.Printf("客户端连接: %s, 总连接数: %d", sessionID, len(s.sessions))
-	
+
 	// 设置会话属性
 	sess.SetAttribute("connect_time", time.Now())
 	sess.SetAttribute("last_heartbeat", time.Now())
@@ -128,10 +120,10 @@ func (s *Server) onConnect(sess *session.Session) {
 func (s *Server) onDisconnect(sess *session.Session) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	sessionID := sess.ID()
 	delete(s.sessions, sessionID)
-	
+
 	log.Printf("客户端断开: %s, 剩余连接数: %d", sessionID, len(s.sessions))
 }
 
@@ -143,25 +135,25 @@ func (s *Server) onMessage(sess *session.Session, data []byte) {
 		log.Printf("消息解析失败: %v", err)
 		return
 	}
-	
+
 	// 更新心跳时间
 	sess.SetAttribute("last_heartbeat", time.Now())
-	
+
 	// 查找处理器
 	s.mu.RLock()
 	handler, exists := s.handlers[msg.Type]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		log.Printf("未找到消息类型 %d 的处理器", msg.Type)
 		return
 	}
-	
+
 	// 处理消息
 	go func() {
 		ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
 		defer cancel()
-		
+
 		if err := handler.Handle(ctx, sess, msg); err != nil {
 			log.Printf("消息处理失败: %v", err)
 		}
@@ -172,18 +164,18 @@ func (s *Server) onMessage(sess *session.Session, data []byte) {
 func (s *Server) Broadcast(msg *protocol.Message) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	data, err := protocol.EncodeMessage(msg)
 	if err != nil {
 		return fmt.Errorf("消息编码失败: %w", err)
 	}
-	
+
 	for _, sess := range s.sessions {
 		if err := sess.Send(data); err != nil {
 			log.Printf("发送消息到会话 %s 失败: %v", sess.ID(), err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -192,16 +184,16 @@ func (s *Server) SendToSession(sessionID string, msg *protocol.Message) error {
 	s.mu.RLock()
 	sess, exists := s.sessions[sessionID]
 	s.mu.RUnlock()
-	
+
 	if !exists {
 		return fmt.Errorf("会话 %s 不存在", sessionID)
 	}
-	
+
 	data, err := protocol.EncodeMessage(msg)
 	if err != nil {
 		return fmt.Errorf("消息编码失败: %w", err)
 	}
-	
+
 	return sess.Send(data)
 }
 
@@ -224,7 +216,7 @@ func (s *Server) GetSessionCount() int {
 func (s *Server) GetAllSessions() []*session.Session {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	sessions := make([]*session.Session, 0, len(s.sessions))
 	for _, sess := range s.sessions {
 		sessions = append(sessions, sess)
@@ -252,16 +244,16 @@ func (s *Server) StartHeartbeatChecker() {
 func (s *Server) checkHeartbeat() {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	now := time.Now()
 	timeout := s.config.Heartbeat * 2 // 心跳超时时间为心跳间隔的2倍
-	
+
 	for sessionID, sess := range s.sessions {
 		lastHeartbeat, ok := sess.GetAttribute("last_heartbeat").(time.Time)
 		if !ok {
 			continue
 		}
-		
+
 		if now.Sub(lastHeartbeat) > timeout {
 			log.Printf("会话 %s 心跳超时，断开连接", sessionID)
 			sess.Close()

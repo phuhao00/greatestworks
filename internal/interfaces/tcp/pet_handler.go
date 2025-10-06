@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/greatestworks/application/services"
-	"github.com/greatestworks/internal/interfaces/tcp/protocol"
+	"greatestworks/application/services"
+	"greatestworks/internal/interfaces/tcp/protocol"
 )
 
 // PetHandler 宠物TCP处理器

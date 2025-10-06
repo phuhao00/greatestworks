@@ -2,14 +2,14 @@ package honor
 
 import (
 	"fmt"
-	"time"
+	// "time" // 未使用
 )
 
 // HonorService 荣誉领域服务
 type HonorService struct {
-	titleTemplates      map[string]*TitleTemplate
+	titleTemplates       map[string]*TitleTemplate
 	achievementTemplates map[string]*AchievementTemplate
-	honorLevels         map[int]*HonorLevel
+	honorLevels          map[int]*HonorLevel
 }
 
 // NewHonorService 创建荣誉服务
@@ -48,17 +48,17 @@ func NewTitleTemplate(id, name, description string, category TitleCategory, rari
 // CreateTitle 根据模板创建称号
 func (tt *TitleTemplate) CreateTitle() *Title {
 	title := NewTitle(tt.id, tt.name, tt.description, tt.category, tt.rarity)
-	
+
 	// 复制解锁条件
 	for _, condition := range tt.unlockConditions {
 		title.AddUnlockCondition(condition)
 	}
-	
+
 	// 复制属性加成
 	for attr, bonus := range tt.attributeBonus {
 		title.SetAttributeBonus(attr, bonus)
 	}
-	
+
 	return title
 }
 
@@ -90,18 +90,18 @@ func NewAchievementTemplate(id, name, description string, category AchievementCa
 // CreateAchievement 根据模板创建成就
 func (at *AchievementTemplate) CreateAchievement() *Achievement {
 	achievement := NewAchievement(at.id, at.name, at.description, at.category, at.type_)
-	
+
 	// 复制解锁条件
 	for _, condition := range at.unlockConditions {
 		achievement.AddUnlockCondition(condition)
 	}
-	
+
 	// 设置奖励
 	achievement.SetHonorReward(at.honorReward)
 	for _, itemID := range at.itemRewards {
 		achievement.AddItemReward(itemID)
 	}
-	
+
 	return achievement
 }
 
@@ -123,19 +123,19 @@ func (hs *HonorService) RegisterHonorLevel(level *HonorLevel) {
 // CreatePlayerHonor 为玩家创建荣誉系统
 func (hs *HonorService) CreatePlayerHonor(playerID string) *HonorAggregate {
 	honor := NewHonorAggregate(playerID)
-	
+
 	// 添加所有称号模板
 	for _, template := range hs.titleTemplates {
 		title := template.CreateTitle()
 		honor.AddTitle(title)
 	}
-	
+
 	// 添加所有成就模板
 	for _, template := range hs.achievementTemplates {
 		achievement := template.CreateAchievement()
 		honor.AddAchievement(achievement)
 	}
-	
+
 	return honor
 }
 
@@ -166,18 +166,18 @@ func (hs *HonorService) ValidateTitleUnlock(honor *HonorAggregate, titleID strin
 	if title == nil {
 		return ErrTitleNotFound
 	}
-	
+
 	if title.IsUnlocked() {
 		return ErrTitleAlreadyUnlocked
 	}
-	
+
 	// 检查所有解锁条件
 	for _, condition := range title.GetUnlockConditions() {
 		if !hs.checkUnlockCondition(honor, condition) {
 			return fmt.Errorf("条件未满足: %s", condition.GetDescription())
 		}
 	}
-	
+
 	return nil
 }
 
@@ -187,18 +187,18 @@ func (hs *HonorService) ValidateAchievementUnlock(honor *HonorAggregate, achieve
 	if achievement == nil {
 		return ErrAchievementNotFound
 	}
-	
+
 	if achievement.IsUnlocked() {
 		return ErrAchievementAlreadyUnlocked
 	}
-	
+
 	// 检查所有解锁条件
 	for _, condition := range achievement.GetUnlockConditions() {
 		if !hs.checkUnlockCondition(honor, condition) {
 			return fmt.Errorf("条件未满足: %s", condition.GetDescription())
 		}
 	}
-	
+
 	return nil
 }
 
@@ -228,7 +228,7 @@ func (hs *HonorService) checkUnlockCondition(honor *HonorAggregate, condition *U
 // CalculateTitleAttributeBonus 计算称号属性加成
 func (hs *HonorService) CalculateTitleAttributeBonus(honor *HonorAggregate) map[string]int {
 	bonuses := make(map[string]int)
-	
+
 	// 只计算当前装备的称号
 	currentTitle := honor.GetCurrentTitle()
 	if currentTitle != nil {
@@ -236,7 +236,7 @@ func (hs *HonorService) CalculateTitleAttributeBonus(honor *HonorAggregate) map[
 			bonuses[attr] += bonus
 		}
 	}
-	
+
 	return bonuses
 }
 
@@ -266,39 +266,39 @@ func (hs *HonorService) GetAchievementsByType(honor *HonorAggregate, achievement
 func (hs *HonorService) CalculateHonorRank(honor *HonorAggregate, allPlayers []*HonorAggregate) int {
 	rank := 1
 	currentPoints := honor.GetHonorPoints()
-	
+
 	for _, otherHonor := range allPlayers {
 		if otherHonor.GetPlayerID() != honor.GetPlayerID() && otherHonor.GetHonorPoints() > currentPoints {
 			rank++
 		}
 	}
-	
+
 	return rank
 }
 
 // GetRecommendedTitles 获取推荐称号（接近解锁的称号）
 func (hs *HonorService) GetRecommendedTitles(honor *HonorAggregate) []*Title {
 	var recommended []*Title
-	
+
 	for _, title := range honor.GetAllTitles() {
 		if !title.IsUnlocked() {
 			// 检查是否接近解锁
 			meetsConditions := 0
 			totalConditions := len(title.GetUnlockConditions())
-			
+
 			for _, condition := range title.GetUnlockConditions() {
 				if hs.checkUnlockCondition(honor, condition) {
 					meetsConditions++
 				}
 			}
-			
+
 			// 如果满足80%以上的条件，则推荐
 			if totalConditions > 0 && float64(meetsConditions)/float64(totalConditions) >= 0.8 {
 				recommended = append(recommended, title)
 			}
 		}
 	}
-	
+
 	return recommended
 }
 
@@ -306,10 +306,10 @@ func (hs *HonorService) GetRecommendedTitles(honor *HonorAggregate) []*Title {
 func (hs *HonorService) InitializeDefaultTemplates() {
 	// 初始化默认称号模板
 	hs.initializeDefaultTitles()
-	
+
 	// 初始化默认成就模板
 	hs.initializeDefaultAchievements()
-	
+
 	// 初始化荣誉等级
 	hs.initializeHonorLevels()
 }
@@ -320,13 +320,13 @@ func (hs *HonorService) initializeDefaultTitles() {
 	newbieTitle := NewTitleTemplate("newbie", "新手冒险者", "刚踏上冒险之路的勇士", TitleCategorySpecial, TitleRarityCommon)
 	newbieTitle.unlockConditions = append(newbieTitle.unlockConditions, NewLevelCondition(1))
 	hs.RegisterTitleTemplate(newbieTitle)
-	
+
 	// 战斗称号
 	warriorTitle := NewTitleTemplate("warrior", "勇敢战士", "在战斗中展现勇气的战士", TitleCategoryCombat, TitleRarityUncommon)
 	warriorTitle.unlockConditions = append(warriorTitle.unlockConditions, NewStatisticCondition(StatisticTypeKillCount, 100))
 	warriorTitle.attributeBonus["attack"] = 10
 	hs.RegisterTitleTemplate(warriorTitle)
-	
+
 	// 探索称号
 	explorerTitle := NewTitleTemplate("explorer", "大陆探索者", "足迹遍布大陆的探索者", TitleCategoryExploration, TitleRarityRare)
 	explorerTitle.unlockConditions = append(explorerTitle.unlockConditions, NewStatisticCondition(StatisticTypeDistanceTraveled, 10000))
@@ -341,13 +341,13 @@ func (hs *HonorService) initializeDefaultAchievements() {
 	firstKill.unlockConditions = append(firstKill.unlockConditions, NewStatisticCondition(StatisticTypeKillCount, 1))
 	firstKill.honorReward = 10
 	hs.RegisterAchievementTemplate(firstKill)
-	
+
 	// 连续登录成就
 	loginStreak := NewAchievementTemplate("login_streak_7", "坚持不懈", "连续登录7天", AchievementCategoryProgression, AchievementTypeNormal)
 	loginStreak.unlockConditions = append(loginStreak.unlockConditions, NewStatisticCondition(StatisticTypeLoginDays, 7))
 	loginStreak.honorReward = 50
 	hs.RegisterAchievementTemplate(loginStreak)
-	
+
 	// 收集成就
 	collector := NewAchievementTemplate("collector", "收集家", "收集100个不同的物品", AchievementCategoryCollection, AchievementTypeNormal)
 	collector.unlockConditions = append(collector.unlockConditions, NewStatisticCondition(StatisticTypeItemsCollected, 100))
@@ -375,7 +375,7 @@ func (hs *HonorService) initializeHonorLevels() {
 		{9, 3600, "至尊", "至高无上的存在"},
 		{10, 4500, "神明", "如神明般的力量"},
 	}
-	
+
 	for _, lvl := range levels {
 		honorLevel := NewHonorLevel(lvl.level, lvl.requiredXP, lvl.title, lvl.description)
 		hs.RegisterHonorLevel(honorLevel)

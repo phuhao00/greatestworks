@@ -17,25 +17,25 @@ import (
 
 // Player 玩家数据结构
 type Player struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID      string             `bson:"user_id" json:"user_id"`
-	Username    string             `bson:"username" json:"username"`
-	Level       int32              `bson:"level" json:"level"`
-	Experience  int64              `bson:"experience" json:"experience"`
-	Gold        int64              `bson:"gold" json:"gold"`
-	Diamond     int64              `bson:"diamond" json:"diamond"`
-	Position    Position           `bson:"position" json:"position"`
-	Attributes  PlayerAttributes   `bson:"attributes" json:"attributes"`
-	Inventory   []Item             `bson:"inventory" json:"inventory"`
-	Equipment   Equipment          `bson:"equipment" json:"equipment"`
-	Skills      []Skill            `bson:"skills" json:"skills"`
-	Quests      []Quest            `bson:"quests" json:"quests"`
-	GuildID     string             `bson:"guild_id,omitempty" json:"guild_id,omitempty"`
-	LastLogin   time.Time          `bson:"last_login" json:"last_login"`
-	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at" json:"updated_at"`
-	Online      bool               `bson:"online" json:"online"`
-	ServerID    string             `bson:"server_id" json:"server_id"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID     string             `bson:"user_id" json:"user_id"`
+	Username   string             `bson:"username" json:"username"`
+	Level      int32              `bson:"level" json:"level"`
+	Experience int64              `bson:"experience" json:"experience"`
+	Gold       int64              `bson:"gold" json:"gold"`
+	Diamond    int64              `bson:"diamond" json:"diamond"`
+	Position   Position           `bson:"position" json:"position"`
+	Attributes PlayerAttributes   `bson:"attributes" json:"attributes"`
+	Inventory  []Item             `bson:"inventory" json:"inventory"`
+	Equipment  Equipment          `bson:"equipment" json:"equipment"`
+	Skills     []Skill            `bson:"skills" json:"skills"`
+	Quests     []Quest            `bson:"quests" json:"quests"`
+	GuildID    string             `bson:"guild_id,omitempty" json:"guild_id,omitempty"`
+	LastLogin  time.Time          `bson:"last_login" json:"last_login"`
+	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
+	Online     bool               `bson:"online" json:"online"`
+	ServerID   string             `bson:"server_id" json:"server_id"`
 }
 
 // Position 位置信息
@@ -87,17 +87,17 @@ type Skill struct {
 
 // Quest 任务
 type Quest struct {
-	QuestID   string            `bson:"quest_id" json:"quest_id"`
-	Status    string            `bson:"status" json:"status"` // pending, active, completed, failed
-	Progress  map[string]int32  `bson:"progress" json:"progress"`
-	StartTime time.Time         `bson:"start_time" json:"start_time"`
-	EndTime   *time.Time        `bson:"end_time,omitempty" json:"end_time,omitempty"`
+	QuestID   string           `bson:"quest_id" json:"quest_id"`
+	Status    string           `bson:"status" json:"status"` // pending, active, completed, failed
+	Progress  map[string]int32 `bson:"progress" json:"progress"`
+	StartTime time.Time        `bson:"start_time" json:"start_time"`
+	EndTime   *time.Time       `bson:"end_time,omitempty" json:"end_time,omitempty"`
 }
 
 // PlayerManager 玩家管理器
 type PlayerManager struct {
-	collection *mongo.Collection
-	mu         sync.RWMutex
+	collection    *mongo.Collection
+	mu            sync.RWMutex
 	onlinePlayers map[string]*Player
 }
 
@@ -219,7 +219,7 @@ func (pm *PlayerManager) SetPlayerOnline(ctx context.Context, userID string, onl
 func (pm *PlayerManager) GetOnlinePlayers() map[string]*Player {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
-	
+
 	result := make(map[string]*Player)
 	for k, v := range pm.onlinePlayers {
 		result[k] = v

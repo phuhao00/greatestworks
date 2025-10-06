@@ -1,9 +1,10 @@
 package beginner
 
 import (
-	"fmt"
-	"strings"
+	// "fmt" // 未使用
+	// "strings" // 未使用
 	"time"
+
 	"github.com/google/uuid"
 )
 

@@ -43,7 +43,7 @@ func NewMongoDB(config *MongoConfig) *MongoDB {
 func (m *MongoDB) Connect(ctx context.Context) error {
 	// 设置连接选项
 	clientOptions := options.Client().ApplyURI(m.config.URI)
-	
+
 	if m.config.MaxPoolSize > 0 {
 		clientOptions.SetMaxPoolSize(m.config.MaxPoolSize)
 	}
@@ -59,21 +59,21 @@ func (m *MongoDB) Connect(ctx context.Context) error {
 	if m.config.SocketTimeout > 0 {
 		clientOptions.SetSocketTimeout(time.Duration(m.config.SocketTimeout) * time.Second)
 	}
-	
+
 	// 创建客户端
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		return fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
-	
+
 	// 测试连接
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
-	
+
 	m.client = client
 	m.database = client.Database(m.config.Database)
-	
+
 	return nil
 }
 

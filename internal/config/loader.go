@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"greatestworks/internal/services"
+	"greatestworks/application/services"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,30 +35,7 @@ type MongoDBConfig struct {
 	Timeout  int    `yaml:"timeout"`
 }
 
-// NATSConfig NATS配置
-type NATSConfig struct {
-	URL            string        `yaml:"url"`
-	ClusterID      string        `yaml:"cluster_id"`
-	ClientID       string        `yaml:"client_id"`
-	ReconnectWait  time.Duration `yaml:"reconnect_wait"`
-	MaxReconnects  int           `yaml:"max_reconnects"`
-	ConnectionName string        `yaml:"connection_name"`
-	DrainTimeout   time.Duration `yaml:"drain_timeout"`
-}
-
-// RedisConfig Redis配置
-type RedisConfig struct {
-	Addr         string        `yaml:"addr"`
-	Password     string        `yaml:"password"`
-	DB           int           `yaml:"db"`
-	PoolSize     int           `yaml:"pool_size"`
-	MinIdleConns int           `yaml:"min_idle_conns"`
-	DialTimeout  time.Duration `yaml:"dial_timeout"`
-	ReadTimeout  time.Duration `yaml:"read_timeout"`
-	WriteTimeout time.Duration `yaml:"write_timeout"`
-	PoolTimeout  time.Duration `yaml:"pool_timeout"`
-	IdleTimeout  time.Duration `yaml:"idle_timeout"`
-}
+// 使用config.go中定义的类型
 
 // GameConfig 游戏配置
 type GameConfig struct {
@@ -71,10 +49,10 @@ type GameConfig struct {
 
 // PlayerConfig 玩家配置
 type PlayerConfig struct {
-	MaxLevel       int    `yaml:"max_level"`
-	InitialGold    uint32 `yaml:"initial_gold"`
+	MaxLevel        int    `yaml:"max_level"`
+	InitialGold     uint32 `yaml:"initial_gold"`
 	InitialDiamonds uint32 `yaml:"initial_diamonds"`
-	MaxFriends     int    `yaml:"max_friends"`
+	MaxFriends      int    `yaml:"max_friends"`
 }
 
 // BagConfig 背包配置
@@ -86,8 +64,8 @@ type BagConfig struct {
 
 // PetConfig 宠物配置
 type PetConfig struct {
-	MaxPetsPerPlayer         int `yaml:"max_pets_per_player"`
-	MaxActivePets           int `yaml:"max_active_pets"`
+	MaxPetsPerPlayer          int `yaml:"max_pets_per_player"`
+	MaxActivePets             int `yaml:"max_active_pets"`
 	EvolutionLevelRequirement int `yaml:"evolution_level_requirement"`
 }
 
@@ -106,8 +84,8 @@ type ChatConfig struct {
 
 // ShopConfig 商店配置
 type ShopConfig struct {
-	RefreshInterval    time.Duration `yaml:"refresh_interval"`
-	MaxPurchasePerDay  int           `yaml:"max_purchase_per_day"`
+	RefreshInterval   time.Duration `yaml:"refresh_interval"`
+	MaxPurchasePerDay int           `yaml:"max_purchase_per_day"`
 }
 
 // LoggingConfig 日志配置
@@ -131,16 +109,16 @@ type MonitoringConfig struct {
 
 // SecurityConfig 安全配置
 type SecurityConfig struct {
-	JWTSecret   string        `yaml:"jwt_secret"`
-	JWTExpiry   time.Duration `yaml:"jwt_expiry"`
-	BcryptCost  int           `yaml:"bcrypt_cost"`
-	RateLimit   RateLimitConfig `yaml:"rate_limit"`
+	JWTSecret  string          `yaml:"jwt_secret"`
+	JWTExpiry  time.Duration   `yaml:"jwt_expiry"`
+	BcryptCost int             `yaml:"bcrypt_cost"`
+	RateLimit  RateLimitConfig `yaml:"rate_limit"`
 }
 
 // RateLimitConfig 限流配置
 type RateLimitConfig struct {
 	RequestsPerMinute int `yaml:"requests_per_minute"`
-	Burst            int `yaml:"burst"`
+	Burst             int `yaml:"burst"`
 }
 
 // ThirdPartyConfig 第三方服务配置
@@ -216,9 +194,9 @@ type CacheConfig struct {
 
 // ConcurrencyConfig 并发配置
 type ConcurrencyConfig struct {
-	MaxGoroutines    int `yaml:"max_goroutines"`
-	WorkerPoolSize   int `yaml:"worker_pool_size"`
-	QueueBufferSize  int `yaml:"queue_buffer_size"`
+	MaxGoroutines   int `yaml:"max_goroutines"`
+	WorkerPoolSize  int `yaml:"worker_pool_size"`
+	QueueBufferSize int `yaml:"queue_buffer_size"`
 }
 
 // ConfigLoader 配置加载器
@@ -378,13 +356,13 @@ func (config *AppConfig) ToServiceConfig() services.Config {
 			Timeout:  config.MongoDB.Timeout,
 		},
 		NATS: messaging.NATSConfig{
-			URL:             config.NATS.URL,
-			ClusterID:       config.NATS.ClusterID,
-			ClientID:        config.NATS.ClientID,
-			ReconnectWait:   config.NATS.ReconnectWait,
-			MaxReconnects:   config.NATS.MaxReconnects,
-			ConnectionName:  config.NATS.ConnectionName,
-			DrainTimeout:    config.NATS.DrainTimeout,
+			URL:            config.NATS.URL,
+			ClusterID:      config.NATS.ClusterID,
+			ClientID:       config.NATS.ClientID,
+			ReconnectWait:  config.NATS.ReconnectWait,
+			MaxReconnects:  config.NATS.MaxReconnects,
+			ConnectionName: config.NATS.ConnectionName,
+			DrainTimeout:   config.NATS.DrainTimeout,
 		},
 		Server: config.Server,
 	}

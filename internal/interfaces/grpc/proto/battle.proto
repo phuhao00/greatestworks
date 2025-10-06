@@ -7,66 +7,66 @@ import "player.proto";
 
 option go_package = "greatestworks/internal/interfaces/grpc/proto";
 
-// 战斗类型
+// Battle type
 enum BattleType {
   BATTLE_TYPE_UNKNOWN = 0;
-  BATTLE_TYPE_PVP = 1;      // 玩家对战
-  BATTLE_TYPE_PVE = 2;      // 玩家对环境
-  BATTLE_TYPE_GUILD = 3;    // 公会战
-  BATTLE_TYPE_TOURNAMENT = 4; // 锦标赛
-  BATTLE_TYPE_RAID = 5;     // 团队副本
+  BATTLE_TYPE_PVP = 1;      // Player vs Player
+  BATTLE_TYPE_PVE = 2;      // Player vs Environment
+  BATTLE_TYPE_GUILD = 3;    // Guild battle
+  BATTLE_TYPE_TOURNAMENT = 4; // Tournament
+  BATTLE_TYPE_RAID = 5;     // Raid
 }
 
-// 战斗状态
+// Battle status
 enum BattleStatus {
   BATTLE_STATUS_UNKNOWN = 0;
-  BATTLE_STATUS_WAITING = 1;    // 等待中
-  BATTLE_STATUS_PREPARING = 2;  // 准备中
-  BATTLE_STATUS_ACTIVE = 3;     // 进行中
+  BATTLE_STATUS_WAITING = 1;    // Waiting
+  BATTLE_STATUS_PREPARING = 2;  // Preparing
+  BATTLE_STATUS_ACTIVE = 3;     // Active
   BATTLE_STATUS_PAUSED = 4;     // 暂停
-  BATTLE_STATUS_FINISHED = 5;   // 已结束
-  BATTLE_STATUS_CANCELLED = 6;  // 已取消
+  BATTLE_STATUS_FINISHED = 5;   // 已结�?
+  BATTLE_STATUS_CANCELLED = 6;  // 已取�?
 }
 
 // 战斗结果
 enum BattleResult {
   BATTLE_RESULT_UNKNOWN = 0;
   BATTLE_RESULT_WIN = 1;     // 胜利
-  BATTLE_RESULT_LOSE = 2;    // 失败
-  BATTLE_RESULT_DRAW = 3;    // 平局
-  BATTLE_RESULT_TIMEOUT = 4; // 超时
-  BATTLE_RESULT_FORFEIT = 5; // 弃权
+  BATTLE_RESULT_LOSE = 2;    // Lose
+  BATTLE_RESULT_DRAW = 3;    // Draw
+  BATTLE_RESULT_TIMEOUT = 4; // Timeout
+  BATTLE_RESULT_FORFEIT = 5; // Forfeit
 }
 
-// 行动类型
+// Action type
 enum ActionType {
   ACTION_TYPE_UNKNOWN = 0;
-  ACTION_TYPE_ATTACK = 1;    // 攻击
-  ACTION_TYPE_DEFEND = 2;    // 防御
-  ACTION_TYPE_SKILL = 3;     // 技能
-  ACTION_TYPE_ITEM = 4;      // 使用物品
-  ACTION_TYPE_MOVE = 5;      // 移动
-  ACTION_TYPE_WAIT = 6;      // 等待
-  ACTION_TYPE_SURRENDER = 7; // 投降
+  ACTION_TYPE_ATTACK = 1;    // Attack
+  ACTION_TYPE_DEFEND = 2;    // Defend
+  ACTION_TYPE_SKILL = 3;     // 技�?
+  ACTION_TYPE_ITEM = 4;      // Use item
+  ACTION_TYPE_MOVE = 5;      // Move
+  ACTION_TYPE_WAIT = 6;      // Wait
+  ACTION_TYPE_SURRENDER = 7; // Surrender
 }
 
-// 战斗设置
+// Battle settings
 message BattleSettings {
-  int32 time_limit = 1;      // 时间限制（秒）
-  int32 max_players = 2;     // 最大玩家数
-  bool allow_pets = 3;       // 允许宠物
-  bool allow_items = 4;      // 允许使用物品
-  bool friendly_fire = 5;    // 友军伤害
-  bool auto_battle = 6;      // 自动战斗
-  map<string, string> custom_rules = 7; // 自定义规则
+  int32 time_limit = 1;      // 时间限制（秒�?
+  int32 max_players = 2;     // Maximum players
+  bool allow_pets = 3;       // Allow pets
+  bool allow_items = 4;      // Allow items
+  bool friendly_fire = 5;    // Friendly fire
+  bool auto_battle = 6;      // Auto battle
+  map<string, string> custom_rules = 7; // 自定义规�?
 }
 
-// 战斗参与者
+// 战斗参与�?
 message BattleParticipant {
   string id = 1;
   string player_id = 2;
   string name = 3;
-  int32 team = 4;           // 队伍编号
+  int32 team = 4;           // Team number
   Position position = 5;
   Stats stats = 6;
   bool is_ready = 7;
@@ -75,7 +75,7 @@ message BattleParticipant {
   map<string, string> metadata = 10;
 }
 
-// 战斗信息
+// Battle information
 message BattleInfo {
   string id = 1;
   BattleType type = 2;
@@ -101,7 +101,7 @@ message BattleAction {
   string battle_id = 2;
   string player_id = 3;
   ActionType type = 4;
-  string target_id = 5;      // 目标ID
+  string target_id = 5;      // Target ID
   string skill_id = 6;       // 技能ID
   string item_id = 7;        // 物品ID
   Position target_position = 8;
@@ -119,9 +119,9 @@ message BattleActionResult {
   int32 damage = 4;
   int32 healing = 5;
   repeated string effects = 6; // 效果列表
-  map<string, int32> stat_changes = 7; // 属性变化
+  map<string, int32> stat_changes = 7; // 属性变�?
   bool is_critical = 8;      // 是否暴击
-  bool is_miss = 9;          // 是否未命中
+  bool is_miss = 9;          // 是否未命�?
   map<string, string> metadata = 10;
 }
 
@@ -185,14 +185,14 @@ message LeaveBattleResponse {
   BattleInfo battle = 2;
 }
 
-// 开始战斗请求
+// 开始战斗请�?
 message StartBattleRequest {
   string battle_id = 1;
   string requester_id = 2;
   bool force_start = 3;
 }
 
-// 开始战斗响应
+// 开始战斗响�?
 message StartBattleResponse {
   BaseResponse base = 1;
   BattleInfo battle = 2;
@@ -233,8 +233,8 @@ message ExecuteBattleActionResponse {
 // 获取战斗行动历史请求
 message GetBattleActionsRequest {
   string battle_id = 1;
-  string player_id = 2; // 可选，获取特定玩家的行动
-  int32 round = 3;      // 可选，获取特定回合的行动
+  string player_id = 2; // 可选，获取特定玩家的行�?
+  int32 round = 3;      // 可选，获取特定回合的行�?
   PaginationRequest pagination = 4;
 }
 
@@ -251,7 +251,7 @@ message QueryBattlesRequest {
   QueryCondition condition = 1;
   repeated BattleType types = 2;
   repeated BattleStatus statuses = 3;
-  string player_id = 4; // 可选，查询特定玩家的战斗
+  string player_id = 4; // 可选，查询特定玩家的战�?
   TimeRange time_range = 5;
 }
 
@@ -320,7 +320,7 @@ message BattleStatistics {
 // 获取战斗统计请求
 message GetBattleStatisticsRequest {
   string player_id = 1;
-  BattleType battle_type = 2; // 可选，特定类型的统计
+  BattleType battle_type = 2; // 可选，特定类型的统�?
   TimeRange time_range = 3;   // 可选，时间范围
 }
 
@@ -393,7 +393,7 @@ service BattleService {
   // 离开战斗
   rpc LeaveBattle(LeaveBattleRequest) returns (LeaveBattleResponse);
   
-  // 开始战斗
+  // 开始战�?
   rpc StartBattle(StartBattleRequest) returns (StartBattleResponse);
   
   // 结束战斗

@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
 	"greatestworks/internal/domain/pet"
 	"greatestworks/internal/infrastructure/logger"
 )
@@ -41,7 +41,7 @@ type PetDocument struct {
 	Level      uint32             `bson:"level"`
 	Experience uint64             `bson:"experience"`
 	State      int                `bson:"state"`
-	Attributes AttributesDoc     `bson:"attributes"`
+	Attributes AttributesDoc      `bson:"attributes"`
 	Skills     []SkillDoc         `bson:"skills"`
 	Bonds      BondsDoc           `bson:"bonds"`
 	Skins      []SkinDoc          `bson:"skins"`
@@ -105,15 +105,15 @@ type SkinDoc struct {
 func (r *MongoPetRepository) Save(petAggregate *pet.PetAggregate) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	doc := r.aggregateToDocument(petAggregate)
-	
+
 	_, err := r.collection.InsertOne(ctx, doc)
 	if err != nil {
 		r.logger.Error("Failed to save pet", "error", err, "pet_id", petAggregate.GetID())
 		return fmt.Errorf("failed to save pet: %w", err)
 	}
-	
+
 	r.logger.Debug("Pet saved successfully", "pet_id", petAggregate.GetID())
 	return nil
 }
@@ -122,10 +122,10 @@ func (r *MongoPetRepository) Save(petAggregate *pet.PetAggregate) error {
 func (r *MongoPetRepository) FindByID(id string) (*pet.PetAggregate, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{"pet_id": id}
 	var doc PetDocument
-	
+
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -134,7 +134,7 @@ func (r *MongoPetRepository) FindByID(id string) (*pet.PetAggregate, error) {
 		r.logger.Error("Failed to find pet by ID", "error", err, "pet_id", id)
 		return nil, fmt.Errorf("failed to find pet: %w", err)
 	}
-	
+
 	return r.documentToAggregate(&doc)
 }
 
@@ -142,7 +142,7 @@ func (r *MongoPetRepository) FindByID(id string) (*pet.PetAggregate, error) {
 func (r *MongoPetRepository) FindByPlayer(playerID string) ([]*pet.PetAggregate, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{"player_id": playerID}
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *MongoPetRepository) FindByPlayer(playerID string) ([]*pet.PetAggregate,
 		return nil, fmt.Errorf("failed to find pets: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var pets []*pet.PetAggregate
 	for cursor.Next(ctx) {
 		var doc PetDocument
@@ -158,16 +158,16 @@ func (r *MongoPetRepository) FindByPlayer(playerID string) ([]*pet.PetAggregate,
 			r.logger.Error("Failed to decode pet document", "error", err)
 			continue
 		}
-		
+
 		petAggregate, err := r.documentToAggregate(&doc)
 		if err != nil {
 			r.logger.Error("Failed to convert document to aggregate", "error", err)
 			continue
 		}
-		
+
 		pets = append(pets, petAggregate)
 	}
-	
+
 	return pets, nil
 }
 
@@ -175,19 +175,19 @@ func (r *MongoPetRepository) FindByPlayer(playerID string) ([]*pet.PetAggregate,
 func (r *MongoPetRepository) FindByPlayerAndCategory(playerID string, category pet.PetCategory) ([]*pet.PetAggregate, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{
 		"player_id": playerID,
 		"category":  int(category),
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		r.logger.Error("Failed to find pets by player and category", "error", err, "player_id", playerID, "category", category)
 		return nil, fmt.Errorf("failed to find pets: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var pets []*pet.PetAggregate
 	for cursor.Next(ctx) {
 		var doc PetDocument
@@ -195,16 +195,16 @@ func (r *MongoPetRepository) FindByPlayerAndCategory(playerID string, category p
 			r.logger.Error("Failed to decode pet document", "error", err)
 			continue
 		}
-		
+
 		petAggregate, err := r.documentToAggregate(&doc)
 		if err != nil {
 			r.logger.Error("Failed to convert document to aggregate", "error", err)
 			continue
 		}
-		
+
 		pets = append(pets, petAggregate)
 	}
-	
+
 	return pets, nil
 }
 
@@ -212,21 +212,21 @@ func (r *MongoPetRepository) FindByPlayerAndCategory(playerID string, category p
 func (r *MongoPetRepository) Update(petAggregate *pet.PetAggregate) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{"pet_id": petAggregate.GetID()}
 	doc := r.aggregateToDocument(petAggregate)
-	
+
 	update := bson.M{"$set": doc}
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		r.logger.Error("Failed to update pet", "error", err, "pet_id", petAggregate.GetID())
 		return fmt.Errorf("failed to update pet: %w", err)
 	}
-	
+
 	if result.MatchedCount == 0 {
 		return pet.ErrPetNotFound
 	}
-	
+
 	r.logger.Debug("Pet updated successfully", "pet_id", petAggregate.GetID())
 	return nil
 }
@@ -235,18 +235,18 @@ func (r *MongoPetRepository) Update(petAggregate *pet.PetAggregate) error {
 func (r *MongoPetRepository) Delete(id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{"pet_id": id}
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		r.logger.Error("Failed to delete pet", "error", err, "pet_id", id)
 		return fmt.Errorf("failed to delete pet: %w", err)
 	}
-	
+
 	if result.DeletedCount == 0 {
 		return pet.ErrPetNotFound
 	}
-	
+
 	r.logger.Debug("Pet deleted successfully", "pet_id", id)
 	return nil
 }
@@ -255,7 +255,7 @@ func (r *MongoPetRepository) Delete(id string) error {
 func (r *MongoPetRepository) FindByState(state pet.PetState) ([]*pet.PetAggregate, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{"state": int(state)}
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
@@ -263,7 +263,7 @@ func (r *MongoPetRepository) FindByState(state pet.PetState) ([]*pet.PetAggregat
 		return nil, fmt.Errorf("failed to find pets: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var pets []*pet.PetAggregate
 	for cursor.Next(ctx) {
 		var doc PetDocument
@@ -271,16 +271,16 @@ func (r *MongoPetRepository) FindByState(state pet.PetState) ([]*pet.PetAggregat
 			r.logger.Error("Failed to decode pet document", "error", err)
 			continue
 		}
-		
+
 		petAggregate, err := r.documentToAggregate(&doc)
 		if err != nil {
 			r.logger.Error("Failed to convert document to aggregate", "error", err)
 			continue
 		}
-		
+
 		pets = append(pets, petAggregate)
 	}
-	
+
 	return pets, nil
 }
 
@@ -288,19 +288,19 @@ func (r *MongoPetRepository) FindByState(state pet.PetState) ([]*pet.PetAggregat
 func (r *MongoPetRepository) FindActiveByPlayer(playerID string) ([]*pet.PetAggregate, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{
 		"player_id": playerID,
-		"state": bson.M{"$ne": int(pet.PetStateDead)},
+		"state":     bson.M{"$ne": int(pet.PetStateDead)},
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		r.logger.Error("Failed to find active pets by player", "error", err, "player_id", playerID)
 		return nil, fmt.Errorf("failed to find active pets: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var pets []*pet.PetAggregate
 	for cursor.Next(ctx) {
 		var doc PetDocument
@@ -308,16 +308,16 @@ func (r *MongoPetRepository) FindActiveByPlayer(playerID string) ([]*pet.PetAggr
 			r.logger.Error("Failed to decode pet document", "error", err)
 			continue
 		}
-		
+
 		petAggregate, err := r.documentToAggregate(&doc)
 		if err != nil {
 			r.logger.Error("Failed to convert document to aggregate", "error", err)
 			continue
 		}
-		
+
 		pets = append(pets, petAggregate)
 	}
-	
+
 	return pets, nil
 }
 
@@ -325,13 +325,13 @@ func (r *MongoPetRepository) FindActiveByPlayer(playerID string) ([]*pet.PetAggr
 func (r *MongoPetRepository) Count() (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	count, err := r.collection.CountDocuments(ctx, bson.M{})
 	if err != nil {
 		r.logger.Error("Failed to count pets", "error", err)
 		return 0, fmt.Errorf("failed to count pets: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -339,14 +339,14 @@ func (r *MongoPetRepository) Count() (int64, error) {
 func (r *MongoPetRepository) CountByPlayer(playerID string) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	filter := bson.M{"player_id": playerID}
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		r.logger.Error("Failed to count pets by player", "error", err, "player_id", playerID)
 		return 0, fmt.Errorf("failed to count pets: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -354,10 +354,10 @@ func (r *MongoPetRepository) CountByPlayer(playerID string) (int64, error) {
 func (r *MongoPetRepository) CreateIndexes() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	indexes := []mongo.IndexModel{
 		{
-			Keys: bson.D{{"pet_id", 1}},
+			Keys:    bson.D{{"pet_id", 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{
@@ -379,13 +379,13 @@ func (r *MongoPetRepository) CreateIndexes() error {
 			Keys: bson.D{{"created_at", -1}},
 		},
 	}
-	
+
 	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		r.logger.Error("Failed to create pet indexes", "error", err)
 		return fmt.Errorf("failed to create indexes: %w", err)
 	}
-	
+
 	r.logger.Info("Pet indexes created successfully")
 	return nil
 }
@@ -404,7 +404,7 @@ func (r *MongoPetRepository) aggregateToDocument(petAggregate *pet.PetAggregate)
 		Hit:      petAggregate.GetAttributes().GetHit(),
 		Dodge:    petAggregate.GetAttributes().GetDodge(),
 	}
-	
+
 	// 转换技能
 	var skills []SkillDoc
 	for _, skill := range petAggregate.GetSkills() {
@@ -419,7 +419,7 @@ func (r *MongoPetRepository) aggregateToDocument(petAggregate *pet.PetAggregate)
 			Description: skill.GetDescription(),
 		})
 	}
-	
+
 	// 转换羁绊
 	var activeBonds []ActiveBondDoc
 	for _, bond := range petAggregate.GetBonds().GetActiveBonds() {
@@ -431,12 +431,12 @@ func (r *MongoPetRepository) aggregateToDocument(petAggregate *pet.PetAggregate)
 			ActivatedAt: bond.GetActivatedAt(),
 		})
 	}
-	
+
 	bonds := BondsDoc{
 		ActiveBonds: activeBonds,
 		BondPoints:  petAggregate.GetBonds().GetBondPoints(),
 	}
-	
+
 	// 转换皮肤
 	var skins []SkinDoc
 	for _, skin := range petAggregate.GetSkins() {
@@ -450,7 +450,7 @@ func (r *MongoPetRepository) aggregateToDocument(petAggregate *pet.PetAggregate)
 			Unlocked:       skin.IsUnlocked(),
 		})
 	}
-	
+
 	return &PetDocument{
 		PetID:      petAggregate.GetID(),
 		PlayerID:   petAggregate.GetPlayerID(),
@@ -483,7 +483,7 @@ func (r *MongoPetRepository) documentToAggregate(doc *PetDocument) (*pet.PetAggr
 	attributes.AddCritical(doc.Attributes.Critical - attributes.GetCritical())
 	attributes.AddHit(doc.Attributes.Hit - attributes.GetHit())
 	attributes.AddDodge(doc.Attributes.Dodge - attributes.GetDodge())
-	
+
 	// 重建技能
 	var skills []*pet.PetSkill
 	for _, skillDoc := range doc.Skills {
@@ -497,7 +497,7 @@ func (r *MongoPetRepository) documentToAggregate(doc *PetDocument) (*pet.PetAggr
 		)
 		skills = append(skills, skill)
 	}
-	
+
 	// 重建羁绊
 	bonds := pet.NewPetBonds()
 	for _, bondDoc := range doc.Bonds.ActiveBonds {
@@ -510,7 +510,7 @@ func (r *MongoPetRepository) documentToAggregate(doc *PetDocument) (*pet.PetAggr
 		bonds.AddActiveBond(bond)
 	}
 	bonds.AddBondPoints(doc.Bonds.BondPoints)
-	
+
 	// 重建皮肤
 	var skins []*pet.PetSkin
 	for _, skinDoc := range doc.Skins {
@@ -528,7 +528,7 @@ func (r *MongoPetRepository) documentToAggregate(doc *PetDocument) (*pet.PetAggr
 		}
 		skins = append(skins, skin)
 	}
-	
+
 	// 使用重建函数创建聚合根
 	return pet.ReconstructPetAggregate(
 		doc.PetID,

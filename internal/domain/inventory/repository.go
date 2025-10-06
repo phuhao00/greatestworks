@@ -81,4 +81,4 @@ type ItemRepository interface {
 	Update(ctx context.Context, item *Item) error
 	
 	// Delete 删除物品
-	Delete(ctx context.Context
+	Delete(ctx context.Context, itemID string) error

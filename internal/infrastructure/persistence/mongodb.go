@@ -42,27 +42,27 @@ type MongoDB struct {
 func NewMongoDB(config *MongoConfig) (*MongoDB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.ConnectTimeout)
 	defer cancel()
-	
+
 	// 设置客户端选项
 	clientOptions := options.Client().
 		ApplyURI(config.URI).
 		SetMaxPoolSize(config.MaxPoolSize).
 		SetMinPoolSize(config.MinPoolSize).
 		SetMaxConnIdleTime(30 * time.Minute)
-	
+
 	// 连接到MongoDB
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		return nil, fmt.Errorf("连接MongoDB失败: %w", err)
 	}
-	
+
 	// 测试连接
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return nil, fmt.Errorf("MongoDB连接测试失败: %w", err)
 	}
-	
+
 	database := client.Database(config.Database)
-	
+
 	return &MongoDB{
 		client:   client,
 		database: database,
@@ -102,7 +102,7 @@ func (m *MongoDB) WithTransaction(ctx context.Context, fn func(mongo.SessionCont
 		return nil, err
 	}
 	defer session.EndSession(ctx)
-	
+
 	return session.WithTransaction(ctx, fn)
 }
 

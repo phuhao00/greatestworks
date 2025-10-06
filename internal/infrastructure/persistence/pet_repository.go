@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	"github.com/greatestworks/internal/domain/pet"
 )
 
 // PetRepository MongoDB宠物仓储实现
 type PetRepository struct {
-	db         *mongo.Database
-	petColl    *mongo.Collection
-	fragColl   *mongo.Collection
-	skinColl   *mongo.Collection
-	bondColl   *mongo.Collection
-	pictColl   *mongo.Collection
+	db       *mongo.Database
+	petColl  *mongo.Collection
+	fragColl *mongo.Collection
+	skinColl *mongo.Collection
+	bondColl *mongo.Collection
+	pictColl *mongo.Collection
 }
 
 // NewPetRepository 创建宠物仓储
@@ -37,30 +37,30 @@ func NewPetRepository(db *mongo.Database) *PetRepository {
 
 // PetDocument 宠物文档结构
 type PetDocument struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	PetID       string             `bson:"pet_id"`
-	PlayerID    uint64             `bson:"player_id"`
-	SpeciesID   string             `bson:"species_id"`
-	Name        string             `bson:"name"`
-	Level       int32              `bson:"level"`
-	Exp         int64              `bson:"exp"`
-	MaxExp      int64              `bson:"max_exp"`
-	Rarity      string             `bson:"rarity"`
-	Quality     string             `bson:"quality"`
-	Attributes  map[string]int64   `bson:"attributes"`
-	Skills      []string           `bson:"skills"`
-	EquippedSkin string            `bson:"equipped_skin"`
-	Mood        string             `bson:"mood"`
-	Hunger      int32              `bson:"hunger"`
-	Energy      int32              `bson:"energy"`
-	Health      int32              `bson:"health"`
-	Happiness   int32              `bson:"happiness"`
-	IsActive    bool               `bson:"is_active"`
-	LastFedAt   time.Time          `bson:"last_fed_at"`
-	LastPlayedAt time.Time         `bson:"last_played_at"`
-	CreatedAt   time.Time          `bson:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at"`
-	Version     int64              `bson:"version"`
+	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	PetID        string             `bson:"pet_id"`
+	PlayerID     uint64             `bson:"player_id"`
+	SpeciesID    string             `bson:"species_id"`
+	Name         string             `bson:"name"`
+	Level        int32              `bson:"level"`
+	Exp          int64              `bson:"exp"`
+	MaxExp       int64              `bson:"max_exp"`
+	Rarity       string             `bson:"rarity"`
+	Quality      string             `bson:"quality"`
+	Attributes   map[string]int64   `bson:"attributes"`
+	Skills       []string           `bson:"skills"`
+	EquippedSkin string             `bson:"equipped_skin"`
+	Mood         string             `bson:"mood"`
+	Hunger       int32              `bson:"hunger"`
+	Energy       int32              `bson:"energy"`
+	Health       int32              `bson:"health"`
+	Happiness    int32              `bson:"happiness"`
+	IsActive     bool               `bson:"is_active"`
+	LastFedAt    time.Time          `bson:"last_fed_at"`
+	LastPlayedAt time.Time          `bson:"last_played_at"`
+	CreatedAt    time.Time          `bson:"created_at"`
+	UpdatedAt    time.Time          `bson:"updated_at"`
+	Version      int64              `bson:"version"`
 }
 
 // PetFragmentDocument 宠物碎片文档结构
@@ -93,26 +93,26 @@ type PetSkinDocument struct {
 // Save 保存宠物聚合根
 func (r *PetRepository) Save(ctx context.Context, petAggregate *pet.PetAggregate) error {
 	doc := r.toPetDocument(petAggregate)
-	
+
 	filter := bson.M{"pet_id": doc.PetID}
 	update := bson.M{
 		"$set": doc,
 		"$inc": bson.M{"version": 1},
 	}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.petColl.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save pet: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindByID 根据ID查找宠物
 func (r *PetRepository) FindByID(ctx context.Context, petID string) (*pet.PetAggregate, error) {
 	filter := bson.M{"pet_id": petID}
-	
+
 	var doc PetDocument
 	err := r.petColl.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -121,20 +121,20 @@ func (r *PetRepository) FindByID(ctx context.Context, petID string) (*pet.PetAgg
 		}
 		return nil, fmt.Errorf("failed to find pet: %w", err)
 	}
-	
+
 	return r.fromPetDocument(&doc), nil
 }
 
 // FindByPlayer 根据玩家ID查找宠物列表
 func (r *PetRepository) FindByPlayer(ctx context.Context, playerID uint64) ([]*pet.PetAggregate, error) {
 	filter := bson.M{"player_id": playerID, "is_active": true}
-	
+
 	cursor, err := r.petColl.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pets by player: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var pets []*pet.PetAggregate
 	for cursor.Next(ctx) {
 		var doc PetDocument
@@ -143,24 +143,24 @@ func (r *PetRepository) FindByPlayer(ctx context.Context, playerID uint64) ([]*p
 		}
 		pets = append(pets, r.fromPetDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return pets, nil
 }
 
 // FindByQuery 根据查询条件查找宠物
 func (r *PetRepository) FindByQuery(ctx context.Context, query *pet.PetQuery) ([]*pet.PetAggregate, int64, error) {
 	filter := r.buildPetFilter(query)
-	
+
 	// 计算总数
 	total, err := r.petColl.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count pets: %w", err)
 	}
-	
+
 	// 构建查询选项
 	opts := options.Find()
 	if query.GetSort() != "" {
@@ -176,13 +176,13 @@ func (r *PetRepository) FindByQuery(ctx context.Context, query *pet.PetQuery) ([
 	if query.GetOffset() > 0 {
 		opts.SetSkip(int64(query.GetOffset()))
 	}
-	
+
 	cursor, err := r.petColl.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find pets: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var pets []*pet.PetAggregate
 	for cursor.Next(ctx) {
 		var doc PetDocument
@@ -191,11 +191,11 @@ func (r *PetRepository) FindByQuery(ctx context.Context, query *pet.PetQuery) ([
 		}
 		pets = append(pets, r.fromPetDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, 0, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return pets, total, nil
 }
 
@@ -204,46 +204,46 @@ func (r *PetRepository) Delete(ctx context.Context, petID string) error {
 	filter := bson.M{"pet_id": petID}
 	update := bson.M{
 		"$set": bson.M{
-			"is_active": false,
+			"is_active":  false,
 			"updated_at": time.Now(),
 		},
 		"$inc": bson.M{"version": 1},
 	}
-	
+
 	_, err := r.petColl.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return fmt.Errorf("failed to delete pet: %w", err)
 	}
-	
+
 	return nil
 }
 
 // SaveFragment 保存宠物碎片
 func (r *PetRepository) SaveFragment(ctx context.Context, fragment *pet.PetFragment) error {
 	doc := r.toFragmentDocument(fragment)
-	
+
 	filter := bson.M{"fragment_id": doc.FragmentID}
 	update := bson.M{"$set": doc}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.fragColl.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save pet fragment: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindFragmentsByPlayer 根据玩家ID查找宠物碎片
 func (r *PetRepository) FindFragmentsByPlayer(ctx context.Context, playerID uint64) ([]*pet.PetFragment, error) {
 	filter := bson.M{"player_id": playerID}
-	
+
 	cursor, err := r.fragColl.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pet fragments: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var fragments []*pet.PetFragment
 	for cursor.Next(ctx) {
 		var doc PetFragmentDocument
@@ -252,40 +252,40 @@ func (r *PetRepository) FindFragmentsByPlayer(ctx context.Context, playerID uint
 		}
 		fragments = append(fragments, r.fromFragmentDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return fragments, nil
 }
 
 // SaveSkin 保存宠物皮肤
 func (r *PetRepository) SaveSkin(ctx context.Context, skin *pet.PetSkin) error {
 	doc := r.toSkinDocument(skin)
-	
+
 	filter := bson.M{"skin_id": doc.SkinID}
 	update := bson.M{"$set": doc}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.skinColl.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save pet skin: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindSkinsByPlayer 根据玩家ID查找宠物皮肤
 func (r *PetRepository) FindSkinsByPlayer(ctx context.Context, playerID uint64) ([]*pet.PetSkin, error) {
 	filter := bson.M{"player_id": playerID}
-	
+
 	cursor, err := r.skinColl.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pet skins: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var skins []*pet.PetSkin
 	for cursor.Next(ctx) {
 		var doc PetSkinDocument
@@ -294,11 +294,11 @@ func (r *PetRepository) FindSkinsByPlayer(ctx context.Context, playerID uint64) 
 		}
 		skins = append(skins, r.fromSkinDocument(&doc))
 	}
-	
+
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor error: %w", err)
 	}
-	
+
 	return skins, nil
 }
 
@@ -339,13 +339,13 @@ func (r *PetRepository) fromPetDocument(doc *PetDocument) *pet.PetAggregate {
 	rarity := pet.ParseRarity(doc.Rarity)
 	quality := pet.ParseQuality(doc.Quality)
 	mood := pet.ParseMood(doc.Mood)
-	
+
 	// 创建属性对象
 	attributes := pet.NewPetAttributes()
 	for key, value := range doc.Attributes {
 		attributes.Set(key, value)
 	}
-	
+
 	// 重建聚合根
 	petAggregate := pet.NewPetAggregate(
 		doc.PetID,
@@ -354,7 +354,7 @@ func (r *PetRepository) fromPetDocument(doc *PetDocument) *pet.PetAggregate {
 		doc.Name,
 		rarity,
 	)
-	
+
 	// 设置其他属性
 	petAggregate.SetLevel(doc.Level)
 	petAggregate.SetExp(doc.Exp, doc.MaxExp)
@@ -366,11 +366,11 @@ func (r *PetRepository) fromPetDocument(doc *PetDocument) *pet.PetAggregate {
 	petAggregate.SetStats(doc.Hunger, doc.Energy, doc.Health, doc.Happiness)
 	petAggregate.SetTimestamps(doc.LastFedAt, doc.LastPlayedAt)
 	petAggregate.SetVersion(doc.Version)
-	
+
 	if !doc.IsActive {
 		petAggregate.Deactivate()
 	}
-	
+
 	return petAggregate
 }
 
@@ -418,7 +418,7 @@ func (r *PetRepository) toSkinDocument(skin *pet.PetSkin) *PetSkinDocument {
 // fromSkinDocument 从皮肤文档转换
 func (r *PetRepository) fromSkinDocument(doc *PetSkinDocument) *pet.PetSkin {
 	rarity := pet.ParseRarity(doc.Rarity)
-	
+
 	skin := pet.NewPetSkin(
 		doc.SkinID,
 		doc.PlayerID,
@@ -427,38 +427,38 @@ func (r *PetRepository) fromSkinDocument(doc *PetSkinDocument) *pet.PetSkin {
 		rarity,
 		doc.Effects,
 	)
-	
+
 	if doc.IsUnlocked {
 		skin.Unlock()
 	}
-	
+
 	return skin
 }
 
 // buildPetFilter 构建宠物查询过滤器
 func (r *PetRepository) buildPetFilter(query *pet.PetQuery) bson.M {
 	filter := bson.M{}
-	
+
 	if query.GetPlayerID() > 0 {
 		filter["player_id"] = query.GetPlayerID()
 	}
-	
+
 	if query.GetSpeciesID() != "" {
 		filter["species_id"] = query.GetSpeciesID()
 	}
-	
+
 	if query.GetRarity() != nil {
 		filter["rarity"] = query.GetRarity().String()
 	}
-	
+
 	if query.GetQuality() != nil {
 		filter["quality"] = query.GetQuality().String()
 	}
-	
+
 	if query.GetMinLevel() > 0 {
 		filter["level"] = bson.M{"$gte": query.GetMinLevel()}
 	}
-	
+
 	if query.GetMaxLevel() > 0 {
 		if levelFilter, exists := filter["level"]; exists {
 			levelFilter.(bson.M)["$lte"] = query.GetMaxLevel()
@@ -466,11 +466,11 @@ func (r *PetRepository) buildPetFilter(query *pet.PetQuery) bson.M {
 			filter["level"] = bson.M{"$lte": query.GetMaxLevel()}
 		}
 	}
-	
+
 	if query.IsActiveOnly() {
 		filter["is_active"] = true
 	}
-	
+
 	return filter
 }
 
@@ -479,7 +479,7 @@ func (r *PetRepository) CreateIndexes(ctx context.Context) error {
 	// 宠物索引
 	petIndexes := []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "pet_id", Value: 1}},
+			Keys:    bson.D{{Key: "pet_id", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{
@@ -495,40 +495,40 @@ func (r *PetRepository) CreateIndexes(ctx context.Context) error {
 			Keys: bson.D{{Key: "rarity", Value: 1}},
 		},
 	}
-	
+
 	if _, err := r.petColl.Indexes().CreateMany(ctx, petIndexes); err != nil {
 		return fmt.Errorf("failed to create pet indexes: %w", err)
 	}
-	
+
 	// 碎片索引
 	fragmentIndexes := []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "fragment_id", Value: 1}},
+			Keys:    bson.D{{Key: "fragment_id", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{
 			Keys: bson.D{{Key: "player_id", Value: 1}, {Key: "species_id", Value: 1}},
 		},
 	}
-	
+
 	if _, err := r.fragColl.Indexes().CreateMany(ctx, fragmentIndexes); err != nil {
 		return fmt.Errorf("failed to create fragment indexes: %w", err)
 	}
-	
+
 	// 皮肤索引
 	skinIndexes := []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "skin_id", Value: 1}},
+			Keys:    bson.D{{Key: "skin_id", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{
 			Keys: bson.D{{Key: "player_id", Value: 1}, {Key: "species_id", Value: 1}},
 		},
 	}
-	
+
 	if _, err := r.skinColl.Indexes().CreateMany(ctx, skinIndexes); err != nil {
 		return fmt.Errorf("failed to create skin indexes: %w", err)
 	}
-	
+
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/greatestworks/internal/domain/pet"
+	"greatestworks/internal/domain/pet"
 )
 
 // PetApplicationService 宠物应用服务

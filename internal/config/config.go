@@ -12,9 +12,15 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/phuhao00/netcore-go/core"
+	// "github.com/phuhao00/netcore-go/core" // 暂时注释掉缺失的包
 )
+
+// Logger 简单的日志接口
+type Logger interface {
+	Info(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+}
 
 // Config 全局配置结构
 type Config struct {
@@ -63,10 +69,10 @@ type RedisConfig struct {
 
 // NATSConfig NATS配置
 type NATSConfig struct {
-	URL         string `json:"url"`
-	ClusterID   string `json:"cluster_id"`
-	ClientID    string `json:"client_id"`
-	MaxReconnect int   `json:"max_reconnect"`
+	URL          string `json:"url"`
+	ClusterID    string `json:"cluster_id"`
+	ClientID     string `json:"client_id"`
+	MaxReconnect int    `json:"max_reconnect"`
 }
 
 // GatewayConfig 网关配置
@@ -129,12 +135,12 @@ type Manager struct {
 	configPath string
 	mutex      sync.RWMutex
 	watchers   []func(*Config)
-	logger     core.Logger
+	logger     Logger
 	stopChan   chan struct{}
 }
 
 // NewManager 创建配置管理器
-func NewManager(configPath string, logger core.Logger) *Manager {
+func NewManager(configPath string, logger Logger) *Manager {
 	return &Manager{
 		configPath: configPath,
 		watchers:   make([]func(*Config), 0),
@@ -147,28 +153,28 @@ func NewManager(configPath string, logger core.Logger) *Manager {
 func (m *Manager) Load() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	data, err := ioutil.ReadFile(m.configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
-	
+
 	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		return fmt.Errorf("failed to parse config: %w", err)
 	}
-	
+
 	// 设置默认值
 	m.setDefaults(&config)
-	
+
 	m.config = &config
 	m.logger.Info("Configuration loaded", "path", m.configPath)
-	
+
 	// 通知观察者
 	for _, watcher := range m.watchers {
 		go watcher(&config)
 	}
-	
+
 	return nil
 }
 
@@ -200,12 +206,12 @@ func (m *Manager) StopWatching() {
 func (m *Manager) watchConfigFile() {
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
-	
+
 	var lastModTime time.Time
 	if stat, err := os.Stat(m.configPath); err == nil {
 		lastModTime = stat.ModTime()
 	}
-	
+
 	for {
 		select {
 		case <-m.stopChan:
@@ -215,11 +221,11 @@ func (m *Manager) watchConfigFile() {
 			if err != nil {
 				continue
 			}
-			
+
 			if stat.ModTime().After(lastModTime) {
 				lastModTime = stat.ModTime()
 				m.logger.Info("Config file changed, reloading...")
-				
+
 				if err := m.Load(); err != nil {
 					m.logger.Error("Failed to reload config", "error", err)
 				}
@@ -246,7 +252,7 @@ func (m *Manager) setDefaults(config *Config) {
 	if config.Server.MaxConns == 0 {
 		config.Server.MaxConns = 10000
 	}
-	
+
 	// 数据库默认配置
 	if config.Database.Host == "" {
 		config.Database.Host = "localhost"
@@ -263,7 +269,7 @@ func (m *Manager) setDefaults(config *Config) {
 	if config.Database.MaxLifetime == 0 {
 		config.Database.MaxLifetime = 3600
 	}
-	
+
 	// Redis默认配置
 	if config.Redis.Host == "" {
 		config.Redis.Host = "localhost"
@@ -277,7 +283,7 @@ func (m *Manager) setDefaults(config *Config) {
 	if config.Redis.MinIdleConn == 0 {
 		config.Redis.MinIdleConn = 5
 	}
-	
+
 	// 日志默认配置
 	if config.Log.Level == "" {
 		config.Log.Level = "info"
@@ -303,11 +309,11 @@ func (m *Manager) setDefaults(config *Config) {
 func (m *Manager) LoadFromEnv() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	if m.config == nil {
 		m.config = &Config{}
 	}
-	
+
 	// 从环境变量覆盖配置
 	if host := os.Getenv("SERVER_HOST"); host != "" {
 		m.config.Server.Host = host
@@ -318,7 +324,7 @@ func (m *Manager) LoadFromEnv() {
 	if redisHost := os.Getenv("REDIS_HOST"); redisHost != "" {
 		m.config.Redis.Host = redisHost
 	}
-	
+
 	m.logger.Info("Environment variables loaded")
 }
 
@@ -327,26 +333,26 @@ func (m *Manager) Save() error {
 	m.mutex.RLock()
 	config := m.config
 	m.mutex.RUnlock()
-	
+
 	if config == nil {
 		return fmt.Errorf("no config to save")
 	}
-	
+
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
-	
+
 	// 确保目录存在
 	dir := filepath.Dir(m.configPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	if err := ioutil.WriteFile(m.configPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	m.logger.Info("Configuration saved", "path", m.configPath)
 	return nil
 }

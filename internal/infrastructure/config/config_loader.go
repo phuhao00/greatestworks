@@ -11,9 +11,10 @@ import (
 	"strings"
 	"sync"
 	"time"
-	
+
+	"greatestworks/internal/infrastructure/logger"
+
 	"gopkg.in/yaml.v3"
-	"greatestworks/aop/logger"
 )
 
 // ConfigLoader 配置加载器

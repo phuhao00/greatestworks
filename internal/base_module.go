@@ -1,10 +1,11 @@
 package internal
 
 import (
-	"go.opentelemetry.io/otel/trace"
-	"greatestworks/aop/module_router"
-	"greatestworks/aop/net/call"
+	"greatestworks/internal/infrastructure/module_router"
+	"greatestworks/internal/infrastructure/net/call"
 	"greatestworks/internal/note/event"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 type BaseModule struct {

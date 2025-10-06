@@ -2,21 +2,21 @@ package honor
 
 import (
 	"time"
-	"github.com/google/uuid"
+	// "github.com/google/uuid" // 未使用
 )
 
 // HonorAggregate 荣誉聚合根
 type HonorAggregate struct {
-	playerID       string
-	titles         map[string]*Title
-	achievements   map[string]*Achievement
-	currentTitle   string
-	honorPoints    int
-	honorLevel     int
-	reputation     map[string]int // 声望系统
-	statistics     *PlayerStatistics
-	updatedAt      time.Time
-	version        int
+	playerID     string
+	titles       map[string]*Title
+	achievements map[string]*Achievement
+	currentTitle string
+	honorPoints  int
+	honorLevel   int
+	reputation   map[string]int // 声望系统
+	statistics   *PlayerStatistics
+	updatedAt    time.Time
+	version      int
 }
 
 // NewHonorAggregate 创建荣誉聚合根
@@ -45,12 +45,12 @@ func (h *HonorAggregate) AddTitle(title *Title) error {
 	if title == nil {
 		return ErrInvalidTitle
 	}
-	
+
 	// 检查是否已拥有该称号
 	if _, exists := h.titles[title.GetID()]; exists {
 		return ErrTitleAlreadyOwned
 	}
-	
+
 	h.titles[title.GetID()] = title
 	h.updateVersion()
 	return nil
@@ -62,16 +62,16 @@ func (h *HonorAggregate) UnlockTitle(titleID string) error {
 	if !exists {
 		return ErrTitleNotFound
 	}
-	
+
 	if title.IsUnlocked() {
 		return ErrTitleAlreadyUnlocked
 	}
-	
+
 	// 检查解锁条件
 	if !h.checkTitleUnlockConditions(title) {
 		return ErrTitleConditionNotMet
 	}
-	
+
 	title.Unlock()
 	h.updateVersion()
 	return nil
@@ -83,18 +83,18 @@ func (h *HonorAggregate) EquipTitle(titleID string) error {
 	if !exists {
 		return ErrTitleNotFound
 	}
-	
+
 	if !title.IsUnlocked() {
 		return ErrTitleNotUnlocked
 	}
-	
+
 	// 卸下当前称号
 	if h.currentTitle != "" {
 		if currentTitle, exists := h.titles[h.currentTitle]; exists {
 			currentTitle.Unequip()
 		}
 	}
-	
+
 	// 装备新称号
 	title.Equip()
 	h.currentTitle = titleID
@@ -107,11 +107,11 @@ func (h *HonorAggregate) UnequipTitle() error {
 	if h.currentTitle == "" {
 		return ErrNoTitleEquipped
 	}
-	
+
 	if title, exists := h.titles[h.currentTitle]; exists {
 		title.Unequip()
 	}
-	
+
 	h.currentTitle = ""
 	h.updateVersion()
 	return nil
@@ -146,7 +146,7 @@ func (h *HonorAggregate) AddAchievement(achievement *Achievement) error {
 	if achievement == nil {
 		return ErrInvalidAchievement
 	}
-	
+
 	h.achievements[achievement.GetID()] = achievement
 	h.updateVersion()
 	return nil
@@ -158,21 +158,21 @@ func (h *HonorAggregate) UnlockAchievement(achievementID string) error {
 	if !exists {
 		return ErrAchievementNotFound
 	}
-	
+
 	if achievement.IsUnlocked() {
 		return ErrAchievementAlreadyUnlocked
 	}
-	
+
 	// 检查解锁条件
 	if !h.checkAchievementUnlockConditions(achievement) {
 		return ErrAchievementConditionNotMet
 	}
-	
+
 	achievement.Unlock()
-	
+
 	// 给予荣誉点数奖励
 	h.AddHonorPoints(achievement.GetHonorReward())
-	
+
 	h.updateVersion()
 	return nil
 }
@@ -201,10 +201,10 @@ func (h *HonorAggregate) GetUnlockedAchievements() []*Achievement {
 // AddHonorPoints 增加荣誉点数
 func (h *HonorAggregate) AddHonorPoints(points int) {
 	h.honorPoints += points
-	
+
 	// 检查是否升级
 	h.checkHonorLevelUp()
-	
+
 	h.updateVersion()
 }
 
@@ -237,10 +237,10 @@ func (h *HonorAggregate) GetAllReputation() map[string]int {
 // UpdateStatistics 更新统计数据
 func (h *HonorAggregate) UpdateStatistics(statType StatisticType, value int) {
 	h.statistics.UpdateStatistic(statType, value)
-	
+
 	// 检查是否触发成就或称号解锁
 	h.checkUnlockConditions()
-	
+
 	h.updateVersion()
 }
 
@@ -349,7 +349,7 @@ func (h *HonorAggregate) checkUnlockConditions() {
 			title.Unlock()
 		}
 	}
-	
+
 	// 检查所有未解锁的成就
 	for _, achievement := range h.achievements {
 		if !achievement.IsUnlocked() && h.checkAchievementUnlockConditions(achievement) {

@@ -26,4 +26,4 @@ type Repository interface {
 	FindPlayersByLevel(ctx context.Context, minLevel, maxLevel int) ([]*Player, error)
 	
 	// ExistsByName 检查名称是否存在
-	ExistsByName(ctx context.Context, name string) (
+	ExistsByName(ctx context.Context, name string) bool

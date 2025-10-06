@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	
+
 	"greatestworks/internal/domain/player"
 )
 
@@ -18,12 +18,7 @@ type MongoPlayerRepo struct {
 	collection *mongo.Collection
 }
 
-// NewMongoPlayerRepository 创建MongoDB玩家仓储
-func NewMongoPlayerRepository(db *mongo.Database) player.Repository {
-	return &MongoPlayerRepo{
-		collection: db.Collection("players"),
-	}
-}
+// 使用player_repository.go中定义的NewMongoPlayerRepository
 
 // PlayerDoc MongoDB玩家文档
 type PlayerDoc struct {
@@ -61,23 +56,23 @@ type StatsDoc struct {
 // Save 保存玩家
 func (r *MongoPlayerRepo) Save(ctx context.Context, p *player.Player) error {
 	doc := r.playerToDoc(p)
-	
+
 	filter := bson.M{"player_id": p.ID().String()}
 	update := bson.M{"$set": doc}
 	opts := options.Update().SetUpsert(true)
-	
+
 	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to save player: %w", err)
 	}
-	
+
 	return nil
 }
 
 // FindByID 根据ID查找玩家
 func (r *MongoPlayerRepo) FindByID(ctx context.Context, id player.PlayerID) (*player.Player, error) {
 	filter := bson.M{"player_id": id.String()}
-	
+
 	var doc PlayerDoc
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -86,14 +81,14 @@ func (r *MongoPlayerRepo) FindByID(ctx context.Context, id player.PlayerID) (*pl
 		}
 		return nil, fmt.Errorf("failed to find player: %w", err)
 	}
-	
+
 	return r.docToPlayer(&doc), nil
 }
 
 // FindByName 根据名称查找玩家
 func (r *MongoPlayerRepo) FindByName(ctx context.Context, name string) (*player.Player, error) {
 	filter := bson.M{"name": name}
-	
+
 	var doc PlayerDoc
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
@@ -102,7 +97,7 @@ func (r *MongoPlayerRepo) FindByName(ctx context.Context, name string) (*player.
 		}
 		return nil, fmt.Errorf("failed to find player by name: %w", err)
 	}
-	
+
 	return r.docToPlayer(&doc), nil
 }
 
@@ -114,16 +109,16 @@ func (r *MongoPlayerRepo) Update(ctx context.Context, p *player.Player) error {
 // Delete 删除玩家
 func (r *MongoPlayerRepo) Delete(ctx context.Context, id player.PlayerID) error {
 	filter := bson.M{"player_id": id.String()}
-	
+
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to delete player: %w", err)
 	}
-	
+
 	if result.DeletedCount == 0 {
 		return player.ErrPlayerNotFound
 	}
-	
+
 	return nil
 }
 
@@ -131,23 +126,23 @@ func (r *MongoPlayerRepo) Delete(ctx context.Context, id player.PlayerID) error 
 func (r *MongoPlayerRepo) FindOnlinePlayers(ctx context.Context, limit int) ([]*player.Player, error) {
 	filter := bson.M{"status": "online"}
 	opts := options.Find().SetLimit(int64(limit))
-	
+
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find online players: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var docs []PlayerDoc
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, fmt.Errorf("failed to decode online players: %w", err)
 	}
-	
+
 	players := make([]*player.Player, len(docs))
 	for i, doc := range docs {
 		players[i] = r.docToPlayer(&doc)
 	}
-	
+
 	return players, nil
 }
 
@@ -159,35 +154,35 @@ func (r *MongoPlayerRepo) FindPlayersByLevel(ctx context.Context, minLevel, maxL
 			"$lte": maxLevel,
 		},
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find players by level: %w", err)
 	}
 	defer cursor.Close(ctx)
-	
+
 	var docs []PlayerDoc
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, fmt.Errorf("failed to decode players by level: %w", err)
 	}
-	
+
 	players := make([]*player.Player, len(docs))
 	for i, doc := range docs {
 		players[i] = r.docToPlayer(&doc)
 	}
-	
+
 	return players, nil
 }
 
 // ExistsByName 检查名称是否存在
 func (r *MongoPlayerRepo) ExistsByName(ctx context.Context, name string) (bool, error) {
 	filter := bson.M{"name": name}
-	
+
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("failed to check player name exists: %w", err)
 	}
-	
+
 	return count > 0, nil
 }
 
@@ -195,7 +190,7 @@ func (r *MongoPlayerRepo) ExistsByName(ctx context.Context, name string) (bool, 
 func (r *MongoPlayerRepo) playerToDoc(p *player.Player) *PlayerDoc {
 	position := p.GetPosition()
 	stats := p.Stats()
-	
+
 	return &PlayerDoc{
 		PlayerID: p.ID().String(),
 		Name:     p.Name(),
@@ -226,14 +221,14 @@ func (r *MongoPlayerRepo) playerToDoc(p *player.Player) *PlayerDoc {
 func (r *MongoPlayerRepo) docToPlayer(doc *PlayerDoc) *player.Player {
 	// 重建PlayerID
 	playerID := player.PlayerIDFromString(doc.PlayerID)
-	
+
 	// 重建Position
 	position := player.Position{
 		X: doc.Position.X,
 		Y: doc.Position.Y,
 		Z: doc.Position.Z,
 	}
-	
+
 	// 重建Stats
 	stats := player.PlayerStats{
 		HP:      doc.Stats.HP,
@@ -244,7 +239,7 @@ func (r *MongoPlayerRepo) docToPlayer(doc *PlayerDoc) *player.Player {
 		Defense: doc.Stats.Defense,
 		Speed:   doc.Stats.Speed,
 	}
-	
+
 	// 使用重建方法
 	return player.ReconstructPlayer(
 		playerID,
@@ -311,11 +306,11 @@ func (r *MongoPlayerRepo) CreateIndexes(ctx context.Context) error {
 			Keys: bson.D{{Key: "created_at", Value: -1}},
 		},
 	}
-	
+
 	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		return fmt.Errorf("failed to create player indexes: %w", err)
 	}
-	
+
 	return nil
 }
