@@ -78,11 +78,11 @@ func (e *BaseDomainEvent) Validate() error {
 // NPCCreatedEvent NPC创建事件
 type NPCCreatedEvent struct {
 	*BaseDomainEvent
-	NPCID       string
-	Name        string
-	Type        NPCType
-	Location    *Location
-	CreatedBy   string
+	NPCID     string
+	Name      string
+	Type      NPCType
+	Location  *Location
+	CreatedBy string
 }
 
 // NewNPCCreatedEvent 创建NPC创建事件
@@ -418,18 +418,18 @@ type EventBus interface {
 	// 发布事件
 	Publish(event DomainEvent) error
 	PublishBatch(events []DomainEvent) error
-	
+
 	// 订阅事件
 	Subscribe(eventType string, handler EventHandler) error
 	Unsubscribe(eventType string, handlerName string) error
-	
+
 	// 获取订阅者
 	GetSubscribers(eventType string) []EventHandler
-	
+
 	// 启动和停止
 	Start() error
 	Stop() error
-	
+
 	// 健康检查
 	HealthCheck() error
 }
@@ -439,20 +439,20 @@ type EventStore interface {
 	// 保存事件
 	Save(event DomainEvent) error
 	SaveBatch(events []DomainEvent) error
-	
+
 	// 查询事件
 	FindByAggregateID(aggregateID string) ([]DomainEvent, error)
 	FindByEventType(eventType string) ([]DomainEvent, error)
 	FindByTimeRange(start, end time.Time) ([]DomainEvent, error)
-	
+
 	// 分页查询
 	FindWithPagination(query *EventQuery) (*EventPageResult, error)
-	
+
 	// 统计
 	Count() (int64, error)
 	CountByType(eventType string) (int64, error)
 	CountByAggregateID(aggregateID string) (int64, error)
-	
+
 	// 清理
 	CleanupOldEvents(before time.Time) (int64, error)
 }
@@ -510,12 +510,12 @@ func (v *DefaultEventValidator) Validate(event DomainEvent) error {
 	if err := event.Validate(); err != nil {
 		return err
 	}
-	
+
 	// 类型特定验证
 	if rule, exists := v.validationRules[event.GetEventType()]; exists {
 		return rule(event)
 	}
-	
+
 	return nil
 }
 
@@ -543,12 +543,12 @@ type EventMonitor interface {
 	RecordEvent(event DomainEvent) error
 	RecordEventProcessed(eventType string, duration time.Duration) error
 	RecordEventFailed(eventType string, err error) error
-	
+
 	// 获取指标
 	GetEventCount(eventType string) (int64, error)
 	GetProcessingTime(eventType string) (time.Duration, error)
 	GetFailureRate(eventType string) (float64, error)
-	
+
 	// 健康检查
 	GetHealthStatus() (*EventHealthStatus, error)
 }
@@ -572,11 +572,11 @@ type EventReplayer interface {
 	Replay(aggregateID string, fromVersion int) error
 	ReplayAll(fromTime time.Time) error
 	ReplayByType(eventType string, fromTime time.Time) error
-	
+
 	// 重建聚合
 	RebuildAggregate(aggregateID string) error
 	RebuildAllAggregates() error
-	
+
 	// 快照管理
 	CreateSnapshot(aggregateID string) error
 	LoadFromSnapshot(aggregateID string) error
@@ -589,14 +589,14 @@ type EventProjector interface {
 	// 处理事件
 	Project(event DomainEvent) error
 	ProjectBatch(events []DomainEvent) error
-	
+
 	// 重建投影
 	Rebuild() error
 	RebuildFrom(fromTime time.Time) error
-	
+
 	// 获取投影名称
 	GetProjectionName() string
-	
+
 	// 健康检查
 	HealthCheck() error
 }
@@ -608,11 +608,11 @@ type EventSerializer interface {
 	// 序列化
 	Serialize(event DomainEvent) ([]byte, error)
 	SerializeBatch(events []DomainEvent) ([]byte, error)
-	
+
 	// 反序列化
 	Deserialize(data []byte) (DomainEvent, error)
 	DeserializeBatch(data []byte) ([]DomainEvent, error)
-	
+
 	// 获取内容类型
 	GetContentType() string
 }
@@ -623,7 +623,7 @@ type EventSerializer interface {
 type EventFilter interface {
 	// 过滤事件
 	Filter(event DomainEvent) bool
-	
+
 	// 获取过滤器名称
 	GetFilterName() string
 }
@@ -660,7 +660,7 @@ func (f *EventTypeFilter) GetFilterName() string {
 type EventAggregator interface {
 	// 聚合事件
 	Aggregate(events []DomainEvent) (map[string]interface{}, error)
-	
+
 	// 获取聚合器名称
 	GetAggregatorName() string
 }
@@ -672,13 +672,13 @@ type EventScheduler interface {
 	// 调度事件
 	Schedule(event DomainEvent, delay time.Duration) error
 	ScheduleAt(event DomainEvent, at time.Time) error
-	
+
 	// 取消调度
 	Cancel(eventID string) error
-	
+
 	// 获取调度状态
 	GetScheduledEvents() ([]ScheduledEvent, error)
-	
+
 	// 启动和停止
 	Start() error
 	Stop() error
@@ -702,10 +702,56 @@ type ScheduledEvent struct {
 type EventFactory interface {
 	// 创建事件
 	CreateEvent(eventType string, aggregateID string, data map[string]interface{}) (DomainEvent, error)
-	
+
 	// 注册事件类型
 	RegisterEventType(eventType string, factory func(string, map[string]interface{}) (DomainEvent, error)) error
-	
+
 	// 获取支持的事件类型
 	GetSupportedEventTypes() []string
+}
+
+// NPCNameChangedEvent NPC名称变更事件
+type NPCNameChangedEvent struct {
+	*BaseDomainEvent
+	OldName string
+	NewName string
+}
+
+// NewNPCNameChangedEvent 创建NPC名称变更事件
+func NewNPCNameChangedEvent(npcID, oldName, newName string) *NPCNameChangedEvent {
+	return &NPCNameChangedEvent{
+		BaseDomainEvent: &BaseDomainEvent{
+			EventID:     fmt.Sprintf("npc_name_changed_%d", time.Now().UnixNano()),
+			EventType:   "NPCNameChanged",
+			AggregateID: npcID,
+			OccurredAt:  time.Now(),
+			Version:     1,
+			Data:        make(map[string]interface{}),
+		},
+		OldName: oldName,
+		NewName: newName,
+	}
+}
+
+// NPCMovedEvent NPC移动事件
+type NPCMovedEvent struct {
+	*BaseDomainEvent
+	OldLocation *Location
+	NewLocation *Location
+}
+
+// NewNPCMovedEvent 创建NPC移动事件
+func NewNPCMovedEvent(npcID string, oldLocation, newLocation *Location) *NPCMovedEvent {
+	return &NPCMovedEvent{
+		BaseDomainEvent: &BaseDomainEvent{
+			EventID:     fmt.Sprintf("npc_moved_%d", time.Now().UnixNano()),
+			EventType:   "NPCMoved",
+			AggregateID: npcID,
+			OccurredAt:  time.Now(),
+			Version:     1,
+			Data:        make(map[string]interface{}),
+		},
+		OldLocation: oldLocation,
+		NewLocation: newLocation,
+	}
 }

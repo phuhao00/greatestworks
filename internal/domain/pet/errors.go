@@ -126,18 +126,18 @@ func NewPetAlreadyExistsError(petID string) *PetAlreadyExistsError {
 // PetInvalidStateError 宠物状态无效错误
 type PetInvalidStateError struct {
 	*BasePetError
-	PetID        string   `json:"pet_id"`
-	CurrentState PetState `json:"current_state"`
+	PetID         string   `json:"pet_id"`
+	CurrentState  PetState `json:"current_state"`
 	RequiredState PetState `json:"required_state"`
-	Operation    string   `json:"operation"`
+	Operation     string   `json:"operation"`
 }
 
 // NewPetInvalidStateError 创建宠物状态无效错误
 func NewPetInvalidStateError(petID string, currentState, requiredState PetState, operation string) *PetInvalidStateError {
 	return &PetInvalidStateError{
 		BasePetError: &BasePetError{
-			Code:      "PET_INVALID_STATE",
-			Message:   fmt.Sprintf("Pet %s is in state %s, but %s is required for operation %s", petID, currentState, requiredState, operation),
+			Code:    "PET_INVALID_STATE",
+			Message: fmt.Sprintf("Pet %s is in state %s, but %s is required for operation %s", petID, currentState, requiredState, operation),
 			Details: map[string]interface{}{
 				"pet_id":         petID,
 				"current_state":  currentState,
@@ -188,8 +188,8 @@ type PetInsufficientExperienceError struct {
 func NewPetInsufficientExperienceError(petID string, current, required uint64) *PetInsufficientExperienceError {
 	return &PetInsufficientExperienceError{
 		BasePetError: &BasePetError{
-			Code:      "PET_INSUFFICIENT_EXPERIENCE",
-			Message:   fmt.Sprintf("Pet %s has insufficient experience: %d/%d", petID, current, required),
+			Code:    "PET_INSUFFICIENT_EXPERIENCE",
+			Message: fmt.Sprintf("Pet %s has insufficient experience: %d/%d", petID, current, required),
 			Details: map[string]interface{}{
 				"pet_id":              petID,
 				"current_experience":  current,
@@ -253,17 +253,17 @@ func NewPetSkillNotFoundError(petID, skillID string) *PetSkillNotFoundError {
 // PetSkillOnCooldownError 宠物技能冷却中错误
 type PetSkillOnCooldownError struct {
 	*BasePetError
-	PetID           string `json:"pet_id"`
-	SkillID         string `json:"skill_id"`
-	RemainingCooldown int64 `json:"remaining_cooldown"`
+	PetID             string `json:"pet_id"`
+	SkillID           string `json:"skill_id"`
+	RemainingCooldown int64  `json:"remaining_cooldown"`
 }
 
 // NewPetSkillOnCooldownError 创建宠物技能冷却中错误
 func NewPetSkillOnCooldownError(petID, skillID string, remainingCooldown int64) *PetSkillOnCooldownError {
 	return &PetSkillOnCooldownError{
 		BasePetError: &BasePetError{
-			Code:      "PET_SKILL_ON_COOLDOWN",
-			Message:   fmt.Sprintf("Skill %s for pet %s is on cooldown for %d seconds", skillID, petID, remainingCooldown),
+			Code:    "PET_SKILL_ON_COOLDOWN",
+			Message: fmt.Sprintf("Skill %s for pet %s is on cooldown for %d seconds", skillID, petID, remainingCooldown),
 			Details: map[string]interface{}{
 				"pet_id":             petID,
 				"skill_id":           skillID,
@@ -339,8 +339,8 @@ type PetFragmentInsufficientError struct {
 func NewPetFragmentInsufficientError(playerID string, fragmentID uint32, current, required uint64) *PetFragmentInsufficientError {
 	return &PetFragmentInsufficientError{
 		BasePetError: &BasePetError{
-			Code:      "PET_FRAGMENT_INSUFFICIENT",
-			Message:   fmt.Sprintf("Insufficient fragments %d for player %s: %d/%d", fragmentID, playerID, current, required),
+			Code:    "PET_FRAGMENT_INSUFFICIENT",
+			Message: fmt.Sprintf("Insufficient fragments %d for player %s: %d/%d", fragmentID, playerID, current, required),
 			Details: map[string]interface{}{
 				"player_id":         playerID,
 				"fragment_id":       fragmentID,
@@ -404,9 +404,9 @@ func NewPetSkinNotUnlockedError(skinID, playerID string) *PetSkinNotUnlockedErro
 // PetSkinIncompatibleError 宠物皮肤不兼容错误
 type PetSkinIncompatibleError struct {
 	*BasePetError
-	PetID       string      `json:"pet_id"`
-	SkinID      string      `json:"skin_id"`
-	PetCategory PetCategory `json:"pet_category"`
+	PetID        string      `json:"pet_id"`
+	SkinID       string      `json:"skin_id"`
+	PetCategory  PetCategory `json:"pet_category"`
 	SkinCategory PetCategory `json:"skin_category"`
 }
 
@@ -414,8 +414,8 @@ type PetSkinIncompatibleError struct {
 func NewPetSkinIncompatibleError(petID, skinID string, petCategory, skinCategory PetCategory) *PetSkinIncompatibleError {
 	return &PetSkinIncompatibleError{
 		BasePetError: &BasePetError{
-			Code:      "PET_SKIN_INCOMPATIBLE",
-			Message:   fmt.Sprintf("Skin %s (category: %s) is incompatible with pet %s (category: %s)", skinID, skinCategory, petID, petCategory),
+			Code:    "PET_SKIN_INCOMPATIBLE",
+			Message: fmt.Sprintf("Skin %s (category: %s) is incompatible with pet %s (category: %s)", skinID, skinCategory, petID, petCategory),
 			Details: map[string]interface{}{
 				"pet_id":        petID,
 				"skin_id":       skinID,
@@ -467,8 +467,8 @@ type PetBondRequirementsNotMetError struct {
 func NewPetBondRequirementsNotMetError(bondID string, required, current, missing []string) *PetBondRequirementsNotMetError {
 	return &PetBondRequirementsNotMetError{
 		BasePetError: &BasePetError{
-			Code:      "PET_BOND_REQUIREMENTS_NOT_MET",
-			Message:   fmt.Sprintf("Bond %s requirements not met, missing pets: %v", bondID, missing),
+			Code:    "PET_BOND_REQUIREMENTS_NOT_MET",
+			Message: fmt.Sprintf("Bond %s requirements not met, missing pets: %v", bondID, missing),
 			Details: map[string]interface{}{
 				"bond_id":       bondID,
 				"required_pets": required,
@@ -536,20 +536,20 @@ func NewPetPictorialAlreadyUnlockedError(playerID string, petConfigID uint32) *P
 // PetInsufficientResourcesError 宠物资源不足错误
 type PetInsufficientResourcesError struct {
 	*BasePetError
-	PlayerID         string            `json:"player_id"`
-	ResourceType     string            `json:"resource_type"`
-	CurrentAmount    int64             `json:"current_amount"`
-	RequiredAmount   int64             `json:"required_amount"`
-	Operation        string            `json:"operation"`
-	AdditionalCosts  map[string]int64  `json:"additional_costs,omitempty"`
+	PlayerID        string           `json:"player_id"`
+	ResourceType    string           `json:"resource_type"`
+	CurrentAmount   int64            `json:"current_amount"`
+	RequiredAmount  int64            `json:"required_amount"`
+	Operation       string           `json:"operation"`
+	AdditionalCosts map[string]int64 `json:"additional_costs,omitempty"`
 }
 
 // NewPetInsufficientResourcesError 创建宠物资源不足错误
 func NewPetInsufficientResourcesError(playerID, resourceType string, current, required int64, operation string) *PetInsufficientResourcesError {
 	return &PetInsufficientResourcesError{
 		BasePetError: &BasePetError{
-			Code:      "PET_INSUFFICIENT_RESOURCES",
-			Message:   fmt.Sprintf("Insufficient %s for player %s: %d/%d (operation: %s)", resourceType, playerID, current, required, operation),
+			Code:    "PET_INSUFFICIENT_RESOURCES",
+			Message: fmt.Sprintf("Insufficient %s for player %s: %d/%d (operation: %s)", resourceType, playerID, current, required, operation),
 			Details: map[string]interface{}{
 				"player_id":       playerID,
 				"resource_type":   resourceType,
@@ -651,8 +651,8 @@ type PetLimitExceededError struct {
 func NewPetLimitExceededError(playerID string, current, max int32, limitType string) *PetLimitExceededError {
 	return &PetLimitExceededError{
 		BasePetError: &BasePetError{
-			Code:      "PET_LIMIT_EXCEEDED",
-			Message:   fmt.Sprintf("%s limit exceeded for player %s: %d/%d", limitType, playerID, current, max),
+			Code:    "PET_LIMIT_EXCEEDED",
+			Message: fmt.Sprintf("%s limit exceeded for player %s: %d/%d", limitType, playerID, current, max),
 			Details: map[string]interface{}{
 				"player_id":     playerID,
 				"current_count": current,
@@ -746,18 +746,18 @@ func NewPetCacheError(operation, key, message string, internalErr error) *PetCac
 // PetValidationError 宠物验证错误
 type PetValidationError struct {
 	*BasePetError
-	Field        string      `json:"field"`
-	Value        interface{} `json:"value"`
-	Constraint   string      `json:"constraint"`
-	ValidationRule string    `json:"validation_rule"`
+	Field          string      `json:"field"`
+	Value          interface{} `json:"value"`
+	Constraint     string      `json:"constraint"`
+	ValidationRule string      `json:"validation_rule"`
 }
 
 // NewPetValidationError 创建宠物验证错误
 func NewPetValidationError(field string, value interface{}, constraint, rule string) *PetValidationError {
 	return &PetValidationError{
 		BasePetError: &BasePetError{
-			Code:      "PET_VALIDATION_ERROR",
-			Message:   fmt.Sprintf("Validation failed for field %s: %s (rule: %s)", field, constraint, rule),
+			Code:    "PET_VALIDATION_ERROR",
+			Message: fmt.Sprintf("Validation failed for field %s: %s (rule: %s)", field, constraint, rule),
 			Details: map[string]interface{}{
 				"field":           field,
 				"value":           value,
@@ -778,51 +778,51 @@ func NewPetValidationError(field string, value interface{}, constraint, rule str
 
 const (
 	// 宠物相关错误代码
-	ErrCodePetNotFound         = "PET_NOT_FOUND"
-	ErrCodePetAlreadyExists    = "PET_ALREADY_EXISTS"
-	ErrCodePetInvalidState     = "PET_INVALID_STATE"
-	ErrCodePetMaxLevelReached  = "PET_MAX_LEVEL_REACHED"
-	ErrCodePetInsufficientExp  = "PET_INSUFFICIENT_EXPERIENCE"
-	ErrCodePetDead             = "PET_DEAD"
-	
+	ErrCodePetNotFound        = "PET_NOT_FOUND"
+	ErrCodePetAlreadyExists   = "PET_ALREADY_EXISTS"
+	ErrCodePetInvalidState    = "PET_INVALID_STATE"
+	ErrCodePetMaxLevelReached = "PET_MAX_LEVEL_REACHED"
+	ErrCodePetInsufficientExp = "PET_INSUFFICIENT_EXPERIENCE"
+	ErrCodePetDead            = "PET_DEAD"
+
 	// 技能相关错误代码
-	ErrCodePetSkillNotFound    = "PET_SKILL_NOT_FOUND"
-	ErrCodePetSkillOnCooldown  = "PET_SKILL_ON_COOLDOWN"
-	ErrCodePetSkillMaxLevel    = "PET_SKILL_MAX_LEVEL"
-	
+	ErrCodePetSkillNotFound   = "PET_SKILL_NOT_FOUND"
+	ErrCodePetSkillOnCooldown = "PET_SKILL_ON_COOLDOWN"
+	ErrCodePetSkillMaxLevel   = "PET_SKILL_MAX_LEVEL"
+
 	// 碎片相关错误代码
 	ErrCodePetFragmentNotFound     = "PET_FRAGMENT_NOT_FOUND"
 	ErrCodePetFragmentInsufficient = "PET_FRAGMENT_INSUFFICIENT"
-	
+
 	// 皮肤相关错误代码
-	ErrCodePetSkinNotFound      = "PET_SKIN_NOT_FOUND"
-	ErrCodePetSkinNotUnlocked   = "PET_SKIN_NOT_UNLOCKED"
-	ErrCodePetSkinIncompatible  = "PET_SKIN_INCOMPATIBLE"
-	
+	ErrCodePetSkinNotFound     = "PET_SKIN_NOT_FOUND"
+	ErrCodePetSkinNotUnlocked  = "PET_SKIN_NOT_UNLOCKED"
+	ErrCodePetSkinIncompatible = "PET_SKIN_INCOMPATIBLE"
+
 	// 羁绊相关错误代码
-	ErrCodePetBondNotFound          = "PET_BOND_NOT_FOUND"
+	ErrCodePetBondNotFound           = "PET_BOND_NOT_FOUND"
 	ErrCodePetBondRequirementsNotMet = "PET_BOND_REQUIREMENTS_NOT_MET"
-	
+
 	// 图鉴相关错误代码
 	ErrCodePetPictorialNotFound        = "PET_PICTORIAL_NOT_FOUND"
 	ErrCodePetPictorialAlreadyUnlocked = "PET_PICTORIAL_ALREADY_UNLOCKED"
-	
+
 	// 资源相关错误代码
 	ErrCodePetInsufficientResources = "PET_INSUFFICIENT_RESOURCES"
-	
+
 	// 配置相关错误代码
 	ErrCodePetConfigNotFound = "PET_CONFIG_NOT_FOUND"
 	ErrCodePetConfigInvalid  = "PET_CONFIG_INVALID"
-	
+
 	// 业务逻辑错误代码
 	ErrCodePetOperationNotAllowed = "PET_OPERATION_NOT_ALLOWED"
 	ErrCodePetLimitExceeded       = "PET_LIMIT_EXCEEDED"
-	
+
 	// 系统错误代码
 	ErrCodePetSystemError   = "PET_SYSTEM_ERROR"
 	ErrCodePetDatabaseError = "PET_DATABASE_ERROR"
 	ErrCodePetCacheError    = "PET_CACHE_ERROR"
-	
+
 	// 验证错误代码
 	ErrCodePetValidationError = "PET_VALIDATION_ERROR"
 )
@@ -880,3 +880,15 @@ func LogPetError(err PetError) {
 	// 实现错误日志记录逻辑
 	fmt.Printf("PET_ERROR: %s\n", FormatPetError(err))
 }
+
+// 添加缺失的错误定义
+var (
+	ErrInvalidPetName         = fmt.Errorf("invalid pet name")
+	ErrPetIsDead              = fmt.Errorf("pet is dead")
+	ErrMaxLevelReached        = fmt.Errorf("max level reached")
+	ErrMaxStarReached         = fmt.Errorf("max star reached")
+	ErrInvalidStateTransition = fmt.Errorf("invalid state transition")
+	ErrPetNotDead             = fmt.Errorf("pet is not dead")
+	ErrReviveTimeNotReached   = fmt.Errorf("revive time not reached")
+	ErrMaxSkillsReached       = fmt.Errorf("max skills reached")
+)

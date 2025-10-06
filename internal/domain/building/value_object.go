@@ -209,6 +209,11 @@ func (s *Size) Validate() error {
 	return nil
 }
 
+// IsValid 检查尺寸是否有效
+func (s *Size) IsValid() bool {
+	return s != nil && s.Width > 0 && s.Height > 0 && s.Depth > 0
+}
+
 // Clone 克隆尺寸
 func (s *Size) Clone() *Size {
 	return &Size{Width: s.Width, Height: s.Height, Depth: s.Depth}

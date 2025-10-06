@@ -39,6 +39,10 @@ type GameResult struct {
 	Rankings    []GamePlayer `json:"rankings"`
 	Rewards     []Reward     `json:"rewards"`
 	CompletedAt time.Time    `json:"completed_at"`
+	Rank        int          `json:"rank"`
+	Score       int64        `json:"score"`
+	IsWinner    bool         `json:"is_winner"`
+	PlayerID    string       `json:"player_id"`
 }
 
 // RewardPool 奖励池
@@ -63,16 +67,19 @@ type Reward struct {
 
 // GameStatistics 游戏统计
 type GameStatistics struct {
-	GameID          string        `json:"game_id"`
-	TotalPlayers    int           `json:"total_players"`
-	ActivePlayers   int           `json:"active_players"`
-	CompletedGames  int           `json:"completed_games"`
-	AverageScore    float64       `json:"average_score"`
-	HighestScore    int64         `json:"highest_score"`
-	AverageDuration time.Duration `json:"average_duration"`
-	LastPlayedAt    time.Time     `json:"last_played_at"`
-	CreatedAt       time.Time     `json:"created_at"`
-	UpdatedAt       time.Time     `json:"updated_at"`
+	GameID              string        `json:"game_id"`
+	TotalPlayers        int           `json:"total_players"`
+	ActivePlayers       int           `json:"active_players"`
+	CompletedGames      int           `json:"completed_games"`
+	AverageScore        float64       `json:"average_score"`
+	HighestScore        int64         `json:"highest_score"`
+	LowestScore         int64         `json:"lowest_score"`
+	AverageDuration     time.Duration `json:"average_duration"`
+	AverageGameDuration float64       `json:"average_game_duration"`
+	TotalGames          int           `json:"total_games"`
+	LastPlayedAt        time.Time     `json:"last_played_at"`
+	CreatedAt           time.Time     `json:"created_at"`
+	UpdatedAt           time.Time     `json:"updated_at"`
 }
 
 // NewGameStatistics 创建游戏统计信息
@@ -151,3 +158,29 @@ func (gs *GameStatistics) Clone() *GameStatistics {
 		UpdatedAt:       gs.UpdatedAt,
 	}
 }
+
+// CalculateRewards 计算奖励
+func (rp *RewardPool) CalculateRewards(rank int, score int64, isWinner bool) []Reward {
+	// 简单的奖励计算逻辑
+	rewards := make([]Reward, 0)
+	
+	if isWinner {
+		// 获胜者获得基础奖励
+		rewards = append(rewards, Reward{
+			Type:   "experience",
+			Amount: int64(100 * rank),
+		})
+	}
+	
+	// 根据分数给予额外奖励
+	if score > 1000 {
+		rewards = append(rewards, Reward{
+			Type:   "coin",
+			Amount: score / 10,
+		})
+	}
+	
+	return rewards
+}
+
+// 注意：GameStatistics和GameResult已经在文件开头定义，这里只是添加了缺失的字段

@@ -554,5 +554,5 @@ type PetSearchRepository interface {
 
 	// 索引管理
 	RebuildIndex() error
-	UpdateIndex(entity *Pet) error
+	UpdateIndex(entity *PetAggregate) error
 }

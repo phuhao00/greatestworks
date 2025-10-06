@@ -1,7 +1,6 @@
 package npc
 
 import (
-	"fmt"
 	"math"
 	"time"
 )
@@ -10,7 +9,7 @@ import (
 type NPCType int
 
 const (
-	NPCTypeVillager  NPCType = iota + 1 // 村民
+	NPCTypeVillager   NPCType = iota + 1 // 村民
 	NPCTypeMerchant                      // 商人
 	NPCTypeGuard                         // 守卫
 	NPCTypeQuestGiver                    // 任务发布者
@@ -192,19 +191,19 @@ func (l *Location) ToMap() map[string]interface{} {
 
 // NPCAttributes NPC属性值对象
 type NPCAttributes struct {
-	Level       int
-	Health      int
-	MaxHealth   int
-	Mana        int
-	MaxMana     int
-	Strength    int
-	Agility     int
+	Level        int
+	Health       int
+	MaxHealth    int
+	Mana         int
+	MaxMana      int
+	Strength     int
+	Agility      int
 	Intelligence int
-	Charisma    int
-	Luck        int
-	MoveSpeed   float64
-	ViewRange   float64
-	HearRange   float64
+	Charisma     int
+	Luck         int
+	MoveSpeed    float64
+	ViewRange    float64
+	HearRange    float64
 }
 
 // NewNPCAttributes 创建NPC属性
@@ -338,7 +337,7 @@ func (nb *NPCBehavior) GetNextPatrolPoint() *Location {
 	if len(nb.PatrolPoints) == 0 {
 		return nil
 	}
-	
+
 	nb.CurrentPoint = (nb.CurrentPoint + 1) % len(nb.PatrolPoints)
 	return nb.PatrolPoints[nb.CurrentPoint]
 }
@@ -355,8 +354,8 @@ func (nb *NPCBehavior) ClearTarget() {
 	nb.State = BehaviorStateIdle
 }
 
-// CanMove 检查是否可以移动
-func (nb *NPCBehavior) CanMove() bool {
+// CanMoveNow 检查是否可以移动
+func (nb *NPCBehavior) CanMoveNow() bool {
 	return nb.CanMove && nb.State != BehaviorStatePaused
 }
 
@@ -379,7 +378,7 @@ func (nb *NPCBehavior) updatePatrol(deltaTime time.Duration) {
 	if len(nb.PatrolPoints) == 0 {
 		return
 	}
-	
+
 	switch nb.State {
 	case BehaviorStateIdle:
 		if time.Since(nb.LastMove) >= nb.PauseTime {
@@ -454,10 +453,10 @@ type BehaviorState int
 
 const (
 	BehaviorStateIdle    BehaviorState = iota + 1 // 空闲
-	BehaviorStateMoving                            // 移动中
-	BehaviorStatePaused                            // 暂停
-	BehaviorStateWaiting                           // 等待
-	BehaviorStateActing                            // 执行动作
+	BehaviorStateMoving                           // 移动中
+	BehaviorStatePaused                           // 暂停
+	BehaviorStateWaiting                          // 等待
+	BehaviorStateActing                           // 执行动作
 )
 
 // String 返回行为状态字符串
@@ -517,31 +516,31 @@ func (r *Relationship) GetLevel() RelationshipLevel {
 func (r *Relationship) ChangeValue(change int, reason string) error {
 	oldValue := r.Value
 	oldLevel := r.Level
-	
+
 	r.Value += change
-	
+
 	// 限制关系值范围
 	if r.Value > 1000 {
 		r.Value = 1000
 	} else if r.Value < -1000 {
 		r.Value = -1000
 	}
-	
+
 	// 更新关系等级
 	r.updateLevel()
-	
+
 	// 记录历史
 	event := &RelationshipEvent{
-		Reason:      reason,
-		Change:      change,
-		OldValue:    oldValue,
-		NewValue:    r.Value,
-		OldLevel:    oldLevel,
-		NewLevel:    r.Level,
-		Timestamp:   time.Now(),
+		Reason:    reason,
+		Change:    change,
+		OldValue:  oldValue,
+		NewValue:  r.Value,
+		OldLevel:  oldLevel,
+		NewLevel:  r.Level,
+		Timestamp: time.Now(),
 	}
 	r.History = append(r.History, event)
-	
+
 	r.UpdatedAt = time.Now()
 	return nil
 }
@@ -642,6 +641,32 @@ type RelationshipEvent struct {
 	Timestamp time.Time
 }
 
+// RelationshipChangeType 关系变更类型
+type RelationshipChangeType int
+
+const (
+	RelationshipChangeTypeIncrease RelationshipChangeType = iota + 1 // 增加
+	RelationshipChangeTypeDecrease                                   // 减少
+	RelationshipChangeTypeReset                                      // 重置
+	RelationshipChangeTypeSet                                        // 设置
+)
+
+// String 返回变更类型字符串
+func (rct RelationshipChangeType) String() string {
+	switch rct {
+	case RelationshipChangeTypeIncrease:
+		return "increase"
+	case RelationshipChangeTypeDecrease:
+		return "decrease"
+	case RelationshipChangeTypeReset:
+		return "reset"
+	case RelationshipChangeTypeSet:
+		return "set"
+	default:
+		return "unknown"
+	}
+}
+
 // NPCSchedule NPC日程值对象
 type NPCSchedule struct {
 	ScheduleItems []*ScheduleItem
@@ -721,15 +746,15 @@ func (si *ScheduleItem) IsActive(currentTime time.Time) bool {
 			return false
 		}
 	}
-	
+
 	// 检查时间范围
 	currentHour := currentTime.Hour()
 	currentMinute := currentTime.Minute()
 	currentTimeOfDay := currentHour*60 + currentMinute
-	
+
 	startTimeOfDay := si.StartTime.Hour()*60 + si.StartTime.Minute()
 	endTimeOfDay := si.EndTime.Hour()*60 + si.EndTime.Minute()
-	
+
 	return currentTimeOfDay >= startTimeOfDay && currentTimeOfDay <= endTimeOfDay
 }
 
@@ -745,10 +770,10 @@ func (si *ScheduleItem) AddAction(action string) {
 
 // ShopSchedule 商店日程值对象
 type ShopSchedule struct {
-	OpenTime    time.Time
-	CloseTime   time.Time
-	DaysOpen    []time.Weekday
-	Holidays    []time.Time
+	OpenTime     time.Time
+	CloseTime    time.Time
+	DaysOpen     []time.Weekday
+	Holidays     []time.Time
 	SpecialHours map[string]*SpecialHours
 }
 
@@ -771,13 +796,13 @@ func (ss *ShopSchedule) IsOpen(currentTime time.Time) bool {
 			return false
 		}
 	}
-	
+
 	// 检查特殊时间
 	dateKey := currentTime.Format("2006-01-02")
 	if specialHours, exists := ss.SpecialHours[dateKey]; exists {
 		return specialHours.IsOpen(currentTime)
 	}
-	
+
 	// 检查星期几
 	currentWeekday := currentTime.Weekday()
 	found := false
@@ -790,15 +815,15 @@ func (ss *ShopSchedule) IsOpen(currentTime time.Time) bool {
 	if !found {
 		return false
 	}
-	
+
 	// 检查营业时间
 	currentHour := currentTime.Hour()
 	currentMinute := currentTime.Minute()
 	currentTimeOfDay := currentHour*60 + currentMinute
-	
+
 	openTimeOfDay := ss.OpenTime.Hour()*60 + ss.OpenTime.Minute()
 	closeTimeOfDay := ss.CloseTime.Hour()*60 + ss.CloseTime.Minute()
-	
+
 	return currentTimeOfDay >= openTimeOfDay && currentTimeOfDay <= closeTimeOfDay
 }
 
@@ -833,14 +858,14 @@ func (sh *SpecialHours) IsOpen(currentTime time.Time) bool {
 	if sh.Closed {
 		return false
 	}
-	
+
 	currentHour := currentTime.Hour()
 	currentMinute := currentTime.Minute()
 	currentTimeOfDay := currentHour*60 + currentMinute
-	
+
 	openTimeOfDay := sh.OpenTime.Hour()*60 + sh.OpenTime.Minute()
 	closeTimeOfDay := sh.CloseTime.Hour()*60 + sh.CloseTime.Minute()
-	
+
 	return currentTimeOfDay >= openTimeOfDay && currentTimeOfDay <= closeTimeOfDay
 }
 
@@ -850,7 +875,7 @@ func (sh *SpecialHours) IsOpen(currentTime time.Time) bool {
 type DialogueType int
 
 const (
-	DialogueTypeGreeting   DialogueType = iota + 1 // 问候
+	DialogueTypeGreeting    DialogueType = iota + 1 // 问候
 	DialogueTypeInformation                         // 信息
 	DialogueTypeQuest                               // 任务
 	DialogueTypeTrade                               // 交易
@@ -885,16 +910,16 @@ func (dt DialogueType) String() string {
 type QuestType int
 
 const (
-	QuestTypeKill     QuestType = iota + 1 // 击杀
-	QuestTypeCollect                       // 收集
-	QuestTypeDeliver                       // 运送
-	QuestTypeEscort                        // 护送
-	QuestTypeExplore                       // 探索
-	QuestTypeTalk                          // 对话
-	QuestTypeCraft                         // 制作
-	QuestTypeDaily                         // 日常
-	QuestTypeWeekly                        // 周常
-	QuestTypeSpecial                       // 特殊
+	QuestTypeKill    QuestType = iota + 1 // 击杀
+	QuestTypeCollect                      // 收集
+	QuestTypeDeliver                      // 运送
+	QuestTypeEscort                       // 护送
+	QuestTypeExplore                      // 探索
+	QuestTypeTalk                         // 对话
+	QuestTypeCraft                        // 制作
+	QuestTypeDaily                        // 日常
+	QuestTypeWeekly                       // 周常
+	QuestTypeSpecial                      // 特殊
 )
 
 // String 返回任务类型字符串
@@ -930,10 +955,10 @@ type QuestStatus int
 
 const (
 	QuestStatusActive    QuestStatus = iota + 1 // 激活
-	QuestStatusCompleted                         // 完成
-	QuestStatusFailed                            // 失败
-	QuestStatusAbandoned                         // 放弃
-	QuestStatusExpired                           // 过期
+	QuestStatusCompleted                        // 完成
+	QuestStatusFailed                           // 失败
+	QuestStatusAbandoned                        // 放弃
+	QuestStatusExpired                          // 过期
 )
 
 // String 返回任务状态字符串
@@ -959,13 +984,13 @@ type ObjectiveType int
 
 const (
 	ObjectiveTypeKill     ObjectiveType = iota + 1 // 击杀
-	ObjectiveTypeCollect                            // 收集
-	ObjectiveTypeDeliver                            // 运送
-	ObjectiveTypeReach                              // 到达
-	ObjectiveTypeInteract                           // 交互
-	ObjectiveTypeWait                               // 等待
-	ObjectiveTypeDefend                             // 防御
-	ObjectiveTypeEscape                             // 逃脱
+	ObjectiveTypeCollect                           // 收集
+	ObjectiveTypeDeliver                           // 运送
+	ObjectiveTypeReach                             // 到达
+	ObjectiveTypeInteract                          // 交互
+	ObjectiveTypeWait                              // 等待
+	ObjectiveTypeDefend                            // 防御
+	ObjectiveTypeEscape                            // 逃脱
 )
 
 // String 返回目标类型字符串
@@ -997,13 +1022,13 @@ type ConditionType int
 
 const (
 	ConditionTypeLevel        ConditionType = iota + 1 // 等级
-	ConditionTypeItem                                   // 物品
-	ConditionTypeQuest                                  // 任务
-	ConditionTypeRelationship                           // 关系
-	ConditionTypeTime                                   // 时间
-	ConditionTypeLocation                               // 位置
-	ConditionTypeAttribute                              // 属性
-	ConditionTypeCustom                                 // 自定义
+	ConditionTypeItem                                  // 物品
+	ConditionTypeQuest                                 // 任务
+	ConditionTypeRelationship                          // 关系
+	ConditionTypeTime                                  // 时间
+	ConditionTypeLocation                              // 位置
+	ConditionTypeAttribute                             // 属性
+	ConditionTypeCustom                                // 自定义
 )
 
 // String 返回条件类型字符串
@@ -1034,16 +1059,16 @@ func (ct ConditionType) String() string {
 type ActionType int
 
 const (
-	ActionTypeGiveItem       ActionType = iota + 1 // 给予物品
-	ActionTypeTakeItem                              // 拿取物品
-	ActionTypeGiveGold                              // 给予金币
-	ActionTypeTakeGold                              // 拿取金币
-	ActionTypeGiveExperience                        // 给予经验
-	ActionTypeStartQuest                            // 开始任务
-	ActionTypeCompleteQuest                         // 完成任务
-	ActionTypeChangeRelationship                    // 改变关系
-	ActionTypeTeleport                              // 传送
-	ActionTypeCustom                                // 自定义
+	ActionTypeGiveItem           ActionType = iota + 1 // 给予物品
+	ActionTypeTakeItem                                 // 拿取物品
+	ActionTypeGiveGold                                 // 给予金币
+	ActionTypeTakeGold                                 // 拿取金币
+	ActionTypeGiveExperience                           // 给予经验
+	ActionTypeStartQuest                               // 开始任务
+	ActionTypeCompleteQuest                            // 完成任务
+	ActionTypeChangeRelationship                       // 改变关系
+	ActionTypeTeleport                                 // 传送
+	ActionTypeCustom                                   // 自定义
 )
 
 // String 返回动作类型字符串
@@ -1079,12 +1104,12 @@ type PrerequisiteType int
 
 const (
 	PrerequisiteTypeLevel        PrerequisiteType = iota + 1 // 等级
-	PrerequisiteTypeQuest                                     // 任务
-	PrerequisiteTypeItem                                      // 物品
-	PrerequisiteTypeRelationship                              // 关系
-	PrerequisiteTypeAttribute                                 // 属性
-	PrerequisiteTypeTime                                      // 时间
-	PrerequisiteTypeCustom                                    // 自定义
+	PrerequisiteTypeQuest                                    // 任务
+	PrerequisiteTypeItem                                     // 物品
+	PrerequisiteTypeRelationship                             // 关系
+	PrerequisiteTypeAttribute                                // 属性
+	PrerequisiteTypeTime                                     // 时间
+	PrerequisiteTypeCustom                                   // 自定义
 )
 
 // String 返回前置条件类型字符串
@@ -1114,7 +1139,7 @@ type DiscountType int
 
 const (
 	DiscountTypePercentage DiscountType = iota + 1 // 百分比
-	DiscountTypeFixed                               // 固定金额
+	DiscountTypeFixed                              // 固定金额
 )
 
 // String 返回折扣类型字符串

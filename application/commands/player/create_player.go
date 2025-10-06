@@ -7,7 +7,9 @@ import (
 
 // CreatePlayerCommand 创建玩家命令
 type CreatePlayerCommand struct {
-	Name string `json:"name" validate:"required,min=2,max=20"`
+	Name   string `json:"name" validate:"required,min=2,max=20"`
+	Avatar string `json:"avatar,omitempty"`
+	Gender int    `json:"gender,omitempty" validate:"min=0,max=2"`
 }
 
 // CreatePlayerResult 创建玩家结果

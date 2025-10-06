@@ -1,7 +1,6 @@
 package npc
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -151,7 +150,7 @@ func (n *NPCAggregate) SetStatus(status NPCStatus) error {
 	n.version++
 
 	// 发布状态变更事�?
-	event := NewNPCStatusChangedEvent(n.id, oldStatus, status)
+	event := NewNPCStatusChangedEvent(n.id, oldStatus, status, "status_changed", "system")
 	n.addEvent(event)
 
 	return nil
@@ -647,19 +646,20 @@ type NPCStatistics struct {
 
 // 相关错误定义
 var (
-	ErrInvalidNPCName           = fmt.Errorf("invalid NPC name")
-	ErrInvalidNPCStatus         = fmt.Errorf("invalid NPC status")
-	ErrInvalidLocation          = fmt.Errorf("invalid location")
-	ErrNPCCannotMove            = fmt.Errorf("NPC cannot move")
-	ErrInvalidDialogue          = fmt.Errorf("invalid dialogue")
-	ErrDialogueAlreadyExists    = fmt.Errorf("dialogue already exists")
-	ErrDialogueNotFound         = fmt.Errorf("dialogue not found")
-	ErrDialogueConditionsNotMet = fmt.Errorf("dialogue conditions not met")
-	ErrInvalidQuest             = fmt.Errorf("invalid quest")
-	ErrQuestAlreadyExists       = fmt.Errorf("quest already exists")
-	ErrQuestNotFound            = fmt.Errorf("quest not found")
-	ErrQuestConditionsNotMet    = fmt.Errorf("quest conditions not met")
-	ErrInvalidShop              = fmt.Errorf("invalid shop")
-	ErrNPCCannotHaveShop        = fmt.Errorf("NPC cannot have shop")
-	ErrNPCHasNoShop             = fmt.Errorf("NPC has no shop")
+// 这些错误已经在errors.go中定义，注释掉重复声明
+// ErrInvalidNPCName           = fmt.Errorf("invalid NPC name")
+// ErrInvalidNPCStatus         = fmt.Errorf("invalid NPC status")
+// ErrInvalidLocation          = fmt.Errorf("invalid location")
+// ErrNPCCannotMove            = fmt.Errorf("NPC cannot move")
+// ErrInvalidDialogue          = fmt.Errorf("invalid dialogue")
+// ErrDialogueAlreadyExists    = fmt.Errorf("dialogue already exists")
+// ErrDialogueNotFound         = fmt.Errorf("dialogue not found")
+// ErrDialogueConditionsNotMet = fmt.Errorf("dialogue conditions not met")
+// ErrInvalidQuest             = fmt.Errorf("invalid quest")
+// ErrQuestAlreadyExists       = fmt.Errorf("quest already exists")
+// ErrQuestNotFound            = fmt.Errorf("quest not found")
+// ErrQuestConditionsNotMet    = fmt.Errorf("quest conditions not met")
+// ErrInvalidShop              = fmt.Errorf("invalid shop")
+// ErrNPCCannotHaveShop        = fmt.Errorf("NPC cannot have shop")
+// ErrNPCHasNoShop             = fmt.Errorf("NPC has no shop")
 )

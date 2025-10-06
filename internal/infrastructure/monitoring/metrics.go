@@ -2,13 +2,90 @@ package monitoring
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"greatestworks/internal/infrastructure/logger"
+)
+
+// Factory 指标工厂接口
+type Factory interface {
+	NewCounter(name, help string, labels Labels) Counter
+	NewGauge(name, help string, labels Labels) Gauge
+	NewHistogram(name, help string, buckets []float64, labels Labels) Histogram
+	NewSummary(name, help string, objectives map[float64]float64, labels Labels) Summary
+}
+
+// Registry 指标注册表接口
+type Registry interface {
+	Register(collector Collector) error
+	Unregister(collector Collector) bool
+	MustRegister(collectors ...Collector)
+	Gather() ([]*MetricFamily, error)
+}
+
+// Collector 收集器接口
+type Collector interface {
+	Describe(chan<- *MetricDesc)
+	Collect(chan<- Metric)
+}
+
+// Labels 标签类型
+type Labels map[string]string
+
+// MetricDesc 指标描述
+type MetricDesc struct {
+	Name string
+	Help string
+	Type MetricType
+}
+
+// MetricFamily 指标族
+type MetricFamily struct {
+	Name    string
+	Help    string
+	Type    MetricType
+	Metrics []*Sample
+}
+
+// Sample 样本
+type Sample struct {
+	Labels    Labels
+	Value     float64
+	Timestamp time.Time
+	Buckets   []Bucket
+	Quantiles []Quantile
+}
+
+// Bucket 直方图桶
+type Bucket struct {
+	UpperBound float64
+	Count      uint64
+}
+
+// Quantile 分位数
+type Quantile struct {
+	Quantile float64
+	Value    float64
+}
+
+// 常量定义
+const (
+	CounterType   MetricType = "counter"
+	GaugeType     MetricType = "gauge"
+	HistogramType MetricType = "histogram"
+	SummaryType   MetricType = "summary"
+)
+
+// 错误定义
+var (
+	ErrMetricExists   = fmt.Errorf("metric already exists")
+	ErrMetricNotFound = fmt.Errorf("metric not found")
 )
 
 // MetricType 指标类型
@@ -28,11 +105,15 @@ type Metric interface {
 	GetValue() interface{}
 	GetLabels() map[string]string
 	GetTimestamp() time.Time
+	Help() string
+	Type() MetricType
+	Name() string
 }
 
 // Counter 计数器指标
 type Counter struct {
 	name      string
+	help      string
 	value     int64
 	labels    map[string]string
 	timestamp time.Time
@@ -43,6 +124,18 @@ type Counter struct {
 func NewCounter(name string, labels map[string]string) *Counter {
 	return &Counter{
 		name:      name,
+		help:      "",
+		value:     0,
+		labels:    labels,
+		timestamp: time.Now(),
+	}
+}
+
+// NewCounterWithHelp 创建带帮助信息的计数器
+func NewCounterWithHelp(name, help string, labels map[string]string) *Counter {
+	return &Counter{
+		name:      name,
+		help:      help,
 		value:     0,
 		labels:    labels,
 		timestamp: time.Now(),
@@ -91,9 +184,25 @@ func (c *Counter) GetTimestamp() time.Time {
 	return c.timestamp
 }
 
+// Help 获取帮助信息
+func (c *Counter) Help() string {
+	return c.help
+}
+
+// Type 获取类型
+func (c *Counter) Type() MetricType {
+	return MetricTypeCounter
+}
+
+// Name 获取名称
+func (c *Counter) Name() string {
+	return c.name
+}
+
 // Gauge 仪表指标
 type Gauge struct {
 	name      string
+	help      string
 	value     float64
 	labels    map[string]string
 	timestamp time.Time
@@ -104,6 +213,18 @@ type Gauge struct {
 func NewGauge(name string, labels map[string]string) *Gauge {
 	return &Gauge{
 		name:      name,
+		help:      "",
+		value:     0,
+		labels:    labels,
+		timestamp: time.Now(),
+	}
+}
+
+// NewGaugeWithHelp 创建带帮助信息的仪表
+func NewGaugeWithHelp(name, help string, labels map[string]string) *Gauge {
+	return &Gauge{
+		name:      name,
+		help:      help,
 		value:     0,
 		labels:    labels,
 		timestamp: time.Now(),
@@ -165,9 +286,25 @@ func (g *Gauge) GetTimestamp() time.Time {
 	return g.timestamp
 }
 
+// Help 获取帮助信息
+func (g *Gauge) Help() string {
+	return g.help
+}
+
+// Type 获取类型
+func (g *Gauge) Type() MetricType {
+	return MetricTypeGauge
+}
+
+// Name 获取名称
+func (g *Gauge) Name() string {
+	return g.name
+}
+
 // Histogram 直方图指标
 type Histogram struct {
 	name      string
+	help      string
 	buckets   []float64
 	counts    []int64
 	sum       float64
@@ -185,6 +322,25 @@ func NewHistogram(name string, buckets []float64, labels map[string]string) *His
 
 	return &Histogram{
 		name:      name,
+		help:      "",
+		buckets:   buckets,
+		counts:    make([]int64, len(buckets)+1), // +1 for +Inf bucket
+		sum:       0,
+		total:     0,
+		labels:    labels,
+		timestamp: time.Now(),
+	}
+}
+
+// NewHistogramWithHelp 创建带帮助信息的直方图
+func NewHistogramWithHelp(name, help string, buckets []float64, labels map[string]string) *Histogram {
+	if buckets == nil {
+		buckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
+	}
+
+	return &Histogram{
+		name:      name,
+		help:      help,
 		buckets:   buckets,
 		counts:    make([]int64, len(buckets)+1), // +1 for +Inf bucket
 		sum:       0,
@@ -247,6 +403,21 @@ func (h *Histogram) GetTimestamp() time.Time {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
 	return h.timestamp
+}
+
+// Help 获取帮助信息
+func (h *Histogram) Help() string {
+	return h.help
+}
+
+// Type 获取类型
+func (h *Histogram) Type() MetricType {
+	return MetricTypeHistogram
+}
+
+// Name 获取名称
+func (h *Histogram) Name() string {
+	return h.name
 }
 
 // MetricsRegistry 指标注册表
