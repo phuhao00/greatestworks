@@ -5,16 +5,21 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"greatestworks/aop/logger"
-
-	"github.com/phuhao00/netcore-go/netcore"
+	// "greatestworks/aop/logger" // 暂时注释掉缺失的包
+	// "github.com/phuhao00/netcore-go/netcore" // 暂时注释掉缺失的包
 )
+
+// Logger 简单的日志接口
+type Logger interface {
+	Info(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+}
 
 // NetcoreServer netcore-go TCP服务器
 type NetcoreServer struct {
-	server   *netcore.Server
-	logger   logger.Logger
+	server   interface{} // *netcore.Server
+	logger   Logger
 	config   *ServerConfig
 	handlers map[uint32]MessageHandler
 	mu       sync.RWMutex

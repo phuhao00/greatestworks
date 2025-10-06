@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/phuhao00/netcore-go/network"
-	"github.com/phuhao00/netcore-go/protocol"
-	"github.com/phuhao00/netcore-go/session"
+	// "github.com/phuhao00/netcore-go/network" // 暂时注释掉缺失的包
+	// "github.com/phuhao00/netcore-go/protocol" // 暂时注释掉缺失的包
+	// "github.com/phuhao00/netcore-go/session" // 暂时注释掉缺失的包
 )
 
 // 使用netcore_server.go中定义的ServerConfig

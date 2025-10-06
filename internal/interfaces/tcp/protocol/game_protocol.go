@@ -18,19 +18,19 @@ const (
 	MsgPlayerLevelUp    uint32 = 0x1008
 	MsgPlayerExpGain    uint32 = 0x1009
 	MsgPlayerStatusSync uint32 = 0x100A
-	
+
 	// 战斗相关协议 (0x2000 - 0x2FFF)
-	MsgCreateBattle   uint32 = 0x2001
-	MsgJoinBattle     uint32 = 0x2002
-	MsgStartBattle    uint32 = 0x2003
-	MsgBattleAction   uint32 = 0x2004
-	MsgLeaveBattle    uint32 = 0x2005
-	MsgBattleResult   uint32 = 0x2006
-	MsgBattleStatus   uint32 = 0x2007
-	MsgBattleRound    uint32 = 0x2008
-	MsgBattleSkill    uint32 = 0x2009
-	MsgBattleDamage   uint32 = 0x200A
-	
+	MsgCreateBattle uint32 = 0x2001
+	MsgJoinBattle   uint32 = 0x2002
+	MsgStartBattle  uint32 = 0x2003
+	MsgBattleAction uint32 = 0x2004
+	MsgLeaveBattle  uint32 = 0x2005
+	MsgBattleResult uint32 = 0x2006
+	MsgBattleStatus uint32 = 0x2007
+	MsgBattleRound  uint32 = 0x2008
+	MsgBattleSkill  uint32 = 0x2009
+	MsgBattleDamage uint32 = 0x200A
+
 	// 查询相关协议 (0x3000 - 0x3FFF)
 	MsgGetPlayerInfo    uint32 = 0x3001
 	MsgGetOnlinePlayers uint32 = 0x3002
@@ -38,11 +38,9 @@ const (
 	MsgGetPlayerStats   uint32 = 0x3004
 	MsgGetBattleList    uint32 = 0x3005
 	MsgGetRankings      uint32 = 0x3006
-	
+
 	// 系统相关协议 (0x9000 - 0x9FFF)
-	MsgHeartbeat uint32 = 0x9000
-	MsgPing      uint32 = 0x9998
-	MsgError     uint32 = 0x9999
+	// 使用message_types.go中定义的消息类型
 )
 
 // 基础协议结构
@@ -261,16 +259,16 @@ type Stats struct {
 
 // BattleInfo 战斗信息
 type BattleInfo struct {
-	ID         string          `json:"id"`
-	Type       int             `json:"type"`
-	Status     string          `json:"status"`
-	Players    []*PlayerInfo   `json:"players"`
-	Settings   *BattleSettings `json:"settings"`
-	State      *BattleState    `json:"state,omitempty"`
-	StartTime  *time.Time      `json:"start_time,omitempty"`
-	EndTime    *time.Time      `json:"end_time,omitempty"`
-	CreatedAt  time.Time       `json:"created_at"`
-	UpdatedAt  time.Time       `json:"updated_at"`
+	ID        string          `json:"id"`
+	Type      int             `json:"type"`
+	Status    string          `json:"status"`
+	Players   []*PlayerInfo   `json:"players"`
+	Settings  *BattleSettings `json:"settings"`
+	State     *BattleState    `json:"state,omitempty"`
+	StartTime *time.Time      `json:"start_time,omitempty"`
+	EndTime   *time.Time      `json:"end_time,omitempty"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 // BattleSettings 战斗设置
@@ -285,26 +283,26 @@ type BattleSettings struct {
 
 // BattleState 战斗状态
 type BattleState struct {
-	CurrentRound int                    `json:"current_round"`
-	CurrentTurn  string                 `json:"current_turn"`
-	TurnOrder    []string               `json:"turn_order"`
+	CurrentRound int                     `json:"current_round"`
+	CurrentTurn  string                  `json:"current_turn"`
+	TurnOrder    []string                `json:"turn_order"`
 	PlayerStates map[string]*PlayerState `json:"player_states"`
-	RoundHistory []*RoundResult         `json:"round_history,omitempty"`
+	RoundHistory []*RoundResult          `json:"round_history,omitempty"`
 }
 
 // PlayerState 玩家战斗状态
 type PlayerState struct {
-	PlayerID    string            `json:"player_id"`
-	HP          int               `json:"hp"`
-	MP          int               `json:"mp"`
-	Status      []string          `json:"status,omitempty"`
-	Buffs       []*Buff           `json:"buffs,omitempty"`
-	Debuffs     []*Debuff         `json:"debuffs,omitempty"`
-	SkillCDs    map[string]int    `json:"skill_cds,omitempty"`
-	Position    int               `json:"position"`
-	Team        int               `json:"team"`
-	IsAlive     bool              `json:"is_alive"`
-	LastAction  *ActionResult     `json:"last_action,omitempty"`
+	PlayerID   string         `json:"player_id"`
+	HP         int            `json:"hp"`
+	MP         int            `json:"mp"`
+	Status     []string       `json:"status,omitempty"`
+	Buffs      []*Buff        `json:"buffs,omitempty"`
+	Debuffs    []*Debuff      `json:"debuffs,omitempty"`
+	SkillCDs   map[string]int `json:"skill_cds,omitempty"`
+	Position   int            `json:"position"`
+	Team       int            `json:"team"`
+	IsAlive    bool           `json:"is_alive"`
+	LastAction *ActionResult  `json:"last_action,omitempty"`
 }
 
 // ActionResult 行动结果
@@ -354,12 +352,12 @@ type Debuff struct {
 
 // Effect 效果
 type Effect struct {
-	Type       string                 `json:"type"`
-	Value      int                    `json:"value,omitempty"`
-	Target     string                 `json:"target,omitempty"`
-	Duration   int                    `json:"duration,omitempty"`
-	Params     map[string]interface{} `json:"params,omitempty"`
-	Trigger    string                 `json:"trigger,omitempty"`
+	Type     string                 `json:"type"`
+	Value    int                    `json:"value,omitempty"`
+	Target   string                 `json:"target,omitempty"`
+	Duration int                    `json:"duration,omitempty"`
+	Params   map[string]interface{} `json:"params,omitempty"`
+	Trigger  string                 `json:"trigger,omitempty"`
 }
 
 // 系统协议结构
@@ -455,7 +453,7 @@ func GetMessageTypeName(msgType uint32) string {
 		MsgPing:             "Ping",
 		MsgError:            "Error",
 	}
-	
+
 	if name, exists := msgNames[msgType]; exists {
 		return name
 	}

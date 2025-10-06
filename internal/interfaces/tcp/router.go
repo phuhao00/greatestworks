@@ -10,12 +10,7 @@ import (
 	"greatestworks/internal/interfaces/tcp/protocol"
 )
 
-// Logger 简单的日志接口
-type Logger interface {
-	Info(msg string, args ...interface{})
-	Error(msg string, args ...interface{})
-	Debug(msg string, args ...interface{})
-}
+// 使用其他地方定义的Logger接口
 
 // MessageHandler 消息处理器接口
 type MessageHandler interface {
@@ -49,81 +44,81 @@ func (r *Router) RegisterHandler(messageType uint16, handler MessageHandler) {
 // RegisterGameHandler 注册游戏处理器的所有消息类型
 func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	// 系统消息
-	r.RegisterHandler(protocol.MsgHeartbeat, handler)
-	r.RegisterHandler(protocol.MsgAuth, handler)
-	r.RegisterHandler(protocol.MsgError, handler)
+	r.RegisterHandler(uint16(protocol.MsgHeartbeat), handler)
+	r.RegisterHandler(uint16(protocol.MsgAuth), handler)
+	r.RegisterHandler(uint16(protocol.MsgError), handler)
 
 	// 玩家相关消息
-	r.RegisterHandler(protocol.MsgPlayerLogin, handler)
-	r.RegisterHandler(protocol.MsgPlayerLogout, handler)
-	r.RegisterHandler(protocol.MsgPlayerMove, handler)
-	r.RegisterHandler(protocol.MsgPlayerInfo, handler)
-	r.RegisterHandler(protocol.MsgPlayerCreate, handler)
-	r.RegisterHandler(protocol.MsgPlayerStatus, handler)
-	r.RegisterHandler(protocol.MsgPlayerStats, handler)
-	r.RegisterHandler(protocol.MsgPlayerInventory, handler)
-	r.RegisterHandler(protocol.MsgPlayerSkills, handler)
-	r.RegisterHandler(protocol.MsgPlayerQuests, handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerLogin), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerLogout), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerMove), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerInfo), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerCreate), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerStatus), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerStats), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerInventory), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerSkills), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerQuests), handler)
 
 	// 战斗相关消息
-	r.RegisterHandler(protocol.MsgCreateBattle, handler)
-	r.RegisterHandler(protocol.MsgJoinBattle, handler)
-	r.RegisterHandler(protocol.MsgStartBattle, handler)
-	r.RegisterHandler(protocol.MsgBattleAction, handler)
-	r.RegisterHandler(protocol.MsgLeaveBattle, handler)
-	r.RegisterHandler(protocol.MsgBattleStatus, handler)
-	r.RegisterHandler(protocol.MsgBattleResult, handler)
+	r.RegisterHandler(uint16(protocol.MsgCreateBattle), handler)
+	r.RegisterHandler(uint16(protocol.MsgJoinBattle), handler)
+	r.RegisterHandler(uint16(protocol.MsgStartBattle), handler)
+	r.RegisterHandler(uint16(protocol.MsgBattleAction), handler)
+	r.RegisterHandler(uint16(protocol.MsgLeaveBattle), handler)
+	r.RegisterHandler(uint16(protocol.MsgBattleStatus), handler)
+	r.RegisterHandler(uint16(protocol.MsgBattleResult), handler)
 
 	// 宠物相关消息
-	r.RegisterHandler(protocol.MsgPetSummon, handler)
-	r.RegisterHandler(protocol.MsgPetDismiss, handler)
-	r.RegisterHandler(protocol.MsgPetAction, handler)
-	r.RegisterHandler(protocol.MsgPetStatus, handler)
-	r.RegisterHandler(protocol.MsgPetTrain, handler)
-	r.RegisterHandler(protocol.MsgPetEvolve, handler)
+	r.RegisterHandler(uint16(protocol.MsgPetSummon), handler)
+	r.RegisterHandler(uint16(protocol.MsgPetDismiss), handler)
+	r.RegisterHandler(uint16(protocol.MsgPetAction), handler)
+	r.RegisterHandler(uint16(protocol.MsgPetStatus), handler)
+	r.RegisterHandler(uint16(protocol.MsgPetTrain), handler)
+	r.RegisterHandler(uint16(protocol.MsgPetEvolve), handler)
 
 	// 建筑相关消息
-	r.RegisterHandler(protocol.MsgBuildingCreate, handler)
-	r.RegisterHandler(protocol.MsgBuildingUpgrade, handler)
-	r.RegisterHandler(protocol.MsgBuildingDestroy, handler)
-	r.RegisterHandler(protocol.MsgBuildingStatus, handler)
-	r.RegisterHandler(protocol.MsgBuildingList, handler)
+	r.RegisterHandler(uint16(protocol.MsgBuildingCreate), handler)
+	r.RegisterHandler(uint16(protocol.MsgBuildingUpgrade), handler)
+	r.RegisterHandler(uint16(protocol.MsgBuildingDestroy), handler)
+	r.RegisterHandler(uint16(protocol.MsgBuildingStatus), handler)
+	r.RegisterHandler(uint16(protocol.MsgBuildingList), handler)
 
 	// 社交相关消息
-	r.RegisterHandler(protocol.MsgChatSend, handler)
-	r.RegisterHandler(protocol.MsgChatReceive, handler)
-	r.RegisterHandler(protocol.MsgFriendAdd, handler)
-	r.RegisterHandler(protocol.MsgFriendRemove, handler)
-	r.RegisterHandler(protocol.MsgFriendList, handler)
-	r.RegisterHandler(protocol.MsgGuildJoin, handler)
-	r.RegisterHandler(protocol.MsgGuildLeave, handler)
-	r.RegisterHandler(protocol.MsgGuildInfo, handler)
-	r.RegisterHandler(protocol.MsgTeamCreate, handler)
-	r.RegisterHandler(protocol.MsgTeamJoin, handler)
-	r.RegisterHandler(protocol.MsgTeamLeave, handler)
-	r.RegisterHandler(protocol.MsgTeamInfo, handler)
+	r.RegisterHandler(uint16(protocol.MsgChatSend), handler)
+	r.RegisterHandler(uint16(protocol.MsgChatReceive), handler)
+	r.RegisterHandler(uint16(protocol.MsgFriendAdd), handler)
+	r.RegisterHandler(uint16(protocol.MsgFriendRemove), handler)
+	r.RegisterHandler(uint16(protocol.MsgFriendList), handler)
+	r.RegisterHandler(uint16(protocol.MsgGuildJoin), handler)
+	r.RegisterHandler(uint16(protocol.MsgGuildLeave), handler)
+	r.RegisterHandler(uint16(protocol.MsgGuildInfo), handler)
+	r.RegisterHandler(uint16(protocol.MsgTeamCreate), handler)
+	r.RegisterHandler(uint16(protocol.MsgTeamJoin), handler)
+	r.RegisterHandler(uint16(protocol.MsgTeamLeave), handler)
+	r.RegisterHandler(uint16(protocol.MsgTeamInfo), handler)
 
 	// 物品相关消息
-	r.RegisterHandler(protocol.MsgItemUse, handler)
-	r.RegisterHandler(protocol.MsgItemMove, handler)
-	r.RegisterHandler(protocol.MsgItemDrop, handler)
-	r.RegisterHandler(protocol.MsgItemPickup, handler)
-	r.RegisterHandler(protocol.MsgItemTrade, handler)
-	r.RegisterHandler(protocol.MsgItemCraft, handler)
+	r.RegisterHandler(uint16(protocol.MsgItemUse), handler)
+	r.RegisterHandler(uint16(protocol.MsgItemMove), handler)
+	r.RegisterHandler(uint16(protocol.MsgItemDrop), handler)
+	r.RegisterHandler(uint16(protocol.MsgItemPickup), handler)
+	r.RegisterHandler(uint16(protocol.MsgItemTrade), handler)
+	r.RegisterHandler(uint16(protocol.MsgItemCraft), handler)
 
 	// 任务相关消息
-	r.RegisterHandler(protocol.MsgQuestAccept, handler)
-	r.RegisterHandler(protocol.MsgQuestComplete, handler)
-	r.RegisterHandler(protocol.MsgQuestCancel, handler)
-	r.RegisterHandler(protocol.MsgQuestProgress, handler)
-	r.RegisterHandler(protocol.MsgQuestList, handler)
+	r.RegisterHandler(uint16(protocol.MsgQuestAccept), handler)
+	r.RegisterHandler(uint16(protocol.MsgQuestComplete), handler)
+	r.RegisterHandler(uint16(protocol.MsgQuestCancel), handler)
+	r.RegisterHandler(uint16(protocol.MsgQuestProgress), handler)
+	r.RegisterHandler(uint16(protocol.MsgQuestList), handler)
 
 	// 查询相关消息
-	r.RegisterHandler(protocol.MsgGetPlayerInfo, handler)
-	r.RegisterHandler(protocol.MsgGetOnlinePlayers, handler)
-	r.RegisterHandler(protocol.MsgGetBattleInfo, handler)
-	r.RegisterHandler(protocol.MsgGetServerInfo, handler)
-	r.RegisterHandler(protocol.MsgGetWorldInfo, handler)
+	r.RegisterHandler(uint16(protocol.MsgGetPlayerInfo), handler)
+	r.RegisterHandler(uint16(protocol.MsgGetOnlinePlayers), handler)
+	r.RegisterHandler(uint16(protocol.MsgGetBattleInfo), handler)
+	r.RegisterHandler(uint16(protocol.MsgGetServerInfo), handler)
+	r.RegisterHandler(uint16(protocol.MsgGetWorldInfo), handler)
 
 	r.logger.Info("Game handler registered with all message types")
 }

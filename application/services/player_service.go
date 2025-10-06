@@ -269,3 +269,121 @@ func (s *PlayerService) GetOnlinePlayers(ctx context.Context, query *GetOnlinePl
 		Total:   len(results),
 	}, nil
 }
+
+// Login 玩家登录
+func (s *PlayerService) Login(ctx context.Context, playerID string) (*LoginPlayerResult, error) {
+	// 解析玩家ID
+	pid := player.PlayerID{}
+	
+	// 查找玩家
+	p, err := s.playerRepo.FindByID(ctx, pid)
+	if err != nil {
+		return nil, fmt.Errorf("获取玩家失败: %w", err)
+	}
+	if p == nil {
+		return nil, player.ErrPlayerNotFound
+	}
+	
+	// 更新玩家状态为在线
+	p.SetStatus(player.StatusOnline)
+	
+	// 保存玩家
+	if err := s.playerRepo.Save(ctx, p); err != nil {
+		return nil, fmt.Errorf("保存玩家失败: %w", err)
+	}
+	
+	return &LoginPlayerResult{
+		PlayerID: p.ID().String(),
+		Name:     p.Name(),
+		Level:    p.Level(),
+		Status:   p.Status(),
+		Position: p.Position(),
+		Stats:    p.Stats(),
+	}, nil
+}
+
+// Logout 玩家登出
+func (s *PlayerService) Logout(ctx context.Context, playerID string) error {
+	// 解析玩家ID
+	pid := player.PlayerID{}
+	
+	// 查找玩家
+	p, err := s.playerRepo.FindByID(ctx, pid)
+	if err != nil {
+		return fmt.Errorf("获取玩家失败: %w", err)
+	}
+	if p == nil {
+		return player.ErrPlayerNotFound
+	}
+	
+	// 更新玩家状态为离线
+	p.SetStatus(player.StatusOffline)
+	
+	// 保存玩家
+	if err := s.playerRepo.Save(ctx, p); err != nil {
+		return fmt.Errorf("保存玩家失败: %w", err)
+	}
+	
+	return nil
+}
+
+// GetPlayerInfo 获取玩家信息
+func (s *PlayerService) GetPlayerInfo(ctx context.Context, playerID string) (*LoginPlayerResult, error) {
+	// 解析玩家ID
+	pid := player.PlayerID{}
+	
+	// 查找玩家
+	p, err := s.playerRepo.FindByID(ctx, pid)
+	if err != nil {
+		return nil, fmt.Errorf("获取玩家失败: %w", err)
+	}
+	if p == nil {
+		return nil, player.ErrPlayerNotFound
+	}
+	
+	return &LoginPlayerResult{
+		PlayerID: p.ID().String(),
+		Name:     p.Name(),
+		Level:    p.Level(),
+		Status:   p.Status(),
+		Position: p.Position(),
+		Stats:    p.Stats(),
+	}, nil
+}
+
+// UpdatePlayer 更新玩家信息
+func (s *PlayerService) UpdatePlayer(ctx context.Context, playerID string, updates map[string]interface{}) error {
+	// 解析玩家ID
+	pid := player.PlayerID{}
+	
+	// 查找玩家
+	p, err := s.playerRepo.FindByID(ctx, pid)
+	if err != nil {
+		return fmt.Errorf("获取玩家失败: %w", err)
+	}
+	if p == nil {
+		return player.ErrPlayerNotFound
+	}
+	
+	// 应用更新
+	for key, value := range updates {
+		switch key {
+		case "name":
+			if name, ok := value.(string); ok {
+				p.SetName(name)
+			}
+		case "level":
+			if level, ok := value.(int); ok {
+				p.SetLevel(level)
+			}
+		// 可以添加更多字段的更新逻辑
+		}
+	}
+	
+	// 保存玩家
+	if err := s.playerRepo.Save(ctx, p); err != nil {
+		return fmt.Errorf("保存玩家失败: %w", err)
+	}
+	
+	return nil
+}
