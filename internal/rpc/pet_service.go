@@ -7,6 +7,7 @@ import (
 
 	"greatestworks/application/services"
 	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/proto/pet"
 )
 
 // PetRPCService 宠物RPC服务
