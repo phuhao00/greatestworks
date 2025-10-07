@@ -75,9 +75,7 @@ func (s *RPCServer) Start() error {
 	// 启动服务器
 	go func() {
 		s.logger.Info("RPC服务器启动", "address", addr)
-		if err := s.server.Accept(listener); err != nil {
-			s.logger.Error("RPC服务器运行失败", "error", err)
-		}
+		s.server.Accept(listener)
 	}()
 
 	return nil
