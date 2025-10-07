@@ -6,437 +6,297 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"greatestworks/internal/infrastructure/logging"
+
+	"github.com/gin-gonic/gin"
 )
 
-// ErrorCode 错误码类�?
+// ErrorCode 错误码类型
 type ErrorCode int
 
 // 预定义错误码
 const (
-	// 通用错误�?(1000-1999)
+	// 通用错误码(1000-1999)
 	ErrUnknown ErrorCode = 1000 + iota
-	ErrInternalServer
-	ErrInvalidRequest
-	ErrInvalidParameter
-	ErrMissingParameter
-	ErrValidationFailed
+	ErrInternal
+	ErrInvalidInput
+	ErrNotFound
+	ErrUnauthorized
+	ErrForbidden
+	ErrConflict
 	ErrTimeout
+	ErrRateLimit
 	ErrServiceUnavailable
-	ErrRateLimitExceeded
-	ErrMaintenanceMode
 
-	// 认证错误�?(2000-2999)
-	ErrUnauthorized ErrorCode = 2000 + iota
-	ErrInvalidToken
-	ErrTokenExpired
-	ErrTokenRevoked
-	ErrInvalidCredentials
-	ErrAccountLocked
-	ErrAccountDisabled
-	ErrPermissionDenied
-	ErrInsufficientPrivileges
-	ErrSessionExpired
+	// 认证相关错误码(2000-2999)
+	ErrAuthTokenMissing
+	ErrAuthTokenInvalid
+	ErrAuthTokenExpired
+	ErrAuthUserNotFound
+	ErrAuthPasswordIncorrect
+	ErrAuthUserAlreadyExists
+	ErrAuthUserDisabled
 
-	// 用户错误�?(3000-3999)
-	ErrUserNotFound ErrorCode = 3000 + iota
-	ErrUserAlreadyExists
-	ErrInvalidUserData
-	ErrUsernameTaken
-	ErrEmailTaken
-	ErrWeakPassword
-	ErrPasswordMismatch
-	ErrUserBanned
-	ErrUserSuspended
-	ErrEmailNotVerified
-
-	// 玩家错误�?(4000-4999)
-	ErrPlayerNotFound ErrorCode = 4000 + iota
-	ErrPlayerAlreadyExists
-	ErrInvalidPlayerData
+	// 玩家相关错误码(3000-3999)
+	ErrPlayerNotFound
 	ErrPlayerOffline
-	ErrPlayerInBattle
-	ErrPlayerBusy
-	ErrInsufficientLevel
-	ErrInsufficientExp
-	ErrInsufficientGold
-	ErrInventoryFull
+	ErrPlayerAlreadyExists
+	ErrPlayerInvalidName
+	ErrPlayerInvalidLevel
+	ErrPlayerInsufficientExp
+	ErrPlayerDead
+	ErrPlayerInvalidPosition
+	ErrPlayerVersionMismatch
 
-	// 战斗错误�?(5000-5999)
-	ErrBattleNotFound ErrorCode = 5000 + iota
-	ErrBattleAlreadyExists
-	ErrBattleFull
-	ErrBattleStarted
-	ErrBattleEnded
-	ErrInvalidBattleAction
-	ErrNotInBattle
-	ErrBattleTimeout
+	// 战斗相关错误码(4000-4999)
+	ErrBattleNotFound
+	ErrBattleAlreadyStarted
+	ErrBattleNotInProgress
+	ErrPlayerNotInBattle
+	ErrPlayerAlreadyInBattle
+	ErrInsufficientParticipants
+	ErrPlayerDeadInBattle
+	ErrInvalidAction
+	ErrActionOnCooldown
+	ErrInsufficientMana
 	ErrInvalidTarget
-	ErrActionCooldown
+	ErrBattleFinished
+	ErrBattleAlreadyFinished
+	ErrBattleNotFinished
 
-	// 数据库错误码 (6000-6999)
-	ErrDatabaseConnection ErrorCode = 6000 + iota
+	// 数据库相关错误码(5000-5999)
+	ErrDatabaseConnection
 	ErrDatabaseQuery
 	ErrDatabaseTransaction
-	ErrRecordNotFound
-	ErrRecordAlreadyExists
-	ErrConstraintViolation
+	ErrDatabaseConstraint
 	ErrDatabaseTimeout
-	ErrDatabaseLock
-	ErrMigrationFailed
-	ErrBackupFailed
 
-	// 网络错误�?(7000-7999)
-	ErrConnectionFailed ErrorCode = 7000 + iota
-	ErrConnectionTimeout
-	ErrConnectionLost
-	ErrInvalidProtocol
-	ErrMessageTooLarge
-	ErrInvalidMessage
-	ErrNetworkUnavailable
-	ErrDNSResolution
-	ErrSSLHandshake
-	ErrProxyError
+	// 网络相关错误码(6000-6999)
+	ErrNetworkConnection
+	ErrNetworkTimeout
+	ErrNetworkUnreachable
+	ErrNetworkInvalidResponse
 )
 
-// AppError 应用错误
-type AppError struct {
-	Code      ErrorCode              `json:"code"`
-	Message   string                 `json:"message"`
-	Details   string                 `json:"details,omitempty"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
-	Cause     error                  `json:"-"`
-	Stack     string                 `json:"-"`
-	Timestamp time.Time              `json:"timestamp"`
-	RequestID string                 `json:"request_id,omitempty"`
-	UserID    string                 `json:"user_id,omitempty"`
+// Error 自定义错误结构
+type Error struct {
+	Code      ErrorCode `json:"code"`
+	Message   string    `json:"message"`
+	Details   string    `json:"details,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	File      string    `json:"file,omitempty"`
+	Line      int       `json:"line,omitempty"`
+	Stack     string    `json:"stack,omitempty"`
 }
 
 // Error 实现error接口
-func (e *AppError) Error() string {
+func (e *Error) Error() string {
 	if e.Details != "" {
 		return fmt.Sprintf("[%d] %s: %s", e.Code, e.Message, e.Details)
 	}
 	return fmt.Sprintf("[%d] %s", e.Code, e.Message)
 }
 
-// Unwrap 实现errors.Unwrap接口
-func (e *AppError) Unwrap() error {
-	return e.Cause
-}
-
-// WithCause 添加原因错误
-func (e *AppError) WithCause(cause error) *AppError {
-	e.Cause = cause
-	return e
-}
-
-// WithDetails 添加详细信息
-func (e *AppError) WithDetails(details string) *AppError {
-	e.Details = details
-	return e
-}
-
-// WithMetadata 添加元数�?
-func (e *AppError) WithMetadata(key string, value interface{}) *AppError {
-	if e.Metadata == nil {
-		e.Metadata = make(map[string]interface{})
+// NewError 创建新错误
+func NewError(code ErrorCode, message string) *Error {
+	_, file, line, _ := runtime.Caller(1)
+	return &Error{
+		Code:      code,
+		Message:   message,
+		Timestamp: time.Now(),
+		File:      file,
+		Line:      line,
 	}
-	e.Metadata[key] = value
-	return e
 }
 
-// WithRequestID 添加请求ID
-func (e *AppError) WithRequestID(requestID string) *AppError {
-	e.RequestID = requestID
-	return e
+// NewErrorWithDetails 创建带详情的错误
+func NewErrorWithDetails(code ErrorCode, message, details string) *Error {
+	_, file, line, _ := runtime.Caller(1)
+	return &Error{
+		Code:      code,
+		Message:   message,
+		Details:   details,
+		Timestamp: time.Now(),
+		File:      file,
+		Line:      line,
+	}
 }
 
-// WithUserID 添加用户ID
-func (e *AppError) WithUserID(userID string) *AppError {
-	e.UserID = userID
-	return e
+// NewErrorWithStack 创建带堆栈的错误
+func NewErrorWithStack(code ErrorCode, message string) *Error {
+	_, file, line, _ := runtime.Caller(1)
+	stack := make([]byte, 1024)
+	length := runtime.Stack(stack, false)
+
+	return &Error{
+		Code:      code,
+		Message:   message,
+		Timestamp: time.Now(),
+		File:      file,
+		Line:      line,
+		Stack:     string(stack[:length]),
+	}
 }
 
 // GetHTTPStatus 获取HTTP状态码
-func (e *AppError) GetHTTPStatus() int {
-	switch {
-	case e.Code >= 2000 && e.Code < 3000:
+func (e *Error) GetHTTPStatus() int {
+	switch e.Code {
+	case ErrNotFound, ErrPlayerNotFound, ErrBattleNotFound:
+		return http.StatusNotFound
+	case ErrUnauthorized, ErrAuthTokenMissing, ErrAuthTokenInvalid, ErrAuthTokenExpired:
 		return http.StatusUnauthorized
-	case e.Code == ErrPermissionDenied || e.Code == ErrInsufficientPrivileges:
+	case ErrForbidden, ErrAuthUserDisabled:
 		return http.StatusForbidden
-	case e.Code >= 3000 && e.Code < 4000:
-		if e.Code == ErrUserNotFound {
-			return http.StatusNotFound
-		}
-		if e.Code == ErrUserAlreadyExists || e.Code == ErrUsernameTaken || e.Code == ErrEmailTaken {
-			return http.StatusConflict
-		}
+	case ErrConflict, ErrPlayerAlreadyExists, ErrPlayerAlreadyInBattle:
+		return http.StatusConflict
+	case ErrInvalidInput, ErrPlayerInvalidName, ErrPlayerInvalidLevel, ErrPlayerInvalidPosition:
 		return http.StatusBadRequest
-	case e.Code >= 4000 && e.Code < 5000:
-		if e.Code == ErrPlayerNotFound {
-			return http.StatusNotFound
-		}
-		return http.StatusBadRequest
-	case e.Code >= 5000 && e.Code < 6000:
-		if e.Code == ErrBattleNotFound {
-			return http.StatusNotFound
-		}
-		return http.StatusBadRequest
-	case e.Code == ErrRateLimitExceeded:
-		return http.StatusTooManyRequests
-	case e.Code == ErrTimeout || e.Code == ErrConnectionTimeout:
+	case ErrTimeout, ErrDatabaseTimeout, ErrNetworkTimeout:
 		return http.StatusRequestTimeout
-	case e.Code == ErrServiceUnavailable || e.Code == ErrMaintenanceMode:
+	case ErrRateLimit:
+		return http.StatusTooManyRequests
+	case ErrServiceUnavailable, ErrDatabaseConnection, ErrNetworkConnection:
 		return http.StatusServiceUnavailable
-	case e.Code == ErrInvalidRequest || e.Code == ErrInvalidParameter || e.Code == ErrMissingParameter || e.Code == ErrValidationFailed:
-		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
 	}
 }
 
-// NewError 创建新的应用错误
-func NewError(code ErrorCode, message string) *AppError {
-	return &AppError{
-		Code:      code,
-		Message:   message,
-		Timestamp: time.Now(),
-		Stack:     getStack(),
-	}
-}
-
-// NewErrorWithCause 创建带原因的应用错误
-func NewErrorWithCause(code ErrorCode, message string, cause error) *AppError {
-	return &AppError{
-		Code:      code,
-		Message:   message,
-		Cause:     cause,
-		Timestamp: time.Now(),
-		Stack:     getStack(),
-	}
-}
-
-// WrapError 包装现有错误
-func WrapError(err error, code ErrorCode, message string) *AppError {
-	if err == nil {
-		return nil
-	}
-
-	// 如果已经是AppError，更新信�?
-	if appErr, ok := err.(*AppError); ok {
-		appErr.Code = code
-		appErr.Message = message
-		return appErr
-	}
-
-	return &AppError{
-		Code:      code,
-		Message:   message,
-		Cause:     err,
-		Timestamp: time.Now(),
-		Stack:     getStack(),
-	}
-}
-
-// getStack 获取调用�?
-func getStack() string {
-	buf := make([]byte, 1024)
-	n := runtime.Stack(buf, false)
-	return string(buf[:n])
-}
-
-// 预定义错�?
+// 预定义错误
 var (
 	// 通用错误
-	ErrInternal         = NewError(ErrInternalServer, "Internal server error")
-	ErrBadRequest       = NewError(ErrInvalidRequest, "Bad request")
-	ErrNotFound         = NewError(ErrRecordNotFound, "Resource not found")
-	ErrConflict         = NewError(ErrRecordAlreadyExists, "Resource already exists")
-	ErrForbidden        = NewError(ErrPermissionDenied, "Access forbidden")
-	ErrUnauth           = NewError(ErrUnauthorized, "Unauthorized")
-	ErrRateLimit        = NewError(ErrRateLimitExceeded, "Rate limit exceeded")
-	ErrMaintenance      = NewError(ErrMaintenanceMode, "Service under maintenance")
+	ErrUnknownError            = NewError(ErrUnknown, "未知错误")
+	ErrInternalError           = NewError(ErrInternal, "内部错误")
+	ErrInvalidInputError       = NewError(ErrInvalidInput, "无效输入")
+	ErrNotFoundError           = NewError(ErrNotFound, "资源不存在")
+	ErrUnauthorizedError       = NewError(ErrUnauthorized, "未授权")
+	ErrForbiddenError          = NewError(ErrForbidden, "禁止访问")
+	ErrConflictError           = NewError(ErrConflict, "冲突")
+	ErrTimeoutError            = NewError(ErrTimeout, "超时")
+	ErrRateLimitError          = NewError(ErrRateLimit, "请求过于频繁")
+	ErrServiceUnavailableError = NewError(ErrServiceUnavailable, "服务不可用")
 
-	// 认证错误
-	ErrInvalidAuth      = NewError(ErrInvalidCredentials, "Invalid credentials")
-	ErrExpiredToken     = NewError(ErrTokenExpired, "Token expired")
-	ErrInvalidTokenErr  = NewError(ErrInvalidToken, "Invalid token")
-	ErrSessionExp       = NewError(ErrSessionExpired, "Session expired")
+	// 认证相关错误
+	ErrAuthTokenMissingError      = NewError(ErrAuthTokenMissing, "缺少认证令牌")
+	ErrAuthTokenInvalidError      = NewError(ErrAuthTokenInvalid, "无效的认证令牌")
+	ErrAuthTokenExpiredError      = NewError(ErrAuthTokenExpired, "认证令牌已过期")
+	ErrAuthUserNotFoundError      = NewError(ErrAuthUserNotFound, "用户不存在")
+	ErrAuthPasswordIncorrectError = NewError(ErrAuthPasswordIncorrect, "密码错误")
+	ErrAuthUserAlreadyExistsError = NewError(ErrAuthUserAlreadyExists, "用户已存在")
+	ErrAuthUserDisabledError      = NewError(ErrAuthUserDisabled, "用户已被禁用")
 
-	// 用户错误
-	ErrUserNotFoundErr  = NewError(ErrUserNotFound, "User not found")
-	ErrUserExists       = NewError(ErrUserAlreadyExists, "User already exists")
-	ErrUsernameExists   = NewError(ErrUsernameTaken, "Username already taken")
-	ErrEmailExists      = NewError(ErrEmailTaken, "Email already taken")
-	ErrPasswordWeak     = NewError(ErrWeakPassword, "Password too weak")
+	// 玩家相关错误
+	ErrPlayerNotFoundError        = NewError(ErrPlayerNotFound, "玩家不存在")
+	ErrPlayerOfflineError         = NewError(ErrPlayerOffline, "玩家已离线")
+	ErrPlayerAlreadyExistsError   = NewError(ErrPlayerAlreadyExists, "玩家已存在")
+	ErrPlayerInvalidNameError     = NewError(ErrPlayerInvalidName, "无效的玩家名称")
+	ErrPlayerInvalidLevelError    = NewError(ErrPlayerInvalidLevel, "无效的等级")
+	ErrPlayerInsufficientExpError = NewError(ErrPlayerInsufficientExp, "经验值不足")
+	ErrPlayerDeadError            = NewError(ErrPlayerDead, "玩家已死亡")
+	ErrPlayerInvalidPositionError = NewError(ErrPlayerInvalidPosition, "无效的位置")
+	ErrPlayerVersionMismatchError = NewError(ErrPlayerVersionMismatch, "版本不匹配")
 
-	// 玩家错误
-	ErrPlayerNotFoundErr = NewError(ErrPlayerNotFound, "Player not found")
-	ErrPlayerExists      = NewError(ErrPlayerAlreadyExists, "Player already exists")
-	ErrPlayerOfflineErr  = NewError(ErrPlayerOffline, "Player is offline")
-	ErrPlayerInBattleErr = NewError(ErrPlayerInBattle, "Player is in battle")
+	// 战斗相关错误
+	ErrBattleNotFoundError           = NewError(ErrBattleNotFound, "战斗不存在")
+	ErrBattleAlreadyStartedError     = NewError(ErrBattleAlreadyStarted, "战斗已开始")
+	ErrBattleNotInProgressError      = NewError(ErrBattleNotInProgress, "战斗未进行中")
+	ErrPlayerNotInBattleError        = NewError(ErrPlayerNotInBattle, "玩家不在战斗中")
+	ErrPlayerAlreadyInBattleError    = NewError(ErrPlayerAlreadyInBattle, "玩家已在战斗中")
+	ErrInsufficientParticipantsError = NewError(ErrInsufficientParticipants, "参与者不足")
+	ErrInvalidActionError            = NewError(ErrInvalidAction, "无效的行动")
+	ErrActionOnCooldownError         = NewError(ErrActionOnCooldown, "行动冷却中")
+	ErrInsufficientManaError         = NewError(ErrInsufficientMana, "魔法值不足")
+	ErrInvalidTargetError            = NewError(ErrInvalidTarget, "无效的目标")
+	ErrBattleFinishedError           = NewError(ErrBattleFinished, "战斗已结束")
+	ErrBattleAlreadyFinishedError    = NewError(ErrBattleAlreadyFinished, "战斗已结束")
+	ErrBattleNotFinishedError        = NewError(ErrBattleNotFinished, "战斗未结束")
 
-	// 战斗错误
-	ErrBattleNotFoundErr = NewError(ErrBattleNotFound, "Battle not found")
-	ErrBattleFullErr     = NewError(ErrBattleFull, "Battle is full")
-	ErrBattleStartedErr  = NewError(ErrBattleStarted, "Battle already started")
-	ErrNotInBattleErr    = NewError(ErrNotInBattle, "Not in battle")
+	// 数据库相关错误
+	ErrDatabaseConnectionError  = NewError(ErrDatabaseConnection, "数据库连接失败")
+	ErrDatabaseQueryError       = NewError(ErrDatabaseQuery, "数据库查询失败")
+	ErrDatabaseTransactionError = NewError(ErrDatabaseTransaction, "数据库事务失败")
+	ErrDatabaseConstraintError  = NewError(ErrDatabaseConstraint, "数据库约束违反")
+	ErrDatabaseTimeoutError     = NewError(ErrDatabaseTimeout, "数据库操作超时")
+
+	// 网络相关错误
+	ErrNetworkConnectionError      = NewError(ErrNetworkConnection, "网络连接失败")
+	ErrNetworkTimeoutError         = NewError(ErrNetworkTimeout, "网络超时")
+	ErrNetworkUnreachableError     = NewError(ErrNetworkUnreachable, "网络不可达")
+	ErrNetworkInvalidResponseError = NewError(ErrNetworkInvalidResponse, "无效的网络响应")
 )
 
-// ErrorHandler 错误处理�?
+// ErrorHandler 错误处理器
 type ErrorHandler struct {
-	logger logger.Logger
+	logger logging.Logger
 }
 
-// NewErrorHandler 创建错误处理�?
-func NewErrorHandler(logger logger.Logger) *ErrorHandler {
+// NewErrorHandler 创建错误处理器
+func NewErrorHandler(logger logging.Logger) *ErrorHandler {
 	return &ErrorHandler{
 		logger: logger,
 	}
 }
 
-// HandleError HTTP错误处理中间�?
-func (h *ErrorHandler) HandleError() gin.HandlerFunc {
-	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
-		var err error
-		switch x := recovered.(type) {
-		case string:
-			err = fmt.Errorf("%s", x)
-		case error:
-			err = x
-		default:
-			err = fmt.Errorf("unknown panic: %v", x)
-		}
+// HandleError 处理错误
+func (h *ErrorHandler) HandleError(c *gin.Context, err error) {
+	// 记录错误日志
+	h.logger.Error("Request error", err, logging.Fields{
+		"path":   c.Request.URL.Path,
+		"method": c.Request.Method,
+	})
 
-		// 记录panic错误
-		h.logger.Error("Panic recovered", 
-			"error", err,
-			"path", c.Request.URL.Path,
-			"method", c.Request.Method,
-			"stack", getStack())
+	// 检查是否为自定义错误
+	if customErr, ok := err.(*Error); ok {
+		c.JSON(customErr.GetHTTPStatus(), gin.H{
+			"error": gin.H{
+				"code":      customErr.Code,
+				"message":   customErr.Message,
+				"details":   customErr.Details,
+				"timestamp": customErr.Timestamp,
+			},
+		})
+		return
+	}
 
-		// 创建内部服务器错�?
-		appErr := NewErrorWithCause(ErrInternalServer, "Internal server error", err)
-		h.HandleAppError(c, appErr)
+	// 处理其他错误
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"error": gin.H{
+			"code":      ErrInternal,
+			"message":   "内部错误",
+			"timestamp": time.Now(),
+		},
 	})
 }
 
-// HandleAppError 处理应用错误
-func (h *ErrorHandler) HandleAppError(c *gin.Context, err *AppError) {
-	// 添加请求信息
-	if err.RequestID == "" {
-		if requestID := c.GetHeader("X-Request-ID"); requestID != "" {
-			err.RequestID = requestID
-		}
-	}
+// HandlePanic 处理panic
+func (h *ErrorHandler) HandlePanic(c *gin.Context, recovered interface{}) {
+	// 记录panic日志
+	h.logger.Error("Panic recovered", fmt.Errorf("panic: %v", recovered), logging.Fields{
+		"path":   c.Request.URL.Path,
+		"method": c.Request.Method,
+	})
 
-	if err.UserID == "" {
-		if userID, exists := c.Get("user_id"); exists {
-			if userIDStr, ok := userID.(string); ok {
-				err.UserID = userIDStr
-			}
-		}
-	}
-
-	// 记录错误
-	h.logError(c, err)
-
-	// 构造响�?
-	response := h.buildErrorResponse(err)
-
-	// 返回错误响应
-	c.JSON(err.GetHTTPStatus(), response)
-	c.Abort()
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"error": gin.H{
+			"code":      ErrInternal,
+			"message":   "内部错误",
+			"timestamp": time.Now(),
+		},
+	})
 }
 
-// logError 记录错误
-func (h *ErrorHandler) logError(c *gin.Context, err *AppError) {
-	logFields := []interface{}{
-		"error_code", err.Code,
-		"error_message", err.Message,
-		"path", c.Request.URL.Path,
-		"method", c.Request.Method,
-		"request_id", err.RequestID,
-		"user_id", err.UserID,
+// IsError 检查是否为特定错误
+func IsError(err error, code ErrorCode) bool {
+	if customErr, ok := err.(*Error); ok {
+		return customErr.Code == code
 	}
-
-	if err.Details != "" {
-		logFields = append(logFields, "details", err.Details)
-	}
-
-	if err.Metadata != nil {
-		logFields = append(logFields, "metadata", err.Metadata)
-	}
-
-	if err.Cause != nil {
-		logFields = append(logFields, "cause", err.Cause.Error())
-	}
-
-	// 根据错误级别记录日志
-	if err.Code >= 6000 || err.Code == ErrInternalServer {
-		// 系统级错�?
-		logFields = append(logFields, "stack", err.Stack)
-		h.logger.Error("System error occurred", logFields...)
-	} else if err.Code >= 2000 && err.Code < 3000 {
-		// 认证错误
-		h.logger.Warn("Authentication error", logFields...)
-	} else {
-		// 业务错误
-		h.logger.Info("Business error", logFields...)
-	}
+	return false
 }
 
-// buildErrorResponse 构造错误响�?
-func (h *ErrorHandler) buildErrorResponse(err *AppError) map[string]interface{} {
-	response := map[string]interface{}{
-		"success":   false,
-		"error":     true,
-		"code":      err.Code,
-		"message":   err.Message,
-		"timestamp": err.Timestamp.Unix(),
-	}
-
-	if err.RequestID != "" {
-		response["request_id"] = err.RequestID
-	}
-
-	// 在开发环境下返回更多信息
-	if gin.Mode() == gin.DebugMode {
-		if err.Details != "" {
-			response["details"] = err.Details
-		}
-		if err.Metadata != nil {
-			response["metadata"] = err.Metadata
-		}
-		if err.Cause != nil {
-			response["cause"] = err.Cause.Error()
-		}
-	}
-
-	return response
-}
-
-// IsAppError 检查是否是应用错误
-func IsAppError(err error) (*AppError, bool) {
-	if err == nil {
-		return nil, false
-	}
-	appErr, ok := err.(*AppError)
-	return appErr, ok
-}
-
-// GetErrorCode 获取错误�?
+// GetErrorCode 获取错误码
 func GetErrorCode(err error) ErrorCode {
-	if appErr, ok := IsAppError(err); ok {
-		return appErr.Code
+	if customErr, ok := err.(*Error); ok {
+		return customErr.Code
 	}
 	return ErrUnknown
-}
-
-// IsErrorCode 检查是否是指定错误�?
-func IsErrorCode(err error, code ErrorCode) bool {
-	return GetErrorCode(err) == code
 }

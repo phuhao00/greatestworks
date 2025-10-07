@@ -68,10 +68,9 @@ func (r *BaseRepository) Save(ctx context.Context, id string, document interface
 	opts := options.Replace().SetUpsert(true)
 	_, err = r.collection.ReplaceOne(ctx, bson.M{"_id": objectID}, document, opts)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to save document", logging.Fields{
+		r.logger.Error("Failed to save document", err, logging.Fields{
 			"collection": r.collectionName,
 			"id":         id,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to save document: %w", err)
 	}
@@ -82,7 +81,7 @@ func (r *BaseRepository) Save(ctx context.Context, id string, document interface
 		r.cache.Delete(ctx, cacheKey)
 	}
 
-	r.logger.DebugWithFields("Document saved successfully", logging.Fields{
+	r.logger.Debug("Document saved successfully", logging.Fields{
 		"collection": r.collectionName,
 		"id":         id,
 	})
@@ -96,7 +95,7 @@ func (r *BaseRepository) FindByID(ctx context.Context, id string, result interfa
 	if r.cache != nil {
 		cacheKey := r.buildCacheKey(id)
 		if err := r.cache.Get(ctx, cacheKey, result); err == nil {
-			r.logger.DebugWithFields("Document found in cache", logging.Fields{
+			r.logger.Debug("Document found in cache", logging.Fields{
 				"collection": r.collectionName,
 				"id":         id,
 			})
@@ -115,10 +114,9 @@ func (r *BaseRepository) FindByID(ctx context.Context, id string, result interfa
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("document not found")
 		}
-		r.logger.ErrorWithFields("Failed to find document", logging.Fields{
+		r.logger.Error("Failed to find document", err, logging.Fields{
 			"collection": r.collectionName,
 			"id":         id,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to find document: %w", err)
 	}
@@ -129,7 +127,7 @@ func (r *BaseRepository) FindByID(ctx context.Context, id string, result interfa
 		r.cache.Set(ctx, cacheKey, result, time.Hour)
 	}
 
-	r.logger.DebugWithFields("Document found in database", logging.Fields{
+	r.logger.Debug("Document found in database", logging.Fields{
 		"collection": r.collectionName,
 		"id":         id,
 	})
@@ -144,7 +142,7 @@ func (r *BaseRepository) FindOne(ctx context.Context, filter bson.M, result inte
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("document not found")
 		}
-		r.logger.ErrorWithFields("Failed to find document", logging.Fields{
+		r.logger.Error("Failed to find document", err, logging.Fields{
 			"collection": r.collectionName,
 			"filter":     filter,
 			"error":      err,
@@ -159,10 +157,9 @@ func (r *BaseRepository) FindOne(ctx context.Context, filter bson.M, result inte
 func (r *BaseRepository) FindMany(ctx context.Context, filter bson.M, results interface{}, opts ...*options.FindOptions) error {
 	cursor, err := r.collection.Find(ctx, filter, opts...)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to find documents", logging.Fields{
+		r.logger.Error("Failed to find documents", err, logging.Fields{
 			"collection": r.collectionName,
 			"filter":     filter,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to find documents: %w", err)
 	}
@@ -170,9 +167,8 @@ func (r *BaseRepository) FindMany(ctx context.Context, filter bson.M, results in
 
 	err = cursor.All(ctx, results)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to decode documents", logging.Fields{
+		r.logger.Error("Failed to decode documents", err, logging.Fields{
 			"collection": r.collectionName,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to decode documents: %w", err)
 	}
@@ -189,7 +185,7 @@ func (r *BaseRepository) Delete(ctx context.Context, id string) error {
 
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to delete document", logging.Fields{
+		r.logger.Error("Failed to delete document", err, logging.Fields{
 			"collection": r.collectionName,
 			"id":         id,
 			"error":      err,
@@ -207,7 +203,7 @@ func (r *BaseRepository) Delete(ctx context.Context, id string) error {
 		r.cache.Delete(ctx, cacheKey)
 	}
 
-	r.logger.DebugWithFields("Document deleted successfully", logging.Fields{
+	r.logger.Debug("Document deleted successfully", logging.Fields{
 		"collection": r.collectionName,
 		"id":         id,
 	})
@@ -219,10 +215,9 @@ func (r *BaseRepository) Delete(ctx context.Context, id string) error {
 func (r *BaseRepository) Count(ctx context.Context, filter bson.M) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to count documents", logging.Fields{
+		r.logger.Error("Failed to count documents", err, logging.Fields{
 			"collection": r.collectionName,
 			"filter":     filter,
-			"error":      err,
 		})
 		return 0, fmt.Errorf("failed to count documents: %w", err)
 	}
@@ -243,14 +238,14 @@ func (r *BaseRepository) Exists(ctx context.Context, filter bson.M) (bool, error
 func (r *BaseRepository) CreateIndex(ctx context.Context, index mongo.IndexModel) error {
 	_, err := r.collection.Indexes().CreateOne(ctx, index)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to create index", logging.Fields{
+		r.logger.Error("Failed to create index", err, logging.Fields{
 			"collection": r.collectionName,
 			"error":      err,
 		})
 		return fmt.Errorf("failed to create index: %w", err)
 	}
 
-	r.logger.DebugWithFields("Index created successfully", logging.Fields{
+	r.logger.Debug("Index created successfully", logging.Fields{
 		"collection": r.collectionName,
 	})
 
@@ -261,14 +256,13 @@ func (r *BaseRepository) CreateIndex(ctx context.Context, index mongo.IndexModel
 func (r *BaseRepository) CreateIndexes(ctx context.Context, indexes []mongo.IndexModel) error {
 	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to create indexes", logging.Fields{
+		r.logger.Error("Failed to create indexes", err, logging.Fields{
 			"collection": r.collectionName,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to create indexes: %w", err)
 	}
 
-	r.logger.DebugWithFields("Indexes created successfully", logging.Fields{
+	r.logger.Debug("Indexes created successfully", logging.Fields{
 		"collection": r.collectionName,
 		"count":      len(indexes),
 	})
@@ -280,9 +274,8 @@ func (r *BaseRepository) CreateIndexes(ctx context.Context, indexes []mongo.Inde
 func (r *BaseRepository) Aggregate(ctx context.Context, pipeline mongo.Pipeline, results interface{}) error {
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to execute aggregation", logging.Fields{
+		r.logger.Error("Failed to execute aggregation", err, logging.Fields{
 			"collection": r.collectionName,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to execute aggregation: %w", err)
 	}
@@ -290,9 +283,8 @@ func (r *BaseRepository) Aggregate(ctx context.Context, pipeline mongo.Pipeline,
 
 	err = cursor.All(ctx, results)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to decode aggregation results", logging.Fields{
+		r.logger.Error("Failed to decode aggregation results", err, logging.Fields{
 			"collection": r.collectionName,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to decode aggregation results: %w", err)
 	}
@@ -304,7 +296,7 @@ func (r *BaseRepository) Aggregate(ctx context.Context, pipeline mongo.Pipeline,
 func (r *BaseRepository) UpdateOne(ctx context.Context, filter bson.M, update bson.M) error {
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to update document", logging.Fields{
+		r.logger.Error("Failed to update document", err, logging.Fields{
 			"collection": r.collectionName,
 			"filter":     filter,
 			"error":      err,
@@ -316,7 +308,7 @@ func (r *BaseRepository) UpdateOne(ctx context.Context, filter bson.M, update bs
 		return fmt.Errorf("document not found")
 	}
 
-	r.logger.DebugWithFields("Document updated successfully", logging.Fields{
+	r.logger.Debug("Document updated successfully", logging.Fields{
 		"collection": r.collectionName,
 		"matched":    result.MatchedCount,
 		"modified":   result.ModifiedCount,
@@ -329,15 +321,14 @@ func (r *BaseRepository) UpdateOne(ctx context.Context, filter bson.M, update bs
 func (r *BaseRepository) UpdateMany(ctx context.Context, filter bson.M, update bson.M) error {
 	result, err := r.collection.UpdateMany(ctx, filter, update)
 	if err != nil {
-		r.logger.ErrorWithFields("Failed to update documents", logging.Fields{
+		r.logger.Error("Failed to update documents", err, logging.Fields{
 			"collection": r.collectionName,
 			"filter":     filter,
-			"error":      err,
 		})
 		return fmt.Errorf("failed to update documents: %w", err)
 	}
 
-	r.logger.DebugWithFields("Documents updated successfully", logging.Fields{
+	r.logger.Debug("Documents updated successfully", logging.Fields{
 		"collection": r.collectionName,
 		"matched":    result.MatchedCount,
 		"modified":   result.ModifiedCount,

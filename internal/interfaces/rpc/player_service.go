@@ -42,7 +42,9 @@ type CreatePlayerResponse struct {
 
 // CreatePlayer 创建玩家
 func (s *PlayerRPCService) CreatePlayer(req CreatePlayerRequest, resp *CreatePlayerResponse) error {
-	s.logger.Info("RPC调用: 创建玩家", "name", req.Name)
+	s.logger.Info("RPC call: Create player", logging.Fields{
+		"name": req.Name,
+	})
 
 	// TODO: 实现创建玩家逻辑
 	// 1. 验证请求参数
@@ -81,7 +83,9 @@ type PlayerInfo struct {
 
 // GetPlayer 获取玩家信息
 func (s *PlayerRPCService) GetPlayer(req GetPlayerRequest, resp *GetPlayerResponse) error {
-	s.logger.Info("RPC调用: 获取玩家", "player_id", req.PlayerID)
+	s.logger.Info("RPC call: Get player", logging.Fields{
+		"player_id": req.PlayerID,
+	})
 
 	// TODO: 实现获取玩家逻辑
 	// 1. 验证请求参数
@@ -117,7 +121,10 @@ type UpdatePlayerResponse struct {
 
 // UpdatePlayer 更新玩家信息
 func (s *PlayerRPCService) UpdatePlayer(req UpdatePlayerRequest, resp *UpdatePlayerResponse) error {
-	s.logger.Info("RPC调用: 更新玩家", "player_id", req.PlayerID, "updates", req.Updates)
+	s.logger.Info("RPC call: Update player", logging.Fields{
+		"player_id": req.PlayerID,
+		"updates":   req.Updates,
+	})
 
 	// TODO: 实现更新玩家逻辑
 	// 1. 验证请求参数
@@ -143,7 +150,9 @@ type DeletePlayerResponse struct {
 
 // DeletePlayer 删除玩家
 func (s *PlayerRPCService) DeletePlayer(req DeletePlayerRequest, resp *DeletePlayerResponse) error {
-	s.logger.Info("RPC调用: 删除玩家", "player_id", req.PlayerID)
+	s.logger.Info("RPC call: Delete player", logging.Fields{
+		"player_id": req.PlayerID,
+	})
 
 	// TODO: 实现删除玩家逻辑
 	// 1. 验证请求参数
@@ -175,7 +184,10 @@ type ListPlayersResponse struct {
 
 // ListPlayers 列出玩家
 func (s *PlayerRPCService) ListPlayers(req ListPlayersRequest, resp *ListPlayersResponse) error {
-	s.logger.Info("RPC调用: 列出玩家", "page", req.Page, "page_size", req.PageSize)
+	s.logger.Info("RPC call: List players", logging.Fields{
+		"page":      req.Page,
+		"page_size": req.PageSize,
+	})
 
 	// TODO: 实现列出玩家逻辑
 	// 1. 验证请求参数

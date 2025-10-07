@@ -48,9 +48,8 @@ func (r *HangupRepository) CreateHangup(ctx context.Context, record *HangupRecor
 
 	_, err := r.collection.InsertOne(ctx, record)
 	if err != nil {
-		r.logger.Error("创建挂机记录失败", map[string]interface{}{
+		r.logger.Error("创建挂机记录失败", err, logging.Fields{
 			"player_id": record.PlayerID,
-			"error":     err.Error(),
 		})
 		return fmt.Errorf("创建挂机记录失败: %w", err)
 	}
@@ -76,9 +75,8 @@ func (r *HangupRepository) GetHangup(ctx context.Context, id string) (*HangupRec
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("挂机记录不存在")
 		}
-		r.logger.Error("获取挂机记录失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("获取挂机记录失败", err, logging.Fields{
+			"id": id,
 		})
 		return nil, fmt.Errorf("获取挂机记录失败: %w", err)
 	}
@@ -101,9 +99,8 @@ func (r *HangupRepository) UpdateHangup(ctx context.Context, id string, updates 
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("更新挂机记录失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("更新挂机记录失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("更新挂机记录失败: %w", err)
 	}
@@ -128,9 +125,8 @@ func (r *HangupRepository) DeleteHangup(ctx context.Context, id string) error {
 
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.Error("删除挂机记录失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("删除挂机记录失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("删除挂机记录失败: %w", err)
 	}
@@ -156,9 +152,8 @@ func (r *HangupRepository) GetPlayerHangups(ctx context.Context, playerID string
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("获取玩家挂机记录失败", map[string]interface{}{
+		r.logger.Error("获取玩家挂机记录失败", err, logging.Fields{
 			"player_id": playerID,
-			"error":     err.Error(),
 		})
 		return nil, fmt.Errorf("获取玩家挂机记录失败: %w", err)
 	}
@@ -186,9 +181,8 @@ func (r *HangupRepository) GetActiveHangups(ctx context.Context, playerID string
 
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
-		r.logger.Error("获取活跃挂机记录失败", map[string]interface{}{
+		r.logger.Error("获取活跃挂机记录失败", err, logging.Fields{
 			"player_id": playerID,
-			"error":     err.Error(),
 		})
 		return nil, fmt.Errorf("获取活跃挂机记录失败: %w", err)
 	}
@@ -224,9 +218,8 @@ func (r *HangupRepository) EndHangup(ctx context.Context, id string, endTime tim
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("结束挂机失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("结束挂机失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("结束挂机失败: %w", err)
 	}

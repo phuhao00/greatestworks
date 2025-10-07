@@ -85,9 +85,11 @@ func (s *HTTPServer) Start() error {
 
 	// 启动服务器
 	go func() {
-		s.logger.Info("HTTP服务器启动", "address", s.server.Addr)
+		s.logger.Info("HTTP server started", logging.Fields{
+			"address": s.server.Addr,
+		})
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Error("HTTP服务器运行失败", "error", err)
+			s.logger.Error("HTTP server failed", err)
 		}
 	}()
 
@@ -96,7 +98,7 @@ func (s *HTTPServer) Start() error {
 
 // Stop 停止HTTP服务器
 func (s *HTTPServer) Stop() error {
-	s.logger.Info("停止HTTP服务器")
+	s.logger.Info("Stopping HTTP server", logging.Fields{})
 
 	// 取消上下文
 	s.cancel()
@@ -106,11 +108,11 @@ func (s *HTTPServer) Stop() error {
 	defer cancel()
 
 	if err := s.server.Shutdown(ctx); err != nil {
-		s.logger.Error("HTTP服务器关闭失败", "error", err)
+		s.logger.Error("HTTP server shutdown failed", err, logging.Fields{})
 		return err
 	}
 
-	s.logger.Info("HTTP服务器已停止")
+	s.logger.Info("HTTP server stopped", logging.Fields{})
 	return nil
 }
 
@@ -145,9 +147,6 @@ func (s *HTTPServer) setupMiddleware(router *gin.Engine) {
 	// 超时中间件
 	router.Use(timeout.New(
 		timeout.WithTimeout(30*time.Second),
-		timeout.WithHandler(func(c *gin.Context) {
-			c.Next()
-		}),
 		timeout.WithResponse(func(c *gin.Context) {
 			c.JSON(http.StatusRequestTimeout, gin.H{
 				"error": "Request timeout",

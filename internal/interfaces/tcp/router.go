@@ -39,7 +39,9 @@ func (r *Router) RegisterHandler(messageType uint16, handler MessageHandler) {
 	defer r.mutex.Unlock()
 
 	r.handlers[messageType] = handler
-	r.logger.Info("Message handler registered", "message_type", messageType)
+	r.logger.Info("Message handler registered", logging.Fields{
+		"message_type": messageType,
+	})
 }
 
 // RegisterGameHandler 注册游戏处理器的所有消息类型
@@ -131,29 +133,31 @@ func (r *Router) RouteMessage(session *connection.Session, msg *protocol.Message
 	r.mutex.RUnlock()
 
 	if !exists {
-		r.logger.Info("No handler found for message type",
-			"message_type", msg.Header.MessageType,
-			"session_id", session.ID,
-			"user_id", session.UserID)
+		r.logger.Info("No handler found for message type", logging.Fields{
+			"message_type": msg.Header.MessageType,
+			"session_id":   session.ID,
+			"user_id":      session.UserID,
+		})
 		return r.sendUnhandledMessageError(session, msg)
 	}
 
 	// 记录消息处理日志
-	r.logger.Debug("Routing message",
-		"message_type", msg.Header.MessageType,
-		"message_id", msg.Header.MessageID,
-		"session_id", session.ID,
-		"user_id", session.UserID)
+	r.logger.Debug("Routing message", logging.Fields{
+		"message_type": msg.Header.MessageType,
+		"message_id":   msg.Header.MessageID,
+		"session_id":   session.ID,
+		"user_id":      session.UserID,
+	})
 
 	// 调用处理器
 	err := handler.HandleMessage(session, msg)
 	if err != nil {
-		r.logger.Error("Message handler error",
-			"error", err,
-			"message_type", msg.Header.MessageType,
-			"message_id", msg.Header.MessageID,
-			"session_id", session.ID,
-			"user_id", session.UserID)
+		r.logger.Error("Message handler error", err, logging.Fields{
+			"message_type": msg.Header.MessageType,
+			"message_id":   msg.Header.MessageID,
+			"session_id":   session.ID,
+			"user_id":      session.UserID,
+		})
 		return err
 	}
 
@@ -175,7 +179,9 @@ func (r *Router) UnregisterHandler(messageType uint16) {
 	defer r.mutex.Unlock()
 
 	delete(r.handlers, messageType)
-	r.logger.Info("Message handler unregistered", "message_type", messageType)
+	r.logger.Info("Message handler unregistered", logging.Fields{
+		"message_type": messageType,
+	})
 }
 
 // GetRegisteredMessageTypes 获取所有已注册的消息类型
@@ -277,7 +283,8 @@ func (r *Router) LogRouterStats() {
 	}
 	r.mutex.RUnlock()
 
-	r.logger.Info("Router statistics",
-		"handler_count", handlerCount,
-		"message_types", messageTypes)
+	r.logger.Info("Router statistics", logging.Fields{
+		"handler_count": handlerCount,
+		"message_types": messageTypes,
+	})
 }

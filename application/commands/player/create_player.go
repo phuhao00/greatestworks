@@ -2,6 +2,7 @@ package player
 
 import (
 	"context"
+	"greatestworks/internal/application/interfaces"
 	"time"
 )
 
@@ -64,6 +65,9 @@ type CreatePlayerWithAccountResult struct {
 type CreatePlayerHandler struct {
 	playerService PlayerService
 }
+
+// 确保实现了接口
+var _ interfaces.CommandHandler[*CreatePlayerCommand, *CreatePlayerResult] = (*CreatePlayerHandler)(nil)
 
 // PlayerService 玩家服务接口
 type PlayerService interface {

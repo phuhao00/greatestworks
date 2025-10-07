@@ -28,6 +28,23 @@ type Config struct {
 	Monitoring MonitoringConfig `yaml:"monitoring"`
 }
 
+// ConfigLoader 配置加载器
+type ConfigLoader struct {
+	configPath string
+}
+
+// NewConfigLoader 创建配置加载器
+func NewConfigLoader(configPath string) *ConfigLoader {
+	return &ConfigLoader{
+		configPath: configPath,
+	}
+}
+
+// Load 加载配置
+func (cl *ConfigLoader) Load() (*Config, error) {
+	return LoadConfig(cl.configPath)
+}
+
 // AppConfig 应用配置
 type AppConfig struct {
 	Name        string `yaml:"name"`

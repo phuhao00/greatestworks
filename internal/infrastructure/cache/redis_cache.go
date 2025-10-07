@@ -214,9 +214,7 @@ func (rc *RedisCache) Keys() []string {
 	// 建议使用SCAN命令进行迭代
 	keys, err := rc.client.Keys(context.Background(), "*").Result()
 	if err != nil {
-		rc.logger.Error("获取键列表失败", map[string]interface{}{
-			"error": err.Error(),
-		})
+		rc.logger.Error("Failed to get keys", err)
 		return []string{}
 	}
 

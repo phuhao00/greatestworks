@@ -13,11 +13,11 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// FileWatcher 文件监听�?
+// FileWatcher 文件监听器
 type FileWatcher struct {
 	filePath    string
 	callback    func(string)
-	logger      logger.Logger
+	logger      logging.Logger
 	watcher     *fsnotify.Watcher
 	ctx         context.Context
 	cancel      context.CancelFunc
@@ -27,7 +27,7 @@ type FileWatcher struct {
 	debounce    time.Duration
 }
 
-// WatcherConfig 监听器配�?
+// WatcherConfig 监听器配置
 type WatcherConfig struct {
 	DebounceInterval time.Duration `json:"debounce_interval" yaml:"debounce_interval"`
 	WatchDirectory   bool          `json:"watch_directory" yaml:"watch_directory"`
@@ -35,7 +35,7 @@ type WatcherConfig struct {
 	IgnorePatterns   []string      `json:"ignore_patterns" yaml:"ignore_patterns"`
 }
 
-// Watcher 文件监听器接�?
+// Watcher 文件监听器接口
 type Watcher interface {
 	// Start 启动监听
 	Start() error
@@ -43,7 +43,7 @@ type Watcher interface {
 	// Stop 停止监听
 	Stop() error
 
-	// IsRunning 检查是否正在运�?
+	// IsRunning 检查是否正在运行
 	IsRunning() bool
 
 	// AddPath 添加监听路径
@@ -56,14 +56,14 @@ type Watcher interface {
 	SetCallback(callback func(string))
 }
 
-// NewFileWatcher 创建文件监听�?
-func NewFileWatcher(filePath string, callback func(string), logger logger.Logger) (*FileWatcher, error) {
-	// 检查文件是否存�?
+// NewFileWatcher 创建文件监听器
+func NewFileWatcher(filePath string, callback func(string), logger logging.Logger) (*FileWatcher, error) {
+	// 检查文件是否存在
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return nil, fmt.Errorf("file does not exist: %s", filePath)
 	}
 
-	// 创建fsnotify监听�?
+	// 创建fsnotify监听器
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create fsnotify watcher: %w", err)
@@ -89,7 +89,9 @@ func NewFileWatcher(filePath string, callback func(string), logger logger.Logger
 		debounce:    100 * time.Millisecond, // 默认防抖时间
 	}
 
-	logger.Debug("File watcher created", "file", filePath)
+	logger.Debug("File watcher created", logging.Fields{
+		"file": filePath,
+	})
 	return fw, nil
 }
 
@@ -102,7 +104,7 @@ func (fw *FileWatcher) Start() error {
 		return fmt.Errorf("file watcher is already running")
 	}
 
-	// 添加文件到监听列�?
+	// 添加文件到监听列表
 	// 对于文件，我们监听其所在的目录
 	dir := filepath.Dir(fw.filePath)
 	if err := fw.watcher.Add(dir); err != nil {
@@ -114,7 +116,9 @@ func (fw *FileWatcher) Start() error {
 	// 启动监听协程
 	go fw.watchLoop()
 
-	fw.logger.Info("File watcher started", "file", fw.filePath)
+	fw.logger.Info("File watcher started", logging.Fields{
+		"file": fw.filePath,
+	})
 	return nil
 }
 
@@ -127,21 +131,23 @@ func (fw *FileWatcher) Stop() error {
 		return nil
 	}
 
-	// 取消上下�?
+	// 取消上下文
 	fw.cancel()
 
-	// 关闭fsnotify监听�?
+	// 关闭fsnotify监听器
 	if err := fw.watcher.Close(); err != nil {
-		fw.logger.Error("Failed to close fsnotify watcher", "error", err)
+		fw.logger.Error("Failed to close fsnotify watcher", err)
 	}
 
 	fw.isRunning = false
 
-	fw.logger.Info("File watcher stopped", "file", fw.filePath)
+	fw.logger.Info("File watcher stopped", logging.Fields{
+		"file": fw.filePath,
+	})
 	return nil
 }
 
-// IsRunning 检查是否正在运�?
+// IsRunning 检查是否正在运行
 func (fw *FileWatcher) IsRunning() bool {
 	fw.mu.RLock()
 	defer fw.mu.RUnlock()
@@ -161,7 +167,9 @@ func (fw *FileWatcher) AddPath(path string) error {
 		return fmt.Errorf("failed to add path to watcher: %w", err)
 	}
 
-	fw.logger.Debug("Path added to watcher", "path", path)
+	fw.logger.Debug("Path added to watcher", logging.Fields{
+		"path": path,
+	})
 	return nil
 }
 
@@ -178,7 +186,9 @@ func (fw *FileWatcher) RemovePath(path string) error {
 		return fmt.Errorf("failed to remove path from watcher: %w", err)
 	}
 
-	fw.logger.Debug("Path removed from watcher", "path", path)
+	fw.logger.Debug("Path removed from watcher", logging.Fields{
+		"path": path,
+	})
 	return nil
 }
 
@@ -213,7 +223,7 @@ func (fw *FileWatcher) watchLoop() {
 				return
 			}
 
-			fw.logger.Error("File watcher error", "error", err)
+			fw.logger.Error("File watcher error", err)
 
 		case <-fw.ctx.Done():
 			fw.logger.Debug("File watcher context cancelled")
@@ -229,14 +239,17 @@ func (fw *FileWatcher) handleEvent(event fsnotify.Event) {
 		return
 	}
 
-	fw.logger.Debug("File event received", "event", event.Op.String(), "file", event.Name)
+	fw.logger.Debug("File event received", logging.Fields{
+		"event": event.Op.String(),
+		"file":  event.Name,
+	})
 
-	// 检查事件类�?
+	// 检查事件类型
 	if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 		// 文件被写入或创建
 		fw.handleFileChange(event.Name)
 	} else if event.Op&fsnotify.Remove == fsnotify.Remove || event.Op&fsnotify.Rename == fsnotify.Rename {
-		// 文件被删除或重命�?
+		// 文件被删除或重命名
 		fw.handleFileRemove(event.Name)
 	}
 }
@@ -246,7 +259,9 @@ func (fw *FileWatcher) handleFileChange(filePath string) {
 	// 获取文件信息
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		fw.logger.Error("Failed to get file info after change", "error", err, "file", filePath)
+		fw.logger.Error("Failed to get file info after change", err, logging.Fields{
+			"file": filePath,
+		})
 		return
 	}
 
@@ -257,20 +272,26 @@ func (fw *FileWatcher) handleFileChange(filePath string) {
 	fw.mu.Unlock()
 
 	if fileInfo.ModTime().Sub(lastModTime) < fw.debounce {
-		fw.logger.Debug("File change ignored due to debounce", "file", filePath)
+		fw.logger.Debug("File change ignored due to debounce", logging.Fields{
+			"file": filePath,
+		})
 		return
 	}
 
-	// 延迟一小段时间，确保文件写入完�?
+	// 延迟一小段时间，确保文件写入完成
 	time.Sleep(fw.debounce)
 
 	// 再次检查文件是否存在（可能在写入过程中被删除）
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		fw.logger.Debug("File no longer exists after change", "file", filePath)
+		fw.logger.Debug("File no longer exists after change", logging.Fields{
+			"file": filePath,
+		})
 		return
 	}
 
-	fw.logger.Info("File changed", "file", filePath)
+	fw.logger.Info("File changed", logging.Fields{
+		"file": filePath,
+	})
 
 	// 调用回调函数
 	fw.mu.RLock()
@@ -281,7 +302,9 @@ func (fw *FileWatcher) handleFileChange(filePath string) {
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
-					fw.logger.Error("Panic in file change callback", "panic", r, "file", filePath)
+					fw.logger.Error("Panic in file change callback", fmt.Errorf("panic: %v", r), logging.Fields{
+						"file": filePath,
+					})
 				}
 			}()
 
@@ -292,224 +315,10 @@ func (fw *FileWatcher) handleFileChange(filePath string) {
 
 // handleFileRemove 处理文件删除
 func (fw *FileWatcher) handleFileRemove(filePath string) {
-	fw.logger.Warn("File removed or renamed", "file", filePath)
+	fw.logger.Warn("File removed or renamed", logging.Fields{
+		"file": filePath,
+	})
 
-	// 可以选择停止监听或等待文件重新创�?
-	// 这里我们选择继续监听，等待文件重新创�?
-}
-
-// DirectoryWatcher 目录监听�?
-type DirectoryWatcher struct {
-	dirPath   string
-	callback  func(string, fsnotify.Op)
-	logger    logger.Logger
-	watcher   *fsnotify.Watcher
-	config    *WatcherConfig
-	ctx       context.Context
-	cancel    context.CancelFunc
-	mu        sync.RWMutex
-	isRunning bool
-	ignoreMap map[string]bool
-}
-
-// NewDirectoryWatcher 创建目录监听�?
-func NewDirectoryWatcher(dirPath string, callback func(string, fsnotify.Op), config *WatcherConfig, logger logger.Logger) (*DirectoryWatcher, error) {
-	// 检查目录是否存�?
-	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("directory does not exist: %s", dirPath)
-	}
-
-	if config == nil {
-		config = &WatcherConfig{
-			DebounceInterval: 100 * time.Millisecond,
-			WatchDirectory:   true,
-			Recursive:        false,
-			IgnorePatterns:   []string{".git", ".svn", "node_modules", ".DS_Store"},
-		}
-	}
-
-	// 创建fsnotify监听�?
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create fsnotify watcher: %w", err)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	// 构建忽略模式映射
-	ignoreMap := make(map[string]bool)
-	for _, pattern := range config.IgnorePatterns {
-		ignoreMap[pattern] = true
-	}
-
-	dw := &DirectoryWatcher{
-		dirPath:   dirPath,
-		callback:  callback,
-		logger:    logger,
-		watcher:   watcher,
-		config:    config,
-		ctx:       ctx,
-		cancel:    cancel,
-		isRunning: false,
-		ignoreMap: ignoreMap,
-	}
-
-	logger.Debug("Directory watcher created", "directory", dirPath)
-	return dw, nil
-}
-
-// Start 启动目录监听
-func (dw *DirectoryWatcher) Start() error {
-	dw.mu.Lock()
-	defer dw.mu.Unlock()
-
-	if dw.isRunning {
-		return fmt.Errorf("directory watcher is already running")
-	}
-
-	// 添加目录到监听列�?
-	if err := dw.addDirectory(dw.dirPath); err != nil {
-		return fmt.Errorf("failed to add directory to watcher: %w", err)
-	}
-
-	dw.isRunning = true
-
-	// 启动监听协程
-	go dw.watchLoop()
-
-	dw.logger.Info("Directory watcher started", "directory", dw.dirPath)
-	return nil
-}
-
-// Stop 停止目录监听
-func (dw *DirectoryWatcher) Stop() error {
-	dw.mu.Lock()
-	defer dw.mu.Unlock()
-
-	if !dw.isRunning {
-		return nil
-	}
-
-	// 取消上下�?
-	dw.cancel()
-
-	// 关闭fsnotify监听�?
-	if err := dw.watcher.Close(); err != nil {
-		dw.logger.Error("Failed to close fsnotify watcher", "error", err)
-	}
-
-	dw.isRunning = false
-
-	dw.logger.Info("Directory watcher stopped", "directory", dw.dirPath)
-	return nil
-}
-
-// IsRunning 检查是否正在运�?
-func (dw *DirectoryWatcher) IsRunning() bool {
-	dw.mu.RLock()
-	defer dw.mu.RUnlock()
-	return dw.isRunning
-}
-
-// 私有方法
-
-// addDirectory 添加目录到监�?
-func (dw *DirectoryWatcher) addDirectory(dirPath string) error {
-	if err := dw.watcher.Add(dirPath); err != nil {
-		return err
-	}
-
-	// 如果启用递归监听
-	if dw.config.Recursive {
-		return filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() && path != dirPath {
-				// 检查是否应该忽略这个目�?
-				if dw.shouldIgnore(filepath.Base(path)) {
-					return filepath.SkipDir
-				}
-
-				if err := dw.watcher.Add(path); err != nil {
-					dw.logger.Error("Failed to add subdirectory to watcher", "error", err, "path", path)
-				}
-			}
-
-			return nil
-		})
-	}
-
-	return nil
-}
-
-// shouldIgnore 检查是否应该忽略文件或目录
-func (dw *DirectoryWatcher) shouldIgnore(name string) bool {
-	return dw.ignoreMap[name]
-}
-
-// watchLoop 监听循环
-func (dw *DirectoryWatcher) watchLoop() {
-	dw.logger.Debug("Directory watcher loop started")
-
-	for {
-		select {
-		case event, ok := <-dw.watcher.Events:
-			if !ok {
-				dw.logger.Debug("Directory watcher events channel closed")
-				return
-			}
-
-			dw.handleDirectoryEvent(event)
-
-		case err, ok := <-dw.watcher.Errors:
-			if !ok {
-				dw.logger.Debug("Directory watcher errors channel closed")
-				return
-			}
-
-			dw.logger.Error("Directory watcher error", "error", err)
-
-		case <-dw.ctx.Done():
-			dw.logger.Debug("Directory watcher context cancelled")
-			return
-		}
-	}
-}
-
-// handleDirectoryEvent 处理目录事件
-func (dw *DirectoryWatcher) handleDirectoryEvent(event fsnotify.Event) {
-	// 检查是否应该忽略这个文�?
-	if dw.shouldIgnore(filepath.Base(event.Name)) {
-		return
-	}
-
-	dw.logger.Debug("Directory event received", "event", event.Op.String(), "file", event.Name)
-
-	// 如果是目录创建事件且启用了递归监听
-	if event.Op&fsnotify.Create == fsnotify.Create && dw.config.Recursive {
-		if info, err := os.Stat(event.Name); err == nil && info.IsDir() {
-			if err := dw.addDirectory(event.Name); err != nil {
-				dw.logger.Error("Failed to add new directory to watcher", "error", err, "path", event.Name)
-			}
-		}
-	}
-
-	// 调用回调函数
-	dw.mu.RLock()
-	callback := dw.callback
-	dw.mu.RUnlock()
-
-	if callback != nil {
-		go func() {
-			defer func() {
-				if r := recover(); r != nil {
-					dw.logger.Error("Panic in directory change callback", "panic", r, "file", event.Name)
-				}
-			}()
-
-			callback(event.Name, event.Op)
-		}()
-	}
+	// 可以选择停止监听或等待文件重新创建
+	// 这里我们选择继续监听，等待文件重新创建
 }

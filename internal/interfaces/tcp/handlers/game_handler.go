@@ -102,7 +102,7 @@ func (h *GameHandler) handlePlayerChat(session *connection.Session, message *pro
 
 // handlePlayerAction 处理玩家动作
 func (h *GameHandler) handlePlayerAction(session *connection.Session, message *protocol.Message) error {
-	h.logger.Info("处理玩家动作", map[string]interface{}{
+	h.logger.Info("处理玩家动作", logging.Fields{
 		"player_id": message.Header.PlayerID,
 	})
 
@@ -125,7 +125,7 @@ func (h *GameHandler) SendResponse(playerID uint64, responseType uint32, data in
 	}
 
 	// TODO: 实现发送响应逻辑
-	h.logger.Info("发送响应", map[string]interface{}{
+	h.logger.Info("发送响应", logging.Fields{
 		"player_id":     playerID,
 		"response_type": responseType,
 	})

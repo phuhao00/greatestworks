@@ -29,7 +29,7 @@ func (m *Manager) AddConnection(session *Session) {
 	defer m.mutex.Unlock()
 
 	m.connections[session.ID] = session
-	m.logger.Info("连接已添加", map[string]interface{}{
+	m.logger.Info("Connection added", logging.Fields{
 		"session_id": session.ID,
 		"address":    session.RemoteAddr,
 	})
@@ -42,7 +42,7 @@ func (m *Manager) RemoveConnection(sessionID string) {
 
 	if session, exists := m.connections[sessionID]; exists {
 		delete(m.connections, sessionID)
-		m.logger.Info("连接已移除", map[string]interface{}{
+		m.logger.Info("Connection removed", logging.Fields{
 			"session_id": sessionID,
 			"address":    session.RemoteAddr,
 		})
@@ -86,9 +86,8 @@ func (m *Manager) Broadcast(message []byte) {
 
 	for _, session := range m.connections {
 		if err := session.Send(message); err != nil {
-			m.logger.Error("广播消息失败", map[string]interface{}{
+			m.logger.Error("Failed to broadcast message", err, logging.Fields{
 				"session_id": session.ID,
-				"error":      err.Error(),
 			})
 		}
 	}
@@ -102,10 +101,9 @@ func (m *Manager) BroadcastToGroup(groupID string, message []byte) {
 	for _, session := range m.connections {
 		if session.GroupID == groupID {
 			if err := session.Send(message); err != nil {
-				m.logger.Error("组广播消息失败", map[string]interface{}{
+				m.logger.Error("Failed to broadcast to group", err, logging.Fields{
 					"session_id": session.ID,
 					"group_id":   groupID,
-					"error":      err.Error(),
 				})
 			}
 		}
@@ -122,7 +120,7 @@ func (m *Manager) CleanupInactiveConnections(timeout time.Duration) {
 		if now.Sub(session.LastActivity) > timeout {
 			session.Close()
 			delete(m.connections, id)
-			m.logger.Info("清理非活跃连接", map[string]interface{}{
+			m.logger.Info("Cleaned up inactive connection", logging.Fields{
 				"session_id":    id,
 				"last_activity": session.LastActivity,
 			})
@@ -138,7 +136,7 @@ func (m *Manager) StartCleanupRoutine(ctx context.Context, interval, timeout tim
 	for {
 		select {
 		case <-ctx.Done():
-			m.logger.Info("连接清理例程已停止")
+			m.logger.Info("Connection cleanup routine stopped", logging.Fields{})
 			return
 		case <-ticker.C:
 			m.CleanupInactiveConnections(timeout)

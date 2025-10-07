@@ -1,16 +1,16 @@
 package player
 
-import "errors"
+import "greatestworks/internal/errors"
 
-// 玩家领域错误定义
+// 玩家领域错误定义 - 使用统一的错误处理机制
 var (
-	ErrPlayerNotFound    = errors.New("player not found")
-	ErrPlayerOffline     = errors.New("player is offline")
-	ErrInvalidPlayerName = errors.New("invalid player name")
-	ErrPlayerAlreadyExists = errors.New("player already exists")
-	ErrInvalidLevel      = errors.New("invalid level")
-	ErrInsufficientExp   = errors.New("insufficient experience")
-	ErrPlayerDead        = errors.New("player is dead")
-	ErrInvalidPosition   = errors.New("invalid position")
-	ErrVersionMismatch   = errors.New("version mismatch")
+	ErrPlayerNotFound      = errors.ErrPlayerNotFound
+	ErrPlayerOffline       = errors.ErrPlayerOffline
+	ErrPlayerAlreadyExists = errors.ErrPlayerAlreadyExists
+	ErrInvalidPlayerName   = errors.ErrInvalidPlayerName
+	ErrInvalidPosition     = errors.ErrInvalidPosition
+	ErrVersionMismatch     = errors.ErrVersionMismatch
+	ErrPlayerDead          = errors.NewDomainError("PLAYER_DEAD", "玩家已死亡")
+	ErrInvalidLevel        = errors.NewDomainError("INVALID_LEVEL", "无效的等级")
+	ErrInsufficientExp     = errors.NewDomainError("INSUFFICIENT_EXP", "经验值不足")
 )

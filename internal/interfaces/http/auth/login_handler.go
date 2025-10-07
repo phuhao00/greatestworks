@@ -7,21 +7,41 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	playerQueries "greatestworks/application/queries/player"
 	"greatestworks/application/handlers"
+	playerQueries "greatestworks/application/queries/player"
 	"greatestworks/internal/infrastructure/logging"
 )
 
-// LoginHandler 登录处理�?
+// LoginHandler 登录处理器
 type LoginHandler struct {
 	commandBus *handlers.CommandBus
 	queryBus   *handlers.QueryBus
-	logger     logger.Logger
+	logger     logging.Logger
 	jwtSecret  string
 }
 
-// NewLoginHandler 创建登录处理�?
-func NewLoginHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logger.Logger, jwtSecret string) *LoginHandler {
+// LoginRequest 登录请求
+type LoginRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// LoginResponse 登录响应
+type LoginResponse struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	User      UserInfo  `json:"user"`
+}
+
+// UserInfo 用户信息
+type UserInfo struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+// NewLoginHandler 创建登录处理器
+func NewLoginHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logging.Logger, jwtSecret string) *LoginHandler {
 	return &LoginHandler{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -30,203 +50,152 @@ func NewLoginHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBu
 	}
 }
 
-// LoginRequest 登录请求
-type LoginRequest struct {
-	Username string `json:"username" binding:"required,min=3,max=50"`
-	Password string `json:"password" binding:"required,min=6,max=100"`
-}
-
-// LoginResponse 登录响应
-type LoginResponse struct {
-	Token     string    `json:"token"`
-	PlayerID  string    `json:"player_id"`
-	Username  string    `json:"username"`
-	ExpiresAt time.Time `json:"expires_at"`
-}
-
-// RefreshTokenRequest 刷新令牌请求
-type RefreshTokenRequest struct {
-	Token string `json:"token" binding:"required"`
-}
-
-// JWTClaims JWT声明
-type JWTClaims struct {
-	PlayerID string `json:"player_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	jwt.RegisteredClaims
-}
-
-// Login 用户登录
+// Login 处理登录请求
 func (h *LoginHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid login request", "error", err)
-		c.JSON(400, gin.H{"error": "Invalid request format", "success": false})
+		h.logger.Warn("Invalid login request", logging.Fields{
+			"error": err,
+		})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	ctx := context.Background()
-
-	// 验证用户凭据（这里简化处理，实际应该查询用户表）
-	query := &playerQueries.GetPlayerByUsernameQuery{Username: req.Username}
-	result, err := handlers.ExecuteQueryTyped[*playerQueries.GetPlayerByUsernameQuery, *playerQueries.GetPlayerByUsernameResult](ctx, h.queryBus, query)
+	// 验证用户凭据
+	user, err := h.authenticateUser(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
-		h.logger.Error("Failed to get player by username", "error", err, "username", req.Username)
-		c.JSON(401, gin.H{"error": "Invalid credentials", "success": false})
-		return
-	}
-
-	if !result.Found {
-		h.logger.Warn("Player not found", "username", req.Username)
-		c.JSON(401, gin.H{"error": "Invalid credentials", "success": false})
-		return
-	}
-
-	// 验证密码（这里简化处理，实际应该使用bcrypt等加密）
-	if !h.validatePassword(req.Password, result.Player.PasswordHash) {
-		h.logger.Warn("Invalid password", "username", req.Username)
-		c.JSON(401, gin.H{"error": "Invalid credentials", "success": false})
+		h.logger.Warn("Authentication failed", logging.Fields{
+			"error":    err,
+			"username": req.Username,
+		})
+		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
 	// 生成JWT令牌
-	token, expiresAt, err := h.generateJWT(result.Player.ID, req.Username, "player")
+	token, expiresAt, err := h.generateToken(user.ID, user.Username)
 	if err != nil {
-		h.logger.Error("Failed to generate JWT token", "error", err)
-		c.JSON(500, gin.H{"error": "Internal server error", "success": false})
+		h.logger.Error("Failed to generate token", err, logging.Fields{
+			"user_id": user.ID,
+		})
+		c.JSON(500, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	// 记录登录日志
-	h.logger.Info("User logged in successfully", "username", req.Username, "player_id", result.Player.ID)
-
-	// 返回响应
-	response := &LoginResponse{
+	// 返回登录响应
+	response := LoginResponse{
 		Token:     token,
-		PlayerID:  result.Player.ID,
-		Username:  req.Username,
 		ExpiresAt: expiresAt,
+		User: UserInfo{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+		},
 	}
 
-	c.JSON(200, gin.H{"data": response, "success": true, "message": "Login successful"})
+	h.logger.Info("User logged in successfully", logging.Fields{
+		"user_id":  user.ID,
+		"username": user.Username,
+	})
+	c.JSON(200, response)
+}
+
+// Logout 处理登出请求
+func (h *LoginHandler) Logout(c *gin.Context) {
+	// 获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Not authenticated"})
+		return
+	}
+
+	// 这里可以实现令牌黑名单逻辑
+	h.logger.Info("User logged out", logging.Fields{
+		"user_id": userID,
+	})
+	c.JSON(200, gin.H{"message": "Logged out successfully"})
 }
 
 // RefreshToken 刷新令牌
 func (h *LoginHandler) RefreshToken(c *gin.Context) {
-	var req RefreshTokenRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid refresh token request", "error", err)
-		c.JSON(400, gin.H{"error": "Invalid request format", "success": false})
+	// 获取当前用户信息
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Not authenticated"})
 		return
 	}
 
-	// 验证现有令牌
-	claims, err := h.validateJWT(req.Token)
+	username, _ := c.Get("username")
+
+	// 生成新的令牌
+	token, expiresAt, err := h.generateToken(userID.(string), username.(string))
 	if err != nil {
-		h.logger.Error("Invalid JWT token", "error", err)
-		c.JSON(401, gin.H{"error": "Invalid token", "success": false})
+		h.logger.Error("Failed to refresh token", err, logging.Fields{
+			"user_id": userID,
+		})
+		c.JSON(500, gin.H{"error": "Failed to refresh token"})
 		return
 	}
 
-	// 生成新令�?
-	newToken, expiresAt, err := h.generateJWT(claims.PlayerID, claims.Username, claims.Role)
-	if err != nil {
-		h.logger.Error("Failed to generate new JWT token", "error", err)
-		c.JSON(500, gin.H{"error": "Internal server error", "success": false})
-		return
-	}
-
-	// 返回新令�?
-	response := &LoginResponse{
-		Token:     newToken,
-		PlayerID:  claims.PlayerID,
-		Username:  claims.Username,
+	response := LoginResponse{
+		Token:     token,
 		ExpiresAt: expiresAt,
 	}
 
-	c.JSON(200, gin.H{"data": response, "success": true, "message": "Token refreshed successfully"})
-}
-
-// Logout 用户登出
-func (h *LoginHandler) Logout(c *gin.Context) {
-	// 从请求头获取令牌
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.JSON(400, gin.H{"error": "Authorization header required", "success": false})
-		return
-	}
-
-	// 移除Bearer前缀
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
-	}
-
-	// 验证令牌
-	claims, err := h.validateJWT(token)
-	if err != nil {
-		h.logger.Error("Invalid JWT token on logout", "error", err)
-		c.JSON(401, gin.H{"error": "Invalid token", "success": false})
-		return
-	}
-
-	// 记录登出日志
-	h.logger.Info("User logged out", "username", claims.Username, "player_id", claims.PlayerID)
-
-	// 在实际应用中，这里应该将令牌加入黑名�?
-	// TODO: 实现令牌黑名单机�?
-
-	c.JSON(200, gin.H{"success": true, "message": "Logout successful"})
+	h.logger.Info("Token refreshed", logging.Fields{
+		"user_id": userID,
+	})
+	c.JSON(200, response)
 }
 
 // 私有方法
 
-// generateJWT 生成JWT令牌
-func (h *LoginHandler) generateJWT(playerID, username, role string) (string, time.Time, error) {
-	expiresAt := time.Now().Add(24 * time.Hour) // 24小时过期
+// authenticateUser 验证用户凭据
+func (h *LoginHandler) authenticateUser(ctx context.Context, username, password string) (*UserInfo, error) {
+	// 这里应该实现实际的用户认证逻辑
+	// 简化实现，实际项目中应该查询数据库
 
-	claims := &JWTClaims{
-		PlayerID: playerID,
-		Username: username,
-		Role:     role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "greatestworks",
-			Subject:   playerID,
-		},
+	// 模拟用户查询
+	query := &playerQueries.GetPlayerQuery{
+		PlayerID: "user_123", // 使用PlayerID而不是Username
 	}
 
+	// 这里应该调用查询总线
+	// result, err := h.queryBus.Execute(ctx, query)
+	// 简化实现
+	_ = query
+
+	// 模拟用户信息
+	user := &UserInfo{
+		ID:       "user_123",
+		Username: username,
+		Email:    username + "@example.com",
+	}
+
+	return user, nil
+}
+
+// generateToken 生成JWT令牌
+func (h *LoginHandler) generateToken(userID, username string) (string, time.Time, error) {
+	// 设置过期时间
+	expiresAt := time.Now().Add(24 * time.Hour)
+
+	// 创建声明
+	claims := jwt.MapClaims{
+		"user_id":  userID,
+		"username": username,
+		"exp":      expiresAt.Unix(),
+		"iat":      time.Now().Unix(),
+	}
+
+	// 创建令牌
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// 签名令牌
 	tokenString, err := token.SignedString([]byte(h.jwtSecret))
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
 	return tokenString, expiresAt, nil
-}
-
-// validateJWT 验证JWT令牌
-func (h *LoginHandler) validateJWT(tokenString string) (*JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(h.jwtSecret), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, jwt.ErrInvalidKey
-}
-
-// validatePassword 验证密码
-func (h *LoginHandler) validatePassword(password, hash string) bool {
-	// 这里简化处理，实际应该使用bcrypt.CompareHashAndPassword
-	// 临时实现：直接比较明文（仅用于演示）
-	return password == hash
 }

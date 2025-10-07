@@ -42,7 +42,10 @@ type CreateBattleResponse struct {
 
 // CreateBattle 创建战斗
 func (s *BattleRPCService) CreateBattle(req CreateBattleRequest, resp *CreateBattleResponse) error {
-	s.logger.Info("RPC调用: 创建战斗", "player_id", req.PlayerID, "opponents", req.OpponentIDs)
+	s.logger.Info("RPC call: Create battle", logging.Fields{
+		"player_id": req.PlayerID,
+		"opponents": req.OpponentIDs,
+	})
 
 	// TODO: 实现创建战斗逻辑
 	// 1. 验证请求参数
@@ -82,7 +85,9 @@ type BattleInfo struct {
 
 // GetBattle 获取战斗信息
 func (s *BattleRPCService) GetBattle(req GetBattleRequest, resp *GetBattleResponse) error {
-	s.logger.Info("RPC调用: 获取战斗", "battle_id", req.BattleID)
+	s.logger.Info("RPC call: Get battle", logging.Fields{
+		"battle_id": req.BattleID,
+	})
 
 	// TODO: 实现获取战斗逻辑
 	// 1. 验证请求参数
@@ -118,7 +123,10 @@ type JoinBattleResponse struct {
 
 // JoinBattle 加入战斗
 func (s *BattleRPCService) JoinBattle(req JoinBattleRequest, resp *JoinBattleResponse) error {
-	s.logger.Info("RPC调用: 加入战斗", "battle_id", req.BattleID, "player_id", req.PlayerID)
+	s.logger.Info("RPC call: Join battle", logging.Fields{
+		"battle_id": req.BattleID,
+		"player_id": req.PlayerID,
+	})
 
 	// TODO: 实现加入战斗逻辑
 	// 1. 验证请求参数
@@ -145,7 +153,10 @@ type LeaveBattleResponse struct {
 
 // LeaveBattle 离开战斗
 func (s *BattleRPCService) LeaveBattle(req LeaveBattleRequest, resp *LeaveBattleResponse) error {
-	s.logger.Info("RPC调用: 离开战斗", "battle_id", req.BattleID, "player_id", req.PlayerID)
+	s.logger.Info("RPC call: Leave battle", logging.Fields{
+		"battle_id": req.BattleID,
+		"player_id": req.PlayerID,
+	})
 
 	// TODO: 实现离开战斗逻辑
 	// 1. 验证请求参数
@@ -184,7 +195,11 @@ type ActionResult struct {
 
 // ExecuteAction 执行动作
 func (s *BattleRPCService) ExecuteAction(req ExecuteActionRequest, resp *ExecuteActionResponse) error {
-	s.logger.Info("RPC调用: 执行动作", "battle_id", req.BattleID, "player_id", req.PlayerID, "action", req.Action)
+	s.logger.Info("RPC call: Execute action", logging.Fields{
+		"battle_id": req.BattleID,
+		"player_id": req.PlayerID,
+		"action":    req.Action,
+	})
 
 	// TODO: 实现执行动作逻辑
 	// 1. 验证请求参数
@@ -228,7 +243,10 @@ type BattleResult struct {
 
 // EndBattle 结束战斗
 func (s *BattleRPCService) EndBattle(req EndBattleRequest, resp *EndBattleResponse) error {
-	s.logger.Info("RPC调用: 结束战斗", "battle_id", req.BattleID, "winner_id", req.WinnerID)
+	s.logger.Info("RPC call: End battle", logging.Fields{
+		"battle_id": req.BattleID,
+		"winner_id": req.WinnerID,
+	})
 
 	// TODO: 实现结束战斗逻辑
 	// 1. 验证请求参数

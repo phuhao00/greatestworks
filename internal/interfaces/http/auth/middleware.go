@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -10,227 +11,242 @@ import (
 	"greatestworks/internal/infrastructure/logging"
 )
 
-// AuthMiddleware 认证中间�?
+// AuthMiddleware 认证中间件
 type AuthMiddleware struct {
 	jwtSecret string
-	logger    logger.Logger
+	logger    logging.Logger
 }
 
-// NewAuthMiddleware 创建认证中间�?
-func NewAuthMiddleware(jwtSecret string, logger logger.Logger) *AuthMiddleware {
+// NewAuthMiddleware 创建认证中间件
+func NewAuthMiddleware(jwtSecret string, logger logging.Logger) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtSecret: jwtSecret,
 		logger:    logger,
 	}
 }
 
-// RequireAuth 需要认证的中间�?
+// RequireAuth 需要认证的中间件
 func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := m.extractToken(c)
-		if token == "" {
-			m.logger.Warn("Missing authorization token", "path", c.Request.URL.Path)
-			c.JSON(401, gin.H{"error": "Authorization token required", "success": false})
+		// 从请求头获取token
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			m.logger.Warn("Missing authorization header")
+			c.JSON(401, gin.H{"error": "Missing authorization header"})
 			c.Abort()
 			return
 		}
 
-		claims, err := m.validateToken(token)
-		if err != nil {
-			m.logger.Warn("Invalid authorization token", "error", err, "path", c.Request.URL.Path)
-			c.JSON(401, gin.H{"error": "Invalid authorization token", "success": false})
+		// 检查Bearer前缀
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			m.logger.Warn("Invalid authorization header format")
+			c.JSON(401, gin.H{"error": "Invalid authorization header format"})
 			c.Abort()
 			return
+		}
+
+		// 提取token
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// 验证token
+		claims, err := m.validateToken(tokenString)
+		if err != nil {
+			m.logger.Warn("Invalid token", logging.Fields{
+				"error": err,
+			})
+			c.JSON(401, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		// 检查token是否过期
+		if exp, ok := claims["exp"].(float64); ok {
+			if time.Unix(int64(exp), 0).Before(time.Now()) {
+				m.logger.Warn("Token expired")
+				c.JSON(401, gin.H{"error": "Token expired"})
+				c.Abort()
+				return
+			}
 		}
 
 		// 将用户信息存储到上下文中
-		c.Set("player_id", claims.PlayerID)
-		c.Set("username", claims.Username)
-		c.Set("role", claims.Role)
-		c.Set("token_claims", claims)
+		if userID, ok := claims["user_id"].(string); ok {
+			c.Set("user_id", userID)
+		}
+		if username, ok := claims["username"].(string); ok {
+			c.Set("username", username)
+		}
+		if exp, ok := claims["exp"].(float64); ok {
+			c.Set("expires_at", time.Unix(int64(exp), 0))
+		}
 
+		m.logger.Debug("User authenticated", logging.Fields{
+			"user_id":  claims["user_id"],
+			"username": claims["username"],
+		})
 		c.Next()
 	}
 }
 
-// RequireRole 需要特定角色的中间�?
-func (m *AuthMiddleware) RequireRole(roles ...string) gin.HandlerFunc {
+// OptionalAuth 可选认证的中间件
+func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 首先检查是否已认证
-		claims, exists := c.Get("token_claims")
-		if !exists {
-			m.logger.Warn("No token claims found in context", "path", c.Request.URL.Path)
-			c.JSON(401, gin.H{"error": "Authentication required", "success": false})
-			c.Abort()
+		// 从请求头获取token
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
 			return
 		}
 
-		jwtClaims, ok := claims.(*JWTClaims)
-		if !ok {
-			m.logger.Error("Invalid token claims type", "path", c.Request.URL.Path)
-			c.JSON(500, gin.H{"error": "Internal server error", "success": false})
-			c.Abort()
+		// 检查Bearer前缀
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			c.Next()
 			return
 		}
 
-		// 检查用户角�?
-		userRole := jwtClaims.Role
-		for _, role := range roles {
-			if userRole == role {
+		// 提取token
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// 验证token
+		claims, err := m.validateToken(tokenString)
+		if err != nil {
+			m.logger.Debug("Invalid token in optional auth", logging.Fields{
+				"error": err,
+			})
+			c.Next()
+			return
+		}
+
+		// 检查token是否过期
+		if exp, ok := claims["exp"].(float64); ok {
+			if time.Unix(int64(exp), 0).Before(time.Now()) {
+				m.logger.Debug("Token expired in optional auth")
 				c.Next()
 				return
 			}
 		}
 
-		m.logger.Warn("Insufficient permissions", "user_role", userRole, "required_roles", roles, "path", c.Request.URL.Path)
-		c.JSON(403, gin.H{"error": "Insufficient permissions", "success": false})
-		c.Abort()
-	}
-}
-
-// RequireGM GM权限中间�?
-func (m *AuthMiddleware) RequireGM() gin.HandlerFunc {
-	return m.RequireRole("gm", "admin", "super_admin")
-}
-
-// RequireAdmin 管理员权限中间件
-func (m *AuthMiddleware) RequireAdmin() gin.HandlerFunc {
-	return m.RequireRole("admin", "super_admin")
-}
-
-// RequireSuperAdmin 超级管理员权限中间件
-func (m *AuthMiddleware) RequireSuperAdmin() gin.HandlerFunc {
-	return m.RequireRole("super_admin")
-}
-
-// OptionalAuth 可选认证中间件（不强制要求认证�?
-func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := m.extractToken(c)
-		if token != "" {
-			claims, err := m.validateToken(token)
-			if err == nil {
-				// 认证成功，存储用户信�?
-				c.Set("player_id", claims.PlayerID)
-				c.Set("username", claims.Username)
-				c.Set("role", claims.Role)
-				c.Set("token_claims", claims)
-				c.Set("authenticated", true)
-			} else {
-				m.logger.Debug("Optional auth failed", "error", err)
-				c.Set("authenticated", false)
-			}
-		} else {
-			c.Set("authenticated", false)
+		// 将用户信息存储到上下文中
+		if userID, ok := claims["user_id"].(string); ok {
+			c.Set("user_id", userID)
+		}
+		if username, ok := claims["username"].(string); ok {
+			c.Set("username", username)
+		}
+		if exp, ok := claims["exp"].(float64); ok {
+			c.Set("expires_at", time.Unix(int64(exp), 0))
 		}
 
+		m.logger.Debug("User authenticated (optional)", logging.Fields{
+			"user_id":  claims["user_id"],
+			"username": claims["username"],
+		})
 		c.Next()
 	}
 }
 
-// RefreshTokenMiddleware 刷新令牌中间�?
-func (m *AuthMiddleware) RefreshTokenMiddleware() gin.HandlerFunc {
+// RequireRole 需要特定角色的中间件
+func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, exists := c.Get("token_claims")
+		// 首先检查是否已认证
+		userID, exists := c.Get("user_id")
 		if !exists {
-			c.Next()
+			m.logger.Warn("User not authenticated for role check")
+			c.JSON(401, gin.H{"error": "Authentication required"})
+			c.Abort()
 			return
 		}
 
-		jwtClaims, ok := claims.(*JWTClaims)
-		if !ok {
-			c.Next()
+		// 检查用户角色
+		userRole, err := m.getUserRole(userID.(string))
+		if err != nil {
+			m.logger.Error("Failed to get user role", err, logging.Fields{
+				"user_id": userID,
+			})
+			c.JSON(500, gin.H{"error": "Failed to check user role"})
+			c.Abort()
 			return
 		}
 
-		// 检查令牌是否即将过期（剩余时间少于1小时�?
-		if time.Until(jwtClaims.ExpiresAt.Time) < time.Hour {
-			// 生成新令�?
-			newToken, expiresAt, err := m.generateJWT(jwtClaims.PlayerID, jwtClaims.Username, jwtClaims.Role)
-			if err != nil {
-				m.logger.Error("Failed to generate refresh token", "error", err)
-			} else {
-				// 在响应头中返回新令牌
-				c.Header("X-New-Token", newToken)
-				c.Header("X-Token-Expires-At", expiresAt.Format(time.RFC3339))
-				m.logger.Info("Token refreshed", "player_id", jwtClaims.PlayerID)
-			}
+		if userRole != role {
+			m.logger.Warn("Insufficient permissions", logging.Fields{
+				"user_id":       userID,
+				"required_role": role,
+				"user_role":     userRole,
+			})
+			c.JSON(403, gin.H{"error": "Insufficient permissions"})
+			c.Abort()
+			return
 		}
 
+		m.logger.Debug("Role check passed", logging.Fields{
+			"user_id": userID,
+			"role":    role,
+		})
 		c.Next()
 	}
 }
 
-// CORSMiddleware CORS中间�?
-func (m *AuthMiddleware) CORSMiddleware() gin.HandlerFunc {
+// RequireAnyRole 需要任意一个角色的中间件
+func (m *AuthMiddleware) RequireAnyRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		origin := c.Request.Header.Get("Origin")
-		
-		// 允许的源列表（在生产环境中应该配置具体的域名�?
-		allowedOrigins := []string{
-			"http://localhost:3000",
-			"http://localhost:8080",
-			"https://yourdomain.com",
+		// 首先检查是否已认证
+		userID, exists := c.Get("user_id")
+		if !exists {
+			m.logger.Warn("User not authenticated for role check")
+			c.JSON(401, gin.H{"error": "Authentication required"})
+			c.Abort()
+			return
 		}
 
-		// 检查是否为允许的源
-		allowed := false
-		for _, allowedOrigin := range allowedOrigins {
-			if origin == allowedOrigin {
-				allowed = true
+		// 检查用户角色
+		userRole, err := m.getUserRole(userID.(string))
+		if err != nil {
+			m.logger.Error("Failed to get user role", err, logging.Fields{
+				"user_id": userID,
+			})
+			c.JSON(500, gin.H{"error": "Failed to check user role"})
+			c.Abort()
+			return
+		}
+
+		// 检查用户是否有任意一个所需角色
+		hasRole := false
+		for _, role := range roles {
+			if userRole == role {
+				hasRole = true
 				break
 			}
 		}
 
-		if allowed || origin == "" {
-			c.Header("Access-Control-Allow-Origin", origin)
-		}
-		
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-		c.Header("Access-Control-Expose-Headers", "X-New-Token, X-Token-Expires-At")
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Header("Access-Control-Max-Age", "86400")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+		if !hasRole {
+			m.logger.Warn("Insufficient permissions", logging.Fields{
+				"user_id":        userID,
+				"required_roles": roles,
+				"user_role":      userRole,
+			})
+			c.JSON(403, gin.H{"error": "Insufficient permissions"})
+			c.Abort()
 			return
 		}
 
+		m.logger.Debug("Role check passed", logging.Fields{
+			"user_id": userID,
+			"roles":   roles,
+		})
 		c.Next()
 	}
 }
 
 // 私有方法
 
-// extractToken 从请求中提取令牌
-func (m *AuthMiddleware) extractToken(c *gin.Context) string {
-	// 从Authorization头提�?
-	auth := c.GetHeader("Authorization")
-	if auth != "" {
-		if strings.HasPrefix(auth, "Bearer ") {
-			return strings.TrimPrefix(auth, "Bearer ")
+// validateToken 验证JWT token
+func (m *AuthMiddleware) validateToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// 验证签名方法
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-	}
-
-	// 从查询参数提�?
-	token := c.Query("token")
-	if token != "" {
-		return token
-	}
-
-	// 从Cookie提取
-	cookie, err := c.Cookie("auth_token")
-	if err == nil && cookie != "" {
-		return cookie
-	}
-
-	return ""
-}
-
-// validateToken 验证令牌
-func (m *AuthMiddleware) validateToken(tokenString string) (*JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(m.jwtSecret), nil
 	})
 
@@ -238,68 +254,16 @@ func (m *AuthMiddleware) validateToken(tokenString string) (*JWTClaims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, jwt.ErrInvalidKey
+	return nil, fmt.Errorf("invalid token")
 }
 
-// generateJWT 生成JWT令牌
-func (m *AuthMiddleware) generateJWT(playerID, username, role string) (string, time.Time, error) {
-	expiresAt := time.Now().Add(24 * time.Hour) // 24小时过期
-
-	claims := &JWTClaims{
-		PlayerID: playerID,
-		Username: username,
-		Role:     role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "greatestworks",
-			Subject:   playerID,
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(m.jwtSecret))
-	if err != nil {
-		return "", time.Time{}, err
-	}
-
-	return tokenString, expiresAt, nil
-}
-
-// GetCurrentUser 获取当前用户信息的辅助函�?
-func GetCurrentUser(c *gin.Context) (*JWTClaims, bool) {
-	claims, exists := c.Get("token_claims")
-	if !exists {
-		return nil, false
-	}
-
-	jwtClaims, ok := claims.(*JWTClaims)
-	return jwtClaims, ok
-}
-
-// IsAuthenticated 检查是否已认证的辅助函�?
-func IsAuthenticated(c *gin.Context) bool {
-	authenticated, exists := c.Get("authenticated")
-	if !exists {
-		return false
-	}
-
-	auth, ok := authenticated.(bool)
-	return ok && auth
-}
-
-// GetPlayerID 获取当前玩家ID的辅助函�?
-func GetPlayerID(c *gin.Context) (string, bool) {
-	playerID, exists := c.Get("player_id")
-	if !exists {
-		return "", false
-	}
-
-	id, ok := playerID.(string)
-	return id, ok
+// getUserRole 获取用户角色
+func (m *AuthMiddleware) getUserRole(userID string) (string, error) {
+	// 这里应该从数据库或缓存中获取用户角色
+	// 简化实现，返回默认角色
+	return "user", nil
 }

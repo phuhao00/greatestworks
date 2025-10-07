@@ -74,7 +74,9 @@ func (s *RPCServer) Start() error {
 
 	// 启动服务器
 	go func() {
-		s.logger.Info("RPC服务器启动", "address", addr)
+		s.logger.Info("RPC server started", logging.Fields{
+			"address": addr,
+		})
 		s.server.Accept(listener)
 	}()
 

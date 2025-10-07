@@ -199,10 +199,11 @@ func NewGameService(config *GameServiceConfig, logger logging.Logger) *GameServi
 
 // Start 启动游戏服务
 func (s *GameService) Start() error {
-	s.logger.Info("启动游戏服务",
-		"service", s.config.Service.Name,
-		"version", s.config.Service.Version,
-		"node_id", s.config.Service.NodeID)
+	s.logger.Info("Starting game service", logging.Fields{
+		"service": s.config.Service.Name,
+		"version": s.config.Service.Version,
+		"node_id": s.config.Service.NodeID,
+	})
 
 	// 初始化数据库连接
 	if err := s.initializeDatabase(); err != nil {
@@ -227,12 +228,13 @@ func (s *GameService) Start() error {
 	// 启动RPC服务器
 	go func() {
 		if err := s.server.Start(); err != nil {
-			s.logger.Error("RPC服务器启动失败", "error", err)
+			s.logger.Error("RPC server start failed", err)
 		}
 	}()
 
-	s.logger.Info("游戏服务启动成功",
-		"rpc_addr", fmt.Sprintf("%s:%d", s.config.Server.RPC.Host, s.config.Server.RPC.Port))
+	s.logger.Info("Game service started successfully", logging.Fields{
+		"rpc_addr": fmt.Sprintf("%s:%d", s.config.Server.RPC.Host, s.config.Server.RPC.Port),
+	})
 
 	return nil
 }
@@ -247,7 +249,7 @@ func (s *GameService) Stop() error {
 	// 停止RPC服务器
 	if s.server != nil {
 		if err := s.server.Stop(); err != nil {
-			s.logger.Error("停止RPC服务器失败", "error", err)
+			s.logger.Error("Failed to stop RPC server", err)
 			return err
 		}
 	}
@@ -337,12 +339,9 @@ func loadConfig() (*GameServiceConfig, error) {
 // main 主函数
 func main() {
 	// 创建日志器
-	logger, err := logging.NewSimpleLogger(&logging.Config{})
-	if err != nil {
-		panic(fmt.Sprintf("创建日志器失败: %v", err))
-	}
+	logger := logging.NewBaseLogger(logging.InfoLevel)
 
-	logger.Info("启动游戏服务")
+	logger.Info("启动游戏服务", logging.Fields{})
 
 	// 加载配置
 	config, err := loadConfig()
@@ -364,17 +363,19 @@ func main() {
 
 	select {
 	case sig := <-sigChan:
-		logger.Info("收到关闭信号", "signal", sig.String())
+		logger.Info("收到关闭信号", logging.Fields{
+			"signal": sig.String(),
+		})
 	case <-service.ctx.Done():
-		logger.Info("上下文已取消")
+		logger.Info("上下文已取消", logging.Fields{})
 	}
 
 	// 优雅关闭
-	logger.Info("正在关闭游戏服务...")
+	logger.Info("正在关闭游戏服务...", logging.Fields{})
 	if err := service.Stop(); err != nil {
-		logger.Error("关闭游戏服务失败", "error", err)
+		logger.Error("关闭游戏服务失败", err, logging.Fields{})
 		os.Exit(1)
 	}
 
-	logger.Info("游戏服务已关闭")
+	logger.Info("游戏服务已关闭", logging.Fields{})
 }

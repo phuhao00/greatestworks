@@ -1,4 +1,4 @@
-package persistence
+﻿package persistence
 
 import (
 	"context"
@@ -80,9 +80,8 @@ func (r *MongoPlayerRepository) Save(ctx context.Context, p *player.Player) erro
 
 	_, err := r.collection.ReplaceOne(ctx, filter, doc, opts)
 	if err != nil {
-		r.logger.Error("保存玩家失败", map[string]interface{}{
-			"name":  p.Name(),
-			"error": err.Error(),
+		r.logger.Error("保存玩家失败", err, logging.Fields{
+			"name": p.Name(),
 		})
 		return fmt.Errorf("保存玩家失败: %w", err)
 	}
@@ -126,9 +125,8 @@ func (r *MongoPlayerRepository) FindByID(ctx context.Context, id string) (*playe
 		if err == mongo.ErrNoDocuments {
 			return nil, player.ErrPlayerNotFound
 		}
-		r.logger.Error("查找玩家失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("查找玩家失败", err, logging.Fields{
+			"id": id,
 		})
 		return nil, fmt.Errorf("查找玩家失败: %w", err)
 	}
@@ -167,9 +165,8 @@ func (r *MongoPlayerRepository) FindByName(ctx context.Context, name string) (*p
 		if err == mongo.ErrNoDocuments {
 			return nil, player.ErrPlayerNotFound
 		}
-		r.logger.Error("根据名称查找玩家失败", map[string]interface{}{
-			"name":  name,
-			"error": err.Error(),
+		r.logger.Error("根据名称查找玩家失败", err, logging.Fields{
+			"name": name,
 		})
 		return nil, fmt.Errorf("根据名称查找玩家失败: %w", err)
 	}
@@ -201,9 +198,8 @@ func (r *MongoPlayerRepository) Delete(ctx context.Context, id string) error {
 	filter := bson.M{"_id": objectID}
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		r.logger.Error("删除玩家失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("删除玩家失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("删除玩家失败: %w", err)
 	}
@@ -237,9 +233,7 @@ func (r *MongoPlayerRepository) List(ctx context.Context, limit, offset int) ([]
 
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
-		r.logger.Error("获取玩家列表失败", map[string]interface{}{
-			"error": err.Error(),
-		})
+		r.logger.Error("获取玩家列表失败", err, logging.Fields{})
 		return nil, fmt.Errorf("获取玩家列表失败: %w", err)
 	}
 	defer cursor.Close(ctx)
@@ -253,9 +247,8 @@ func (r *MongoPlayerRepository) List(ctx context.Context, limit, offset int) ([]
 	for _, doc := range docs {
 		playerAggregate, err := r.toAggregate(&doc)
 		if err != nil {
-			r.logger.Error("转换玩家对象失败", map[string]interface{}{
-				"id":    doc.ID.Hex(),
-				"error": err.Error(),
+			r.logger.Error("转换玩家对象失败", err, logging.Fields{
+				"id": doc.ID.Hex(),
 			})
 			continue
 		}
@@ -273,9 +266,7 @@ func (r *MongoPlayerRepository) List(ctx context.Context, limit, offset int) ([]
 func (r *MongoPlayerRepository) Count(ctx context.Context) (int64, error) {
 	count, err := r.collection.CountDocuments(ctx, bson.M{})
 	if err != nil {
-		r.logger.Error("获取玩家总数失败", map[string]interface{}{
-			"error": err.Error(),
-		})
+		r.logger.Error("获取玩家总数失败", err, logging.Fields{})
 		return 0, fmt.Errorf("获取玩家总数失败: %w", err)
 	}
 

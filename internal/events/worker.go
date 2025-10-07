@@ -38,11 +38,11 @@ func (d *EventDispatcher) RegisterHandler(eventType EventType, handler EventHand
 // Dispatch 分发事件
 func (d *EventDispatcher) Dispatch(ctx context.Context, event Event) error {
 	d.mu.RLock()
-	handlers, exists := d.handlers[EventType(event.GetType())]
+	handlers, exists := d.handlers[EventType(event.GetEventType())]
 	d.mu.RUnlock()
 
 	if !exists {
-		return fmt.Errorf("no handlers for event type: %s", event.GetType())
+		return fmt.Errorf("no handlers for event type: %s", event.GetEventType())
 	}
 
 	for _, handler := range handlers {
@@ -209,7 +209,7 @@ func (w *Worker) processTask(task *EventTask) {
 		w.metrics.mu.Unlock()
 	}()
 
-	w.logger.Printf("Processing event: %s (type: %s)", task.Event.GetID(), task.Event.GetType())
+	w.logger.Printf("Processing event: %s (type: %s)", task.Event.GetID(), task.Event.GetEventType())
 
 	// 处理事件
 	if err := task.Dispatcher.Dispatch(task.Context, task.Event); err != nil {

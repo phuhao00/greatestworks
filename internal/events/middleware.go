@@ -23,7 +23,7 @@ func NewLoggingMiddleware() *LoggingMiddleware {
 func (lm *LoggingMiddleware) Process(ctx context.Context, event Event, next func(context.Context, Event) error) error {
 	start := time.Now()
 	lm.logger.Printf("Processing event: %s (type: %s, player: %s)",
-		event.GetID(), event.GetType(), event.GetPlayerID())
+		event.GetID(), event.GetEventType(), event.GetPlayerID())
 
 	err := next(ctx, event)
 
@@ -68,21 +68,21 @@ func (vm *ValidationMiddleware) validateEvent(event Event) error {
 		return fmt.Errorf("event ID is required")
 	}
 
-	if event.GetType() == "" {
+	if event.GetEventType() == "" {
 		return fmt.Errorf("event type is required")
 	}
 
-	if event.GetTimestamp().IsZero() {
+	if event.GetOccurredAt().IsZero() {
 		return fmt.Errorf("event timestamp is required")
 	}
 
 	// 检查时间戳是否合理（不能是未来时间，不能太久以前）
 	now := time.Now()
-	if event.GetTimestamp().After(now.Add(5 * time.Minute)) {
+	if event.GetOccurredAt().After(now.Add(5 * time.Minute)) {
 		return fmt.Errorf("event timestamp is in the future")
 	}
 
-	if event.GetTimestamp().Before(now.Add(-24 * time.Hour)) {
+	if event.GetOccurredAt().Before(now.Add(-24 * time.Hour)) {
 		return fmt.Errorf("event timestamp is too old")
 	}
 
@@ -178,7 +178,7 @@ func NewAuthenticationMiddleware() *AuthenticationMiddleware {
 // Process 处理事件
 func (am *AuthenticationMiddleware) Process(ctx context.Context, event Event, next func(context.Context, Event) error) error {
 	// 检查事件是否需要认证
-	if am.requiresAuthentication(EventType(event.GetType())) {
+	if am.requiresAuthentication(EventType(event.GetEventType())) {
 		if err := am.authenticateEvent(ctx, event); err != nil {
 			am.logger.Printf("Event authentication failed: %s, error: %v", event.GetID(), err)
 			return fmt.Errorf("event authentication failed: %w", err)
@@ -233,12 +233,12 @@ func (mm *MetricsMiddleware) Process(ctx context.Context, event Event, next func
 	err := next(ctx, event)
 
 	duration := time.Since(start)
-	mm.metrics.RecordProcessingTime(EventType(event.GetType()), duration)
+	mm.metrics.RecordProcessingTime(EventType(event.GetEventType()), duration)
 
 	if err != nil {
-		mm.metrics.IncrementErrorCount(EventType(event.GetType()))
+		mm.metrics.IncrementErrorCount(EventType(event.GetEventType()))
 	} else {
-		mm.metrics.IncrementSuccessCount(EventType(event.GetType()))
+		mm.metrics.IncrementSuccessCount(EventType(event.GetEventType()))
 	}
 
 	return err
@@ -278,11 +278,11 @@ func NewCircuitBreakerMiddleware() *CircuitBreakerMiddleware {
 
 // Process 处理事件
 func (cbm *CircuitBreakerMiddleware) Process(ctx context.Context, event Event, next func(context.Context, Event) error) error {
-	breaker := cbm.getBreaker(EventType(event.GetType()))
+	breaker := cbm.getBreaker(EventType(event.GetEventType()))
 
 	if !breaker.allowRequest() {
-		cbm.logger.Printf("Circuit breaker is open for event type: %s", event.GetType())
-		return fmt.Errorf("circuit breaker is open for event type: %s", event.GetType())
+		cbm.logger.Printf("Circuit breaker is open for event type: %s", event.GetEventType())
+		return fmt.Errorf("circuit breaker is open for event type: %s", event.GetEventType())
 	}
 
 	err := next(ctx, event)

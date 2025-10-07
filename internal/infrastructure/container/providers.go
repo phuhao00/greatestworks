@@ -23,7 +23,7 @@ func (cp *ConfigProvider) RegisterServices(container *Container) error {
 	// Register config loader
 	container.RegisterSingleton("config.loader", func(c *Container) (interface{}, error) {
 		// 使用简单的配置加载器
-		loader := &config.ConfigLoader{}
+		loader := config.NewConfigLoader("config.yaml")
 		return loader, nil
 	})
 

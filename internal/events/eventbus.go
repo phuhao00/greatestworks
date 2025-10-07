@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"greatestworks/internal/infrastructure/logging"
+
 	"github.com/nats-io/nats.go"
 	// "github.com/phuhao00/netcore-go/core" // 暂时注释掉缺失的包
 )
@@ -26,9 +28,11 @@ type Logger interface {
 // Event 事件接口
 type Event interface {
 	GetID() string
-	GetType() string
+	GetEventType() string
+	GetAggregateID() string
+	GetVersion() int64
+	GetOccurredAt() time.Time
 	GetData() interface{}
-	GetTimestamp() time.Time
 	GetPlayerID() string
 }
 
@@ -45,17 +49,34 @@ type EventBus struct {
 
 // BaseEvent 基础事件结构
 type BaseEvent struct {
-	ID        string      `json:"id"`
-	Type      string      `json:"type"`
-	Data      interface{} `json:"data"`
-	Timestamp time.Time   `json:"timestamp"`
-	UserID    string      `json:"user_id,omitempty"`
-	SessionID string      `json:"session_id,omitempty"`
+	ID          string      `json:"id"`
+	Type        string      `json:"type"`
+	AggregateID string      `json:"aggregate_id"`
+	Version     int64       `json:"version"`
+	Data        interface{} `json:"data"`
+	Timestamp   time.Time   `json:"timestamp"`
+	UserID      string      `json:"user_id,omitempty"`
+	SessionID   string      `json:"session_id,omitempty"`
 }
 
-// GetType 获取事件类型
-func (e *BaseEvent) GetType() string {
+// GetEventType 获取事件类型
+func (e *BaseEvent) GetEventType() string {
 	return e.Type
+}
+
+// GetAggregateID 获取聚合根ID
+func (e *BaseEvent) GetAggregateID() string {
+	return e.AggregateID
+}
+
+// GetVersion 获取版本号
+func (e *BaseEvent) GetVersion() int64 {
+	return e.Version
+}
+
+// GetOccurredAt 获取发生时间
+func (e *BaseEvent) GetOccurredAt() time.Time {
+	return e.Timestamp
 }
 
 // GetData 获取事件数据
@@ -63,19 +84,14 @@ func (e *BaseEvent) GetData() interface{} {
 	return e.Data
 }
 
-// GetTimestamp 获取时间戳
-func (e *BaseEvent) GetTimestamp() time.Time {
-	return e.Timestamp
+// GetPlayerID 获取玩家ID
+func (e *BaseEvent) GetPlayerID() string {
+	return e.UserID
 }
 
 // GetID 获取事件ID
 func (e *BaseEvent) GetID() string {
 	return e.ID
-}
-
-// GetPlayerID 获取玩家ID
-func (e *BaseEvent) GetPlayerID() string {
-	return e.UserID
 }
 
 // NewEventBus 创建事件总线
@@ -94,7 +110,9 @@ func (eb *EventBus) ConnectNATS(url string) error {
 	}
 
 	eb.nats = nc
-	eb.logger.Info("Connected to NATS", "url", url)
+	eb.logger.Info("Connected to NATS", logging.Fields{
+		"url": url,
+	})
 	return nil
 }
 
@@ -104,7 +122,9 @@ func (eb *EventBus) Subscribe(eventType string, handler Handler) {
 	defer eb.mutex.Unlock()
 
 	eb.handlers[eventType] = append(eb.handlers[eventType], handler)
-	eb.logger.Debug("Event handler subscribed", "type", eventType)
+	eb.logger.Debug("Event handler subscribed", logging.Fields{
+		"type": eventType,
+	})
 }
 
 // Unsubscribe 取消订阅
@@ -120,20 +140,22 @@ func (eb *EventBus) Unsubscribe(eventType string, handler Handler) {
 		}
 	}
 
-	eb.logger.Debug("Event handler unsubscribed", "type", eventType)
+	eb.logger.Debug("Event handler unsubscribed", logging.Fields{
+		"type": eventType,
+	})
 }
 
 // Publish 发布事件
 func (eb *EventBus) Publish(ctx context.Context, event Event) error {
 	// 本地处理
 	if err := eb.publishLocal(ctx, event); err != nil {
-		eb.logger.Error("Local event publish failed", "error", err)
+		eb.logger.Error("Local event publish failed", err, logging.Fields{})
 	}
 
 	// 远程发布（通过NATS）
 	if eb.nats != nil {
 		if err := eb.publishRemote(event); err != nil {
-			eb.logger.Error("Remote event publish failed", "error", err)
+			eb.logger.Error("Remote event publish failed", err, logging.Fields{})
 			return err
 		}
 	}
@@ -144,18 +166,22 @@ func (eb *EventBus) Publish(ctx context.Context, event Event) error {
 // publishLocal 本地发布事件
 func (eb *EventBus) publishLocal(ctx context.Context, event Event) error {
 	eb.mutex.RLock()
-	handlers := eb.handlers[event.GetType()]
+	handlers := eb.handlers[event.GetEventType()]
 	eb.mutex.RUnlock()
 
 	for _, handler := range handlers {
 		go func(h Handler) {
 			if err := h(ctx, event); err != nil {
-				eb.logger.Error("Event handler error", "type", event.GetType(), "error", err)
+				eb.logger.Error("Event handler error", err, logging.Fields{
+					"type": event.GetEventType(),
+				})
 			}
 		}(handler)
 	}
 
-	eb.logger.Debug("Event published locally", "type", event.GetType())
+	eb.logger.Debug("Event published locally", logging.Fields{
+		"type": event.GetEventType(),
+	})
 	return nil
 }
 
@@ -166,12 +192,15 @@ func (eb *EventBus) publishRemote(event Event) error {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
-	subject := fmt.Sprintf("events.%s", event.GetType())
+	subject := fmt.Sprintf("events.%s", event.GetEventType())
 	if err := eb.nats.Publish(subject, data); err != nil {
 		return fmt.Errorf("failed to publish event to NATS: %w", err)
 	}
 
-	eb.logger.Debug("Event published remotely", "type", event.GetType(), "subject", subject)
+	eb.logger.Debug("Event published remotely", logging.Fields{
+		"type":    event.GetEventType(),
+		"subject": subject,
+	})
 	return nil
 }
 
@@ -185,13 +214,15 @@ func (eb *EventBus) SubscribeRemote(eventType string, handler Handler) error {
 	_, err := eb.nats.Subscribe(subject, func(msg *nats.Msg) {
 		var event BaseEvent
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
-			eb.logger.Error("Failed to unmarshal remote event", "error", err)
+			eb.logger.Error("Failed to unmarshal remote event", err, logging.Fields{})
 			return
 		}
 
 		ctx := context.Background()
 		if err := handler(ctx, &event); err != nil {
-			eb.logger.Error("Remote event handler error", "type", eventType, "error", err)
+			eb.logger.Error("Remote event handler error", err, logging.Fields{
+				"type": eventType,
+			})
 		}
 	})
 
@@ -199,7 +230,10 @@ func (eb *EventBus) SubscribeRemote(eventType string, handler Handler) error {
 		return fmt.Errorf("failed to subscribe to remote events: %w", err)
 	}
 
-	eb.logger.Info("Subscribed to remote events", "type", eventType, "subject", subject)
+	eb.logger.Info("Subscribed to remote events", logging.Fields{
+		"type":    eventType,
+		"subject": subject,
+	})
 	return nil
 }
 
@@ -207,7 +241,7 @@ func (eb *EventBus) SubscribeRemote(eventType string, handler Handler) error {
 func (eb *EventBus) Close() {
 	if eb.nats != nil {
 		eb.nats.Close()
-		eb.logger.Info("NATS connection closed")
+		eb.logger.Info("NATS connection closed", logging.Fields{})
 	}
 }
 

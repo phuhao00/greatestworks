@@ -57,7 +57,7 @@ func (s *NetCoreServer) Start() error {
 
 	s.listener = listener
 
-	s.logger.Info("网络服务器启动", map[string]interface{}{
+	s.logger.Info("Network server started", logging.Fields{
 		"address": addr,
 	})
 
@@ -73,7 +73,7 @@ func (s *NetCoreServer) Stop() error {
 		return nil
 	}
 
-	s.logger.Info("网络服务器停止")
+	s.logger.Info("Network server stopped")
 
 	// 关闭所有客户端连接
 	s.mutex.Lock()
@@ -91,9 +91,7 @@ func (s *NetCoreServer) acceptConnections() {
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			s.logger.Error("接受连接失败", map[string]interface{}{
-				"error": err.Error(),
-			})
+			s.logger.Error("Failed to accept connection", err)
 			continue
 		}
 
@@ -106,7 +104,7 @@ func (s *NetCoreServer) acceptConnections() {
 		s.clients[clientID] = client
 		s.mutex.Unlock()
 
-		s.logger.Info("新客户端连接", map[string]interface{}{
+		s.logger.Info("新客户端连接", logging.Fields{
 			"client_id":   clientID,
 			"remote_addr": conn.RemoteAddr().String(),
 		})
@@ -142,9 +140,8 @@ func (s *NetCoreServer) handleClient(client *NetCoreClient) {
 		// 接收消息
 		data, err := client.Receive()
 		if err != nil {
-			s.logger.Error("接收消息失败", map[string]interface{}{
+			s.logger.Error("Failed to receive message", err, logging.Fields{
 				"client_id": client.GetRemoteAddr(),
-				"error":     err.Error(),
 			})
 			break
 		}
@@ -184,9 +181,8 @@ func (s *NetCoreServer) Broadcast(message []byte) {
 
 	for _, client := range s.clients {
 		if err := client.Send(message); err != nil {
-			s.logger.Error("广播消息失败", map[string]interface{}{
+			s.logger.Error("Failed to broadcast message", err, logging.Fields{
 				"client_id": client.GetRemoteAddr(),
-				"error":     err.Error(),
 			})
 		}
 	}

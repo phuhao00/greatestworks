@@ -170,10 +170,11 @@ func NewGatewayService(config *GatewayServiceConfig, logger logging.Logger) *Gat
 
 // Start 启动网关服务
 func (s *GatewayService) Start() error {
-	s.logger.Info("启动网关服务",
-		"service", s.config.Service.Name,
-		"version", s.config.Service.Version,
-		"node_id", s.config.Service.NodeID)
+	s.logger.Info("Starting gateway service", logging.Fields{
+		"service": s.config.Service.Name,
+		"version": s.config.Service.Version,
+		"node_id": s.config.Service.NodeID,
+	})
 
 	// 初始化数据库连接
 	if err := s.initializeDatabase(); err != nil {
@@ -193,12 +194,13 @@ func (s *GatewayService) Start() error {
 	// 启动TCP服务器
 	go func() {
 		if err := s.server.Start(); err != nil {
-			s.logger.Error("TCP服务器启动失败", "error", err)
+			s.logger.Error("TCP server start failed", err)
 		}
 	}()
 
-	s.logger.Info("网关服务启动成功",
-		"tcp_addr", fmt.Sprintf("%s:%d", s.config.Server.TCP.Host, s.config.Server.TCP.Port))
+	s.logger.Info("Gateway service started successfully", logging.Fields{
+		"tcp_addr": fmt.Sprintf("%s:%d", s.config.Server.TCP.Host, s.config.Server.TCP.Port),
+	})
 
 	return nil
 }
@@ -213,7 +215,7 @@ func (s *GatewayService) Stop() error {
 	// 停止TCP服务器
 	if s.server != nil {
 		if err := s.server.Stop(); err != nil {
-			s.logger.Error("停止TCP服务器失败", "error", err)
+			s.logger.Error("Failed to stop TCP server", err)
 			return err
 		}
 	}
@@ -279,10 +281,7 @@ func loadConfig() (*GatewayServiceConfig, error) {
 // main 主函数
 func main() {
 	// 创建日志器
-	logger, err := logging.NewSimpleLogger(&logging.Config{})
-	if err != nil {
-		panic(fmt.Sprintf("创建日志器失败: %v", err))
-	}
+	logger := logging.NewBaseLogger(logging.InfoLevel)
 
 	logger.Info("启动网关服务")
 
@@ -306,7 +305,9 @@ func main() {
 
 	select {
 	case sig := <-sigChan:
-		logger.Info("收到关闭信号", "signal", sig.String())
+		logger.Info("收到关闭信号", logging.Fields{
+			"signal": sig.String(),
+		})
 	case <-service.ctx.Done():
 		logger.Info("上下文已取消")
 	}
@@ -314,7 +315,7 @@ func main() {
 	// 优雅关闭
 	logger.Info("正在关闭网关服务...")
 	if err := service.Stop(); err != nil {
-		logger.Error("关闭网关服务失败", "error", err)
+		logger.Error("关闭网关服务失败", err, logging.Fields{})
 		os.Exit(1)
 	}
 

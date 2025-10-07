@@ -1,7 +1,7 @@
 package gm
 
 import (
-	"context"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -10,18 +10,17 @@ import (
 	"greatestworks/application/handlers"
 	playerQuery "greatestworks/application/queries/player"
 	"greatestworks/internal/infrastructure/logging"
-	"greatestworks/internal/interfaces/http/auth"
 )
 
-// PlayerManagementHandler GM玩家管理处理�?
+// PlayerManagementHandler GM玩家管理处理器
 type PlayerManagementHandler struct {
 	commandBus *handlers.CommandBus
 	queryBus   *handlers.QueryBus
-	logger     logger.Logger
+	logger     logging.Logger
 }
 
-// NewPlayerManagementHandler 创建GM玩家管理处理�?
-func NewPlayerManagementHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logger.Logger) *PlayerManagementHandler {
+// NewPlayerManagementHandler 创建GM玩家管理处理器
+func NewPlayerManagementHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logging.Logger) *PlayerManagementHandler {
 	return &PlayerManagementHandler{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -29,453 +28,335 @@ func NewPlayerManagementHandler(commandBus *handlers.CommandBus, queryBus *handl
 	}
 }
 
-// PlayerSearchRequest 玩家搜索请求
-type PlayerSearchRequest struct {
-	Keyword   string `form:"keyword,omitempty"`
-	PlayerID  string `form:"player_id,omitempty"`
-	Username  string `form:"username,omitempty"`
-	Email     string `form:"email,omitempty"`
-	Status    string `form:"status,omitempty"`
-	MinLevel  int    `form:"min_level,omitempty"`
-	MaxLevel  int    `form:"max_level,omitempty"`
-	Page      int    `form:"page,omitempty" binding:"min=1"`
-	PageSize  int    `form:"page_size,omitempty" binding:"min=1,max=100"`
-	SortBy    string `form:"sort_by,omitempty"`
-	SortOrder string `form:"sort_order,omitempty"`
-}
-
-// PlayerUpdateRequest GM玩家更新请求
-type PlayerUpdateRequest struct {
-	Name    *string `json:"name,omitempty"`
-	Level   *int    `json:"level,omitempty"`
-	Exp     *int64  `json:"exp,omitempty"`
-	Status  *string `json:"status,omitempty"`
-	HP      *int    `json:"hp,omitempty"`
-	MaxHP   *int    `json:"max_hp,omitempty"`
-	MP      *int    `json:"mp,omitempty"`
-	MaxMP   *int    `json:"max_mp,omitempty"`
-	Attack  *int    `json:"attack,omitempty"`
-	Defense *int    `json:"defense,omitempty"`
-	Speed   *int    `json:"speed,omitempty"`
-	Reason  string  `json:"reason" binding:"required"`
-}
-
-// PlayerBanRequest 玩家封禁请求
-type PlayerBanRequest struct {
-	PlayerID  string    `json:"player_id" binding:"required"`
-	Reason    string    `json:"reason" binding:"required"`
-	Duration  int       `json:"duration"` // 封禁时长（小时）�?表示永久
-	BanType   string    `json:"ban_type" binding:"required,oneof=login chat trade all"`
-	ExpiresAt time.Time `json:"expires_at,omitempty"`
-}
-
-// PlayerUnbanRequest 玩家解封请求
-type PlayerUnbanRequest struct {
-	PlayerID string `json:"player_id" binding:"required"`
-	Reason   string `json:"reason" binding:"required"`
-}
-
-// GMPlayerResponse GM玩家响应
-type GMPlayerResponse struct {
-	ID           string           `json:"id"`
-	Username     string           `json:"username"`
-	Email        string           `json:"email"`
-	Name         string           `json:"name"`
-	Level        int              `json:"level"`
-	Exp          int64            `json:"exp"`
-	Status       string           `json:"status"`
-	Position     PositionResponse `json:"position"`
-	Stats        StatsResponse    `json:"stats"`
-	Avatar       string           `json:"avatar,omitempty"`
-	Gender       int              `json:"gender,omitempty"`
-	LastLoginAt  *time.Time       `json:"last_login_at,omitempty"`
-	LastLogoutAt *time.Time       `json:"last_logout_at,omitempty"`
-	OnlineTime   int64            `json:"online_time"`
-	CreatedAt    time.Time        `json:"created_at"`
-	UpdatedAt    time.Time        `json:"updated_at"`
-	BanInfo      *BanInfo         `json:"ban_info,omitempty"`
-}
-
-// PositionResponse 位置响应
-type PositionResponse struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-	Z float64 `json:"z"`
-}
-
-// StatsResponse 属性响�?
-type StatsResponse struct {
-	HP      int `json:"hp"`
-	MaxHP   int `json:"max_hp"`
-	MP      int `json:"mp"`
-	MaxMP   int `json:"max_mp"`
-	Attack  int `json:"attack"`
-	Defense int `json:"defense"`
-	Speed   int `json:"speed"`
-}
-
-// BanInfo 封禁信息
-type BanInfo struct {
-	IsBanned  bool       `json:"is_banned"`
-	BanType   string     `json:"ban_type,omitempty"`
-	Reason    string     `json:"reason,omitempty"`
-	BannedBy  string     `json:"banned_by,omitempty"`
-	BannedAt  *time.Time `json:"banned_at,omitempty"`
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-}
-
-// SearchPlayers 搜索玩家
-func (h *PlayerManagementHandler) SearchPlayers(c *gin.Context) {
-	var req PlayerSearchRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		h.logger.Error("Invalid search players request", "error", err)
-		c.JSON(400, gin.H{"error": "Invalid request parameters", "success": false})
+// CreatePlayer 创建玩家
+func (h *PlayerManagementHandler) CreatePlayer(c *gin.Context) {
+	var req CreatePlayerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Invalid create player request", logging.Fields{
+			"error": err,
+		})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	// 设置默认�?
-	if req.Page == 0 {
-		req.Page = 1
-	}
-	if req.PageSize == 0 {
-		req.PageSize = 20
-	}
-	if req.SortBy == "" {
-		req.SortBy = "created_at"
-	}
-	if req.SortOrder == "" {
-		req.SortOrder = "desc"
+	// 创建命令
+	cmd := &playerCmd.CreatePlayerCommand{
+		Name:   req.Name,
+		Avatar: req.Avatar,
+		Gender: req.Gender,
 	}
 
-	// 执行搜索查询
-	// TODO: 修复SearchPlayersQuery类型
-	// query := &playerQuery.SearchPlayersQuery{
-	// 	Keyword:   req.Keyword,
-	// 	PlayerID:  req.PlayerID,
-	// 	Username:  req.Username,
-	// 	Email:     req.Email,
-	// 	Status:    req.Status,
-	// 	MinLevel:  req.MinLevel,
-	// 	MaxLevel:  req.MaxLevel,
-	// 	Page:      req.Page,
-	// 	PageSize:  req.PageSize,
-	// 	SortBy:    req.SortBy,
-	// 	SortOrder: req.SortOrder,
-	// }
-
-	// TODO: 修复ExecuteQueryTyped方法调用
-	// result, err := handlers.ExecuteQueryTyped[*playerQuery.SearchPlayersQuery, *playerQuery.SearchPlayersResult](ctx, h.queryBus, query)
-	result := &playerQuery.SearchPlayersResult{}
-	// TODO: 修复err变量
-	// if err != nil {
-	// 	h.logger.Error("Failed to search players", "error", err)
-	// 	c.JSON(500, gin.H{"error": "Failed to search players", "success": false})
-	// 	return
-	// }
-
-	// 构造响�?
-	players := make([]*GMPlayerResponse, len(result.Players))
-	for i, p := range result.Players {
-		players[i] = &GMPlayerResponse{
-			ID:       p.ID,
-			Username: p.Username,
-			Email:    p.Email,
-			Name:     p.Name,
-			Level:    p.Level,
-			Exp:      p.Exp,
-			Status:   p.Status,
-			Position: PositionResponse{
-				X: p.Position.X,
-				Y: p.Position.Y,
-				Z: p.Position.Z,
-			},
-			Stats: StatsResponse{
-				HP:      p.Stats.HP,
-				MaxHP:   p.Stats.MaxHP,
-				MP:      p.Stats.MP,
-				MaxMP:   p.Stats.MaxMP,
-				Attack:  p.Stats.Attack,
-				Defense: p.Stats.Defense,
-				Speed:   p.Stats.Speed,
-			},
-			Avatar:       p.Avatar,
-			Gender:       p.Gender,
-			LastLoginAt:  p.LastLoginAt,
-			LastLogoutAt: p.LastLogoutAt,
-			OnlineTime:   p.OnlineTime,
-			CreatedAt:    p.CreatedAt,
-			UpdatedAt:    p.UpdatedAt,
-		}
-
-		// 添加封禁信息
-		if p.BanInfo != nil {
-			players[i].BanInfo = &BanInfo{
-				IsBanned:  p.BanInfo.IsBanned,
-				BanType:   p.BanInfo.BanType,
-				Reason:    p.BanInfo.Reason,
-				BannedBy:  p.BanInfo.BannedBy,
-				BannedAt:  p.BanInfo.BannedAt,
-				ExpiresAt: p.BanInfo.ExpiresAt,
-			}
-		}
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
+	if err != nil {
+		h.logger.Error("Failed to create player", err, logging.Fields{
+			"name": req.Name,
+		})
+		c.JSON(500, gin.H{"error": "Failed to create player"})
+		return
 	}
 
-	response := map[string]interface{}{
-		"players": players,
-		"pagination": map[string]interface{}{
-			"page":        result.Page,
-			"page_size":   result.Size,
-			"total":       result.Total,
-			"total_pages": (result.Total + int64(result.Size) - 1) / int64(result.Size),
-		},
-	}
-
-	// 记录GM操作日志
-	gmUser, _ := auth.GetCurrentUser(c)
-	h.logger.Info("GM searched players", "gm_user", gmUser.Username, "search_params", req)
-
-	c.JSON(200, gin.H{"data": response, "success": true})
+	h.logger.Info("Player created successfully", logging.Fields{
+		"player_id": result.(*playerCmd.CreatePlayerResult).PlayerID,
+		"name":      req.Name,
+	})
+	c.JSON(200, result)
 }
 
-// GetPlayerDetail 获取玩家详细信息
-func (h *PlayerManagementHandler) GetPlayerDetail(c *gin.Context) {
+// GetPlayer 获取玩家信息
+func (h *PlayerManagementHandler) GetPlayer(c *gin.Context) {
 	playerID := c.Param("id")
 	if playerID == "" {
-		c.JSON(400, gin.H{"error": "Player ID is required", "success": false})
+		c.JSON(400, gin.H{"error": "Player ID is required"})
 		return
 	}
 
-	// ctx := context.Background()
+	// 创建查询
+	query := &playerQuery.GetPlayerQuery{
+		PlayerID: playerID,
+	}
 
-	// 查询玩家详细信息
-	// TODO: 修复GetPlayerDetailQuery类型
-	// query := &playerQuery.GetPlayerDetailQuery{PlayerID: playerID}
-	// result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerDetailQuery, *playerQuery.GetPlayerDetailResult](ctx, h.queryBus, query)
-	result := &playerQuery.GetPlayerDetailResult{}
-	// TODO: 修复err变量
-	// if err != nil {
-	// 	h.logger.Error("Failed to get player detail", "error", err, "player_id", playerID)
-	// 	c.JSON(500, gin.H{"error": "Failed to get player detail", "success": false})
-	// 	return
-	// }
-
-	if !result.Found {
-		c.JSON(404, gin.H{"error": "Player not found", "success": false})
+	// 执行查询
+	result, err := h.queryBus.Execute(c.Request.Context(), query)
+	if err != nil {
+		h.logger.Error("Failed to get player", err, logging.Fields{
+			"player_id": playerID,
+		})
+		c.JSON(500, gin.H{"error": "Failed to get player"})
 		return
 	}
 
-	// 构造详细响�?
-	p := result.Player
-	response := &GMPlayerResponse{
-		ID:       p.ID,
-		Username: p.Username,
-		Email:    p.Email,
-		Name:     p.Name,
-		Level:    p.Level,
-		Exp:      p.Exp,
-		Status:   p.Status,
-		Position: PositionResponse{
-			X: p.Position.X,
-			Y: p.Position.Y,
-			Z: p.Position.Z,
-		},
-		Stats: StatsResponse{
-			HP:      p.Stats.HP,
-			MaxHP:   p.Stats.MaxHP,
-			MP:      p.Stats.MP,
-			MaxMP:   p.Stats.MaxMP,
-			Attack:  p.Stats.Attack,
-			Defense: p.Stats.Defense,
-			Speed:   p.Stats.Speed,
-		},
-		Avatar:       p.Avatar,
-		Gender:       p.Gender,
-		LastLoginAt:  p.LastLoginAt,
-		LastLogoutAt: p.LastLogoutAt,
-		OnlineTime:   p.OnlineTime,
-		CreatedAt:    p.CreatedAt,
-		UpdatedAt:    p.UpdatedAt,
-	}
-
-	// 添加封禁信息
-	if p.BanInfo != nil {
-		response.BanInfo = &BanInfo{
-			IsBanned:  p.BanInfo.IsBanned,
-			BanType:   p.BanInfo.BanType,
-			Reason:    p.BanInfo.Reason,
-			BannedBy:  p.BanInfo.BannedBy,
-			BannedAt:  p.BanInfo.BannedAt,
-			ExpiresAt: p.BanInfo.ExpiresAt,
-		}
-	}
-
-	// 记录GM操作日志
-	gmUser, _ := auth.GetCurrentUser(c)
-	h.logger.Info("GM viewed player detail", "gm_user", gmUser.Username, "player_id", playerID)
-
-	c.JSON(200, gin.H{"data": response, "success": true})
+	c.JSON(200, result)
 }
 
-// UpdatePlayer GM更新玩家信息
+// ListPlayers 获取玩家列表
+func (h *PlayerManagementHandler) ListPlayers(c *gin.Context) {
+	// 解析查询参数
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "20")
+	search := c.Query("search")
+
+	// 创建查询
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	query := &playerQuery.ListPlayersQuery{
+		Page:     pageInt,
+		PageSize: limitInt,
+		Name:     search,
+	}
+
+	// 执行查询
+	result, err := h.queryBus.Execute(c.Request.Context(), query)
+	if err != nil {
+		h.logger.Error("Failed to list players", err, logging.Fields{})
+		c.JSON(500, gin.H{"error": "Failed to list players"})
+		return
+	}
+
+	c.JSON(200, result)
+}
+
+// UpdatePlayer 更新玩家信息
 func (h *PlayerManagementHandler) UpdatePlayer(c *gin.Context) {
 	playerID := c.Param("id")
 	if playerID == "" {
-		c.JSON(400, gin.H{"error": "Player ID is required", "success": false})
+		c.JSON(400, gin.H{"error": "Player ID is required"})
 		return
 	}
 
-	var req PlayerUpdateRequest
+	var req UpdatePlayerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid update player request", "error", err)
-		c.JSON(400, gin.H{"error": "Invalid request format", "success": false})
+		h.logger.Warn("Invalid update player request", logging.Fields{
+			"error": err,
+		})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	// ctx := context.Background()
+	// 创建命令
+	cmd := &playerCmd.UpdatePlayerCommand{
+		PlayerID: playerID,
+		Name:     req.Name,
+	}
 
-	// 获取GM用户信息
-	gmUser, _ := auth.GetCurrentUser(c)
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
+	if err != nil {
+		h.logger.Error("Failed to update player", err, logging.Fields{
+			"player_id": playerID,
+		})
+		c.JSON(500, gin.H{"error": "Failed to update player"})
+		return
+	}
 
-	// 执行更新命令
-	// TODO: 修复GMUpdatePlayerCommand类型
-	// cmd := &playerCmd.GMUpdatePlayerCommand{
-	// 	PlayerID: playerID,
-	// 	GMUserID: gmUser.PlayerID,
-	// 	GMUser:   gmUser.Username,
-	// 	Reason:   req.Reason,
-	// 	Updates:  map[string]interface{}{},
-	// }
+	h.logger.Info("Player updated successfully", logging.Fields{
+		"player_id": playerID,
+	})
+	c.JSON(200, result)
+}
 
-	// 添加需要更新的字段
-	// TODO: 修复cmd变量
-	// if req.Name != nil {
-	// 	cmd.Updates["name"] = *req.Name
-	// }
-	// if req.Level != nil {
-	// 	cmd.Updates["level"] = *req.Level
-	// }
-	// if req.Exp != nil {
-	// 	cmd.Updates["exp"] = *req.Exp
-	// }
-	// if req.Status != nil {
-	// 	cmd.Updates["status"] = *req.Status
-	// }
-	// if req.HP != nil {
-	// 	cmd.Updates["hp"] = *req.HP
-	// }
-	// if req.MaxHP != nil {
-	// 	cmd.Updates["max_hp"] = *req.MaxHP
-	// }
-	// if req.MP != nil {
-	// 	cmd.Updates["mp"] = *req.MP
-	// }
-	// if req.MaxMP != nil {
-	// 	cmd.Updates["max_mp"] = *req.MaxMP
-	// }
-	// if req.Attack != nil {
-	// 	cmd.Updates["attack"] = *req.Attack
-	// }
-	// if req.Defense != nil {
-	// 	cmd.Updates["defense"] = *req.Defense
-	// }
-	// if req.Speed != nil {
-	// 	cmd.Updates["speed"] = *req.Speed
-	// }
+// DeletePlayer 删除玩家
+func (h *PlayerManagementHandler) DeletePlayer(c *gin.Context) {
+	playerID := c.Param("id")
+	if playerID == "" {
+		c.JSON(400, gin.H{"error": "Player ID is required"})
+		return
+	}
 
-	// TODO: 修复ExecuteTyped方法调用
-	// result, err := handlers.ExecuteTyped[*playerCmd.GMUpdatePlayerCommand, *playerCmd.GMUpdatePlayerResult](ctx, h.commandBus, cmd)
-	result := &playerCmd.GMUpdatePlayerResult{}
-	// TODO: 修复err变量
-	// if err != nil {
-	// 	h.logger.Error("Failed to update player", "error", err, "player_id", playerID, "gm_user", gmUser.Username)
-	// 	c.JSON(500, gin.H{"error": "Failed to update player", "success": false})
-	// 	return
-	// }
+	// 创建命令
+	cmd := &playerCmd.DeletePlayerCommand{
+		PlayerID: playerID,
+	}
 
-	// 记录GM操作日志
-	// TODO: 修复cmd变量
-	// h.logger.Info("GM updated player", "gm_user", gmUser.Username, "player_id", playerID, "updates", cmd.Updates, "reason", req.Reason)
-	h.logger.Info("GM updated player", "gm_user", gmUser.Username, "player_id", playerID, "reason", req.Reason)
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
+	if err != nil {
+		h.logger.Error("Failed to delete player", err, logging.Fields{
+			"player_id": playerID,
+		})
+		c.JSON(500, gin.H{"error": "Failed to delete player"})
+		return
+	}
 
-	c.JSON(200, gin.H{"data": result, "success": true, "message": "Player updated successfully"})
+	h.logger.Info("Player deleted successfully", logging.Fields{
+		"player_id": playerID,
+	})
+	c.JSON(200, result)
 }
 
 // BanPlayer 封禁玩家
 func (h *PlayerManagementHandler) BanPlayer(c *gin.Context) {
-	var req PlayerBanRequest
+	playerID := c.Param("id")
+	if playerID == "" {
+		c.JSON(400, gin.H{"error": "Player ID is required"})
+		return
+	}
+
+	var req BanPlayerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid ban player request", "error", err)
-		c.JSON(400, gin.H{"error": "Invalid request format", "success": false})
+		h.logger.Warn("Invalid ban player request", logging.Fields{"error": err})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	ctx := context.Background()
-
-	// 获取GM用户信息
-	gmUser, _ := auth.GetCurrentUser(c)
-
-	// 计算封禁过期时间
-	var expiresAt *time.Time
-	if req.Duration > 0 {
-		expiry := time.Now().Add(time.Duration(req.Duration) * time.Hour)
-		expiresAt = &expiry
-	} else if !req.ExpiresAt.IsZero() {
-		expiresAt = &req.ExpiresAt
+	// 创建命令
+	banType := "temporary"
+	if req.Permanent {
+		banType = "permanent"
 	}
-
-	// 执行封禁命令
 	cmd := &playerCmd.BanPlayerCommand{
-		PlayerID:     req.PlayerID,
-		BannedBy:     gmUser.PlayerID,
-		BannedByName: gmUser.Username,
-		BanType:      req.BanType,
+		PlayerID:     playerID,
+		BannedBy:     "GM",
+		BannedByName: "GameMaster",
 		Reason:       req.Reason,
-		BanUntil:     *expiresAt,
+		BanType:      banType,
+		BanUntil:     time.Now().Add(req.Duration),
 	}
 
-	result, err := handlers.ExecuteTyped[*playerCmd.BanPlayerCommand, *playerCmd.BanPlayerResult](ctx, h.commandBus, cmd)
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
 	if err != nil {
-		h.logger.Error("Failed to ban player", "error", err, "player_id", req.PlayerID, "gm_user", gmUser.Username)
-		c.JSON(500, gin.H{"error": "Failed to ban player", "success": false})
+		h.logger.Error("Failed to ban player", err, logging.Fields{"player_id": playerID})
+		c.JSON(500, gin.H{"error": "Failed to ban player"})
 		return
 	}
 
-	// 记录GM操作日志
-	h.logger.Info("GM banned player", "gm_user", gmUser.Username, "player_id", req.PlayerID, "ban_type", req.BanType, "reason", req.Reason, "expires_at", expiresAt)
-
-	c.JSON(200, gin.H{"data": result, "success": true, "message": "Player banned successfully"})
+	h.logger.Info("Player banned successfully", logging.Fields{"player_id": playerID, "reason": req.Reason})
+	c.JSON(200, result)
 }
 
 // UnbanPlayer 解封玩家
 func (h *PlayerManagementHandler) UnbanPlayer(c *gin.Context) {
-	var req PlayerUnbanRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid unban player request", "error", err)
-		c.JSON(400, gin.H{"error": "Invalid request format", "success": false})
+	playerID := c.Param("id")
+	if playerID == "" {
+		c.JSON(400, gin.H{"error": "Player ID is required"})
 		return
 	}
 
-	ctx := context.Background()
-
-	// 获取GM用户信息
-	gmUser, _ := auth.GetCurrentUser(c)
-
-	// 执行解封命令
+	// 创建命令
 	cmd := &playerCmd.UnbanPlayerCommand{
-		PlayerID:   req.PlayerID,
-		UnbannedBy: gmUser.PlayerID,
-		Reason:     req.Reason,
+		PlayerID: playerID,
 	}
 
-	result, err := handlers.ExecuteTyped[*playerCmd.UnbanPlayerCommand, *playerCmd.UnbanPlayerResult](ctx, h.commandBus, cmd)
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
 	if err != nil {
-		h.logger.Error("Failed to unban player", "error", err, "player_id", req.PlayerID, "gm_user", gmUser.Username)
-		c.JSON(500, gin.H{"error": "Failed to unban player", "success": false})
+		h.logger.Error("Failed to unban player", err, logging.Fields{"player_id": playerID})
+		c.JSON(500, gin.H{"error": "Failed to unban player"})
 		return
 	}
 
-	// 记录GM操作日志
-	h.logger.Info("GM unbanned player", "gm_user", gmUser.Username, "player_id", req.PlayerID, "reason", req.Reason)
+	h.logger.Info("Player unbanned successfully", logging.Fields{"player_id": playerID})
+	c.JSON(200, result)
+}
 
-	c.JSON(200, gin.H{"data": result, "success": true, "message": "Player unbanned successfully"})
+// MovePlayer 移动玩家
+func (h *PlayerManagementHandler) MovePlayer(c *gin.Context) {
+	playerID := c.Param("id")
+	if playerID == "" {
+		c.JSON(400, gin.H{"error": "Player ID is required"})
+		return
+	}
+
+	var req MovePlayerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Invalid move player request", logging.Fields{"error": err})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// 创建命令
+	cmd := &playerCmd.MovePlayerCommand{
+		PlayerID: playerID,
+		Position: playerCmd.Position{X: req.X, Y: req.Y, Z: req.Z},
+	}
+
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
+	if err != nil {
+		h.logger.Error("Failed to move player", err, logging.Fields{"player_id": playerID})
+		c.JSON(500, gin.H{"error": "Failed to move player"})
+		return
+	}
+
+	h.logger.Info("Player moved successfully", logging.Fields{
+		"player_id": playerID,
+		"position":  req,
+	})
+	c.JSON(200, result)
+}
+
+// LevelUpPlayer 升级玩家
+func (h *PlayerManagementHandler) LevelUpPlayer(c *gin.Context) {
+	playerID := c.Param("id")
+	if playerID == "" {
+		c.JSON(400, gin.H{"error": "Player ID is required"})
+		return
+	}
+
+	var req LevelUpPlayerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Invalid level up player request", logging.Fields{
+			"error": err,
+		})
+		c.JSON(400, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	// 创建命令
+	cmd := &playerCmd.LevelUpPlayerCommand{
+		PlayerID: playerID,
+		ExpGain:  int64(req.Levels * 1000), // 假设每级需要1000经验
+	}
+
+	// 执行命令
+	result, err := h.commandBus.Execute(c.Request.Context(), cmd)
+	if err != nil {
+		h.logger.Error("Failed to level up player", err, logging.Fields{
+			"player_id": playerID,
+		})
+		c.JSON(500, gin.H{"error": "Failed to level up player"})
+		return
+	}
+
+	h.logger.Info("Player leveled up successfully", logging.Fields{
+		"player_id": playerID,
+		"levels":    req.Levels,
+	})
+	c.JSON(200, result)
+}
+
+// 请求和响应结构体
+
+// CreatePlayerRequest 创建玩家请求
+type CreatePlayerRequest struct {
+	Name   string `json:"name" binding:"required"`
+	Avatar string `json:"avatar,omitempty"`
+	Gender int    `json:"gender,omitempty"`
+}
+
+// UpdatePlayerRequest 更新玩家请求
+type UpdatePlayerRequest struct {
+	Name  string `json:"name,omitempty"`
+	Level int    `json:"level,omitempty"`
+	Exp   int64  `json:"exp,omitempty"`
+}
+
+// BanPlayerRequest 封禁玩家请求
+type BanPlayerRequest struct {
+	Reason    string        `json:"reason" binding:"required"`
+	Duration  time.Duration `json:"duration,omitempty"`
+	Permanent bool          `json:"permanent,omitempty"`
+}
+
+// MovePlayerRequest 移动玩家请求
+type MovePlayerRequest struct {
+	X float64 `json:"x" binding:"required"`
+	Y float64 `json:"y" binding:"required"`
+	Z float64 `json:"z" binding:"required"`
+}
+
+// LevelUpPlayerRequest 升级玩家请求
+type LevelUpPlayerRequest struct {
+	Levels int `json:"levels" binding:"required,min=1"`
 }

@@ -143,10 +143,11 @@ func NewAuthService(config *AuthServiceConfig, logger logging.Logger) *AuthServi
 
 // Start 启动认证服务
 func (s *AuthService) Start() error {
-	s.logger.Info("启动认证服务",
-		"service", s.config.Service.Name,
-		"version", s.config.Service.Version,
-		"node_id", s.config.Service.NodeID)
+	s.logger.Info("Starting auth service", logging.Fields{
+		"service": s.config.Service.Name,
+		"version": s.config.Service.Version,
+		"node_id": s.config.Service.NodeID,
+	})
 
 	// 初始化数据库连接
 	if err := s.initializeDatabase(); err != nil {
@@ -161,12 +162,13 @@ func (s *AuthService) Start() error {
 	// 启动HTTP服务器
 	go func() {
 		if err := s.server.Start(); err != nil {
-			s.logger.Error("HTTP服务器启动失败", "error", err)
+			s.logger.Error("HTTP server start failed", err)
 		}
 	}()
 
-	s.logger.Info("认证服务启动成功",
-		"http_addr", fmt.Sprintf("%s:%d", s.config.Server.HTTP.Host, s.config.Server.HTTP.Port))
+	s.logger.Info("Auth service started successfully", logging.Fields{
+		"http_addr": fmt.Sprintf("%s:%d", s.config.Server.HTTP.Host, s.config.Server.HTTP.Port),
+	})
 
 	return nil
 }
@@ -181,7 +183,7 @@ func (s *AuthService) Stop() error {
 	// 停止HTTP服务器
 	if s.server != nil {
 		if err := s.server.Stop(); err != nil {
-			s.logger.Error("停止HTTP服务器失败", "error", err)
+			s.logger.Error("Failed to stop HTTP server", err)
 			return err
 		}
 	}
@@ -236,10 +238,7 @@ func loadConfig() (*AuthServiceConfig, error) {
 // main 主函数
 func main() {
 	// 创建日志器
-	logger, err := logging.NewSimpleLogger(&logging.Config{})
-	if err != nil {
-		panic(fmt.Sprintf("创建日志器失败: %v", err))
-	}
+	logger := logging.NewBaseLogger(logging.InfoLevel)
 
 	logger.Info("启动认证服务")
 
@@ -263,7 +262,9 @@ func main() {
 
 	select {
 	case sig := <-sigChan:
-		logger.Info("收到关闭信号", "signal", sig.String())
+		logger.Info("收到关闭信号", logging.Fields{
+			"signal": sig.String(),
+		})
 	case <-service.ctx.Done():
 		logger.Info("上下文已取消")
 	}
@@ -271,7 +272,7 @@ func main() {
 	// 优雅关闭
 	logger.Info("正在关闭认证服务...")
 	if err := service.Stop(); err != nil {
-		logger.Error("关闭认证服务失败", "error", err)
+		logger.Error("关闭认证服务失败", err, logging.Fields{})
 		os.Exit(1)
 	}
 

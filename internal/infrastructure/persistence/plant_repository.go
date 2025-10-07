@@ -1,4 +1,4 @@
-package persistence
+﻿package persistence
 
 import (
 	"context"
@@ -53,10 +53,9 @@ func (r *PlantRepository) CreatePlant(ctx context.Context, plant *PlantRecord) e
 
 	_, err := r.collection.InsertOne(ctx, plant)
 	if err != nil {
-		r.logger.Error("创建植物失败", map[string]interface{}{
+		r.logger.Error("创建植物失败", err, logging.Fields{
 			"player_id":  plant.PlayerID,
 			"plant_type": plant.PlantType,
-			"error":      err.Error(),
 		})
 		return fmt.Errorf("创建植物失败: %w", err)
 	}
@@ -83,9 +82,8 @@ func (r *PlantRepository) GetPlant(ctx context.Context, id string) (*PlantRecord
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("植物不存在")
 		}
-		r.logger.Error("获取植物失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("获取植物失败", err, logging.Fields{
+			"id": id,
 		})
 		return nil, fmt.Errorf("获取植物失败: %w", err)
 	}
@@ -108,9 +106,8 @@ func (r *PlantRepository) UpdatePlant(ctx context.Context, id string, updates ma
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("更新植物失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("更新植物失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("更新植物失败: %w", err)
 	}
@@ -135,9 +132,8 @@ func (r *PlantRepository) DeletePlant(ctx context.Context, id string) error {
 
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.Error("删除植物失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("删除植物失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("删除植物失败: %w", err)
 	}
@@ -163,9 +159,8 @@ func (r *PlantRepository) GetPlayerPlants(ctx context.Context, playerID string, 
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("获取玩家植物失败", map[string]interface{}{
+		r.logger.Error("获取玩家植物失败", err, logging.Fields{
 			"player_id": playerID,
-			"error":     err.Error(),
 		})
 		return nil, fmt.Errorf("获取玩家植物失败: %w", err)
 	}
@@ -194,9 +189,8 @@ func (r *PlantRepository) GetPlantsByType(ctx context.Context, plantType string,
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("根据类型获取植物失败", map[string]interface{}{
+		r.logger.Error("根据类型获取植物失败", err, logging.Fields{
 			"plant_type": plantType,
-			"error":      err.Error(),
 		})
 		return nil, fmt.Errorf("根据类型获取植物失败: %w", err)
 	}
@@ -237,10 +231,9 @@ func (r *PlantRepository) WaterPlant(ctx context.Context, id string, waterAmount
 		updates,
 	)
 	if err != nil {
-		r.logger.Error("植物浇水失败", map[string]interface{}{
+		r.logger.Error("植物浇水失败", err, logging.Fields{
 			"id":           id,
 			"water_amount": waterAmount,
-			"error":        err.Error(),
 		})
 		return fmt.Errorf("植物浇水失败: %w", err)
 	}
@@ -279,10 +272,9 @@ func (r *PlantRepository) FertilizePlant(ctx context.Context, id string, fertili
 		updates,
 	)
 	if err != nil {
-		r.logger.Error("植物施肥失败", map[string]interface{}{
+		r.logger.Error("植物施肥失败", err, logging.Fields{
 			"id":                id,
 			"fertilizer_amount": fertilizerAmount,
-			"error":             err.Error(),
 		})
 		return fmt.Errorf("植物施肥失败: %w", err)
 	}
@@ -319,9 +311,8 @@ func (r *PlantRepository) HarvestPlant(ctx context.Context, id string) (*PlantRe
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("收获植物失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("收获植物失败", err, logging.Fields{
+			"id": id,
 		})
 		return nil, fmt.Errorf("收获植物失败: %w", err)
 	}

@@ -1,21 +1,21 @@
 package battle
 
-import "errors"
+import "greatestworks/internal/errors"
 
-// 战斗领域错误定义
+// 战斗领域错误定义 - 使用统一的错误处理机制
 var (
-	ErrBattleNotFound           = errors.New("battle not found")
-	ErrBattleAlreadyStarted     = errors.New("battle already started")
-	ErrBattleNotInProgress      = errors.New("battle not in progress")
-	ErrPlayerNotInBattle        = errors.New("player not in battle")
-	ErrPlayerAlreadyInBattle    = errors.New("player already in battle")
-	ErrInsufficientParticipants = errors.New("insufficient participants")
-	ErrPlayerDead               = errors.New("player is dead")
-	ErrInvalidAction            = errors.New("invalid action")
-	ErrActionOnCooldown         = errors.New("action on cooldown")
-	ErrInsufficientMana         = errors.New("insufficient mana")
-	ErrInvalidTarget            = errors.New("invalid target")
-	ErrBattleFinished           = errors.New("battle is finished")
-	ErrBattleAlreadyFinished    = errors.New("battle already finished")
-	ErrBattleNotFinished        = errors.New("battle not finished")
+	ErrBattleNotFound           = errors.ErrBattleNotFound
+	ErrBattleAlreadyStarted     = errors.ErrBattleAlreadyStarted
+	ErrBattleNotInProgress      = errors.ErrBattleNotInProgress
+	ErrPlayerNotInBattle        = errors.ErrPlayerNotInBattle
+	ErrPlayerAlreadyInBattle    = errors.ErrPlayerAlreadyInBattle
+	ErrInsufficientParticipants = errors.ErrInsufficientParticipants
+	ErrInsufficientMana         = errors.ErrInsufficientMana
+	ErrInvalidTarget            = errors.ErrInvalidTarget
+	ErrBattleFinished           = errors.ErrBattleFinished
+	ErrPlayerDead               = errors.NewDomainError("PLAYER_DEAD", "玩家已死亡")
+	ErrInvalidAction            = errors.NewDomainError("INVALID_ACTION", "无效的行动")
+	ErrActionOnCooldown         = errors.NewDomainError("ACTION_ON_COOLDOWN", "行动冷却中")
+	ErrBattleAlreadyFinished    = errors.NewDomainError("BATTLE_ALREADY_FINISHED", "战斗已结束")
+	ErrBattleNotFinished        = errors.NewDomainError("BATTLE_NOT_FINISHED", "战斗未结束")
 )

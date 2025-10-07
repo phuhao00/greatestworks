@@ -1,4 +1,4 @@
-package persistence
+﻿package persistence
 
 import (
 	"context"
@@ -59,10 +59,9 @@ func (r *NPCRepository) CreateNPC(ctx context.Context, npc *NPCRecord) error {
 
 	_, err := r.collection.InsertOne(ctx, npc)
 	if err != nil {
-		r.logger.Error("创建NPC失败", map[string]interface{}{
-			"name":  npc.Name,
-			"type":  npc.Type,
-			"error": err.Error(),
+		r.logger.Error("创建NPC失败", err, logging.Fields{
+			"name": npc.Name,
+			"type": npc.Type,
 		})
 		return fmt.Errorf("创建NPC失败: %w", err)
 	}
@@ -89,9 +88,8 @@ func (r *NPCRepository) GetNPC(ctx context.Context, id string) (*NPCRecord, erro
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("NPC不存在")
 		}
-		r.logger.Error("获取NPC失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("获取NPC失败", err, logging.Fields{
+			"id": id,
 		})
 		return nil, fmt.Errorf("获取NPC失败: %w", err)
 	}
@@ -114,9 +112,8 @@ func (r *NPCRepository) UpdateNPC(ctx context.Context, id string, updates map[st
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("更新NPC失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("更新NPC失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("更新NPC失败: %w", err)
 	}
@@ -141,9 +138,8 @@ func (r *NPCRepository) DeleteNPC(ctx context.Context, id string) error {
 
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.Error("删除NPC失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("删除NPC失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("删除NPC失败: %w", err)
 	}
@@ -169,9 +165,8 @@ func (r *NPCRepository) GetNPCsByType(ctx context.Context, npcType string, limit
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("根据类型获取NPC失败", map[string]interface{}{
-			"type":  npcType,
-			"error": err.Error(),
+		r.logger.Error("根据类型获取NPC失败", err, logging.Fields{
+			"type": npcType,
 		})
 		return nil, fmt.Errorf("根据类型获取NPC失败: %w", err)
 	}
@@ -209,12 +204,11 @@ func (r *NPCRepository) GetNPCsByPosition(ctx context.Context, x, y, z float64, 
 
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
-		r.logger.Error("根据位置获取NPC失败", map[string]interface{}{
+		r.logger.Error("根据位置获取NPC失败", err, logging.Fields{
 			"x":      x,
 			"y":      y,
 			"z":      z,
 			"radius": radius,
-			"error":  err.Error(),
 		})
 		return nil, fmt.Errorf("根据位置获取NPC失败: %w", err)
 	}
@@ -255,10 +249,9 @@ func (r *NPCRepository) UpdateNPCPosition(ctx context.Context, id string, positi
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("更新NPC位置失败", map[string]interface{}{
+		r.logger.Error("更新NPC位置失败", err, logging.Fields{
 			"id":       id,
 			"position": position,
-			"error":    err.Error(),
 		})
 		return fmt.Errorf("更新NPC位置失败: %w", err)
 	}

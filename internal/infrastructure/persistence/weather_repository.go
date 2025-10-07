@@ -1,4 +1,4 @@
-package persistence
+﻿package persistence
 
 import (
 	"context"
@@ -52,10 +52,9 @@ func (r *WeatherRepository) CreateWeather(ctx context.Context, weather *WeatherR
 
 	_, err := r.collection.InsertOne(ctx, weather)
 	if err != nil {
-		r.logger.Error("创建天气记录失败", map[string]interface{}{
+		r.logger.Error("创建天气记录失败", err, logging.Fields{
 			"region":       weather.Region,
 			"weather_type": weather.WeatherType,
-			"error":        err.Error(),
 		})
 		return fmt.Errorf("创建天气记录失败: %w", err)
 	}
@@ -82,9 +81,8 @@ func (r *WeatherRepository) GetWeather(ctx context.Context, id string) (*Weather
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("天气记录不存在")
 		}
-		r.logger.Error("获取天气记录失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("获取天气记录失败", err, logging.Fields{
+			"id": id,
 		})
 		return nil, fmt.Errorf("获取天气记录失败: %w", err)
 	}
@@ -107,9 +105,8 @@ func (r *WeatherRepository) UpdateWeather(ctx context.Context, id string, update
 		bson.M{"$set": updates},
 	)
 	if err != nil {
-		r.logger.Error("更新天气记录失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("更新天气记录失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("更新天气记录失败: %w", err)
 	}
@@ -134,9 +131,8 @@ func (r *WeatherRepository) DeleteWeather(ctx context.Context, id string) error 
 
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.Error("删除天气记录失败", map[string]interface{}{
-			"id":    id,
-			"error": err.Error(),
+		r.logger.Error("删除天气记录失败", err, logging.Fields{
+			"id": id,
 		})
 		return fmt.Errorf("删除天气记录失败: %w", err)
 	}
@@ -169,9 +165,8 @@ func (r *WeatherRepository) GetCurrentWeather(ctx context.Context, region string
 		if err == mongo.ErrNoDocuments {
 			return nil, fmt.Errorf("当前没有天气记录")
 		}
-		r.logger.Error("获取当前天气失败", map[string]interface{}{
+		r.logger.Error("获取当前天气失败", err, logging.Fields{
 			"region": region,
-			"error":  err.Error(),
 		})
 		return nil, fmt.Errorf("获取当前天气失败: %w", err)
 	}
@@ -193,11 +188,10 @@ func (r *WeatherRepository) GetWeatherHistory(ctx context.Context, region string
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("获取天气历史失败", map[string]interface{}{
+		r.logger.Error("获取天气历史失败", err, logging.Fields{
 			"region":     region,
 			"start_time": startTime,
 			"end_time":   endTime,
-			"error":      err.Error(),
 		})
 		return nil, fmt.Errorf("获取天气历史失败: %w", err)
 	}
@@ -226,9 +220,8 @@ func (r *WeatherRepository) GetWeatherByType(ctx context.Context, weatherType st
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("根据天气类型获取记录失败", map[string]interface{}{
+		r.logger.Error("根据天气类型获取记录失败", err, logging.Fields{
 			"weather_type": weatherType,
-			"error":        err.Error(),
 		})
 		return nil, fmt.Errorf("根据天气类型获取记录失败: %w", err)
 	}
@@ -269,11 +262,10 @@ func (r *WeatherRepository) GetWeatherStats(ctx context.Context, region string, 
 
 	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		r.logger.Error("获取天气统计失败", map[string]interface{}{
+		r.logger.Error("获取天气统计失败", err, logging.Fields{
 			"region":     region,
 			"start_time": startTime,
 			"end_time":   endTime,
-			"error":      err.Error(),
 		})
 		return nil, fmt.Errorf("获取天气统计失败: %w", err)
 	}
@@ -315,14 +307,12 @@ func (r *WeatherRepository) GetWeatherForecast(ctx context.Context, region strin
 
 	opts := options.Find().
 		SetSort(bson.D{{"start_time", 1}}).
-		SetLimit(int64(days * 24)) // 假设每小时一条记录
-
+		SetLimit(int64(days * 24)) // 假设每小时一条记�?
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("获取天气预报失败", map[string]interface{}{
+		r.logger.Error("获取天气预报失败", err, logging.Fields{
 			"region": region,
 			"days":   days,
-			"error":  err.Error(),
 		})
 		return nil, fmt.Errorf("获取天气预报失败: %w", err)
 	}

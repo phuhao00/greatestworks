@@ -82,22 +82,20 @@ func (m *CacheManager) Set(ctx context.Context, key string, value interface{}, t
 	err := m.primary.Set(ctx, key, value, ttl)
 	if err != nil {
 		m.stats.ErrorCount++
-		m.logger.Error("主缓存设置失败", map[string]interface{}{
-			"key":   key,
-			"error": err.Error(),
+		m.logger.Error("Primary cache set failed", err, logging.Fields{
+			"key": key,
 		})
 
 		// 如果启用备用缓存，尝试设置备用缓存
 		if m.config.UseFallback && m.secondary != nil {
 			if err := m.secondary.Set(ctx, key, value, ttl); err != nil {
-				m.logger.Error("备用缓存设置失败", map[string]interface{}{
-					"key":   key,
-					"error": err.Error(),
+				m.logger.Error("Secondary cache set failed", err, logging.Fields{
+					"key": key,
 				})
 				return fmt.Errorf("主缓存和备用缓存都设置失败: %w", err)
 			}
 			m.stats.FallbackCount++
-			m.logger.Info("使用备用缓存设置", map[string]interface{}{
+			m.logger.Info("Using secondary cache", logging.Fields{
 				"key": key,
 			})
 		} else {
@@ -110,9 +108,8 @@ func (m *CacheManager) Set(ctx context.Context, key string, value interface{}, t
 		if m.config.SyncToSecondary && m.secondary != nil {
 			go func() {
 				if err := m.secondary.Set(context.Background(), key, value, ttl); err != nil {
-					m.logger.Error("同步到备用缓存失败", map[string]interface{}{
-						"key":   key,
-						"error": err.Error(),
+					m.logger.Error("Failed to sync to secondary cache", err, logging.Fields{
+						"key": key,
 					})
 				} else {
 					m.stats.SyncCount++
@@ -135,22 +132,20 @@ func (m *CacheManager) Get(ctx context.Context, key string, dest interface{}) er
 	err := m.primary.Get(ctx, key, dest)
 	if err != nil {
 		m.stats.ErrorCount++
-		m.logger.Error("主缓存获取失败", map[string]interface{}{
-			"key":   key,
-			"error": err.Error(),
+		m.logger.Error("Primary cache get failed", err, logging.Fields{
+			"key": key,
 		})
 
 		// 如果启用备用缓存，尝试从备用缓存获取
 		if m.config.UseFallback && m.secondary != nil {
 			if err := m.secondary.Get(ctx, key, dest); err != nil {
-				m.logger.Error("备用缓存获取失败", map[string]interface{}{
-					"key":   key,
-					"error": err.Error(),
+				m.logger.Error("Secondary cache get failed", err, logging.Fields{
+					"key": key,
 				})
 				return fmt.Errorf("主缓存和备用缓存都获取失败: %w", err)
 			}
 			m.stats.FallbackCount++
-			m.logger.Info("从备用缓存获取", map[string]interface{}{
+			m.logger.Info("Got from secondary cache", logging.Fields{
 				"key": key,
 			})
 		} else {
@@ -174,18 +169,16 @@ func (m *CacheManager) Delete(ctx context.Context, key string) error {
 	err := m.primary.Delete(ctx, key)
 	if err != nil {
 		m.stats.ErrorCount++
-		m.logger.Error("主缓存删除失败", map[string]interface{}{
-			"key":   key,
-			"error": err.Error(),
+		m.logger.Error("Primary cache delete failed", err, logging.Fields{
+			"key": key,
 		})
 	}
 
 	// 删除备用缓存
 	if m.secondary != nil {
 		if err := m.secondary.Delete(ctx, key); err != nil {
-			m.logger.Error("备用缓存删除失败", map[string]interface{}{
-				"key":   key,
-				"error": err.Error(),
+			m.logger.Error("Secondary cache delete failed", err, logging.Fields{
+				"key": key,
 			})
 		}
 	}
@@ -206,18 +199,16 @@ func (m *CacheManager) Exists(ctx context.Context, key string) (bool, error) {
 	// 检查主缓存
 	exists, err := m.primary.Exists(ctx, key)
 	if err != nil {
-		m.logger.Error("主缓存检查存在性失败", map[string]interface{}{
-			"key":   key,
-			"error": err.Error(),
+		m.logger.Error("Primary cache exists check failed", err, logging.Fields{
+			"key": key,
 		})
 
 		// 如果启用备用缓存，检查备用缓存
 		if m.config.UseFallback && m.secondary != nil {
 			exists, err = m.secondary.Exists(ctx, key)
 			if err != nil {
-				m.logger.Error("备用缓存检查存在性失败", map[string]interface{}{
-					"key":   key,
-					"error": err.Error(),
+				m.logger.Error("Secondary cache exists check failed", err, logging.Fields{
+					"key": key,
 				})
 				return false, err
 			}
@@ -237,17 +228,13 @@ func (m *CacheManager) Clear(ctx context.Context) error {
 	// 清空主缓存
 	err := m.primary.Clear(ctx)
 	if err != nil {
-		m.logger.Error("主缓存清空失败", map[string]interface{}{
-			"error": err.Error(),
-		})
+		m.logger.Error("Primary cache clear failed", err)
 	}
 
 	// 清空备用缓存
 	if m.secondary != nil {
 		if err := m.secondary.Clear(ctx); err != nil {
-			m.logger.Error("备用缓存清空失败", map[string]interface{}{
-				"error": err.Error(),
-			})
+			m.logger.Error("Secondary cache clear failed", err)
 		}
 	}
 

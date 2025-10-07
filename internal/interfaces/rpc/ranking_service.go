@@ -69,7 +69,10 @@ type RankEntry struct {
 
 // GetRanking 获取排行榜
 func (s *RankingRPCService) GetRanking(req GetRankingRequest, resp *GetRankingResponse) error {
-	s.logger.Info("RPC调用: 获取排行榜", "ranking_id", req.RankingID, "page", req.Page)
+	s.logger.Info("RPC call: Get ranking", logging.Fields{
+		"ranking_id": req.RankingID,
+		"page":       req.Page,
+	})
 
 	// TODO: 实现获取排行榜逻辑
 	// 1. 验证请求参数
@@ -132,7 +135,11 @@ type UpdatePlayerScoreResponse struct {
 
 // UpdatePlayerScore 更新玩家分数
 func (s *RankingRPCService) UpdatePlayerScore(req UpdatePlayerScoreRequest, resp *UpdatePlayerScoreResponse) error {
-	s.logger.Info("RPC调用: 更新玩家分数", "ranking_id", req.RankingID, "player_id", req.PlayerID, "score", req.Score)
+	s.logger.Info("RPC call: Update player score", logging.Fields{
+		"ranking_id": req.RankingID,
+		"player_id":  req.PlayerID,
+		"score":      req.Score,
+	})
 
 	// TODO: 实现更新玩家分数逻辑
 	// 1. 验证请求参数
@@ -163,7 +170,10 @@ type GetPlayerRankResponse struct {
 
 // GetPlayerRank 获取玩家排名
 func (s *RankingRPCService) GetPlayerRank(req GetPlayerRankRequest, resp *GetPlayerRankResponse) error {
-	s.logger.Info("RPC调用: 获取玩家排名", "ranking_id", req.RankingID, "player_id", req.PlayerID)
+	s.logger.Info("RPC call: Get player rank", logging.Fields{
+		"ranking_id": req.RankingID,
+		"player_id":  req.PlayerID,
+	})
 
 	// TODO: 实现获取玩家排名逻辑
 	// 1. 验证请求参数
@@ -201,7 +211,10 @@ type GetTopPlayersResponse struct {
 
 // GetTopPlayers 获取顶级玩家
 func (s *RankingRPCService) GetTopPlayers(req GetTopPlayersRequest, resp *GetTopPlayersResponse) error {
-	s.logger.Info("RPC调用: 获取顶级玩家", "ranking_id", req.RankingID, "limit", req.Limit)
+	s.logger.Info("RPC call: Get top players", logging.Fields{
+		"ranking_id": req.RankingID,
+		"limit":      req.Limit,
+	})
 
 	// TODO: 实现获取顶级玩家逻辑
 	// 1. 验证请求参数
@@ -250,7 +263,10 @@ type CreateRankingResponse struct {
 
 // CreateRanking 创建排行榜
 func (s *RankingRPCService) CreateRanking(req CreateRankingRequest, resp *CreateRankingResponse) error {
-	s.logger.Info("RPC调用: 创建排行榜", "name", req.Name, "type", req.Type)
+	s.logger.Info("RPC call: Create ranking", logging.Fields{
+		"name": req.Name,
+		"type": req.Type,
+	})
 
 	// TODO: 实现创建排行榜逻辑
 	// 1. 验证请求参数

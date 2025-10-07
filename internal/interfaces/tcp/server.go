@@ -106,8 +106,7 @@ func (s *TCPServer) Start() error {
 	// 创建监听器
 	listener, err := net.Listen("tcp", s.config.Addr)
 	if err != nil {
-		s.logger.Error("Failed to create listener", map[string]interface{}{
-			"error":   err.Error(),
+		s.logger.Error("Failed to create listener", err, logging.Fields{
 			"address": s.config.Addr,
 		})
 		return fmt.Errorf("failed to create listener: %w", err)
@@ -149,9 +148,7 @@ func (s *TCPServer) Stop() error {
 	// 关闭监听器
 	if s.listener != nil {
 		if err := s.listener.Close(); err != nil {
-			s.logger.Error("Failed to close listener", map[string]interface{}{
-				"error": err.Error(),
-			})
+			s.logger.Error("Failed to close listener", err)
 		}
 	}
 
@@ -189,9 +186,7 @@ func (s *TCPServer) acceptConnections() {
 				case <-s.ctx.Done():
 					return
 				default:
-					s.logger.Error("Failed to accept connection", map[string]interface{}{
-						"error": err.Error(),
-					})
+					s.logger.Error("Failed to accept connection", err)
 					continue
 				}
 			}
@@ -199,7 +194,7 @@ func (s *TCPServer) acceptConnections() {
 			// 检查连接数限制
 			connectionCount := s.connManager.GetConnectionCount()
 			if connectionCount >= s.config.MaxConnections {
-				s.logger.Warn("Connection limit reached, rejecting new connection", map[string]interface{}{
+				s.logger.Warn("Connection limit reached, rejecting new connection", logging.Fields{
 					"current_count":   connectionCount,
 					"max_connections": s.config.MaxConnections,
 				})
@@ -266,8 +261,7 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 					})
 					continue
 				} else {
-					s.logger.Error("Failed to read message", map[string]interface{}{
-						"error":      err.Error(),
+					s.logger.Error("Failed to read message", err, logging.Fields{
 						"session_id": session.ID,
 					})
 				}
@@ -276,8 +270,7 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 
 			// 验证消息
 			if err := s.router.ValidateMessage(msg); err != nil {
-				s.logger.Error("Invalid message received", map[string]interface{}{
-					"error":      err.Error(),
+				s.logger.Error("Invalid message received", err, logging.Fields{
 					"session_id": session.ID,
 				})
 				continue
@@ -285,8 +278,7 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 
 			// 路由消息
 			if err := s.router.RouteMessage(session, msg); err != nil {
-				s.logger.Error("Failed to route message", map[string]interface{}{
-					"error":        err.Error(),
+				s.logger.Error("Failed to route message", err, logging.Fields{
 					"session_id":   session.ID,
 					"message_type": msg.Header.MessageType,
 				})
