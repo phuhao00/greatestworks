@@ -1,0 +1,209 @@
+# =============================================================================
+# 网关服务配置 - 基于DDD的分布式架构
+# 负责客户端连接管理、协议转换、负载均衡
+# =============================================================================
+
+# 服务基础配置
+service:
+  name: "gateway-service"
+  version: "1.0.0"
+  environment: "development"
+  node_id: "gateway-node-1"
+  
+# TCP服务器配置 (客户端连接)
+server:
+  tcp:
+    host: "0.0.0.0"
+    port: 9090
+    max_connections: 10000
+    read_timeout: "30s"
+    write_timeout: "30s"
+    buffer_size: 4096
+    enable_compression: false
+    heartbeat:
+      enabled: true
+      interval: "30s"
+      timeout: "10s"
+      max_missed: 3
+    connection:
+      keep_alive: true
+      keep_alive_period: "30s"
+      no_delay: true
+
+# 游戏服务连接配置 (RPC)
+game_services:
+  discovery:
+    type: "consul"  # consul, etcd, static
+    consul:
+      address: "localhost:8500"
+      datacenter: "dc1"
+      service_name: "game-service"
+    etcd:
+      endpoints: ["localhost:2379"]
+    static:
+      endpoints:
+        - "localhost:8081"
+        - "localhost:8082"
+        - "localhost:8083"
+        
+  rpc:
+    protocol: "grpc"
+    timeout: "30s"
+    retry_attempts: 3
+    retry_delay: "1s"
+    circuit_breaker:
+      enabled: true
+      failure_threshold: 5
+      timeout: "30s"
+      max_requests: 100
+      
+  load_balancer:
+    strategy: "round_robin"  # round_robin, least_connections, weighted
+    health_check:
+      enabled: true
+      interval: "10s"
+      timeout: "5s"
+      path: "/health"
+
+# 认证服务连接配置 (HTTP)
+auth_service:
+  base_url: "http://localhost:8080"
+  timeout: "10s"
+  retry_attempts: 3
+  retry_delay: "1s"
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    timeout: "30s"
+
+# 数据库配置
+database:
+  redis:
+    addr: "localhost:6379"
+    password: "redis123"
+    db: 1  # 网关专用数据库
+    pool_size: 100
+    min_idle_conns: 10
+    max_retries: 3
+    dial_timeout: "5s"
+    read_timeout: "3s"
+    write_timeout: "3s"
+    pool_timeout: "4s"
+    idle_timeout: "5m"
+
+# 连接管理
+connection:
+  max_connections: 10000
+  connection_timeout: "30s"
+  idle_timeout: "5m"
+  cleanup_interval: "1m"
+  
+  # 会话管理
+  session:
+    timeout: "24h"
+    cleanup_interval: "1h"
+    store_type: "redis"
+    
+  # 消息队列
+  message_queue:
+    enabled: true
+    provider: "redis"
+    topics:
+      player_events: "gateway.player.events"
+      game_events: "gateway.game.events"
+      system_events: "gateway.system.events"
+
+# 协议配置
+protocol:
+  # 客户端协议
+  client:
+    type: "tcp"
+    codec: "binary"
+    compression: false
+    encryption: false
+    
+  # 游戏服务协议
+  game:
+    type: "grpc"
+    codec: "protobuf"
+    compression: true
+    encryption: true
+
+# 路由配置
+routing:
+  # 消息路由规则
+  rules:
+    - pattern: "player.*"
+      target: "game-service"
+      method: "rpc"
+    - pattern: "battle.*"
+      target: "game-service"
+      method: "rpc"
+    - pattern: "auth.*"
+      target: "auth-service"
+      method: "http"
+      
+  # 负载均衡
+  load_balancer:
+    strategy: "round_robin"
+    health_check: true
+    failover: true
+
+# 安全配置
+security:
+  rate_limiting:
+    enabled: true
+    global_limit: 10000  # requests per minute
+    per_connection_limit: 100  # requests per minute
+  ddos_protection:
+    enabled: true
+    threshold: 1000
+    ban_duration: "1h"
+  encryption:
+    enabled: true
+    algorithm: "AES-256-GCM"
+    key: ""
+
+# 日志配置
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  fields:
+    service: "gateway-service"
+    version: "1.0.0"
+
+# 监控配置
+monitoring:
+  health:
+    enabled: true
+    path: "/health"
+  metrics:
+    enabled: true
+    namespace: "gateway_service"
+  profiling:
+    enabled: false
+    path: "/debug/pprof"
+
+# 性能配置
+performance:
+  worker_pool:
+    size: 100
+    queue_size: 1000
+    
+  cache:
+    default_ttl: "1h"
+    max_entries: 10000
+    cleanup_interval: "10m"
+    
+  connection_pool:
+    max_idle: 100
+    max_open: 200
+    max_lifetime: "1h"
+
+# 开发配置
+development:
+  debug: false
+  hot_reload: false
+  mock_data: false
+  test_mode: false

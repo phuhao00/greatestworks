@@ -1,0 +1,235 @@
+# =============================================================================
+# 游戏服务配置 - 基于DDD的分布式架构
+# 负责核心游戏逻辑、领域模型、业务规则
+# =============================================================================
+
+# 服务基础配置
+service:
+  name: "game-service"
+  version: "1.0.0"
+  environment: "development"
+  node_id: "game-node-1"
+  
+# RPC服务器配置 (网关连接)
+server:
+  rpc:
+    host: "0.0.0.0"
+    port: 8081
+    max_connections: 1000
+    timeout: "30s"
+    keep_alive: true
+    keep_alive_period: "30s"
+    read_timeout: "30s"
+    write_timeout: "30s"
+
+# 数据库配置
+database:
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "game_service"
+    username: "admin"
+    password: "admin123"
+    auth_source: "admin"
+    max_pool_size: 100
+    min_pool_size: 10
+    max_idle_time: "10m"
+    connect_timeout: "10s"
+    socket_timeout: "30s"
+    
+  redis:
+    addr: "localhost:6379"
+    password: "redis123"
+    db: 2  # 游戏服务专用数据库
+    pool_size: 100
+    min_idle_conns: 10
+    max_retries: 3
+    dial_timeout: "5s"
+    read_timeout: "3s"
+    write_timeout: "3s"
+    pool_timeout: "4s"
+    idle_timeout: "5m"
+
+# 消息队列配置
+messaging:
+  nats:
+    url: "nats://localhost:4222"
+    cluster_id: "game-cluster"
+    client_id: "game-service-1"
+    max_reconnect: 10
+    reconnect_wait: "2s"
+    timeout: "5s"
+    
+    jetstream:
+      enabled: true
+      domain: "game"
+      
+    subjects:
+      player_events: "game.player.events.>"
+      battle_events: "game.battle.events.>"
+      system_events: "game.system.events.>"
+      domain_events: "game.domain.events.>"
+
+# 领域服务配置
+domain:
+  # 玩家领域
+  player:
+    max_level: 100
+    initial_gold: 1000
+    initial_experience: 0
+    max_inventory_slots: 100
+    session_timeout: "24h"
+    
+  # 战斗领域
+  battle:
+    max_battle_time: "10m"
+    damage_variance: 0.1
+    critical_rate_base: 0.05
+    critical_damage_base: 1.5
+    max_participants: 10
+    turn_timeout: "30s"
+    
+  # 经验系统
+  experience:
+    base_exp_per_level: 100
+    exp_multiplier: 1.2
+    max_exp_bonus: 2.0
+    
+  # 聊天系统
+  chat:
+    max_message_length: 500
+    rate_limit: 10  # 每分钟最大消息数
+    banned_words: ["spam", "cheat"]
+    
+  # 排行榜
+  ranking:
+    max_entries: 1000
+    update_interval: "1m"
+    cache_ttl: "5m"
+    
+  # 天气系统
+  weather:
+    update_interval: "30m"
+    forecast_days: 7
+    seasonal_effects: true
+    
+  # 种植系统
+  plant:
+    growth_speed: 1.0
+    harvest_bonus: 1.2
+    max_farm_size: 100
+
+# 应用服务配置
+application:
+  # 命令总线
+  command_bus:
+    timeout: "30s"
+    retry_attempts: 3
+    retry_delay: "1s"
+    
+  # 查询总线
+  query_bus:
+    timeout: "10s"
+    cache_ttl: "5m"
+    
+  # 事件总线
+  event_bus:
+    timeout: "5s"
+    retry_attempts: 3
+    retry_delay: "1s"
+    dead_letter_queue: true
+
+# 仓储配置
+repository:
+  # 缓存策略
+  cache:
+    default_ttl: "1h"
+    max_entries: 10000
+    cleanup_interval: "10m"
+    
+  # 分页配置
+  pagination:
+    default_page_size: 20
+    max_page_size: 100
+    
+  # 事务配置
+  transaction:
+    timeout: "30s"
+    retry_attempts: 3
+    isolation_level: "read_committed"
+
+# 性能配置
+performance:
+  # 工作池配置
+  worker_pool:
+    size: 100
+    queue_size: 1000
+    
+  # 缓存配置
+  cache:
+    default_ttl: "1h"
+    max_entries: 10000
+    cleanup_interval: "10m"
+    
+  # 限流配置
+  rate_limit:
+    enabled: true
+    requests_per_minute: 1000
+    burst: 100
+    
+  # 连接池配置
+  connection_pool:
+    max_idle: 100
+    max_open: 200
+    max_lifetime: "1h"
+
+# 监控配置
+monitoring:
+  health:
+    enabled: true
+    path: "/health"
+    
+  metrics:
+    enabled: true
+    namespace: "game_service"
+    
+  tracing:
+    enabled: false
+    jaeger_endpoint: "http://localhost:14268/api/traces"
+    sample_rate: 0.1
+    
+  profiling:
+    enabled: false
+    host: "localhost"
+    port: 6060
+
+# 日志配置
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+  fields:
+    service: "game-service"
+    version: "1.0.0"
+
+# 安全配置
+security:
+  rate_limiting:
+    enabled: true
+    global_limit: 1000
+    per_connection_limit: 100
+  ddos_protection:
+    enabled: true
+    threshold: 1000
+    ban_duration: "1h"
+  encryption:
+    enabled: true
+    algorithm: "AES-256-GCM"
+    key: ""
+
+# 开发配置
+development:
+  debug: false
+  hot_reload: false
+  mock_data: false
+  test_mode: false
+  profiling: false
