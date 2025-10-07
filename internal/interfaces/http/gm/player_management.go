@@ -245,7 +245,7 @@ func (h *PlayerManagementHandler) GetPlayerDetail(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
 	// 查询玩家详细信息
 	// TODO: 修复GetPlayerDetailQuery类型
@@ -289,7 +289,7 @@ func (h *PlayerManagementHandler) GetPlayerDetail(c *gin.Context) {
 			Speed:   p.Stats.Speed,
 		},
 		Avatar:       p.Avatar,
-		Gender:       p.Gender
+		Gender:       p.Gender,
 		LastLoginAt:  p.LastLoginAt,
 		LastLogoutAt: p.LastLogoutAt,
 		OnlineTime:   p.OnlineTime,
@@ -331,7 +331,7 @@ func (h *PlayerManagementHandler) UpdatePlayer(c *gin.Context) {
 		return
 	}
 
-	ctx := context.Background()
+	// ctx := context.Background()
 
 	// 获取GM用户信息
 	gmUser, _ := auth.GetCurrentUser(c)
@@ -424,15 +424,16 @@ func (h *PlayerManagementHandler) BanPlayer(c *gin.Context) {
 	}
 
 	// 执行封禁命令
-	cmd := &player.BanPlayerCommand{
-		PlayerID:  req.PlayerID,
-		BannedBy:  gmUser.PlayerID,
-		BanType:   req.BanType,
-		Reason:    req.Reason,
-		ExpiresAt: expiresAt,
+	cmd := &playerCmd.BanPlayerCommand{
+		PlayerID:     req.PlayerID,
+		BannedBy:     gmUser.PlayerID,
+		BannedByName: gmUser.Username,
+		BanType:      req.BanType,
+		Reason:       req.Reason,
+		BanUntil:     *expiresAt,
 	}
 
-	result, err := handlers.ExecuteTyped[*player.BanPlayerCommand, *player.BanPlayerResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCmd.BanPlayerCommand, *playerCmd.BanPlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to ban player", "error", err, "player_id", req.PlayerID, "gm_user", gmUser.Username)
 		c.JSON(500, gin.H{"error": "Failed to ban player", "success": false})
@@ -460,13 +461,13 @@ func (h *PlayerManagementHandler) UnbanPlayer(c *gin.Context) {
 	gmUser, _ := auth.GetCurrentUser(c)
 
 	// 执行解封命令
-	cmd := &player.UnbanPlayerCommand{
+	cmd := &playerCmd.UnbanPlayerCommand{
 		PlayerID:   req.PlayerID,
 		UnbannedBy: gmUser.PlayerID,
 		Reason:     req.Reason,
 	}
 
-	result, err := handlers.ExecuteTyped[*player.UnbanPlayerCommand, *player.UnbanPlayerResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCmd.UnbanPlayerCommand, *playerCmd.UnbanPlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to unban player", "error", err, "player_id", req.PlayerID, "gm_user", gmUser.Username)
 		c.JSON(500, gin.H{"error": "Failed to unban player", "success": false})

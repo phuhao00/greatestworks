@@ -2,12 +2,14 @@ package tcp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"greatestworks/application/services"
 	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/infrastructure/network"
+	"greatestworks/internal/interfaces/tcp/protocol"
+	commonProto "greatestworks/internal/proto/common"
+	"google.golang.org/protobuf/proto"
 )
 
 // NPCHandler NPC TCP处理器
@@ -49,9 +51,9 @@ func (h *NPCHandler) RegisterHandlers(server *network.Server) {
 }
 
 // handleNPCDialogue 处理NPC对话
-func (h *NPCHandler) handleNPCDialogue(ctx context.Context, conn network.Connection, packet *network.Packet) error {
-	var req NPCRequest
-	if err := json.Unmarshal(packet.Data, &req); err != nil {
+func (h *NPCHandler) handleNPCDialogue(ctx context.Context, conn network.Connection, msg protocol.Message) error {
+	var req commonProto.CommonRequest
+	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
 		return h.sendError(conn, "解析请求失败", err)
 	}
 
@@ -71,9 +73,9 @@ func (h *NPCHandler) handleNPCDialogue(ctx context.Context, conn network.Connect
 }
 
 // handleNPCInteraction 处理NPC交互
-func (h *NPCHandler) handleNPCInteraction(ctx context.Context, conn network.Connection, packet *network.Packet) error {
-	var req NPCRequest
-	if err := json.Unmarshal(packet.Data, &req); err != nil {
+func (h *NPCHandler) handleNPCInteraction(ctx context.Context, conn network.Connection, msg protocol.Message) error {
+	var req commonProto.CommonRequest
+	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
 		return h.sendError(conn, "解析请求失败", err)
 	}
 
@@ -112,9 +114,9 @@ func (h *NPCHandler) handleNPCInteraction(ctx context.Context, conn network.Conn
 }
 
 // handleNPCQuest 处理NPC任务
-func (h *NPCHandler) handleNPCQuest(ctx context.Context, conn network.Connection, packet *network.Packet) error {
-	var req NPCRequest
-	if err := json.Unmarshal(packet.Data, &req); err != nil {
+func (h *NPCHandler) handleNPCQuest(ctx context.Context, conn network.Connection, msg protocol.Message) error {
+	var req commonProto.CommonRequest
+	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
 		return h.sendError(conn, "解析请求失败", err)
 	}
 

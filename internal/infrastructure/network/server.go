@@ -35,9 +35,7 @@ func DefaultServerConfig() *ServerConfig {
 }
 
 // MessageHandler 消息处理器接口
-type MessageHandler interface {
-	Handle(ctx context.Context, session *session.Session, msg *protocol.Message) error
-}
+type MessageHandler func(ctx context.Context, session *session.Session, msg protocol.Message) error
 
 // simpleLogger 简单日志实现
 type simpleLogger struct{}

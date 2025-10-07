@@ -69,10 +69,14 @@ type RedisConfig struct {
 
 // NATSConfig NATS配置
 type NATSConfig struct {
-	URL          string `json:"url"`
-	ClusterID    string `json:"cluster_id"`
-	ClientID     string `json:"client_id"`
-	MaxReconnect int    `json:"max_reconnect"`
+	URL            string `json:"url"`
+	ClusterID      string `json:"cluster_id"`
+	ClientID       string `json:"client_id"`
+	MaxReconnect   int    `json:"max_reconnect"`
+	ReconnectWait  int    `json:"reconnect_wait"`
+	MaxReconnects  int    `json:"max_reconnects"`
+	ConnectionName string `json:"connection_name"`
+	DrainTimeout   int    `json:"drain_timeout"`
 }
 
 // GatewayConfig 网关配置

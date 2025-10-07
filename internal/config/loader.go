@@ -7,25 +7,23 @@ import (
 	"strings"
 	"time"
 
-	"greatestworks/application/services"
-
 	"gopkg.in/yaml.v3"
 )
 
 // AppConfig 应用程序完整配置
 type AppConfig struct {
-	Server      services.ServerConfig `yaml:"server"`
-	MongoDB     MongoDBConfig         `yaml:"mongodb"`
-	NATS        NATSConfig            `yaml:"nats"`
-	Redis       RedisConfig           `yaml:"redis"`
-	Game        GameConfig            `yaml:"game"`
-	Logging     LoggingConfig         `yaml:"logging"`
-	Monitoring  MonitoringConfig      `yaml:"monitoring"`
-	Security    SecurityConfig        `yaml:"security"`
-	ThirdParty  ThirdPartyConfig      `yaml:"third_party"`
-	Development EnvironmentConfig     `yaml:"development"`
-	Production  EnvironmentConfig     `yaml:"production"`
-	Performance PerformanceConfig     `yaml:"performance"`
+	Server      ServerConfig      `yaml:"server"`
+	MongoDB     MongoDBConfig     `yaml:"mongodb"`
+	NATS        NATSConfig        `yaml:"nats"`
+	Redis       RedisConfig       `yaml:"redis"`
+	Game        GameConfig        `yaml:"game"`
+	Logging     LoggingConfig     `yaml:"logging"`
+	Monitoring  MonitoringConfig  `yaml:"monitoring"`
+	Security    SecurityConfig    `yaml:"security"`
+	ThirdParty  ThirdPartyConfig  `yaml:"third_party"`
+	Development EnvironmentConfig `yaml:"development"`
+	Production  EnvironmentConfig `yaml:"production"`
+	Performance PerformanceConfig `yaml:"performance"`
 }
 
 // MongoDBConfig MongoDB配置
@@ -279,7 +277,8 @@ func (cl *ConfigLoader) applyEnvironmentOverrides(config *AppConfig) error {
 
 	// Redis配置覆盖
 	if addr := os.Getenv("REDIS_ADDR"); addr != "" {
-		config.Redis.Addr = addr
+		// TODO: 解析Redis地址到Host和Port
+		config.Redis.Host = addr
 	}
 	if password := os.Getenv("REDIS_PASSWORD"); password != "" {
 		config.Redis.Password = password
@@ -348,24 +347,26 @@ func (cl *ConfigLoader) validateConfig(config *AppConfig) error {
 }
 
 // ToServiceConfig 转换为服务配置
-func (config *AppConfig) ToServiceConfig() services.Config {
-	return services.Config{
-		MongoDB: database.MongoConfig{
-			URI:      config.MongoDB.URI,
-			Database: config.MongoDB.Database,
-			Timeout:  config.MongoDB.Timeout,
-		},
-		NATS: messaging.NATSConfig{
-			URL:            config.NATS.URL,
-			ClusterID:      config.NATS.ClusterID,
-			ClientID:       config.NATS.ClientID,
-			ReconnectWait:  config.NATS.ReconnectWait,
-			MaxReconnects:  config.NATS.MaxReconnects,
-			ConnectionName: config.NATS.ConnectionName,
-			DrainTimeout:   config.NATS.DrainTimeout,
-		},
-		Server: config.Server,
-	}
+// TODO: 修复services.Config类型
+func (config *AppConfig) ToServiceConfig() interface{} {
+	// return services.Config{
+	// 	MongoDB: database.MongoConfig{
+	// 		URI:      config.MongoDB.URI,
+	// 		Database: config.MongoDB.Database,
+	// 		Timeout:  config.MongoDB.Timeout,
+	// 	},
+	// 	NATS: messaging.NATSConfig{
+	// 		URL:            config.NATS.URL,
+	// 		ClusterID:      config.NATS.ClusterID,
+	// 		ClientID:       config.NATS.ClientID,
+	// 		ReconnectWait:  config.NATS.ReconnectWait,
+	// 		MaxReconnects:  config.NATS.MaxReconnects,
+	// 		ConnectionName: config.NATS.ConnectionName,
+	// 		DrainTimeout:   config.NATS.DrainTimeout,
+	// 	},
+	// 	Server: config.Server,
+	// }
+	return nil // TODO: 实现ToServiceConfig方法
 }
 
 // GetEnvironment 获取当前环境

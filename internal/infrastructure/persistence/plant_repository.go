@@ -1052,6 +1052,46 @@ func (r *MongoCropRepository) FindExpiredCrops(ctx context.Context, expiredBefor
 	return crops, nil
 }
 
+// SaveBatch 批量保存作物
+func (r *MongoCropRepository) SaveBatch(ctx context.Context, crops []*plant.Crop) error {
+	if len(crops) == 0 {
+		return nil
+	}
+
+	var operations []mongo.WriteModel
+	for _, crop := range crops {
+		doc := r.cropAggregateToDocument(crop)
+		doc.UpdatedAt = time.Now()
+		
+		filter := bson.M{"crop_id": crop.GetID()}
+		update := bson.M{"$set": doc}
+		upsertModel := mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true)
+		operations = append(operations, upsertModel)
+	}
+
+	_, err := r.collection.BulkWrite(ctx, operations)
+	if err != nil {
+		r.logger.Error("Failed to save crops in batch", "error", err, "count", len(crops))
+		return fmt.Errorf("failed to save crops in batch: %w", err)
+	}
+
+	// 更新缓存
+	for _, crop := range crops {
+		cacheKey := fmt.Sprintf("crop:%s", crop.GetID())
+		if err := r.cache.Set(ctx, cacheKey, crop, 10*time.Minute); err != nil {
+			r.logger.Warn("Failed to cache crop", "error", err, "crop_id", crop.GetID())
+		}
+	}
+
+	r.logger.Info("Crops saved in batch", "count", len(crops))
+	return nil
+}
+
+// UpdateBatch 批量更新作物
+func (r *MongoCropRepository) UpdateBatch(ctx context.Context, crops []*plant.Crop) error {
+	return r.SaveBatch(ctx, crops)
+}
+
 // DeleteBatch 批量删除作物
 func (r *MongoCropRepository) DeleteBatch(ctx context.Context, cropIDs []string) error {
 	filter := bson.M{"crop_id": bson.M{"$in": cropIDs}}

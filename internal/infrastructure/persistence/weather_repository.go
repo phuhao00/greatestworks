@@ -100,9 +100,7 @@ func (r *MongoWeatherRepository) Save(weatherAggregate *weather.WeatherAggregate
 }
 
 // FindByID 根据ID查找天气记录
-func (r *MongoWeatherRepository) FindByID(weatherID string) (*weather.WeatherAggregate, error) {
-	ctx := context.Background()
-
+func (r *MongoWeatherRepository) FindByID(ctx context.Context, weatherID string) (*weather.WeatherAggregate, error) {
 	// 先从缓存获取
 	cacheKey := fmt.Sprintf("weather:%s", weatherID)
 	var cachedWeather *weather.WeatherAggregate
@@ -127,6 +125,41 @@ func (r *MongoWeatherRepository) FindByID(weatherID string) (*weather.WeatherAgg
 	// 更新缓存
 	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, time.Hour); err != nil {
 		r.logger.Warn("Failed to cache weather", "error", err, "weather_id", weatherID)
+	}
+
+	return weatherAggregate, nil
+}
+
+// FindBySceneID 根据场景ID查找天气记录
+func (r *MongoWeatherRepository) FindBySceneID(ctx context.Context, sceneID string) (*weather.WeatherAggregate, error) {
+	// 先从缓存获取
+	cacheKey := fmt.Sprintf("weather:scene:%s", sceneID)
+	var cachedWeather *weather.WeatherAggregate
+	if err := r.cache.Get(ctx, cacheKey, &cachedWeather); err == nil && cachedWeather != nil {
+		return cachedWeather, nil
+	}
+
+	// 从数据库获取当前活跃的天气
+	filter := bson.M{
+		"scene_id":  sceneID,
+		"is_active": true,
+	}
+
+	var doc WeatherDocument
+	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, weather.ErrWeatherNotFound
+		}
+		r.logger.Error("Failed to find weather by scene ID", "error", err, "scene_id", sceneID)
+		return nil, fmt.Errorf("failed to find weather by scene ID: %w", err)
+	}
+
+	weatherAggregate := r.documentToAggregate(&doc)
+
+	// 更新缓存
+	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, time.Hour); err != nil {
+		r.logger.Warn("Failed to cache weather by scene ID", "error", err, "scene_id", sceneID)
 	}
 
 	return weatherAggregate, nil
@@ -169,6 +202,24 @@ func (r *MongoWeatherRepository) FindCurrentByRegion(regionID string) (*weather.
 	}
 
 	return weatherAggregate, nil
+}
+
+// FindBySceneIDs 根据场景ID列表查找天气记录
+func (r *MongoWeatherRepository) FindBySceneIDs(ctx context.Context, sceneIDs []string) ([]*weather.WeatherAggregate, error) {
+	// TODO: 实现FindBySceneIDs方法
+	return nil, fmt.Errorf("FindBySceneIDs not implemented")
+}
+
+// FindWeatherByTimeRange 根据时间范围查找天气
+func (r *MongoWeatherRepository) FindWeatherByTimeRange(ctx context.Context, regionID string, startTime, endTime time.Time) ([]*weather.WeatherAggregate, error) {
+	// TODO: 实现FindWeatherByTimeRange方法
+	return nil, fmt.Errorf("FindWeatherByTimeRange not implemented")
+}
+
+// FindWeatherByType 根据天气类型查找天气
+func (r *MongoWeatherRepository) FindWeatherByType(ctx context.Context, weatherType weather.WeatherType, limit int) ([]*weather.WeatherAggregate, error) {
+	// TODO: 实现FindWeatherByType方法
+	return nil, fmt.Errorf("FindWeatherByType not implemented")
 }
 
 // FindByRegionAndTimeRange 根据区域和时间范围查找天气
@@ -474,11 +525,11 @@ func (r *MongoWeatherRepository) aggregateToDocument(weatherAggregate *weather.W
 	}
 
 	return &WeatherDocument{
-			WeatherID:   weatherAggregate.GetID(),
-			RegionID:    weatherAggregate.GetRegionID(),
-			WeatherType: string(weatherAggregate.GetWeatherType()),
-			Intensity:   weatherAggregate.GetIntensity().GetMultiplier(),
-			Temperature: weatherAggregate.GetTemperature(),
+		WeatherID:   weatherAggregate.GetID(),
+		RegionID:    weatherAggregate.GetRegionID(),
+		WeatherType: string(weatherAggregate.GetWeatherType()),
+		Intensity:   weatherAggregate.GetIntensity().GetMultiplier(),
+		Temperature: weatherAggregate.GetTemperature(),
 		Humidity:    weatherAggregate.GetHumidity(),
 		WindSpeed:   weatherAggregate.GetWindSpeed(),
 		Visibility:  weatherAggregate.GetVisibility(),

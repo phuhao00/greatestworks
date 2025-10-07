@@ -9,34 +9,34 @@ import (
 	"sync"
 	"time"
 
-	"greatestworks/application/handlers"
+	appHandlers "greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/interfaces/tcp/connection"
-	"greatestworks/internal/interfaces/tcp/handlers"
+	tcpHandlers "greatestworks/internal/interfaces/tcp/handlers"
 	"greatestworks/internal/interfaces/tcp/protocol"
 )
 
 // ServerConfig TCP服务器配置
 type ServerConfig struct {
-	Addr               string
-	MaxConnections     int
-	ReadTimeout        time.Duration
-	WriteTimeout       time.Duration
-	HeartbeatConfig    *connection.HeartbeatConfig
-	EnableCompression  bool
-	BufferSize         int
+	Addr              string
+	MaxConnections    int
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	HeartbeatConfig   *connection.HeartbeatConfig
+	EnableCompression bool
+	BufferSize        int
 }
 
 // DefaultServerConfig 默认服务器配置
 func DefaultServerConfig() *ServerConfig {
 	return &ServerConfig{
-		Addr:               ":9090",
-		MaxConnections:     10000,
-		ReadTimeout:        30 * time.Second,
-		WriteTimeout:       30 * time.Second,
-		HeartbeatConfig:    connection.DefaultHeartbeatConfig(),
-		EnableCompression:  false,
-		BufferSize:         4096,
+		Addr:              ":9090",
+		MaxConnections:    10000,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		HeartbeatConfig:   connection.DefaultHeartbeatConfig(),
+		EnableCompression: false,
+		BufferSize:        4096,
 	}
 }
 
@@ -44,7 +44,7 @@ func DefaultServerConfig() *ServerConfig {
 type TCPServer struct {
 	config           *ServerConfig
 	listener         net.Listener
-	gameHandler      *handlers.GameHandler
+	gameHandler      *tcpHandlers.GameHandler
 	router           *Router
 	connManager      *connection.ConnectionManager
 	sessionManager   *connection.SessionManager
@@ -58,7 +58,7 @@ type TCPServer struct {
 }
 
 // NewTCPServer 创建TCP服务器
-func NewTCPServer(config *ServerConfig, commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logger.Logger) *TCPServer {
+func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, queryBus *appHandlers.QueryBus, logger logger.Logger) *TCPServer {
 	if config == nil {
 		config = DefaultServerConfig()
 	}
@@ -75,7 +75,7 @@ func NewTCPServer(config *ServerConfig, commandBus *handlers.CommandBus, queryBu
 	heartbeatManager := connection.NewHeartbeatManager(config.HeartbeatConfig, logger)
 
 	// 创建游戏处理器
-	gameHandler := handlers.NewGameHandler(commandBus, queryBus, connManager, logger)
+	gameHandler := tcpHandlers.NewGameHandler(commandBus, queryBus, connManager, logger)
 
 	// 创建路由器
 	router := NewRouter(logger)
@@ -203,7 +203,7 @@ func (s *TCPServer) acceptConnections() {
 
 			// 检查连接数限制
 			if s.connManager.GetConnectionCount() >= s.config.MaxConnections {
-				s.logger.Warn("Connection limit reached, rejecting new connection", 
+				s.logger.Warn("Connection limit reached, rejecting new connection",
 					"current_count", s.connManager.GetConnectionCount(),
 					"max_connections", s.config.MaxConnections)
 				conn.Close()
@@ -371,12 +371,12 @@ func (s *TCPServer) GetStats() map[string]interface{} {
 	heartbeatStats := s.heartbeatManager.GetStats()
 
 	return map[string]interface{}{
-		"running":           s.IsRunning(),
-		"address":           s.config.Addr,
-		"max_connections":   s.config.MaxConnections,
-		"connection_stats":  connStats,
-		"session_stats":     sessionStats,
-		"heartbeat_stats":   heartbeatStats,
+		"running":          s.IsRunning(),
+		"address":          s.config.Addr,
+		"max_connections":  s.config.MaxConnections,
+		"connection_stats": connStats,
+		"session_stats":    sessionStats,
+		"heartbeat_stats":  heartbeatStats,
 		"router_stats": map[string]interface{}{
 			"handler_count": s.router.GetHandlerCount(),
 			"message_types": s.router.GetRegisteredMessageTypes(),
