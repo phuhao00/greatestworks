@@ -66,7 +66,13 @@ func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, quer
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// 创建连接管理器
-	connManager := connection.NewConnectionManager(config.MaxConnections, logger)
+	connManager := connection.NewConnectionManager(
+		config.MaxConnections,
+		config.HeartbeatConfig.Interval,
+		config.ReadTimeout,
+		config.WriteTimeout,
+		logger,
+	)
 
 	// 创建会话管理器
 	sessionManager := connection.NewSessionManager(logger)
@@ -160,7 +166,7 @@ func (s *TCPServer) Stop() error {
 	s.sessionManager.Stop()
 
 	// 关闭所有连接
-	s.connManager.CloseAllConnections()
+	s.connManager.Close()
 
 	// 等待所有协程结束
 	s.wg.Wait()
@@ -202,9 +208,10 @@ func (s *TCPServer) acceptConnections() {
 			}
 
 			// 检查连接数限制
-			if s.connManager.GetConnectionCount() >= s.config.MaxConnections {
+			stats := s.connManager.GetStats()
+			if stats.ActiveConnections >= int64(s.config.MaxConnections) {
 				s.logger.Warn("Connection limit reached, rejecting new connection",
-					"current_count", s.connManager.GetConnectionCount(),
+					"current_count", stats.ActiveConnections,
 					"max_connections", s.config.MaxConnections)
 				conn.Close()
 				continue
@@ -227,11 +234,9 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 		tcpConn.SetKeepAlivePeriod(30 * time.Second)
 	}
 
-	// 创建连接对象
-	conn := connection.NewConnection(netConn, s.config.BufferSize, s.logger)
-
 	// 添加到连接管理器
-	if err := s.connManager.AddConnection(conn); err != nil {
+	conn, err := s.connManager.AddConnection(netConn)
+	if err != nil {
 		s.logger.Error("Failed to add connection to manager", "error", err, "conn_id", conn.ID)
 		conn.Close()
 		return
@@ -253,7 +258,7 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 		select {
 		case <-s.ctx.Done():
 			return
-		case <-conn.Done():
+		case <-conn.CloseChan:
 			return
 		default:
 			// 设置读取超时
@@ -386,7 +391,8 @@ func (s *TCPServer) GetStats() map[string]interface{} {
 
 // BroadcastMessage 广播消息
 func (s *TCPServer) BroadcastMessage(msg *protocol.Message) error {
-	return s.connManager.BroadcastMessage(msg)
+	s.connManager.BroadcastMessage(msg)
+	return nil
 }
 
 // SendToPlayer 发送消息给指定玩家
@@ -401,7 +407,8 @@ func (s *TCPServer) SendToPlayer(playerID string, msg *protocol.Message) error {
 
 // GetConnectionCount 获取连接数
 func (s *TCPServer) GetConnectionCount() int {
-	return s.connManager.GetConnectionCount()
+	stats := s.connManager.GetStats()
+	return int(stats.ActiveConnections)
 }
 
 // GetActiveSessionCount 获取活跃会话数

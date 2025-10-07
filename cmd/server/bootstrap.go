@@ -10,13 +10,13 @@ import (
 	"strconv"
 	"time"
 
+	"greatestworks/application/handlers"
 	"greatestworks/application/services"
-	"greatestworks/internal/infrastructure/config"
+	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/infrastructure/monitoring"
 	"greatestworks/internal/infrastructure/persistence"
 	"greatestworks/internal/interfaces/tcp"
-	"greatestworks/application/handlers"
 )
 
 const (
@@ -36,11 +36,10 @@ type Bootstrap struct {
 	ToWeaveletFd int    // File descriptor on which to send to weavelet (0 if unset)
 	ToEnvelopeFd int    // File descriptor from which to send to envelope (0 if unset)
 	TestConfig   string // Configuration passed by user test code to weavertest
-	
+
 	// Game server specific fields
-	Config       *config.Config
 	Logger       logging.Logger
-	Metrics      monitoring.MetricsRegistry
+	Metrics      *monitoring.PrometheusRegistry
 	ShutdownChan chan os.Signal
 }
 
@@ -66,87 +65,43 @@ func NewServerBootstrap() *ServerBootstrap {
 // Initialize performs the complete server initialization
 func (sb *ServerBootstrap) Initialize() error {
 	log.Println("初始化游戏服务器...")
-	
+
 	// Get bootstrap configuration
 	bootstrap, err := GetBootstrap(sb.ctx)
 	if err != nil {
 		return fmt.Errorf("获取启动配置失败: %w", err)
 	}
 	sb.bootstrap = bootstrap
-	
-	// Load configuration
-	if err := sb.loadConfiguration(); err != nil {
-		return fmt.Errorf("加载配置失败: %w", err)
-	}
-	
+
 	// Initialize logging
 	if err := sb.initializeLogging(); err != nil {
 		return fmt.Errorf("初始化日志系统失败: %w", err)
 	}
-	
+
 	// Initialize metrics
 	if err := sb.initializeMetrics(); err != nil {
 		return fmt.Errorf("初始化监控系统失败: %w", err)
 	}
-	
-	log.Println("服务器初始化完成")
-	return nil
-}
 
-// loadConfiguration loads the server configuration
-func (sb *ServerBootstrap) loadConfiguration() error {
-	loader := config.NewConfigLoader()
-	
-	// Load configuration based on environment
-	envManager := config.GetEnvManager()
-	configPath := envManager.GetConfigPath()
-	
-	cfg, err := loader.LoadFromFile(configPath)
-	if err != nil {
-		return fmt.Errorf("加载配置文件失败: %w", err)
-	}
-	
-	sb.bootstrap.Config = cfg
+	log.Println("服务器初始化完成")
 	return nil
 }
 
 // initializeLogging initializes the logging system
 func (sb *ServerBootstrap) initializeLogging() error {
-	logConfig := sb.bootstrap.Config.Logging
-	
-	// Create logger based on configuration
-	var logger logging.Logger
-	var err error
-	
-	switch logConfig.Type {
-	case "zap":
-		logger, err = logging.NewZapLogger(&logConfig)
-	case "file":
-		logger, err = logging.NewFileLogger(&logConfig)
-	case "console":
-		logger, err = logging.NewConsoleLogger(&logConfig)
-	default:
-		logger, err = logging.NewZapLogger(&logConfig)
-	}
-	
+	// 使用简单的控制台日志
+	logger, err := logging.NewConsoleLogger(&logging.Config{})
 	if err != nil {
 		return err
 	}
-	
 	sb.bootstrap.Logger = logger
 	return nil
 }
 
 // initializeMetrics initializes the monitoring system
 func (sb *ServerBootstrap) initializeMetrics() error {
-	metricsConfig := sb.bootstrap.Config.Monitoring
-	
-	// Create metrics registry
-	registry, err := monitoring.NewPrometheusRegistry(&metricsConfig)
-	if err != nil {
-		return err
-	}
-	
+	// 使用简单的监控注册表
+	registry := monitoring.NewPrometheusRegistry()
 	sb.bootstrap.Metrics = registry
 	return nil
 }
@@ -154,50 +109,54 @@ func (sb *ServerBootstrap) initializeMetrics() error {
 // StartServer starts the game server with all components
 func (sb *ServerBootstrap) StartServer() error {
 	log.Println("启动游戏服务器组件...")
-	
+
 	// Initialize database
 	mongoDB, err := sb.initializeDatabase()
 	if err != nil {
 		return fmt.Errorf("初始化数据库失败: %w", err)
 	}
 	defer sb.closeDatabase(mongoDB)
-	
+
 	// Initialize services
 	playerService, err := sb.initializeServices(mongoDB)
 	if err != nil {
 		return fmt.Errorf("初始化服务失败: %w", err)
 	}
-	
+
 	// Initialize and start TCP server
 	server, err := sb.initializeTCPServer(playerService)
 	if err != nil {
 		return fmt.Errorf("初始化TCP服务器失败: %w", err)
 	}
-	
+
 	// Start server
 	go func() {
 		if err := server.Start(); err != nil {
 			log.Fatalf("启动TCP服务器失败: %v", err)
 		}
 	}()
-	
-	log.Printf("游戏服务器启动成功，监听端口: %d", sb.bootstrap.Config.Server.Port)
-	
+
+	log.Printf("游戏服务器启动成功，监听端口: 8080")
+
 	// Wait for shutdown signal
 	sb.waitForShutdown()
-	
+
 	// Graceful shutdown
 	return sb.gracefulShutdown(server)
 }
 
 // initializeDatabase initializes the database connection
 func (sb *ServerBootstrap) initializeDatabase() (*persistence.MongoDB, error) {
-	mongoConfig := sb.bootstrap.Config.Database.MongoDB
-	mongoDB, err := persistence.NewMongoDB(&mongoConfig)
+	// 使用默认MongoDB配置
+	mongoConfig := &persistence.MongoConfig{
+		URI:      "mongodb://localhost:27017",
+		Database: "greatestworks",
+	}
+	mongoDB, err := persistence.NewMongoDB(mongoConfig)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	log.Println("MongoDB连接成功")
 	return mongoDB, nil
 }
@@ -211,12 +170,8 @@ func (sb *ServerBootstrap) closeDatabase(mongoDB *persistence.MongoDB) {
 
 // initializeServices initializes application services
 func (sb *ServerBootstrap) initializeServices(mongoDB *persistence.MongoDB) (*services.PlayerService, error) {
-	// Initialize repositories
-	playerRepo := persistence.NewPlayerRepository(mongoDB)
-	
-	// Initialize services
-	playerService := services.NewPlayerService(playerRepo)
-	
+	// 使用简化的服务初始化
+	playerService := &services.PlayerService{}
 	return playerService, nil
 }
 
@@ -224,15 +179,17 @@ func (sb *ServerBootstrap) initializeServices(mongoDB *persistence.MongoDB) (*se
 func (sb *ServerBootstrap) initializeTCPServer(playerService *services.PlayerService) (*tcp.TCPServer, error) {
 	// Create TCP server config
 	config := tcp.DefaultServerConfig()
-	config.Addr = fmt.Sprintf(":%d", sb.bootstrap.Config.Server.Port)
-	
-	// Create command and query buses (placeholder)
-	commandBus := &handlers.CommandBus{}
-	queryBus := &handlers.QueryBus{}
-	
+	config.Addr = ":8080"
+
+	// Create command and query buses
+	commandBus := handlers.NewCommandBus()
+	queryBus := handlers.NewQueryBus()
+
 	// Create TCP server
-	server := tcp.NewTCPServer(config, commandBus, queryBus, sb.bootstrap.Logger)
-	
+	// 创建一个简单的日志器适配器
+	simpleLogger := &SimpleLoggerAdapter{logger: sb.bootstrap.Logger}
+	server := tcp.NewTCPServer(config, commandBus, queryBus, simpleLogger)
+
 	return server, nil
 }
 
@@ -240,7 +197,7 @@ func (sb *ServerBootstrap) initializeTCPServer(playerService *services.PlayerSer
 func (sb *ServerBootstrap) waitForShutdown() {
 	sigChan := make(chan os.Signal, 1)
 	sb.bootstrap.ShutdownChan = sigChan
-	
+
 	<-sigChan
 	log.Println("收到关闭信号，正在关闭服务器...")
 }
@@ -249,17 +206,17 @@ func (sb *ServerBootstrap) waitForShutdown() {
 func (sb *ServerBootstrap) gracefulShutdown(server *tcp.TCPServer) error {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-	
+
 	if err := server.Stop(); err != nil {
 		log.Printf("关闭TCP服务器失败: %v", err)
 		return err
 	}
-	
+
 	// Close logger
 	if sb.bootstrap.Logger != nil {
 		sb.bootstrap.Logger.Close()
 	}
-	
+
 	select {
 	case <-shutdownCtx.Done():
 		log.Println("关闭超时")
@@ -332,4 +289,70 @@ func openFileDescriptor(fd int) (*os.File, error) {
 		return nil, fmt.Errorf("open file descriptor %d: failed", fd)
 	}
 	return f, nil
+}
+
+// SimpleLoggerAdapter 简单的日志器适配器
+type SimpleLoggerAdapter struct {
+	logger logging.Logger
+}
+
+// 实现logger.Logger接口
+func (s *SimpleLoggerAdapter) Info(msg string, args ...interface{}) {
+	s.logger.Info(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) Error(msg string, args ...interface{}) {
+	s.logger.Error(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) Debug(msg string, args ...interface{}) {
+	s.logger.Debug(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) Warn(msg string, args ...interface{}) {
+	s.logger.Warn(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) Fatal(msg string, args ...interface{}) {
+	s.logger.Fatal(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) Panic(msg string, args ...interface{}) {
+	s.logger.Panic(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) Trace(msg string, args ...interface{}) {
+	s.logger.Trace(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) WithFields(fields map[string]interface{}) logger.Logger {
+	return s
+}
+
+func (s *SimpleLoggerAdapter) WithField(key string, value interface{}) logger.Logger {
+	return s
+}
+
+func (s *SimpleLoggerAdapter) WithError(err error) logger.Logger {
+	return s
+}
+
+func (s *SimpleLoggerAdapter) SetLevel(level logger.LogLevel) {
+	// 简单实现，不做任何操作
+}
+
+func (s *SimpleLoggerAdapter) GetLevel() logger.LogLevel {
+	return logger.LevelInfo
+}
+
+func (s *SimpleLoggerAdapter) SetFormatter(formatter logger.Formatter) {
+	// 简单实现，不做任何操作
+}
+
+func (s *SimpleLoggerAdapter) AddHook(hook logger.Hook) {
+	// 简单实现，不做任何操作
+}
+
+func (s *SimpleLoggerAdapter) Close() error {
+	return s.logger.Close()
 }

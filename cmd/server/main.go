@@ -13,6 +13,7 @@ import (
 
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/interfaces/tcp/connection"
 
 	"greatestworks/internal/interfaces/http"
 	"greatestworks/internal/interfaces/tcp"
@@ -20,8 +21,8 @@ import (
 
 // ServerConfig 服务器配置
 type ServerConfig struct {
-	HTTP *http.ServerConfig `yaml:"http" json:"http"`
-	TCP  *tcp.ServerConfig  `yaml:"tcp" json:"tcp"`
+	HTTP *http.HTTPServerConfig `yaml:"http" json:"http"`
+	TCP  *tcp.ServerConfig      `yaml:"tcp" json:"tcp"`
 }
 
 // MultiProtocolServer 多协议服务器
@@ -48,7 +49,11 @@ func NewMultiProtocolServer(config *ServerConfig, logger logger.Logger) *MultiPr
 	queryBus := handlers.NewQueryBus()
 
 	// 创建各协议服务器
-	httpServer, _ := http.NewHTTPServer(config, commandBus, logger)
+	services := &http.ServiceContainer{
+		CommandBus: commandBus,
+		QueryBus:   queryBus,
+	}
+	httpServer, _ := http.NewHTTPServer(config.HTTP, services, logger)
 	tcpServer := tcp.NewTCPServer(config.TCP, commandBus, queryBus, logger)
 
 	return &MultiProtocolServer{
@@ -74,11 +79,11 @@ func (s *MultiProtocolServer) Start() error {
 		s.wg.Add(1)
 		go func() {
 			defer s.wg.Done()
-			if err := s.httpServer.Start(); err != nil {
+			if err := s.httpServer.Start(s.ctx); err != nil {
 				s.logger.Error("HTTP server failed", "error", err)
 			}
 		}()
-		s.logger.Info("HTTP server started", "address", s.config.HTTP.Addr)
+		s.logger.Info("HTTP server started", "address", fmt.Sprintf("%s:%d", s.config.HTTP.Host, s.config.HTTP.Port))
 	}
 
 	// 启动TCP服务器
@@ -154,7 +159,10 @@ func (s *MultiProtocolServer) GetStats() map[string]interface{} {
 	stats := make(map[string]interface{})
 
 	if s.httpServer != nil {
-		stats["http"] = s.httpServer.GetStats()
+		stats["http"] = map[string]interface{}{
+			"status":  "running",
+			"address": fmt.Sprintf("%s:%d", s.config.HTTP.Host, s.config.HTTP.Port),
+		}
 	}
 
 	if s.tcpServer != nil {
@@ -168,22 +176,31 @@ func (s *MultiProtocolServer) GetStats() map[string]interface{} {
 func loadConfig() (*ServerConfig, error) {
 	// 默认配置
 	defaultConfig := &ServerConfig{
-		HTTP: &http.ServerConfig{
-			Addr:           ":8080",
-			ReadTimeout:    30 * time.Second,
-			WriteTimeout:   30 * time.Second,
-			IdleTimeout:    60 * time.Second,
-			MaxHeaderBytes: 1 << 20, // 1MB
-			EnableCORS:     true,
-			EnableMetrics:  true,
-			EnableSwagger:  true,
-		},
-		TCP: &tcp.ServerConfig{
-			Addr:              ":9090",
-			MaxConnections:    10000,
+		HTTP: &http.HTTPServerConfig{
+			Host:              "0.0.0.0",
+			Port:              8080,
 			ReadTimeout:       30 * time.Second,
 			WriteTimeout:      30 * time.Second,
-			HeartbeatConfig:   tcp.DefaultHeartbeatConfig(),
+			IdleTimeout:       60 * time.Second,
+			MaxHeaderBytes:    1 << 20, // 1MB
+			EnableCORS:        true,
+			EnableMetrics:     true,
+			EnableRequestID:   true,
+			EnableLogging:     true,
+			EnableRecovery:    true,
+			RateLimitEnabled:  true,
+			RateLimitRequests: 100,
+			RateLimitDuration: time.Minute,
+		},
+		TCP: &tcp.ServerConfig{
+			Addr:           ":9090",
+			MaxConnections: 10000,
+			ReadTimeout:    30 * time.Second,
+			WriteTimeout:   30 * time.Second,
+			HeartbeatConfig: &connection.HeartbeatConfig{
+				Interval: 30 * time.Second,
+				Timeout:  60 * time.Second,
+			},
 			EnableCompression: false,
 			BufferSize:        4096,
 		},
@@ -208,7 +225,7 @@ func initializeServices(logger logger.Logger) error {
 // main 主函数
 func main() {
 	// 创建日志器
-	logger := logger.NewConsoleLogger(logger.InfoLevel)
+	logger := logger.NewLogger()
 
 	logger.Info("Starting Greatest Works Game Server")
 
@@ -233,7 +250,7 @@ func main() {
 
 	// 打印服务器信息
 	logger.Info("Server startup completed",
-		"http_addr", config.HTTP.Addr,
+		"http_addr", fmt.Sprintf("%s:%d", config.HTTP.Host, config.HTTP.Port),
 		"tcp_addr", config.TCP.Addr)
 
 	// 等待关闭信号

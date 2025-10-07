@@ -1,5 +1,9 @@
 package protocol
 
+import (
+	"fmt"
+)
+
 // import (
 // 	"time"
 // )
@@ -108,6 +112,49 @@ const (
 
 // 消息魔数
 const MessageMagic uint32 = 0x47574B53 // "GWKS" - GreatestWorks
+
+// 消息头大小
+const MessageHeaderSize = 32 // 消息头固定大小
+
+// ParseMessageHeader 解析消息头
+func ParseMessageHeader(data []byte) (*MessageHeader, error) {
+	if len(data) < MessageHeaderSize {
+		return nil, fmt.Errorf("invalid message header size: %d", len(data))
+	}
+
+	header := &MessageHeader{}
+
+	// 解析魔数 (4字节)
+	header.Magic = uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+	if header.Magic != MessageMagic {
+		return nil, fmt.Errorf("invalid message magic: 0x%08X", header.Magic)
+	}
+
+	// 解析消息ID (4字节)
+	header.MessageID = uint32(data[4])<<24 | uint32(data[5])<<16 | uint32(data[6])<<8 | uint32(data[7])
+
+	// 解析消息类型 (4字节)
+	header.MessageType = uint32(data[8])<<24 | uint32(data[9])<<16 | uint32(data[10])<<8 | uint32(data[11])
+
+	// 解析标志位 (2字节)
+	header.Flags = uint16(data[12])<<8 | uint16(data[13])
+
+	// 解析玩家ID (8字节)
+	header.PlayerID = uint64(data[14])<<56 | uint64(data[15])<<48 | uint64(data[16])<<40 | uint64(data[17])<<32 |
+		uint64(data[18])<<24 | uint64(data[19])<<16 | uint64(data[20])<<8 | uint64(data[21])
+
+	// 解析时间戳 (8字节)
+	header.Timestamp = int64(data[22])<<56 | int64(data[23])<<48 | int64(data[24])<<40 | int64(data[25])<<32 |
+		int64(data[26])<<24 | int64(data[27])<<16 | int64(data[28])<<8 | int64(data[29])
+
+	// 解析序列号 (4字节)
+	header.Sequence = uint32(data[30])<<8 | uint32(data[31])
+
+	// 解析消息体长度 (4字节) - 这个在消息头中不包含，需要从其他地方获取
+	header.Length = 0
+
+	return header, nil
+}
 
 // MessageHeader TCP消息头
 type MessageHeader struct {
