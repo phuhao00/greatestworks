@@ -56,9 +56,9 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	r.RegisterHandler(uint16(protocol.MsgPlayerCreate), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerStatus), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerStats), handler)
-	r.RegisterHandler(uint16(protocol.MsgPlayerInventory), handler)
-	r.RegisterHandler(uint16(protocol.MsgPlayerSkills), handler)
-	r.RegisterHandler(uint16(protocol.MsgPlayerQuests), handler)
+	//r.RegisterHandler(uint16(protocol.MsgPlayerInventory), handler)
+	//r.RegisterHandler(uint16(protocol.MsgPlayerSkills), handler)
+	//r.RegisterHandler(uint16(protocol.MsgPlayerQuests), handler)
 
 	// 战斗相关消息
 	r.RegisterHandler(uint16(protocol.MsgCreateBattle), handler)
@@ -75,19 +75,19 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	r.RegisterHandler(uint16(protocol.MsgPetAction), handler)
 	r.RegisterHandler(uint16(protocol.MsgPetStatus), handler)
 	r.RegisterHandler(uint16(protocol.MsgPetTrain), handler)
-	r.RegisterHandler(uint16(protocol.MsgPetEvolve), handler)
+	//r.RegisterHandler(uint16(protocol.MsgPetEvolve), handler)
 
 	// 建筑相关消息
 	r.RegisterHandler(uint16(protocol.MsgBuildingCreate), handler)
 	r.RegisterHandler(uint16(protocol.MsgBuildingUpgrade), handler)
 	r.RegisterHandler(uint16(protocol.MsgBuildingDestroy), handler)
 	r.RegisterHandler(uint16(protocol.MsgBuildingStatus), handler)
-	r.RegisterHandler(uint16(protocol.MsgBuildingList), handler)
+	//r.RegisterHandler(uint16(protocol.MsgBuildingList), handler)
 
 	// 社交相关消息
-	r.RegisterHandler(uint16(protocol.MsgChatSend), handler)
-	r.RegisterHandler(uint16(protocol.MsgChatReceive), handler)
-	r.RegisterHandler(uint16(protocol.MsgFriendAdd), handler)
+	//r.RegisterHandler(uint16(protocol.MsgChatSend), handler)
+	//r.RegisterHandler(uint16(protocol.MsgChatReceive), handler)
+	//r.RegisterHandler(uint16(protocol.MsgFriendAdd), handler)
 	r.RegisterHandler(uint16(protocol.MsgFriendRemove), handler)
 	r.RegisterHandler(uint16(protocol.MsgFriendList), handler)
 	r.RegisterHandler(uint16(protocol.MsgGuildJoin), handler)
@@ -100,7 +100,7 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 
 	// 物品相关消息
 	r.RegisterHandler(uint16(protocol.MsgItemUse), handler)
-	r.RegisterHandler(uint16(protocol.MsgItemMove), handler)
+	//r.RegisterHandler(uint16(protocol.MsgItemMove), handler)
 	r.RegisterHandler(uint16(protocol.MsgItemDrop), handler)
 	r.RegisterHandler(uint16(protocol.MsgItemPickup), handler)
 	r.RegisterHandler(uint16(protocol.MsgItemTrade), handler)
@@ -118,7 +118,7 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	r.RegisterHandler(uint16(protocol.MsgGetOnlinePlayers), handler)
 	r.RegisterHandler(uint16(protocol.MsgGetBattleInfo), handler)
 	r.RegisterHandler(uint16(protocol.MsgGetServerInfo), handler)
-	r.RegisterHandler(uint16(protocol.MsgGetWorldInfo), handler)
+	//r.RegisterHandler(uint16(protocol.MsgGetWorldInfo), handler)
 
 	r.logger.Info("Game handler registered with all message types")
 }
@@ -126,11 +126,11 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 // RouteMessage 路由消息到对应的处理器
 func (r *Router) RouteMessage(conn *connection.Connection, msg *protocol.Message) error {
 	r.mutex.RLock()
-	handler, exists := r.handlers[msg.Header.MessageType]
+	handler, exists := r.handlers[uint16(msg.Header.MessageType)]
 	r.mutex.RUnlock()
 
 	if !exists {
-		r.logger.Warn("No handler found for message type",
+		r.logger.Info("No handler found for message type",
 			"message_type", msg.Header.MessageType,
 			"conn_id", conn.ID,
 			"player_id", conn.PlayerID)

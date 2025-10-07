@@ -3,6 +3,7 @@ package tcp
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"greatestworks/application/commands/battle"
@@ -11,7 +12,10 @@ import (
 	playerQuery "greatestworks/application/queries/player"
 	"greatestworks/internal/infrastructure/network"
 	"greatestworks/internal/interfaces/tcp/protocol"
+	"greatestworks/internal/network/session"
+	battleProto "greatestworks/internal/proto/battle"
 	playerProto "greatestworks/internal/proto/player"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -66,16 +70,16 @@ func (h *GameHandler) RegisterHandlers(server network.Server) error {
 // 玩家协议处理器
 
 // handlePlayerLogin 处理玩家登录
-func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn network.Connection, msg protocol.Message) error {
+func (h *GameHandler) handlePlayerLogin(ctx context.Context, session session.Session, packet network.Packet) error {
 	var req playerProto.LoginRequest
-	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
+	if err := proto.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal player login request", "error", err)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerLogin, "Invalid request format")
+		return h.sendErrorResponse(session, protocol.MsgPlayerLogin, "Invalid request format")
 	}
 
 	// 验证玩家登录（这里简化处理）
 	if req.PlayerId == "" {
-		return h.sendErrorResponse(conn, protocol.MsgPlayerLogin, "Player ID is required")
+		return h.sendErrorResponse(session, protocol.MsgPlayerLogin, "Player ID is required")
 	}
 
 	// 查询玩家信息
@@ -83,15 +87,15 @@ func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn network.Connec
 	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player info", "error", err, "player_id", req.PlayerId)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerLogin, "Failed to get player info")
+		return h.sendErrorResponse(session, protocol.MsgPlayerLogin, "Failed to get player info")
 	}
 
 	if !result.Found {
-		return h.sendErrorResponse(conn, protocol.MsgPlayerLogin, "Player not found")
+		return h.sendErrorResponse(session, protocol.MsgPlayerLogin, "Player not found")
 	}
 
-	// 设置连接的玩家ID
-	conn.SetAttribute("player_id", req.PlayerId)
+	// 设置会话的玩家ID
+	session.SetPlayerID(req.PlayerId)
 
 	// 构造响应
 	response := &protocol.PlayerLoginResponse{
@@ -123,36 +127,36 @@ func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn network.Connec
 		ServerTime: time.Now().Unix(),
 	}
 
-	return h.sendResponse(conn, protocol.MsgPlayerLogin, response)
+	return h.sendResponse(session, protocol.MsgPlayerLogin, response)
 }
 
 // handlePlayerMove 处理玩家移动
-func (h *GameHandler) handlePlayerMove(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	playerID, ok := conn.GetAttribute("player_id").(string)
-	if !ok || playerID == "" {
-		return h.sendErrorResponse(conn, protocol.MsgPlayerMove, "Not logged in")
+func (h *GameHandler) handlePlayerMove(ctx context.Context, session session.Session, packet network.Packet) error {
+	playerID := session.PlayerID()
+	if playerID == "" {
+		return h.sendErrorResponse(session, protocol.MsgPlayerMove, "Not logged in")
 	}
 
 	var req playerProto.MovePlayerRequest
-	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
+	if err := proto.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal player move request", "error", err)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerMove, "Invalid request format")
+		return h.sendErrorResponse(session, protocol.MsgPlayerMove, "Invalid request format")
 	}
 
 	// 执行移动命令
 	cmd := &playerCmd.MovePlayerCommand{
 		PlayerID: playerID,
 		Position: playerCmd.Position{
-			X: req.Position.X,
-			Y: req.Position.Y,
-			Z: req.Position.Z,
+			X: float64(req.Position.X),
+			Y: float64(req.Position.Y),
+			Z: float64(req.Position.Z),
 		},
 	}
 
 	result, err := handlers.ExecuteTyped[*playerCmd.MovePlayerCommand, *playerCmd.MovePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to move player", "error", err, "player_id", playerID)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerMove, "Failed to move player")
+		return h.sendErrorResponse(session, protocol.MsgPlayerMove, "Failed to move player")
 	}
 
 	// 构造响应
@@ -171,15 +175,15 @@ func (h *GameHandler) handlePlayerMove(ctx context.Context, conn network.Connect
 		MoveTime: time.Now().Unix(),
 	}
 
-	return h.sendResponse(conn, protocol.MsgPlayerMove, response)
+	return h.sendResponse(session, protocol.MsgPlayerMove, response)
 }
 
 // handlePlayerCreate 处理玩家创建
-func (h *GameHandler) handlePlayerCreate(ctx context.Context, conn network.Connection, msg protocol.Message) error {
+func (h *GameHandler) handlePlayerCreate(ctx context.Context, session session.Session, packet network.Packet) error {
 	var req playerProto.CreatePlayerRequest
-	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
+	if err := proto.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal create player request", "error", err)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerCreate, "Invalid request format")
+		return h.sendErrorResponse(session, protocol.MsgPlayerCreate, "Invalid request format")
 	}
 
 	// 执行创建玩家命令
@@ -190,7 +194,7 @@ func (h *GameHandler) handlePlayerCreate(ctx context.Context, conn network.Conne
 	result, err := handlers.ExecuteTyped[*playerCmd.CreatePlayerCommand, *playerCmd.CreatePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to create player", "error", err, "name", req.Name)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerCreate, "Failed to create player")
+		return h.sendErrorResponse(session, protocol.MsgPlayerCreate, "Failed to create player")
 	}
 
 	// 构造响应
@@ -202,14 +206,14 @@ func (h *GameHandler) handlePlayerCreate(ctx context.Context, conn network.Conne
 		CreatedAt:    result.CreatedAt,
 	}
 
-	return h.sendResponse(conn, protocol.MsgPlayerCreate, response)
+	return h.sendResponse(session, protocol.MsgPlayerCreate, response)
 }
 
 // handlePlayerInfo 处理获取玩家信息
-func (h *GameHandler) handlePlayerInfo(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	playerID, ok := conn.GetAttribute("player_id").(string)
-	if !ok || playerID == "" {
-		return h.sendErrorResponse(conn, protocol.MsgPlayerInfo, "Not logged in")
+func (h *GameHandler) handlePlayerInfo(ctx context.Context, session session.Session, packet network.Packet) error {
+	playerID := session.PlayerID()
+	if playerID == "" {
+		return h.sendErrorResponse(session, protocol.MsgPlayerInfo, "Not logged in")
 	}
 
 	// 查询玩家信息
@@ -217,11 +221,11 @@ func (h *GameHandler) handlePlayerInfo(ctx context.Context, conn network.Connect
 	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player info", "error", err, "player_id", playerID)
-		return h.sendErrorResponse(conn, protocol.MsgPlayerInfo, "Failed to get player info")
+		return h.sendErrorResponse(session, protocol.MsgPlayerInfo, "Failed to get player info")
 	}
 
 	if !result.Found {
-		return h.sendErrorResponse(conn, protocol.MsgPlayerInfo, "Player not found")
+		return h.sendErrorResponse(session, protocol.MsgPlayerInfo, "Player not found")
 	}
 
 	// 构造响应
@@ -252,49 +256,54 @@ func (h *GameHandler) handlePlayerInfo(ctx context.Context, conn network.Connect
 		},
 	}
 
-	return h.sendResponse(conn, protocol.MsgPlayerInfo, response)
+	return h.sendResponse(session, protocol.MsgPlayerInfo, response)
 }
 
 // handlePlayerLogout 处理玩家登出
-func (h *GameHandler) handlePlayerLogout(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	playerID, ok := conn.GetAttribute("player_id").(string)
-	if !ok || playerID == "" {
-		return h.sendErrorResponse(conn, protocol.MsgPlayerLogout, "Not logged in")
+func (h *GameHandler) handlePlayerLogout(ctx context.Context, session session.Session, packet network.Packet) error {
+	playerID := session.PlayerID()
+	if playerID == "" {
+		return h.sendErrorResponse(session, protocol.MsgPlayerLogout, "Not logged in")
 	}
 
-	// 清除连接属性
-	conn.SetAttribute("player_id", nil)
+	// 清除会话玩家ID
+	session.SetPlayerID("")
 
 	// 构造响应
 	response := protocol.NewBaseResponse(true, "Logout successful")
-	return h.sendResponse(conn, protocol.MsgPlayerLogout, response)
+	return h.sendResponse(session, protocol.MsgPlayerLogout, response)
 }
 
 // 战斗协议处理器
 
 // handleCreateBattle 处理创建战斗
-func (h *GameHandler) handleCreateBattle(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	playerID, ok := conn.GetAttribute("player_id").(string)
-	if !ok || playerID == "" {
-		return h.sendErrorResponse(conn, protocol.MsgCreateBattle, "Not logged in")
+func (h *GameHandler) handleCreateBattle(ctx context.Context, session session.Session, packet network.Packet) error {
+	playerID := session.PlayerID()
+	if playerID == "" {
+		return h.sendErrorResponse(session, protocol.MsgCreateBattle, "Not logged in")
 	}
 
-	var req playerProto.CreateBattleRequest
-	if err := proto.Unmarshal(msg.Payload, &req); err != nil {
+	var req battleProto.CreateBattleRequest
+	if err := proto.Unmarshal(packet.GetData(), &req); err != nil {
 		h.logger.Error("Failed to unmarshal create battle request", "error", err)
-		return h.sendErrorResponse(conn, protocol.MsgCreateBattle, "Invalid request format")
+		return h.sendErrorResponse(session, protocol.MsgCreateBattle, "Invalid request format")
 	}
 
 	// 执行创建战斗命令
+	battleType, err := strconv.Atoi(req.BattleType)
+	if err != nil {
+		return h.sendErrorResponse(session, protocol.MsgCreateBattle, "Invalid battle type")
+	}
+
 	cmd := &battle.CreateBattleCommand{
-		BattleType: battle.BattleType(req.BattleType),
+		BattleType: battle.BattleType(battleType),
 		CreatorID:  playerID,
 	}
 
 	result, err := handlers.ExecuteTyped[*battle.CreateBattleCommand, *battle.CreateBattleResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to create battle", "error", err, "player_id", playerID)
-		return h.sendErrorResponse(conn, protocol.MsgCreateBattle, "Failed to create battle")
+		return h.sendErrorResponse(session, protocol.MsgCreateBattle, "Failed to create battle")
 	}
 
 	// 构造响应
@@ -306,54 +315,53 @@ func (h *GameHandler) handleCreateBattle(ctx context.Context, conn network.Conne
 		CreatedAt:    result.CreatedAt,
 	}
 
-	return h.sendResponse(conn, protocol.MsgCreateBattle, response)
+	return h.sendResponse(session, protocol.MsgCreateBattle, response)
 }
 
 // 辅助方法
 
 // sendResponse 发送响应
-func (h *GameHandler) sendResponse(conn network.Connection, msgType uint32, data interface{}) error {
-	responseData, err := json.Marshal(data)
+func (h *GameHandler) sendResponse(session session.Session, msgType uint32, data interface{}) error {
+	responseData, err := proto.Marshal(data.(proto.Message))
 	if err != nil {
 		h.logger.Error("Failed to marshal response", "error", err)
 		return err
 	}
 
-	responsePacket := network.NewPacket(msgType, responseData)
-	return conn.Send(responsePacket)
+	return session.Send(responseData)
 }
 
 // sendErrorResponse 发送错误响应
-func (h *GameHandler) sendErrorResponse(conn network.Connection, msgType uint32, message string) error {
+func (h *GameHandler) sendErrorResponse(session session.Session, msgType uint32, message string) error {
 	errorResponse := protocol.NewErrorResponse(message, 400, "BadRequest")
-	return h.sendResponse(conn, msgType, errorResponse)
+	return h.sendResponse(session, msgType, errorResponse)
 }
 
 // 其他处理器的占位符实现
-func (h *GameHandler) handleJoinBattle(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgJoinBattle, "Not implemented")
+func (h *GameHandler) handleJoinBattle(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgJoinBattle, "Not implemented")
 }
 
-func (h *GameHandler) handleStartBattle(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgStartBattle, "Not implemented")
+func (h *GameHandler) handleStartBattle(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgStartBattle, "Not implemented")
 }
 
-func (h *GameHandler) handleBattleAction(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgBattleAction, "Not implemented")
+func (h *GameHandler) handleBattleAction(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgBattleAction, "Not implemented")
 }
 
-func (h *GameHandler) handleLeaveBattle(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgLeaveBattle, "Not implemented")
+func (h *GameHandler) handleLeaveBattle(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgLeaveBattle, "Not implemented")
 }
 
-func (h *GameHandler) handleGetPlayerInfo(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgGetPlayerInfo, "Not implemented")
+func (h *GameHandler) handleGetPlayerInfo(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgGetPlayerInfo, "Not implemented")
 }
 
-func (h *GameHandler) handleGetOnlinePlayers(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgGetOnlinePlayers, "Not implemented")
+func (h *GameHandler) handleGetOnlinePlayers(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgGetOnlinePlayers, "Not implemented")
 }
 
-func (h *GameHandler) handleGetBattleInfo(ctx context.Context, conn network.Connection, msg protocol.Message) error {
-	return h.sendErrorResponse(conn, protocol.MsgGetBattleInfo, "Not implemented")
+func (h *GameHandler) handleGetBattleInfo(ctx context.Context, session session.Session, packet network.Packet) error {
+	return h.sendErrorResponse(session, protocol.MsgGetBattleInfo, "Not implemented")
 }

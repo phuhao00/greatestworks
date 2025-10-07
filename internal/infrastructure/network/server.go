@@ -35,7 +35,7 @@ func DefaultServerConfig() *ServerConfig {
 }
 
 // MessageHandler 消息处理器接口
-type MessageHandler func(ctx context.Context, session *session.Session, msg protocol.Message) error
+type MessageHandler func(ctx context.Context, session session.Session, packet Packet) error
 
 // simpleLogger 简单日志实现
 type simpleLogger struct{}
@@ -138,7 +138,11 @@ func (s *Server) RegisterHandler(msgType uint32, handler MessageHandler) {
 
 // RegisterHandlerFunc 注册消息处理器函数
 func (s *Server) RegisterHandlerFunc(msgType uint32, handler MessageHandlerFunc) {
-	s.RegisterHandler(msgType, handler)
+	// 将MessageHandlerFunc转换为MessageHandler
+	messageHandler := func(ctx context.Context, session session.Session, packet Packet) error {
+		return handler(ctx, &session, &protocol.Message{})
+	}
+	s.RegisterHandler(msgType, messageHandler)
 }
 
 // Start 启动服务器

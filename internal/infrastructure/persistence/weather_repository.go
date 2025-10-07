@@ -63,8 +63,7 @@ type WeatherEffect struct {
 }
 
 // Save 保存天气记录
-func (r *MongoWeatherRepository) Save(weatherAggregate *weather.WeatherAggregate) error {
-	ctx := context.Background()
+func (r *MongoWeatherRepository) Save(ctx context.Context, weatherAggregate *weather.WeatherAggregate) error {
 	doc := r.aggregateToDocument(weatherAggregate)
 	doc.UpdatedAt = time.Now()
 
@@ -222,6 +221,36 @@ func (r *MongoWeatherRepository) FindWeatherByType(ctx context.Context, weatherT
 	return nil, fmt.Errorf("FindWeatherByType not implemented")
 }
 
+// GetWeatherCount 获取天气记录数量
+func (r *MongoWeatherRepository) GetWeatherCount(ctx context.Context, sceneID string) (int64, error) {
+	// TODO: 实现GetWeatherCount方法
+	return 0, fmt.Errorf("GetWeatherCount not implemented")
+}
+
+// GetWeatherCountByType 根据天气类型获取天气记录数量
+func (r *MongoWeatherRepository) GetWeatherCountByType(ctx context.Context, sceneID string, weatherType weather.WeatherType) (int64, error) {
+	// TODO: 实现GetWeatherCountByType方法
+	return 0, fmt.Errorf("GetWeatherCountByType not implemented")
+}
+
+// GetWeatherStatistics 获取天气统计信息
+func (r *MongoWeatherRepository) GetWeatherStatistics(ctx context.Context, sceneID string, period time.Duration) (*weather.WeatherStatistics, error) {
+	// TODO: 实现GetWeatherStatistics方法
+	return nil, fmt.Errorf("GetWeatherStatistics not implemented")
+}
+
+// SaveBatch 批量保存天气记录
+func (r *MongoWeatherRepository) SaveBatch(ctx context.Context, weathers []*weather.WeatherAggregate) error {
+	// TODO: 实现SaveBatch方法
+	return fmt.Errorf("SaveBatch not implemented")
+}
+
+// UpdateBatch 批量更新天气记录
+func (r *MongoWeatherRepository) UpdateBatch(ctx context.Context, weathers []*weather.WeatherAggregate) error {
+	// TODO: 实现UpdateBatch方法
+	return fmt.Errorf("UpdateBatch not implemented")
+}
+
 // FindByRegionAndTimeRange 根据区域和时间范围查找天气
 func (r *MongoWeatherRepository) FindByRegionAndTimeRange(regionID string, startTime, endTime time.Time) ([]*weather.WeatherAggregate, error) {
 	ctx := context.Background()
@@ -316,8 +345,8 @@ func (r *MongoWeatherRepository) FindAllCurrent() ([]*weather.WeatherAggregate, 
 }
 
 // Update 更新天气记录
-func (r *MongoWeatherRepository) Update(weatherAggregate *weather.WeatherAggregate) error {
-	return r.Save(weatherAggregate)
+func (r *MongoWeatherRepository) Update(ctx context.Context, weatherAggregate *weather.WeatherAggregate) error {
+	return r.Save(ctx, weatherAggregate)
 }
 
 // Delete 删除天气记录
