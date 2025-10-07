@@ -1,6 +1,7 @@
 
-# Trae AI工作文件
+# AI工作文件
 .trae/
+.cursor/
 
 # 构建产物
 dist/
