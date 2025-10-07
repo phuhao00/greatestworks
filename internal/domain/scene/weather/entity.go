@@ -7,27 +7,27 @@ import (
 
 // WeatherState 天气状态实体
 type WeatherState struct {
-	ID           string
-	WeatherType  WeatherType
-	Intensity    WeatherIntensity
-	StartTime    time.Time
-	EndTime      time.Time
-	Duration     time.Duration
-	Temperature  float64 // 温度（摄氏度）
-	Humidity     float64 // 湿度（百分比）
-	WindSpeed    float64 // 风速（km/h）
-	Visibility   float64 // 能见度（km）
-	Pressure     float64 // 气压（hPa）
-	Description  string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID          string
+	WeatherType WeatherType
+	Intensity   WeatherIntensity
+	StartTime   time.Time
+	EndTime     time.Time
+	Duration    time.Duration
+	Temperature float64 // 温度（摄氏度）
+	Humidity    float64 // 湿度（百分比）
+	WindSpeed   float64 // 风速（km/h）
+	Visibility  float64 // 能见度（km）
+	Pressure    float64 // 气压（hPa）
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // NewWeatherState 创建天气状态
 func NewWeatherState(weatherType WeatherType, intensity WeatherIntensity) *WeatherState {
 	now := time.Now()
 	return &WeatherState{
-		ID:          generateWeatherID(),
+		ID:          generateWeatherID(""),
 		WeatherType: weatherType,
 		Intensity:   intensity,
 		StartTime:   now,
@@ -109,17 +109,17 @@ func (ws *WeatherState) GetProgress() float64 {
 	if ws.Duration == 0 {
 		return 1.0
 	}
-	
+
 	elapsed := ws.GetElapsedTime()
 	progress := float64(elapsed) / float64(ws.Duration)
-	
+
 	if progress > 1.0 {
 		return 1.0
 	}
 	if progress < 0.0 {
 		return 0.0
 	}
-	
+
 	return progress
 }
 
@@ -225,6 +225,7 @@ func (ws *WeatherState) ToMap() map[string]interface{} {
 type WeatherEffect struct {
 	ID         string
 	EffectType string
+	TargetType string
 	Multiplier float64
 	Duration   time.Duration
 	StartTime  time.Time
@@ -235,11 +236,12 @@ type WeatherEffect struct {
 }
 
 // NewWeatherEffect 创建天气效果
-func NewWeatherEffect(effectType string, multiplier float64, duration time.Duration) *WeatherEffect {
+func NewWeatherEffect(effectType, targetType string, multiplier float64, duration time.Duration) *WeatherEffect {
 	now := time.Now()
 	return &WeatherEffect{
 		ID:         generateEffectID(),
 		EffectType: effectType,
+		TargetType: targetType,
 		Multiplier: multiplier,
 		Duration:   duration,
 		StartTime:  now,
@@ -260,8 +262,18 @@ func (we *WeatherEffect) GetEffectType() string {
 	return we.EffectType
 }
 
+// GetTargetType 获取目标类型
+func (we *WeatherEffect) GetTargetType() string {
+	return we.TargetType
+}
+
 // GetMultiplier 获取倍率
 func (we *WeatherEffect) GetMultiplier() float64 {
+	return we.Multiplier
+}
+
+// GetModifier 获取修饰符（别名方法，与GetMultiplier相同）
+func (we *WeatherEffect) GetModifier() float64 {
 	return we.Multiplier
 }
 
@@ -338,17 +350,18 @@ func (we *WeatherEffect) GetUpdatedAt() time.Time {
 // ToMap 转换为映射
 func (we *WeatherEffect) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":              we.ID,
-		"effect_type":     we.EffectType,
-		"multiplier":      we.Multiplier,
-		"duration":        we.Duration,
-		"start_time":      we.StartTime,
-		"end_time":        we.EndTime,
-		"is_active":       we.IsActive,
+		"id":               we.ID,
+		"effect_type":      we.EffectType,
+		"target_type":      we.TargetType,
+		"multiplier":       we.Multiplier,
+		"duration":         we.Duration,
+		"start_time":       we.StartTime,
+		"end_time":         we.EndTime,
+		"is_active":        we.IsActive,
 		"is_effect_active": we.IsEffectActive(),
-		"remaining_time":  we.GetRemainingTime(),
-		"created_at":      we.CreatedAt,
-		"updated_at":      we.UpdatedAt,
+		"remaining_time":   we.GetRemainingTime(),
+		"created_at":       we.CreatedAt,
+		"updated_at":       we.UpdatedAt,
 	}
 }
 
@@ -511,30 +524,27 @@ func (we *WeatherEvent) GetUpdatedAt() time.Time {
 // ToMap 转换为映射
 func (we *WeatherEvent) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":           we.ID,
-		"event_type":   we.EventType.String(),
-		"severity":     we.Severity.String(),
-		"title":        we.Title,
-		"description":  we.Description,
-		"start_time":   we.StartTime,
-		"end_time":     we.EndTime,
-		"duration":     we.Duration,
-		"effects":      len(we.Effects),
-		"triggers":     we.Triggers,
-		"rewards":      we.Rewards,
-		"is_active":    we.IsActive,
+		"id":              we.ID,
+		"event_type":      we.EventType.String(),
+		"severity":        we.Severity.String(),
+		"title":           we.Title,
+		"description":     we.Description,
+		"start_time":      we.StartTime,
+		"end_time":        we.EndTime,
+		"duration":        we.Duration,
+		"effects":         len(we.Effects),
+		"triggers":        we.Triggers,
+		"rewards":         we.Rewards,
+		"is_active":       we.IsActive,
 		"is_event_active": we.IsEventActive(),
-		"created_at":   we.CreatedAt,
-		"updated_at":   we.UpdatedAt,
+		"created_at":      we.CreatedAt,
+		"updated_at":      we.UpdatedAt,
 	}
 }
 
 // 辅助函数
 
-// generateWeatherID 生成天气ID
-func generateWeatherID() string {
-	return fmt.Sprintf("weather_%d", time.Now().UnixNano())
-}
+// generateWeatherID 生成天气ID - 已在aggregate.go中定义
 
 // generateEffectID 生成效果ID
 func generateEffectID() string {

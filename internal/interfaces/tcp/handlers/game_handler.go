@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	battleCmd "greatestworks/application/commands/battle"
@@ -152,26 +153,26 @@ func (h *GameHandler) handleAuth(ctx context.Context, conn *connection.Connectio
 	}
 
 	h.logger.Info("Player authenticated", "player_id", req.PlayerID, "conn_id", conn.ID, "session_id", sessionID)
-	return h.sendResponse(conn, msg.Header.MessageID, protocol.MsgAuth, response)
+	return h.sendResponse(conn, msg.Header.MessageID, uint16(protocol.MsgAuth), response)
 }
 
 // 玩家相关处理
 
 func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	if !conn.IsAuthenticated {
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrAuthFailed, "Not authenticated")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeAuthFailed, "Not authenticated")
 	}
 
 	var req protocol.PlayerLoginRequest
 	if err := h.unmarshalPayload(msg.Payload, &req); err != nil {
 		h.logger.Error("Failed to unmarshal player login request", "error", err)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrInvalidMessage, "Invalid request format")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeInvalidMessage, "Invalid request format")
 	}
 
 	// 验证玩家ID是否匹配
 	if req.PlayerID != conn.PlayerID {
 		h.logger.Warn("Player ID mismatch", "conn_player_id", conn.PlayerID, "req_player_id", req.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrInvalidPlayer, "Player ID mismatch")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeInvalidPlayer, "Player ID mismatch")
 	}
 
 	// 查询玩家信息
@@ -179,11 +180,11 @@ func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn *connection.Co
 	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerQuery, *playerQuery.GetPlayerResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player info", "error", err, "player_id", req.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Failed to get player info")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodePlayerNotFound, "Failed to get player info")
 	}
 
 	if !result.Found {
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrPlayerNotFound, "Player not found")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodePlayerNotFound, "Player not found")
 	}
 
 	// 更新玩家登录状态 - 暂时注释掉，因为UpdatePlayerStatusCommand不存在
@@ -234,18 +235,18 @@ func (h *GameHandler) handlePlayerLogin(ctx context.Context, conn *connection.Co
 	// 广播玩家上线消息给其他玩家
 	h.broadcastPlayerOnline(result.Player)
 
-	return h.sendResponse(conn, msg.Header.MessageID, protocol.MsgPlayerLogin, response)
+	return h.sendResponse(conn, msg.Header.MessageID, uint16(protocol.MsgPlayerLogin), response)
 }
 
 func (h *GameHandler) handlePlayerMove(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	if !conn.IsAuthenticated {
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrAuthFailed, "Not authenticated")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeAuthFailed, "Not authenticated")
 	}
 
 	var req protocol.PlayerMoveRequest
 	if err := h.unmarshalPayload(msg.Payload, &req); err != nil {
 		h.logger.Error("Failed to unmarshal player move request", "error", err)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrInvalidMessage, "Invalid request format")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeInvalidMessage, "Invalid request format")
 	}
 
 	// 执行移动命令
@@ -256,13 +257,12 @@ func (h *GameHandler) handlePlayerMove(ctx context.Context, conn *connection.Con
 			Y: req.Position.Y,
 			Z: req.Position.Z,
 		},
-		Speed: req.Speed,
 	}
 
 	result, err := handlers.ExecuteTyped[*playerCmd.MovePlayerCommand, *playerCmd.MovePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to move player", "error", err, "player_id", conn.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Failed to move player")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Failed to move player")
 	}
 
 	// 构造响应
@@ -282,64 +282,47 @@ func (h *GameHandler) handlePlayerMove(ctx context.Context, conn *connection.Con
 	}
 
 	// 广播移动消息给附近玩家
-	h.broadcastPlayerMove(conn.PlayerID, result.NewPosition)
+	h.broadcastPlayerMove(conn.PlayerID, result.NewPosition.X, result.NewPosition.Y)
 
-	return h.sendResponse(conn, msg.Header.MessageID, protocol.MsgPlayerMove, response)
+	return h.sendResponse(conn, msg.Header.MessageID, uint16(protocol.MsgPlayerMove), response)
 }
 
 // 战斗相关处理
 
 func (h *GameHandler) handleCreateBattle(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	if !conn.IsAuthenticated {
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrAuthFailed, "Not authenticated")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeAuthFailed, "Not authenticated")
 	}
 
 	var req protocol.CreateBattleRequest
 	if err := h.unmarshalPayload(msg.Payload, &req); err != nil {
 		h.logger.Error("Failed to unmarshal create battle request", "error", err)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrInvalidMessage, "Invalid request format")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeInvalidMessage, "Invalid request format")
 	}
 
 	// 执行创建战斗命令
 	cmd := &battleCmd.CreateBattleCommand{
 		CreatorID:  conn.PlayerID,
-		BattleType: req.BattleType,
-		MaxPlayers: req.MaxPlayers,
-		Settings: battleCmd.BattleSettings{
-			TimeLimit:    req.Settings.TimeLimit,
-			AllowPets:    req.Settings.AllowPets,
-			AllowItems:   req.Settings.AllowItems,
-			FriendlyFire: req.Settings.FriendlyFire,
-		},
+		BattleType: battleCmd.BattleType(req.BattleType),
 	}
 
 	result, err := handlers.ExecuteTyped[*battleCmd.CreateBattleCommand, *battleCmd.CreateBattleResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to create battle", "error", err, "player_id", conn.PlayerID)
-		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Failed to create battle")
+		return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Failed to create battle")
 	}
 
 	// 构造响应
 	response := &protocol.CreateBattleResponse{
 		BaseResponse: protocol.NewBaseResponse(true, "Battle created successfully"),
 		BattleID:     result.BattleID,
-		BattleInfo: &protocol.BattleInfo{
-			ID:      result.BattleID,
-			Type:    req.BattleType,
-			Status:  "waiting",
-			Players: []protocol.PlayerInfo{}, // 初始为空
-			Settings: protocol.BattleSettings{
-				TimeLimit:    req.Settings.TimeLimit,
-				AllowPets:    req.Settings.AllowPets,
-				AllowItems:   req.Settings.AllowItems,
-				FriendlyFire: req.Settings.FriendlyFire,
-			},
-			CreatedAt: result.CreatedAt,
-		},
+		BattleType:   int(result.BattleType),
+		Status:       result.Status,
+		CreatedAt:    result.CreatedAt,
 	}
 
 	h.logger.Info("Battle created", "battle_id", result.BattleID, "creator_id", conn.PlayerID, "battle_type", req.BattleType)
-	return h.sendResponse(conn, msg.Header.MessageID, protocol.MsgCreateBattle, response)
+	return h.sendResponse(conn, msg.Header.MessageID, uint16(protocol.MsgCreateBattle), response)
 }
 
 // 辅助方法
@@ -353,13 +336,21 @@ func (h *GameHandler) unmarshalPayload(payload interface{}, target interface{}) 
 }
 
 func (h *GameHandler) sendResponse(conn *connection.Connection, messageID uint32, messageType uint16, payload interface{}) error {
+	// Convert PlayerID string to uint64
+	var playerID uint64
+	if conn.PlayerID != "" {
+		if id, err := strconv.ParseUint(conn.PlayerID, 10, 64); err == nil {
+			playerID = id
+		}
+	}
+
 	response := &protocol.Message{
 		Header: protocol.MessageHeader{
 			Magic:       protocol.MessageMagic,
 			MessageID:   messageID,
-			MessageType: messageType,
+			MessageType: uint32(messageType),
 			Flags:       protocol.FlagResponse,
-			PlayerID:    conn.PlayerID,
+			PlayerID:    playerID,
 			Timestamp:   time.Now().Unix(),
 			Sequence:    0,
 		},
@@ -370,18 +361,27 @@ func (h *GameHandler) sendResponse(conn *connection.Connection, messageID uint32
 }
 
 func (h *GameHandler) sendErrorResponse(conn *connection.Connection, messageID uint32, errorCode int, message string) error {
-	errorMsg := &protocol.ErrorMessage{
-		ErrorCode: errorCode,
-		Message:   message,
-		Timestamp: time.Now().Unix(),
+	// Convert PlayerID string to uint64
+	var playerID uint64
+	if conn.PlayerID != "" {
+		if id, err := strconv.ParseUint(conn.PlayerID, 10, 64); err == nil {
+			playerID = id
+		}
+	}
+
+	errorMsg := &protocol.ErrorResponse{
+		BaseResponse: protocol.NewBaseResponse(false, message),
+		ErrorCode:    errorCode,
+		ErrorType:    "ERROR",
 	}
 
 	response := &protocol.Message{
 		Header: protocol.MessageHeader{
 			Magic:       protocol.MessageMagic,
 			MessageID:   messageID,
-			MessageType: protocol.MsgError,
+			MessageType: uint32(protocol.MsgError),
 			Flags:       protocol.FlagResponse | protocol.FlagError,
+			PlayerID:    playerID,
 			Timestamp:   time.Now().Unix(),
 		},
 		Payload: errorMsg,
@@ -395,8 +395,9 @@ func (h *GameHandler) broadcastPlayerOnline(player *playerQuery.PlayerDTO) {
 	broadcastMsg := &protocol.Message{
 		Header: protocol.MessageHeader{
 			Magic:       protocol.MessageMagic,
-			MessageType: protocol.MsgPlayerStatus,
+			MessageType: uint32(protocol.MsgPlayerStatus),
 			Flags:       protocol.FlagBroadcast,
+			PlayerID:    0, // 广播消息
 			Timestamp:   time.Now().Unix(),
 		},
 		Payload: map[string]interface{}{
@@ -410,24 +411,20 @@ func (h *GameHandler) broadcastPlayerOnline(player *playerQuery.PlayerDTO) {
 	h.connMgr.BroadcastMessage(broadcastMsg)
 }
 
-func (h *GameHandler) broadcastPlayerMove(playerID string, newPosition playerCmd.Position) {
+func (h *GameHandler) broadcastPlayerMove(playerID string, x, y float64) {
 	// 构造玩家移动广播消息
 	broadcastMsg := &protocol.Message{
 		Header: protocol.MessageHeader{
 			Magic:       protocol.MessageMagic,
-			MessageType: protocol.MsgPlayerMove,
+			MessageType: uint32(protocol.MsgPlayerMove),
 			Flags:       protocol.FlagBroadcast,
 			PlayerID:    0, // 广播消息
 			Timestamp:   time.Now().Unix(),
 		},
 		Payload: map[string]interface{}{
-			"event":     "player_move",
 			"player_id": playerID,
-			"position": protocol.Position{
-				X: newPosition.X,
-				Y: newPosition.Y,
-				Z: newPosition.Z,
-			},
+			"x":         x,
+			"y":         y,
 			"timestamp": time.Now().Unix(),
 		},
 	}
@@ -439,50 +436,50 @@ func (h *GameHandler) broadcastPlayerMove(playerID string, newPosition playerCmd
 
 func (h *GameHandler) handlePlayerLogout(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现玩家登出处理
-	return h.sendResponse(conn, msg.Header.MessageID, protocol.MsgPlayerLogout, protocol.NewBaseResponse(true, "Logout successful"))
+	return h.sendResponse(conn, msg.Header.MessageID, uint16(protocol.MsgPlayerLogout), protocol.NewBaseResponse(true, "Logout successful"))
 }
 
 func (h *GameHandler) handlePlayerInfo(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现玩家信息查询
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handlePlayerCreate(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现玩家创建
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleJoinBattle(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现加入战斗
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleStartBattle(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现开始战斗
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleBattleAction(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现战斗行动
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleLeaveBattle(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现离开战斗
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleGetPlayerInfo(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现获取玩家信息
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleGetOnlinePlayers(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现获取在线玩家列表
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }
 
 func (h *GameHandler) handleGetBattleInfo(ctx context.Context, conn *connection.Connection, msg *protocol.Message) error {
 	// TODO: 实现获取战斗信息
-	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrUnknown, "Not implemented")
+	return h.sendErrorResponse(conn, msg.Header.MessageID, protocol.ErrCodeUnknown, "Not implemented")
 }

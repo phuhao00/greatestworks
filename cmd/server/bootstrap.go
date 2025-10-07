@@ -14,9 +14,9 @@ import (
 	"greatestworks/internal/infrastructure/config"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/infrastructure/monitoring"
-	"greatestworks/internal/infrastructure/network"
 	"greatestworks/internal/infrastructure/persistence"
 	"greatestworks/internal/interfaces/tcp"
+	"greatestworks/application/handlers"
 )
 
 const (
@@ -221,19 +221,17 @@ func (sb *ServerBootstrap) initializeServices(mongoDB *persistence.MongoDB) (*se
 }
 
 // initializeTCPServer initializes the TCP server
-func (sb *ServerBootstrap) initializeTCPServer(playerService *services.PlayerService) (*network.Server, error) {
-	// Initialize TCP handlers
-	playerHandler := tcp.NewPlayerHandler(playerService)
+func (sb *ServerBootstrap) initializeTCPServer(playerService *services.PlayerService) (*tcp.TCPServer, error) {
+	// Create TCP server config
+	config := tcp.DefaultServerConfig()
+	config.Addr = fmt.Sprintf(":%d", sb.bootstrap.Config.Server.Port)
+	
+	// Create command and query buses (placeholder)
+	commandBus := &handlers.CommandBus{}
+	queryBus := &handlers.QueryBus{}
 	
 	// Create TCP server
-	serverConfig := sb.bootstrap.Config.Server
-	server := network.NewServer(&serverConfig)
-	
-	// Register handlers
-	playerHandler.RegisterHandlers(server)
-	
-	// Start heartbeat checker
-	server.StartHeartbeatChecker()
+	server := tcp.NewTCPServer(config, commandBus, queryBus, sb.bootstrap.Logger)
 	
 	return server, nil
 }
@@ -248,7 +246,7 @@ func (sb *ServerBootstrap) waitForShutdown() {
 }
 
 // gracefulShutdown performs graceful shutdown
-func (sb *ServerBootstrap) gracefulShutdown(server *network.Server) error {
+func (sb *ServerBootstrap) gracefulShutdown(server *tcp.TCPServer) error {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
 	

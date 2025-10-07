@@ -102,7 +102,7 @@ func (drc *DefaultRewardCalculator) CalculateReward(location *HangupLocation, du
 	// 计算物品掉落
 	for _, itemDrop := range location.GetSpecialItems() {
 		if itemDrop.ShouldDrop(hours) {
-			baseReward.AddItem(NewRewardItem(itemDrop.ItemID, itemDrop.CalculateQuantity(hours)))
+			baseReward.AddItem(NewRewardItem("item", itemDrop.ItemID, int64(itemDrop.CalculateQuantity(hours)), "normal"))
 		}
 	}
 

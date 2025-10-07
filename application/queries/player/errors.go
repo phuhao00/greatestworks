@@ -11,4 +11,5 @@ var (
 	ErrInvalidLimit      = errors.New("invalid limit")
 	ErrQueryFailed       = errors.New("query failed")
 	ErrInvalidParameters = errors.New("invalid parameters")
+	ErrInvalidUsername   = errors.New("invalid username")
 )

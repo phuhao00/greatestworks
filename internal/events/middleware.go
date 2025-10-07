@@ -22,17 +22,17 @@ func NewLoggingMiddleware() *LoggingMiddleware {
 // Process 处理事件
 func (lm *LoggingMiddleware) Process(ctx context.Context, event Event, next func(context.Context, Event) error) error {
 	start := time.Now()
-	lm.logger.Printf("Processing event: %s (type: %s, player: %s)", 
+	lm.logger.Printf("Processing event: %s (type: %s, player: %s)",
 		event.GetID(), event.GetType(), event.GetPlayerID())
 
 	err := next(ctx, event)
 
 	duration := time.Since(start)
 	if err != nil {
-		lm.logger.Printf("Event processing failed: %s, duration: %v, error: %v", 
+		lm.logger.Printf("Event processing failed: %s, duration: %v, error: %v",
 			event.GetID(), duration, err)
 	} else {
-		lm.logger.Printf("Event processing completed: %s, duration: %v", 
+		lm.logger.Printf("Event processing completed: %s, duration: %v",
 			event.GetID(), duration)
 	}
 
@@ -178,7 +178,7 @@ func NewAuthenticationMiddleware() *AuthenticationMiddleware {
 // Process 处理事件
 func (am *AuthenticationMiddleware) Process(ctx context.Context, event Event, next func(context.Context, Event) error) error {
 	// 检查事件是否需要认证
-	if am.requiresAuthentication(event.GetType()) {
+	if am.requiresAuthentication(EventType(event.GetType())) {
 		if err := am.authenticateEvent(ctx, event); err != nil {
 			am.logger.Printf("Event authentication failed: %s, error: %v", event.GetID(), err)
 			return fmt.Errorf("event authentication failed: %w", err)
@@ -191,7 +191,7 @@ func (am *AuthenticationMiddleware) Process(ctx context.Context, event Event, ne
 // requiresAuthentication 检查事件类型是否需要认证
 func (am *AuthenticationMiddleware) requiresAuthentication(eventType EventType) bool {
 	// 系统事件不需要认证
-	if eventType == SystemStartEvent || eventType == SystemStopEvent || eventType == SystemHealthEvent {
+	if eventType == EventTypeSystemStart || eventType == EventTypeSystemStop || eventType == EventTypeSystemHealth {
 		return false
 	}
 
@@ -233,12 +233,12 @@ func (mm *MetricsMiddleware) Process(ctx context.Context, event Event, next func
 	err := next(ctx, event)
 
 	duration := time.Since(start)
-	mm.metrics.RecordProcessingTime(event.GetType(), duration)
+	mm.metrics.RecordProcessingTime(EventType(event.GetType()), duration)
 
 	if err != nil {
-		mm.metrics.IncrementErrorCount(event.GetType())
+		mm.metrics.IncrementErrorCount(EventType(event.GetType()))
 	} else {
-		mm.metrics.IncrementSuccessCount(event.GetType())
+		mm.metrics.IncrementSuccessCount(EventType(event.GetType()))
 	}
 
 	return err
@@ -252,11 +252,11 @@ type CircuitBreakerMiddleware struct {
 
 // CircuitBreaker 熔断器
 type CircuitBreaker struct {
-	failureCount    int
+	failureCount     int
 	failureThreshold int
-	timeout         time.Duration
-	lastFailureTime time.Time
-	state           CircuitBreakerState
+	timeout          time.Duration
+	lastFailureTime  time.Time
+	state            CircuitBreakerState
 }
 
 // CircuitBreakerState 熔断器状态
@@ -278,7 +278,7 @@ func NewCircuitBreakerMiddleware() *CircuitBreakerMiddleware {
 
 // Process 处理事件
 func (cbm *CircuitBreakerMiddleware) Process(ctx context.Context, event Event, next func(context.Context, Event) error) error {
-	breaker := cbm.getBreaker(event.GetType())
+	breaker := cbm.getBreaker(EventType(event.GetType()))
 
 	if !breaker.allowRequest() {
 		cbm.logger.Printf("Circuit breaker is open for event type: %s", event.GetType())
@@ -301,7 +301,7 @@ func (cbm *CircuitBreakerMiddleware) getBreaker(eventType EventType) *CircuitBre
 	breaker, exists := cbm.breakers[eventType]
 	if !exists {
 		breaker = &CircuitBreaker{
-			failureThreshold: 5,               // 失败阈值
+			failureThreshold: 5,                // 失败阈值
 			timeout:          30 * time.Second, // 超时时间
 			state:            Closed,
 		}

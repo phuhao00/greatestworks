@@ -14,7 +14,6 @@ import (
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 
-
 	"greatestworks/internal/interfaces/http"
 	"greatestworks/internal/interfaces/tcp"
 )
@@ -23,14 +22,13 @@ import (
 type ServerConfig struct {
 	HTTP *http.ServerConfig `yaml:"http" json:"http"`
 	TCP  *tcp.ServerConfig  `yaml:"tcp" json:"tcp"`
-
 }
 
 // MultiProtocolServer 多协议服务器
 type MultiProtocolServer struct {
-	config       *ServerConfig
-	httpServer   *http.HTTPServer
-	tcpServer    *tcp.TCPServer
+	config     *ServerConfig
+	httpServer *http.HTTPServer
+	tcpServer  *tcp.TCPServer
 
 	commandBus   *handlers.CommandBus
 	queryBus     *handlers.QueryBus
@@ -46,18 +44,17 @@ func NewMultiProtocolServer(config *ServerConfig, logger logger.Logger) *MultiPr
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// 创建命令和查询总线
-	commandBus := handlers.NewCommandBus(logger)
-	queryBus := handlers.NewQueryBus(logger)
+	commandBus := handlers.NewCommandBus()
+	queryBus := handlers.NewQueryBus()
 
 	// 创建各协议服务器
-	httpServer := http.NewHTTPServer(config.HTTP, commandBus, queryBus, logger)
+	httpServer, _ := http.NewHTTPServer(config, commandBus, logger)
 	tcpServer := tcp.NewTCPServer(config.TCP, commandBus, queryBus, logger)
 
-
 	return &MultiProtocolServer{
-		config:       config,
-		httpServer:   httpServer,
-		tcpServer:    tcpServer,
+		config:     config,
+		httpServer: httpServer,
+		tcpServer:  tcpServer,
 
 		commandBus:   commandBus,
 		queryBus:     queryBus,
@@ -96,8 +93,6 @@ func (s *MultiProtocolServer) Start() error {
 		s.logger.Info("TCP server started", "address", s.config.TCP.Addr)
 	}
 
-
-
 	// 等待一段时间确保所有服务器启动
 	time.Sleep(1 * time.Second)
 
@@ -128,8 +123,6 @@ func (s *MultiProtocolServer) Stop() error {
 			stopErrors = append(stopErrors, err)
 		}
 	}
-
-
 
 	// 等待所有协程结束
 	s.wg.Wait()
@@ -168,8 +161,6 @@ func (s *MultiProtocolServer) GetStats() map[string]interface{} {
 		stats["tcp"] = s.tcpServer.GetStats()
 	}
 
-
-
 	return stats
 }
 
@@ -196,7 +187,6 @@ func loadConfig() (*ServerConfig, error) {
 			EnableCompression: false,
 			BufferSize:        4096,
 		},
-
 	}
 
 	// TODO: 从配置文件或环境变量加载配置

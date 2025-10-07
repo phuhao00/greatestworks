@@ -195,7 +195,7 @@ func (f *FarmAggregate) PlantCrop(plotID string, seedType SeedType, quantity int
 	}
 
 	// 创建作物
-	crop := NewCrop(generateCropID(), seedType, quantity, f.soil, f.climateZone)
+	crop := NewCrop(generateCropID(), "", seedType, quantity, f.soil, f.climateZone)
 
 	// 应用季节修正
 	f.seasonModifier.ApplyToCrop(crop)

@@ -5,14 +5,37 @@ import (
 	"time"
 )
 
+// EventType 事件类型
+type EventType string
+
+const (
+	EventTypePlayerLogin   EventType = "player_login"
+	EventTypePlayerLogout  EventType = "player_logout"
+	EventTypePlayerMove    EventType = "player_move"
+	EventTypePlayerAction  EventType = "player_action"
+	EventTypePlayerChat    EventType = "player_chat"
+	EventTypePlayerMail    EventType = "player_mail"
+	EventTypeGameBattle    EventType = "game_battle"
+	EventTypeGameShop      EventType = "game_shop"
+	EventTypeGameBag       EventType = "game_bag"
+	EventTypeGamePet       EventType = "game_pet"
+	EventTypeGameBuilding  EventType = "game_building"
+	EventTypeSystemError   EventType = "system_error"
+	EventTypeSystemWarning EventType = "system_warning"
+	EventTypeSystemInfo    EventType = "system_info"
+	EventTypeSystemStart   EventType = "system_start"
+	EventTypeSystemStop    EventType = "system_stop"
+	EventTypeSystemHealth  EventType = "system_health"
+)
+
 // EventMetrics 事件指标
 type EventMetrics struct {
-	eventCounts    map[EventType]uint64
-	successCounts  map[EventType]uint64
-	errorCounts    map[EventType]uint64
-	droppedCounts  map[EventType]uint64
+	eventCounts     map[EventType]uint64
+	successCounts   map[EventType]uint64
+	errorCounts     map[EventType]uint64
+	droppedCounts   map[EventType]uint64
 	processingTimes map[EventType][]time.Duration
-	mu             sync.RWMutex
+	mu              sync.RWMutex
 }
 
 // NewEventMetrics 创建事件指标
@@ -135,12 +158,12 @@ func (em *EventMetrics) GetAllMetrics() map[string]interface{} {
 	defer em.mu.RUnlock()
 
 	metrics := map[string]interface{}{
-		"event_counts":    make(map[string]uint64),
-		"success_counts":  make(map[string]uint64),
-		"error_counts":    make(map[string]uint64),
-		"dropped_counts":  make(map[string]uint64),
-		"success_rates":   make(map[string]float64),
-		"avg_times":       make(map[string]string),
+		"event_counts":   make(map[string]uint64),
+		"success_counts": make(map[string]uint64),
+		"error_counts":   make(map[string]uint64),
+		"dropped_counts": make(map[string]uint64),
+		"success_rates":  make(map[string]float64),
+		"avg_times":      make(map[string]string),
 	}
 
 	// 收集所有事件类型

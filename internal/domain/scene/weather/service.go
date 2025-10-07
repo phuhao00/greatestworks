@@ -206,7 +206,7 @@ func (ws *WeatherService) CalculateWeatherEffects(weather *WeatherState, targetT
 		adjustedMultiplier := baseMultiplier * weather.Intensity.GetMultiplier()
 
 		// 创建效果
-		effect := NewWeatherEffect(effectType, adjustedMultiplier, weather.Duration)
+		effect := NewWeatherEffect(effectType, "general", adjustedMultiplier, weather.Duration)
 		effects = append(effects, effect)
 	}
 
@@ -602,7 +602,7 @@ func (ws *WeatherService) createWeatherEvent(eventType WeatherEventType, templat
 
 	// 添加效果
 	for effectType, multiplier := range template.Effects {
-		effect := NewWeatherEffect(effectType, multiplier*weather.Intensity.GetMultiplier(), duration)
+		effect := NewWeatherEffect(effectType, "special", multiplier*weather.Intensity.GetMultiplier(), duration)
 		event.AddEffect(effect)
 	}
 

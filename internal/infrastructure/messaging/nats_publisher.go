@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"greatestworks/internal/events"
 	"greatestworks/internal/infrastructure/logger"
 
 	"github.com/nats-io/nats.go"
@@ -33,10 +32,10 @@ type PublisherConfig struct {
 // Publisher 消息发布者接口
 type Publisher interface {
 	// PublishEvent 发布领域事件
-	PublishEvent(ctx context.Context, event events.DomainEvent) error
+	PublishEvent(ctx context.Context, event DomainEvent) error
 
 	// PublishEventAsync 异步发布领域事件
-	PublishEventAsync(ctx context.Context, event events.DomainEvent) error
+	PublishEventAsync(ctx context.Context, event DomainEvent) error
 
 	// PublishMessage 发布普通消息
 	PublishMessage(ctx context.Context, subject string, data interface{}) error
@@ -81,7 +80,7 @@ func NewNATSPublisher(conn *nats.Conn, config *PublisherConfig, logger logger.Lo
 }
 
 // PublishEvent 发布领域事件
-func (p *NATSPublisher) PublishEvent(ctx context.Context, event events.DomainEvent) error {
+func (p *NATSPublisher) PublishEvent(ctx context.Context, event DomainEvent) error {
 	subject := p.buildEventSubject(event)
 
 	// 序列化事件
@@ -103,7 +102,7 @@ func (p *NATSPublisher) PublishEvent(ctx context.Context, event events.DomainEve
 }
 
 // PublishEventAsync 异步发布领域事件
-func (p *NATSPublisher) PublishEventAsync(ctx context.Context, event events.DomainEvent) error {
+func (p *NATSPublisher) PublishEventAsync(ctx context.Context, event DomainEvent) error {
 	go func() {
 		if err := p.PublishEvent(context.Background(), event); err != nil {
 			p.logger.Error("Failed to publish event asynchronously", "error", err, "event_type", event.GetEventType())
@@ -229,7 +228,7 @@ func (p *NATSPublisher) Close() error {
 // 私有方法
 
 // buildEventSubject 构建事件主题
-func (p *NATSPublisher) buildEventSubject(event events.DomainEvent) string {
+func (p *NATSPublisher) buildEventSubject(event DomainEvent) string {
 	return fmt.Sprintf("%s.events.%s.%s", p.config.SubjectPrefix, event.GetAggregateType(), event.GetEventType())
 }
 
@@ -242,7 +241,7 @@ func (p *NATSPublisher) buildSubject(subject string) string {
 }
 
 // serializeEvent 序列化事件
-func (p *NATSPublisher) serializeEvent(event events.DomainEvent) ([]byte, error) {
+func (p *NATSPublisher) serializeEvent(event DomainEvent) ([]byte, error) {
 	// 创建事件包装器
 	eventWrapper := map[string]interface{}{
 		"event_id":       event.GetEventID(),

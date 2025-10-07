@@ -2,10 +2,57 @@ package events
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
 )
+
+// EventDispatcher 事件分发器
+type EventDispatcher struct {
+	handlers map[EventType][]EventHandler
+	mu       sync.RWMutex
+}
+
+// EventHandler 事件处理器接口
+type EventHandler interface {
+	Handle(ctx context.Context, event Event) error
+	GetEventTypes() []string
+	GetHandlerName() string
+}
+
+// NewEventDispatcher 创建事件分发器
+func NewEventDispatcher() *EventDispatcher {
+	return &EventDispatcher{
+		handlers: make(map[EventType][]EventHandler),
+	}
+}
+
+// RegisterHandler 注册事件处理器
+func (d *EventDispatcher) RegisterHandler(eventType EventType, handler EventHandler) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.handlers[eventType] = append(d.handlers[eventType], handler)
+}
+
+// Dispatch 分发事件
+func (d *EventDispatcher) Dispatch(ctx context.Context, event Event) error {
+	d.mu.RLock()
+	handlers, exists := d.handlers[EventType(event.GetType())]
+	d.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("no handlers for event type: %s", event.GetType())
+	}
+
+	for _, handler := range handlers {
+		if err := handler.Handle(ctx, event); err != nil {
+			return fmt.Errorf("handler error: %w", err)
+		}
+	}
+
+	return nil
+}
 
 // EventTask 事件任务
 type EventTask struct {
@@ -114,10 +161,10 @@ func (wp *WorkerPool) GetMetrics() map[string]interface{} {
 	defer wp.mu.RUnlock()
 
 	metrics := map[string]interface{}{
-		"worker_count":    wp.workerCount,
-		"queue_size":      cap(wp.TaskQueue),
-		"queue_length":    len(wp.TaskQueue),
-		"running":         wp.running,
+		"worker_count":   wp.workerCount,
+		"queue_size":     cap(wp.TaskQueue),
+		"queue_length":   len(wp.TaskQueue),
+		"running":        wp.running,
 		"worker_metrics": make([]map[string]interface{}, len(wp.workers)),
 	}
 
@@ -165,7 +212,7 @@ func (w *Worker) processTask(task *EventTask) {
 	w.logger.Printf("Processing event: %s (type: %s)", task.Event.GetID(), task.Event.GetType())
 
 	// 处理事件
-	if err := task.Dispatcher.processEvent(task.Context, task.Event); err != nil {
+	if err := task.Dispatcher.Dispatch(task.Context, task.Event); err != nil {
 		w.logger.Printf("Failed to process event %s: %v", task.Event.GetID(), err)
 		w.metrics.mu.Lock()
 		w.metrics.TasksFailed++

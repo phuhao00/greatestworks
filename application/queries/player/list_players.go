@@ -54,6 +54,11 @@ func (h *ListPlayersHandler) Handle(ctx context.Context, query *ListPlayersQuery
 	}, nil
 }
 
+// QueryType 返回查询类型
+func (q *ListPlayersQuery) QueryType() string {
+	return "list_players"
+}
+
 // Validate 验证查询参数
 func (q *ListPlayersQuery) Validate() error {
 	if q.Page <= 0 {

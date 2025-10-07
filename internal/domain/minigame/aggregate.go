@@ -187,7 +187,7 @@ func (mg *MinigameAggregate) AddPlayer(playerID uint64, playerName string) error
 
 	// 添加玩家
 	player := &GamePlayer{
-		PlayerID: fmt.Sprintf("%d", playerID),
+		PlayerID: playerID,
 		Username: playerName,
 		JoinTime: time.Now(),
 		IsActive: true,
@@ -215,7 +215,7 @@ func (mg *MinigameAggregate) RemovePlayer(playerID uint64, reason PlayerLeaveRea
 
 	// 查找并移除玩家
 	for i, player := range mg.Players {
-		if player.PlayerID == fmt.Sprintf("%d", playerID) {
+		if player.PlayerID == playerID {
 			// 更新玩家状态
 			player.IsActive = false
 
@@ -405,6 +405,30 @@ func (mg *MinigameAggregate) GetResults() []*GameResult {
 	return results
 }
 
+// GetID 获取小游戏ID
+func (mg *MinigameAggregate) GetID() string {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+	return mg.ID
+}
+
+// GetName 获取小游戏名称
+func (mg *MinigameAggregate) GetName() string {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+	return mg.Name
+}
+
+// GetRewards 获取奖励列表
+func (mg *MinigameAggregate) GetRewards() []*GameReward {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	rewards := make([]*GameReward, len(mg.Rewards))
+	copy(rewards, mg.Rewards)
+	return rewards
+}
+
 // GetStatistics 获取游戏统计
 func (mg *MinigameAggregate) GetStatistics() *GameStatistics {
 	mg.mutex.RLock()
@@ -414,6 +438,102 @@ func (mg *MinigameAggregate) GetStatistics() *GameStatistics {
 		return nil
 	}
 	return mg.Statistics.Clone()
+}
+
+// GetDescription 获取描述
+func (mg *MinigameAggregate) GetDescription() string {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.Description
+}
+
+// GetGameType 获取游戏类型
+func (mg *MinigameAggregate) GetGameType() GameType {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.GameType
+}
+
+// GetDifficulty 获取难度
+func (mg *MinigameAggregate) GetDifficulty() GameDifficulty {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	// TODO: 从配置或规则中获取难度，目前返回默认值
+	return GameDifficultyEasy
+}
+
+// GetMaxPlayers 获取最大玩家数
+func (mg *MinigameAggregate) GetMaxPlayers() int32 {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.MaxPlayers
+}
+
+// GetTimeLimit 获取时间限制
+func (mg *MinigameAggregate) GetTimeLimit() int32 {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	// TODO: 从配置中获取时间限制，目前返回默认值
+	return 300 // 5分钟
+}
+
+// GetIsActive 检查是否激活
+func (mg *MinigameAggregate) GetIsActive() bool {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.IsActive
+}
+
+// GetRules 获取游戏规则
+func (mg *MinigameAggregate) GetRules() map[string]interface{} {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	if mg.Rules != nil {
+		return mg.Rules.ToMap()
+	}
+	return make(map[string]interface{})
+}
+
+// GetSettings 获取游戏设置
+func (mg *MinigameAggregate) GetSettings() map[string]interface{} {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	if mg.Settings != nil {
+		return mg.Settings.ToMap()
+	}
+	return make(map[string]interface{})
+}
+
+// GetCreatedAt 获取创建时间
+func (mg *MinigameAggregate) GetCreatedAt() time.Time {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.CreatedAt
+}
+
+// GetUpdatedAt 获取更新时间
+func (mg *MinigameAggregate) GetUpdatedAt() time.Time {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.UpdatedAt
+}
+
+// GetVersion 获取版本
+func (mg *MinigameAggregate) GetVersion() int64 {
+	mg.mutex.RLock()
+	defer mg.mutex.RUnlock()
+
+	return mg.Version
 }
 
 // GetEvents 获取领域事件
@@ -507,7 +627,7 @@ func (mg *MinigameAggregate) hasPlayer(playerID uint64) bool {
 // findPlayer 查找玩家
 func (mg *MinigameAggregate) findPlayer(playerID uint64) *GamePlayer {
 	for _, player := range mg.Players {
-		if player.PlayerID == fmt.Sprintf("%d", playerID) {
+		if player.PlayerID == playerID {
 			return player
 		}
 	}
@@ -518,10 +638,7 @@ func (mg *MinigameAggregate) findPlayer(playerID uint64) *GamePlayer {
 func (mg *MinigameAggregate) getPlayerIDs() []uint64 {
 	playerIDs := make([]uint64, len(mg.Players))
 	for i, player := range mg.Players {
-		// Convert string PlayerID to uint64
-		if id, err := strconv.ParseUint(player.PlayerID, 10, 64); err == nil {
-			playerIDs[i] = id
-		}
+		playerIDs[i] = player.PlayerID
 	}
 	return playerIDs
 }
@@ -659,7 +776,7 @@ func (mg *MinigameAggregate) distributeRewards() {
 	for _, result := range mg.Results {
 		rewards := mg.RewardPool.CalculateRewards(result.Rank, result.Score, result.IsWinner)
 		for _, reward := range rewards {
-			reward.PlayerID = result.PlayerID
+			reward.PlayerID = fmt.Sprintf("%d", result.PlayerID)
 			reward.GameID = mg.GameID
 			reward.Timestamp = time.Now()
 			// 将Reward转换为GameReward

@@ -51,6 +51,34 @@ func (rt RankType) String() string {
 	}
 }
 
+// ParseRankType 解析排行榜类型
+func ParseRankType(s string) RankType {
+	switch s {
+	case "level":
+		return RankTypeLevel
+	case "power":
+		return RankTypePower
+	case "wealth":
+		return RankTypeWealth
+	case "achievement":
+		return RankTypeAchievement
+	case "pet":
+		return RankTypePet
+	case "guild":
+		return RankTypeGuild
+	case "arena":
+		return RankTypeArena
+	case "dungeon":
+		return RankTypeDungeon
+	case "activity":
+		return RankTypeActivity
+	case "custom":
+		return RankTypeCustom
+	default:
+		return RankTypeLevel // 默认值
+	}
+}
+
 // IsValid 检查排行榜类型是否有效
 func (rt RankType) IsValid() bool {
 	return rt >= RankTypeLevel && rt <= RankTypeCustom
@@ -150,6 +178,28 @@ func (rp RankPeriod) String() string {
 		return "custom"
 	default:
 		return "unknown"
+	}
+}
+
+// ParsePeriodType 解析排行榜周期类型
+func ParsePeriodType(s string) RankPeriod {
+	switch s {
+	case "permanent":
+		return RankPeriodPermanent
+	case "daily":
+		return RankPeriodDaily
+	case "weekly":
+		return RankPeriodWeekly
+	case "monthly":
+		return RankPeriodMonthly
+	case "seasonal":
+		return RankPeriodSeasonal
+	case "event":
+		return RankPeriodEvent
+	case "custom":
+		return RankPeriodCustom
+	default:
+		return RankPeriodPermanent // 默认值
 	}
 }
 

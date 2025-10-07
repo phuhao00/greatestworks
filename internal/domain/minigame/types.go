@@ -15,9 +15,22 @@ const (
 	GameCategoryRanked      GameCategory = "ranked"
 )
 
+// GameResult 游戏结果
+type GameResult struct {
+	GameID      string    `json:"game_id"`
+	WinnerID    uint64    `json:"winner_id"`
+	WinnerName  string    `json:"winner_name"`
+	FinalScore  int64     `json:"final_score"`
+	CompletedAt time.Time `json:"completed_at"`
+	Rank        int       `json:"rank"`
+	Score       int64     `json:"score"`
+	IsWinner    bool      `json:"is_winner"`
+	PlayerID    uint64    `json:"player_id"`
+}
+
 // GamePlayer 游戏玩家
 type GamePlayer struct {
-	PlayerID string    `json:"player_id"`
+	PlayerID uint64    `json:"player_id"`
 	Username string    `json:"username"`
 	Score    int64     `json:"score"`
 	JoinTime time.Time `json:"join_time"`
@@ -51,21 +64,6 @@ type GameData struct {
 	MinPlayers  int                    `json:"min_players"`
 	IsActive    bool                   `json:"is_active"`
 	IsCompleted bool                   `json:"is_completed"`
-}
-
-// GameResult 游戏结果
-type GameResult struct {
-	GameID      string       `json:"game_id"`
-	WinnerID    string       `json:"winner_id"`
-	WinnerName  string       `json:"winner_name"`
-	FinalScore  int64        `json:"final_score"`
-	Rankings    []GamePlayer `json:"rankings"`
-	Rewards     []Reward     `json:"rewards"`
-	CompletedAt time.Time    `json:"completed_at"`
-	Rank        int          `json:"rank"`
-	Score       int64        `json:"score"`
-	IsWinner    bool         `json:"is_winner"`
-	PlayerID    string       `json:"player_id"`
 }
 
 // RewardPool 奖励池
@@ -166,6 +164,39 @@ func (gd *GameData) Clone() *GameData {
 	}
 
 	return clone
+}
+
+// GetTotalPlays 获取总游戏次数
+func (gs *GameStatistics) GetTotalPlays() int {
+	return gs.TotalGames
+}
+
+// GetTotalPlayers 获取总玩家数
+func (gs *GameStatistics) GetTotalPlayers() int {
+	return gs.TotalPlayers
+}
+
+// GetAverageScore 获取平均分数
+func (gs *GameStatistics) GetAverageScore() float64 {
+	return gs.AverageScore
+}
+
+// GetHighestScore 获取最高分数
+func (gs *GameStatistics) GetHighestScore() int64 {
+	return gs.HighestScore
+}
+
+// GetAverageTime 获取平均游戏时长
+func (gs *GameStatistics) GetAverageTime() time.Duration {
+	return gs.AverageDuration
+}
+
+// GetCompletionRate 获取完成率
+func (gs *GameStatistics) GetCompletionRate() float64 {
+	if gs.TotalGames == 0 {
+		return 0.0
+	}
+	return float64(gs.CompletedGames) / float64(gs.TotalGames)
 }
 
 // Clone 克隆游戏统计信息

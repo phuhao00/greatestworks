@@ -4,7 +4,9 @@
 
 package logger
 
-import "github.com/phuhao00/spoor/v2"
+import "fmt"
+
+// import "github.com/phuhao00/spoor/v2" // TODO: 暂时注释掉有问题的依赖
 
 // Logger 日志接口
 type Logger interface {
@@ -15,14 +17,36 @@ type Logger interface {
 	Fatal(msg string, args ...interface{})
 	Panic(msg string, args ...interface{})
 	Trace(msg string, args ...interface{})
-	WithFields(fields map[string]interface{}) spoor.Logger
-	WithField(key string, value interface{}) spoor.Logger
-	WithError(err error) spoor.Logger
-	SetLevel(level spoor.LogLevel)
-	GetLevel() spoor.LogLevel
-	SetFormatter(formatter spoor.Formatter)
-	AddHook(hook spoor.Hook)
+	WithFields(fields map[string]interface{}) Logger
+	WithField(key string, value interface{}) Logger
+	WithError(err error) Logger
+	SetLevel(level LogLevel)
+	GetLevel() LogLevel
+	SetFormatter(formatter Formatter)
+	AddHook(hook Hook)
 	Close() error
+}
+
+// LogLevel 日志级别
+type LogLevel int
+
+const (
+	LevelTrace LogLevel = iota
+	LevelDebug
+	LevelInfo
+	LevelWarn
+	LevelError
+	LevelFatal
+)
+
+// Formatter 格式化器接口
+type Formatter interface {
+	Format(level LogLevel, msg string, fields map[string]interface{}) []byte
+}
+
+// Hook 钩子接口
+type Hook interface {
+	Fire(level LogLevel, msg string, fields map[string]interface{}) error
 }
 
 // Config 日志配置
@@ -57,9 +81,84 @@ func NewConfig() *Config {
 	}
 }
 
-// NewLogger 创建新的日志记录器（使用spoor单例）
+// simpleLogger 简单日志实现
+type simpleLogger struct {
+	level LogLevel
+}
+
+// NewLogger 创建新的日志记录器
 func NewLogger() Logger {
-	return GetInstance()
+	return &simpleLogger{
+		level: LevelInfo,
+	}
+}
+
+// GetInstance 获取单例实例
+func GetInstance() Logger {
+	return &simpleLogger{
+		level: LevelInfo,
+	}
+}
+
+// 实现Logger接口
+func (l *simpleLogger) Info(msg string, args ...interface{}) {
+	fmt.Printf("[INFO] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) Error(msg string, args ...interface{}) {
+	fmt.Printf("[ERROR] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) Debug(msg string, args ...interface{}) {
+	fmt.Printf("[DEBUG] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) Warn(msg string, args ...interface{}) {
+	fmt.Printf("[WARN] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) Fatal(msg string, args ...interface{}) {
+	fmt.Printf("[FATAL] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) Panic(msg string, args ...interface{}) {
+	fmt.Printf("[PANIC] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) Trace(msg string, args ...interface{}) {
+	fmt.Printf("[TRACE] "+msg+"\n", args...)
+}
+
+func (l *simpleLogger) WithFields(fields map[string]interface{}) Logger {
+	return l
+}
+
+func (l *simpleLogger) WithField(key string, value interface{}) Logger {
+	return l
+}
+
+func (l *simpleLogger) WithError(err error) Logger {
+	return l
+}
+
+func (l *simpleLogger) SetLevel(level LogLevel) {
+	l.level = level
+}
+
+func (l *simpleLogger) GetLevel() LogLevel {
+	return l.level
+}
+
+func (l *simpleLogger) SetFormatter(formatter Formatter) {
+	// 简单实现，不做任何操作
+}
+
+func (l *simpleLogger) AddHook(hook Hook) {
+	// 简单实现，不做任何操作
+}
+
+func (l *simpleLogger) Close() error {
+	return nil
 }
 
 // NewLoggerWithConfig 根据配置创建日志记录器
@@ -82,35 +181,71 @@ func NewLoggerWithConfig(config *Config) Logger {
 }
 
 // parseLevel 解析日志级别
-func parseLevel(level string) spoor.LogLevel {
+func parseLevel(level string) LogLevel {
 	switch level {
 	case "trace":
-		return spoor.LevelDebug // spoor v2没有TraceLevel，使用DebugLevel
+		return LevelTrace
 	case "debug":
-		return spoor.LevelDebug
+		return LevelDebug
 	case "info":
-		return spoor.LevelInfo
+		return LevelInfo
 	case "warn":
-		return spoor.LevelWarn
+		return LevelWarn
 	case "error":
-		return spoor.LevelError
+		return LevelError
 	case "fatal":
-		return spoor.LevelFatal
+		return LevelFatal
 	case "panic":
-		return spoor.LevelFatal // spoor v2没有PanicLevel，使用FatalLevel
+		return LevelFatal
 	default:
-		return spoor.LevelInfo
+		return LevelInfo
 	}
 }
 
 // parseFormatter 解析格式化器
-func parseFormatter(format string) spoor.Formatter {
+func parseFormatter(format string) Formatter {
 	switch format {
 	case "json":
-		return &spoor.JSONFormatter{}
+		return &JSONFormatter{}
 	case "text":
-		return &spoor.TextFormatter{}
+		return &TextFormatter{}
 	default:
-		return &spoor.TextFormatter{}
+		return &TextFormatter{}
+	}
+}
+
+// JSONFormatter JSON格式化器
+type JSONFormatter struct{}
+
+func (f *JSONFormatter) Format(level LogLevel, msg string, fields map[string]interface{}) []byte {
+	// TODO: 实现JSON格式化
+	return []byte(fmt.Sprintf(`{"level":"%s","msg":"%s"}`, level.String(), msg))
+}
+
+// TextFormatter 文本格式化器
+type TextFormatter struct{}
+
+func (f *TextFormatter) Format(level LogLevel, msg string, fields map[string]interface{}) []byte {
+	// TODO: 实现文本格式化
+	return []byte(fmt.Sprintf("[%s] %s", level.String(), msg))
+}
+
+// String 返回日志级别的字符串表示
+func (l LogLevel) String() string {
+	switch l {
+	case LevelTrace:
+		return "TRACE"
+	case LevelDebug:
+		return "DEBUG"
+	case LevelInfo:
+		return "INFO"
+	case LevelWarn:
+		return "WARN"
+	case LevelError:
+		return "ERROR"
+	case LevelFatal:
+		return "FATAL"
+	default:
+		return "INFO"
 	}
 }

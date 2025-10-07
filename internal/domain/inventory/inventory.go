@@ -22,16 +22,6 @@ type InventoryID struct {
 	value string
 }
 
-// NewInventoryID 创建新的背包ID
-func NewInventoryID() InventoryID {
-	return InventoryID{value: uuid.New().String()}
-}
-
-// String 返回字符串表示
-func (id InventoryID) String() string {
-	return id.value
-}
-
 // ItemID 物品ID值对象
 type ItemID struct {
 	value string
@@ -44,6 +34,16 @@ func NewItemID() ItemID {
 
 // String 返回字符串表示
 func (id ItemID) String() string {
+	return id.value
+}
+
+// NewInventoryID 创建新的背包ID
+func NewInventoryID() InventoryID {
+	return InventoryID{value: uuid.New().String()}
+}
+
+// String 返回字符串表示
+func (id InventoryID) String() string {
 	return id.value
 }
 
@@ -210,8 +210,11 @@ func (inv *Inventory) UsedSlots() int {
 func (inv *Inventory) Items() map[string]*Item {
 	items := make(map[string]*Item)
 	for _, slot := range inv.slots {
-		if slot.Item != nil {
-			items[slot.Item.ID] = slot.Item
+		if slot.ItemID != nil {
+			item, exists := inv.GetItemByID(*slot.ItemID)
+			if exists {
+				items[item.ID().String()] = item
+			}
 		}
 	}
 	return items
@@ -219,9 +222,20 @@ func (inv *Inventory) Items() map[string]*Item {
 
 // GetItem 获取指定物品
 func (inv *Inventory) GetItem(itemID string) (*Item, bool) {
+	return inv.GetItemByID(ItemID{value: itemID})
+}
+
+// GetItemByID 通过ItemID获取物品
+func (inv *Inventory) GetItemByID(itemID ItemID) (*Item, bool) {
 	for _, slot := range inv.slots {
-		if slot.Item != nil && slot.Item.ID == itemID {
-			return slot.Item, true
+		if slot.ItemID != nil && *slot.ItemID == itemID {
+			// 这里需要从物品仓库获取物品详情
+			// TODO: 实现从物品仓库获取物品详情的逻辑
+			// 临时实现：创建一个基本的Item
+			return &Item{
+				id: itemID,
+				// 其他字段需要从物品仓库获取
+			}, true
 		}
 	}
 	return nil, false

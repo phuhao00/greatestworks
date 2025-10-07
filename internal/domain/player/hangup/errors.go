@@ -32,6 +32,9 @@ var (
 	
 	// ErrCannotChangeLocationWhileHanging 挂机中无法更换地点
 	ErrCannotChangeLocationWhileHanging = errors.New("cannot change location while hanging up")
+	
+	// ErrHangupNotFound 挂机未找到
+	ErrHangupNotFound = errors.New("hangup not found")
 )
 
 // 挂机状态相关错误

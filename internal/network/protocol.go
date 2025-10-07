@@ -8,12 +8,9 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"sync"
 	"time"
-
-	"github.com/hashicorp/consul/agent/pool"
-	"github.com/phuhao00/netcore-go/pkg/core"
+	// "github.com/phuhao00/netcore-go/pkg/core" // TODO: 暂时注释掉有问题的依赖
 )
 
 // MessageType 消息类型定义
@@ -78,9 +75,16 @@ const (
 	FlagAck                    // 需要确认标志
 )
 
+// Connection 连接接口
+type Connection interface {
+	Send(data []byte) error
+	Close() error
+	RemoteAddr() string
+}
+
 // TCPConnection TCP连接封装
 type TCPConnection struct {
-	conn      core.Connection // 使用netcore-go的Connection接口
+	conn      Connection // 使用自定义的Connection接口
 	readBuf   []byte
 	writeBuf  []byte
 	mutex     sync.RWMutex
@@ -91,7 +95,7 @@ type TCPConnection struct {
 }
 
 // NewTCPConnection 创建新的TCP连接
-func NewTCPConnection(conn core.Connection) *TCPConnection {
+func NewTCPConnection(conn Connection) *TCPConnection {
 	return &TCPConnection{
 		conn:     conn,
 		readBuf:  make([]byte, 4096),
@@ -100,7 +104,7 @@ func NewTCPConnection(conn core.Connection) *TCPConnection {
 	}
 }
 
-// ReadMessage 读取消息
+// ReadMessage 读取消息 - 注意：netcore-go框架通过回调提供数据，此方法主要用于兼容性
 func (c *TCPConnection) ReadMessage() (*Message, error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
@@ -109,43 +113,9 @@ func (c *TCPConnection) ReadMessage() (*Message, error) {
 		return nil, fmt.Errorf("connection closed")
 	}
 
-	// 读取消息头
-	headerBuf := make([]byte, MessageHeaderSize)
-	_, err := io.ReadFull(c.conn, headerBuf)
-	if err != nil {
-		return nil, fmt.Errorf("read header failed: %w", err)
-	}
-
-	// 解析消息头
-	header, err := parseMessageHeader(headerBuf)
-	if err != nil {
-		return nil, fmt.Errorf("parse header failed: %w", err)
-	}
-
-	// 验证消息长度
-	if header.Length < MessageHeaderSize || header.Length > MaxMessageSize {
-		return nil, fmt.Errorf("invalid message length: %d", header.Length)
-	}
-
-	// 读取消息体
-	bodySize := header.Length - MessageHeaderSize
-	body := make([]byte, bodySize)
-	if bodySize > 0 {
-		_, err = io.ReadFull(c.conn, body)
-		if err != nil {
-			return nil, fmt.Errorf("read body failed: %w", err)
-		}
-	}
-
-	// 验证校验和
-	if !verifyChecksum(header, body) {
-		return nil, fmt.Errorf("checksum verification failed")
-	}
-
-	return &Message{
-		Header: *header,
-		Body:   body,
-	}, nil
+	// 在netcore-go架构中，消息读取通过onMessage回调处理
+	// 这个方法主要用于兼容性，实际的消息处理在parseMessage中进行
+	return nil, fmt.Errorf("direct message reading not supported in netcore-go architecture")
 }
 
 // WriteMessage 写入消息
@@ -320,14 +290,21 @@ type NetworkService interface {
 	GetConnectionCount(ctx context.Context) (int, error)
 }
 
-// networkServiceImpl netcore-go网络服务实现
+// Logger 日志接口
+type Logger interface {
+	Info(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+}
+
+// networkServiceImpl 网络服务实现
 type networkServiceImpl struct {
-	// tcpServer   *tcp.Server
-	connPool    *pool.ConnPool
+	// tcpServer   *tcp.Server  // TODO: 待实现服务器集成
+	// connPool    *pool.ConnPool  // TODO: 待实现连接池
 	connections map[string]*TCPConnection
 	mutex       sync.RWMutex
 	running     bool
-	logger      core.Logger
+	logger      Logger
 }
 
 // StartTCPServer 启动TCP服务器
@@ -370,7 +347,7 @@ func (n *networkServiceImpl) StartTCPServer(ctx context.Context, addr string) er
 	//     }
 	// }()
 
-	n.logger.Info("TCP server started", "addr", addr)
+	n.logger.Info(fmt.Sprintf("TCP server started on %s", addr))
 	return nil
 }
 
@@ -385,15 +362,15 @@ func (n *networkServiceImpl) StopTCPServer(ctx context.Context) error {
 
 	n.running = false
 
-	// 停止TCP服务器
-	if n.tcpServer != nil {
-		n.tcpServer.Stop()
-	}
+	// TODO: 停止TCP服务器
+	// if n.tcpServer != nil {
+	//     n.tcpServer.Stop()
+	// }
 
-	// 关闭连接池
-	if n.connPool != nil {
-		n.connPool.Close()
-	}
+	// TODO: 关闭连接池
+	// if n.connPool != nil {
+	//     n.connPool.Close()
+	// }
 
 	// 关闭所有连接
 	for _, conn := range n.connections {
@@ -429,7 +406,7 @@ func (n *networkServiceImpl) BroadcastMessage(ctx context.Context, msg *Message)
 
 	for _, conn := range connections {
 		if err := conn.WriteMessage(msg); err != nil {
-			n.Logger().Error("broadcast message failed", "error", err)
+			n.logger.Error(fmt.Sprintf("broadcast message failed: %v", err))
 		}
 	}
 
@@ -443,9 +420,9 @@ func (n *networkServiceImpl) GetConnectionCount(ctx context.Context) (int, error
 	return len(n.connections), nil
 }
 
-// onConnect netcore-go连接建立回调
-func (n *networkServiceImpl) onConnect(conn core.Connection) {
-	n.logger.Info("new connection established", "remote", conn.RemoteAddr())
+// onConnect 连接建立回调
+func (n *networkServiceImpl) onConnect(conn Connection) {
+	n.logger.Info(fmt.Sprintf("new connection established from %s", conn.RemoteAddr()))
 
 	// 创建TCP连接包装器
 	tcpConn := &TCPConnection{
@@ -456,31 +433,45 @@ func (n *networkServiceImpl) onConnect(conn core.Connection) {
 	}
 
 	// 暂时使用连接地址作为临时ID
-	tempID := conn.RemoteAddr().String()
+	tempID := conn.RemoteAddr()
 	n.mutex.Lock()
 	n.connections[tempID] = tcpConn
 	n.mutex.Unlock()
 }
 
-// onMessage netcore-go消息接收回调
-func (n *networkServiceImpl) onMessage(conn core.Connection, data []byte) {
+// onMessage 消息接收回调
+func (n *networkServiceImpl) onMessage(conn Connection, data []byte) {
 	// 解析消息
 	msg, err := n.parseMessage(data)
 	if err != nil {
-		n.logger.Error("parse message failed", "error", err)
+		n.logger.Error(fmt.Sprintf("parse message failed: %v", err))
 		return
 	}
 
 	// 处理消息
-	if err := n.handleMessage(conn, msg); err != nil {
-		n.logger.Error("handle message failed", "error", err)
+	// 需要找到对应的TCPConnection和创建context
+	n.mutex.RLock()
+	var tcpConn *TCPConnection
+	for _, c := range n.connections {
+		if c.conn == conn {
+			tcpConn = c
+			break
+		}
+	}
+	n.mutex.RUnlock()
+
+	if tcpConn != nil {
+		ctx := context.Background()
+		if err := n.handleMessage(ctx, tcpConn, msg); err != nil {
+			n.logger.Error(fmt.Sprintf("handle message failed: %v", err))
+		}
 	}
 }
 
-// onDisconnect netcore-go连接断开回调
-func (n *networkServiceImpl) onDisconnect(conn core.Connection) {
-	remoteAddr := conn.RemoteAddr().String()
-	n.logger.Info("connection disconnected", "remote", remoteAddr)
+// onDisconnect 连接断开回调
+func (n *networkServiceImpl) onDisconnect(conn Connection) {
+	remoteAddr := conn.RemoteAddr()
+	n.logger.Info(fmt.Sprintf("connection disconnected from %s", remoteAddr))
 
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
@@ -526,7 +517,7 @@ func (n *networkServiceImpl) parseMessage(data []byte) (*Message, error) {
 }
 
 // NewNetworkService 创建网络服务
-func NewNetworkService(logger core.Logger) NetworkService {
+func NewNetworkService(logger Logger) NetworkService {
 	return &networkServiceImpl{
 		connections: make(map[string]*TCPConnection),
 		logger:      logger,
@@ -557,7 +548,7 @@ func (n *networkServiceImpl) handleMessage(ctx context.Context, conn *TCPConnect
 
 	default:
 		// 其他消息类型的处理
-		n.Logger().Debug("received message", "type", msg.Header.Type, "size", len(msg.Body))
+		n.logger.Debug(fmt.Sprintf("received message type: %d, size: %d", msg.Header.Type, len(msg.Body)))
 	}
 
 	return nil

@@ -10,89 +10,89 @@ import (
 // RankingAggregate 排行榜聚合根
 type RankingAggregate struct {
 	// 基础信息
-	ID          string      `json:"id" bson:"_id"`
-	RankID      uint32      `json:"rank_id" bson:"rank_id"`
-	Name        string      `json:"name" bson:"name"`
-	Description string      `json:"description" bson:"description"`
-	RankType    RankType    `json:"rank_type" bson:"rank_type"`
+	ID          string       `json:"id" bson:"_id"`
+	RankID      uint32       `json:"rank_id" bson:"rank_id"`
+	Name        string       `json:"name" bson:"name"`
+	Description string       `json:"description" bson:"description"`
+	RankType    RankType     `json:"rank_type" bson:"rank_type"`
 	Category    RankCategory `json:"category" bson:"category"`
-	
+
 	// 排序配置
-	SortType     SortType `json:"sort_type" bson:"sort_type"`
-	TimeBitLen   uint32   `json:"time_bit_len" bson:"time_bit_len"`
-	TimeUnit     int64    `json:"time_unit" bson:"time_unit"`
-	MaxSize      int64    `json:"max_size" bson:"max_size"`
-	
+	SortType   SortType `json:"sort_type" bson:"sort_type"`
+	TimeBitLen uint32   `json:"time_bit_len" bson:"time_bit_len"`
+	TimeUnit   int64    `json:"time_unit" bson:"time_unit"`
+	MaxSize    int64    `json:"max_size" bson:"max_size"`
+
 	// 时间配置
-	StartTime    int64     `json:"start_time" bson:"start_time"`
-	EndTime      int64     `json:"end_time" bson:"end_time"`
-	Period       RankPeriod `json:"period" bson:"period"`
-	ResetTime    *time.Time `json:"reset_time,omitempty" bson:"reset_time,omitempty"`
-	
+	StartTime int64      `json:"start_time" bson:"start_time"`
+	EndTime   int64      `json:"end_time" bson:"end_time"`
+	Period    RankPeriod `json:"period" bson:"period"`
+	ResetTime *time.Time `json:"reset_time,omitempty" bson:"reset_time,omitempty"`
+
 	// 状态信息
-	Status       RankStatus `json:"status" bson:"status"`
-	IsActive     bool       `json:"is_active" bson:"is_active"`
-	LastUpdated  time.Time  `json:"last_updated" bson:"last_updated"`
-	Version      int64      `json:"version" bson:"version"`
-	
+	Status      RankStatus `json:"status" bson:"status"`
+	IsActive    bool       `json:"is_active" bson:"is_active"`
+	LastUpdated time.Time  `json:"last_updated" bson:"last_updated"`
+	Version     int64      `json:"version" bson:"version"`
+
 	// 排行数据
-	Entries      []*RankEntry `json:"entries" bson:"entries"`
-	Blacklist    *Blacklist   `json:"blacklist" bson:"blacklist"`
-	
+	Entries   []*RankEntry `json:"entries" bson:"entries"`
+	Blacklist *Blacklist   `json:"blacklist" bson:"blacklist"`
+
 	// 统计信息
-	TotalPlayers    int64   `json:"total_players" bson:"total_players"`
-	ActiveEntries   int64   `json:"active_entries" bson:"active_entries"`
-	AverageScore    float64 `json:"average_score" bson:"average_score"`
-	TopScore        int64   `json:"top_score" bson:"top_score"`
+	TotalPlayers    int64     `json:"total_players" bson:"total_players"`
+	ActiveEntries   int64     `json:"active_entries" bson:"active_entries"`
+	AverageScore    float64   `json:"average_score" bson:"average_score"`
+	TopScore        int64     `json:"top_score" bson:"top_score"`
 	LastScoreUpdate time.Time `json:"last_score_update" bson:"last_score_update"`
-	
+
 	// 奖励配置
 	RewardConfig *RankRewardConfig `json:"reward_config,omitempty" bson:"reward_config,omitempty"`
-	
+
 	// 缓存配置
-	CacheConfig  *RankCacheConfig `json:"cache_config,omitempty" bson:"cache_config,omitempty"`
-	
+	CacheConfig *RankCacheConfig `json:"cache_config,omitempty" bson:"cache_config,omitempty"`
+
 	// 创建和更新时间
-	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
-	
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+
 	// 内部状态
-	mutex        sync.RWMutex `json:"-" bson:"-"`
-	dirty        bool         `json:"-" bson:"-"`
-	events       []RankingEvent `json:"-" bson:"-"`
+	mutex  sync.RWMutex   `json:"-" bson:"-"`
+	dirty  bool           `json:"-" bson:"-"`
+	events []RankingEvent `json:"-" bson:"-"`
 }
 
 // NewRankingAggregate 创建新的排行榜聚合
 func NewRankingAggregate(rankID uint32, name string, rankType RankType, category RankCategory) *RankingAggregate {
 	now := time.Now()
 	return &RankingAggregate{
-		ID:           generateRankingID(rankID),
-		RankID:       rankID,
-		Name:         name,
-		RankType:     rankType,
-		Category:     category,
-		SortType:     SortTypeDescending,
-		TimeBitLen:   DefaultTimeBitLen,
-		TimeUnit:     DefaultTimeUnit,
-		MaxSize:      DefaultMaxSize,
-		StartTime:    now.Unix(),
-		EndTime:      0, // 永久排行榜
-		Period:       RankPeriodPermanent,
-		Status:       RankStatusActive,
-		IsActive:     true,
-		LastUpdated:  now,
-		Version:      1,
-		Entries:      make([]*RankEntry, 0),
-		Blacklist:    NewBlacklist(rankID),
-		TotalPlayers: 0,
-		ActiveEntries: 0,
-		AverageScore: 0.0,
-		TopScore:     0,
+		ID:              generateRankingID(rankID),
+		RankID:          rankID,
+		Name:            name,
+		RankType:        rankType,
+		Category:        category,
+		SortType:        SortTypeDescending,
+		TimeBitLen:      DefaultTimeBitLen,
+		TimeUnit:        DefaultTimeUnit,
+		MaxSize:         DefaultMaxSize,
+		StartTime:       now.Unix(),
+		EndTime:         0, // 永久排行榜
+		Period:          RankPeriodPermanent,
+		Status:          RankStatusActive,
+		IsActive:        true,
+		LastUpdated:     now,
+		Version:         1,
+		Entries:         make([]*RankEntry, 0),
+		Blacklist:       NewBlacklist(rankID),
+		TotalPlayers:    0,
+		ActiveEntries:   0,
+		AverageScore:    0.0,
+		TopScore:        0,
 		LastScoreUpdate: now,
-		CreatedAt:    now,
-		UpdatedAt:    now,
-		dirty:        true,
-		events:       make([]RankingEvent, 0),
+		CreatedAt:       now,
+		UpdatedAt:       now,
+		dirty:           true,
+		events:          make([]RankingEvent, 0),
 	}
 }
 
@@ -100,32 +100,32 @@ func NewRankingAggregate(rankID uint32, name string, rankType RankType, category
 func (r *RankingAggregate) UpdateScore(playerID uint64, score int64, metadata map[string]interface{}) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	// 检查排行榜状态
 	if !r.IsActive || r.Status != RankStatusActive {
 		return NewRankingInactiveError(r.RankID)
 	}
-	
+
 	// 检查黑名单
 	if r.Blacklist.IsBlacklisted(playerID) {
 		return NewPlayerBlacklistedError(playerID, r.RankID)
 	}
-	
+
 	// 检查时间范围
 	if !r.isInTimeRange() {
 		return NewRankingTimeExpiredError(r.RankID, r.StartTime, r.EndTime)
 	}
-	
+
 	// 计算带时间因子的分数
 	timeScore := r.calculateTimeScore(score)
-	
+
 	// 查找现有条目
 	existingEntry := r.findEntry(playerID)
 	if existingEntry != nil {
 		// 更新现有条目
 		oldScore := existingEntry.Score
 		existingEntry.UpdateScore(timeScore, score, metadata)
-		
+
 		// 发布分数更新事件
 		r.addEvent(NewPlayerScoreUpdatedEvent(r.ID, playerID, oldScore, score, timeScore))
 	} else {
@@ -133,23 +133,23 @@ func (r *RankingAggregate) UpdateScore(playerID uint64, score int64, metadata ma
 		newEntry := NewRankEntry(playerID, timeScore, score, metadata)
 		r.Entries = append(r.Entries, newEntry)
 		r.TotalPlayers++
-		
+
 		// 发布新玩家加入事件
 		r.addEvent(NewPlayerJoinedRankingEvent(r.ID, playerID, score, timeScore))
 	}
-	
+
 	// 重新排序
 	r.sortEntries()
-	
+
 	// 限制大小
 	r.limitSize()
-	
+
 	// 更新统计信息
 	r.updateStatistics()
-	
+
 	// 标记为脏数据
 	r.markDirty()
-	
+
 	return nil
 }
 
@@ -157,20 +157,20 @@ func (r *RankingAggregate) UpdateScore(playerID uint64, score int64, metadata ma
 func (r *RankingAggregate) GetRanking(start, end int64, excludeBlacklisted bool) ([]*RankEntry, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	if start < 0 || end < start {
 		return nil, NewInvalidRangeError(start, end)
 	}
-	
+
 	entries := make([]*RankEntry, 0)
 	count := int64(0)
-	
+
 	for i, entry := range r.Entries {
 		// 跳过黑名单玩家
 		if excludeBlacklisted && r.Blacklist.IsBlacklisted(entry.PlayerID) {
 			continue
 		}
-		
+
 		// 检查范围
 		if count >= start && count <= end {
 			// 创建副本并设置排名
@@ -178,15 +178,15 @@ func (r *RankingAggregate) GetRanking(start, end int64, excludeBlacklisted bool)
 			entryCopy.Rank = int64(i + 1)
 			entries = append(entries, &entryCopy)
 		}
-		
+
 		count++
-		
+
 		// 达到结束位置
 		if count > end {
 			break
 		}
 	}
-	
+
 	return entries, nil
 }
 
@@ -194,7 +194,7 @@ func (r *RankingAggregate) GetRanking(start, end int64, excludeBlacklisted bool)
 func (r *RankingAggregate) GetPlayerRank(playerID uint64) (*RankEntry, int64, error) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	for i, entry := range r.Entries {
 		if entry.PlayerID == playerID {
 			// 创建副本并设置排名
@@ -203,7 +203,7 @@ func (r *RankingAggregate) GetPlayerRank(playerID uint64) (*RankEntry, int64, er
 			return &entryCopy, int64(i + 1), nil
 		}
 	}
-	
+
 	return nil, -1, NewPlayerNotInRankingError(playerID, r.RankID)
 }
 
@@ -211,21 +211,21 @@ func (r *RankingAggregate) GetPlayerRank(playerID uint64) (*RankEntry, int64, er
 func (r *RankingAggregate) AddToBlacklist(playerID uint64, reason string) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	err := r.Blacklist.AddPlayer(playerID, reason)
 	if err != nil {
 		return err
 	}
-	
+
 	// 从排行榜中移除该玩家
 	r.removePlayer(playerID)
-	
+
 	// 发布黑名单事件
 	r.addEvent(NewPlayerBlacklistedEvent(r.ID, playerID, reason))
-	
+
 	// 标记为脏数据
 	r.markDirty()
-	
+
 	return nil
 }
 
@@ -233,18 +233,18 @@ func (r *RankingAggregate) AddToBlacklist(playerID uint64, reason string) error 
 func (r *RankingAggregate) RemoveFromBlacklist(playerID uint64) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	err := r.Blacklist.RemovePlayer(playerID)
 	if err != nil {
 		return err
 	}
-	
+
 	// 发布黑名单移除事件
 	r.addEvent(NewPlayerUnblacklistedEvent(r.ID, playerID))
-	
+
 	// 标记为脏数据
 	r.markDirty()
-	
+
 	return nil
 }
 
@@ -252,11 +252,11 @@ func (r *RankingAggregate) RemoveFromBlacklist(playerID uint64) error {
 func (r *RankingAggregate) Reset() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	// 保存重置前的数据用于事件
 	oldEntries := make([]*RankEntry, len(r.Entries))
 	copy(oldEntries, r.Entries)
-	
+
 	// 重置数据
 	r.Entries = make([]*RankEntry, 0)
 	r.TotalPlayers = 0
@@ -265,19 +265,19 @@ func (r *RankingAggregate) Reset() error {
 	r.TopScore = 0
 	r.LastScoreUpdate = time.Now()
 	r.Version++
-	
+
 	// 更新重置时间
 	now := time.Now()
 	r.ResetTime = &now
 	r.LastUpdated = now
 	r.UpdatedAt = now
-	
+
 	// 发布重置事件
 	r.addEvent(NewRankingResetEvent(r.ID, len(oldEntries)))
-	
+
 	// 标记为脏数据
 	r.markDirty()
-	
+
 	return nil
 }
 
@@ -285,24 +285,24 @@ func (r *RankingAggregate) Reset() error {
 func (r *RankingAggregate) SetActive(active bool) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	oldStatus := r.IsActive
 	r.IsActive = active
-	
+
 	if active {
 		r.Status = RankStatusActive
 	} else {
 		r.Status = RankStatusInactive
 	}
-	
+
 	r.LastUpdated = time.Now()
 	r.UpdatedAt = time.Now()
-	
+
 	// 发布状态变更事件
 	if oldStatus != active {
 		r.addEvent(NewRankingStatusChangedEvent(r.ID, oldStatus, active))
 	}
-	
+
 	// 标记为脏数据
 	r.markDirty()
 }
@@ -311,19 +311,19 @@ func (r *RankingAggregate) SetActive(active bool) {
 func (r *RankingAggregate) SetTimeRange(startTime, endTime int64) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	if startTime >= endTime && endTime != 0 {
 		return NewInvalidTimeRangeError(startTime, endTime)
 	}
-	
+
 	r.StartTime = startTime
 	r.EndTime = endTime
 	r.LastUpdated = time.Now()
 	r.UpdatedAt = time.Now()
-	
+
 	// 标记为脏数据
 	r.markDirty()
-	
+
 	return nil
 }
 
@@ -331,11 +331,11 @@ func (r *RankingAggregate) SetTimeRange(startTime, endTime int64) error {
 func (r *RankingAggregate) SetRewardConfig(config *RankRewardConfig) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	r.RewardConfig = config
 	r.LastUpdated = time.Now()
 	r.UpdatedAt = time.Now()
-	
+
 	// 标记为脏数据
 	r.markDirty()
 }
@@ -344,11 +344,11 @@ func (r *RankingAggregate) SetRewardConfig(config *RankRewardConfig) {
 func (r *RankingAggregate) SetCacheConfig(config *RankCacheConfig) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	r.CacheConfig = config
 	r.LastUpdated = time.Now()
 	r.UpdatedAt = time.Now()
-	
+
 	// 标记为脏数据
 	r.markDirty()
 }
@@ -357,15 +357,15 @@ func (r *RankingAggregate) SetCacheConfig(config *RankCacheConfig) {
 func (r *RankingAggregate) GetTopPlayers(count int) []*RankEntry {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	if count <= 0 {
 		return []*RankEntry{}
 	}
-	
+
 	if count > len(r.Entries) {
 		count = len(r.Entries)
 	}
-	
+
 	topPlayers := make([]*RankEntry, count)
 	for i := 0; i < count; i++ {
 		// 创建副本并设置排名
@@ -373,7 +373,7 @@ func (r *RankingAggregate) GetTopPlayers(count int) []*RankEntry {
 		entryCopy.Rank = int64(i + 1)
 		topPlayers[i] = &entryCopy
 	}
-	
+
 	return topPlayers
 }
 
@@ -381,7 +381,7 @@ func (r *RankingAggregate) GetTopPlayers(count int) []*RankEntry {
 func (r *RankingAggregate) GetStatistics() *RankingStatistics {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	return &RankingStatistics{
 		RankID:          r.RankID,
 		TotalPlayers:    r.TotalPlayers,
@@ -398,17 +398,175 @@ func (r *RankingAggregate) GetStatistics() *RankingStatistics {
 func (r *RankingAggregate) GetEvents() []RankingEvent {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	events := make([]RankingEvent, len(r.events))
 	copy(events, r.events)
 	return events
+}
+
+// GetID 获取ID
+func (r *RankingAggregate) GetID() string {
+	return r.ID
+}
+
+// GetName 获取名称
+func (r *RankingAggregate) GetName() string {
+	return r.Name
+}
+
+// GetDescription 获取描述
+func (r *RankingAggregate) GetDescription() string {
+	return r.Description
+}
+
+// GetRankType 获取排行榜类型
+func (r *RankingAggregate) GetRankType() RankType {
+	return r.RankType
+}
+
+// GetPeriodType 获取周期类型
+func (r *RankingAggregate) GetPeriodType() RankPeriod {
+	return r.Period
+}
+
+// GetMaxEntries 获取最大条目数
+func (r *RankingAggregate) GetMaxEntries() int64 {
+	return r.MaxSize
+}
+
+// GetCreatedAt 获取创建时间
+func (r *RankingAggregate) GetCreatedAt() time.Time {
+	return r.CreatedAt
+}
+
+// GetUpdatedAt 获取更新时间
+func (r *RankingAggregate) GetUpdatedAt() time.Time {
+	return r.UpdatedAt
+}
+
+// GetVersion 获取版本号
+func (r *RankingAggregate) GetVersion() int64 {
+	return r.Version
+}
+
+// IsRankingActive 检查排行榜是否激活
+func (r *RankingAggregate) IsRankingActive() bool {
+	return r.IsActive && r.Status == RankStatusActive
+}
+
+// GetBlacklist 获取黑名单
+func (r *RankingAggregate) GetBlacklist() []uint64 {
+	if r.Blacklist == nil {
+		return []uint64{}
+	}
+	return r.Blacklist.GetPlayerIDs()
+}
+
+// GetSettings 获取设置
+func (r *RankingAggregate) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["sort_type"] = r.SortType
+	settings["time_bit_len"] = r.TimeBitLen
+	settings["time_unit"] = r.TimeUnit
+	settings["max_size"] = r.MaxSize
+	return settings
+}
+
+// GetResetAt 获取重置时间
+func (r *RankingAggregate) GetResetAt() time.Time {
+	if r.ResetTime != nil {
+		return *r.ResetTime
+	}
+	return time.Time{}
+}
+
+// SetID 设置ID
+func (r *RankingAggregate) SetID(id string) {
+	r.ID = id
+}
+
+// SetDescription 设置描述
+func (r *RankingAggregate) SetDescription(description string) {
+	r.Description = description
+	r.markDirty()
+}
+
+// SetMaxEntries 设置最大条目数
+func (r *RankingAggregate) SetMaxEntries(maxEntries int64) {
+	r.MaxSize = maxEntries
+	r.markDirty()
+}
+
+// SetBlacklist 设置黑名单
+func (r *RankingAggregate) SetBlacklist(playerIDs []uint64) {
+	if r.Blacklist == nil {
+		r.Blacklist = NewBlacklist(r.RankID)
+	}
+	for _, playerID := range playerIDs {
+		err := r.Blacklist.AddPlayer(playerID, "Manual blacklist")
+		if err != nil {
+			// 忽略已存在的错误，继续处理其他玩家
+			continue
+		}
+	}
+	r.markDirty()
+}
+
+// SetSettings 设置配置
+func (r *RankingAggregate) SetSettings(settings map[string]interface{}) {
+	if sortType, ok := settings["sort_type"]; ok {
+		if st, ok := sortType.(SortType); ok {
+			r.SortType = st
+		}
+	}
+	if timeBitLen, ok := settings["time_bit_len"]; ok {
+		if tbl, ok := timeBitLen.(uint32); ok {
+			r.TimeBitLen = tbl
+		}
+	}
+	if timeUnit, ok := settings["time_unit"]; ok {
+		if tu, ok := timeUnit.(int64); ok {
+			r.TimeUnit = tu
+		}
+	}
+	if maxSize, ok := settings["max_size"]; ok {
+		if ms, ok := maxSize.(int64); ok {
+			r.MaxSize = ms
+		}
+	}
+	r.markDirty()
+}
+
+// SetVersion 设置版本号
+func (r *RankingAggregate) SetVersion(version int64) {
+	r.Version = version
+}
+
+// Activate 激活排行榜
+func (r *RankingAggregate) Activate() {
+	r.IsActive = true
+	r.Status = RankStatusActive
+	r.markDirty()
+}
+
+// Deactivate 停用排行榜
+func (r *RankingAggregate) Deactivate() {
+	r.IsActive = false
+	r.Status = RankStatusInactive
+	r.markDirty()
+}
+
+// SetResetAt 设置重置时间
+func (r *RankingAggregate) SetResetAt(resetAt time.Time) {
+	r.ResetTime = &resetAt
+	r.markDirty()
 }
 
 // ClearEvents 清除领域事件
 func (r *RankingAggregate) ClearEvents() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	r.events = make([]RankingEvent, 0)
 }
 
@@ -416,7 +574,7 @@ func (r *RankingAggregate) ClearEvents() {
 func (r *RankingAggregate) IsDirty() bool {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	return r.dirty
 }
 
@@ -424,7 +582,7 @@ func (r *RankingAggregate) IsDirty() bool {
 func (r *RankingAggregate) MarkClean() {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	r.dirty = false
 }
 
@@ -434,13 +592,13 @@ func (r *RankingAggregate) MarkClean() {
 func (r *RankingAggregate) calculateTimeScore(score int64) int64 {
 	nowTime := time.Now().Unix()
 	var timeFactor int64
-	
+
 	if r.SortType == SortTypeDescending {
 		timeFactor = (nowTime - r.StartTime) / r.TimeUnit
 	} else {
 		timeFactor = (r.EndTime - nowTime) / r.TimeUnit
 	}
-	
+
 	timeScore := (score << r.TimeBitLen) | timeFactor
 	return timeScore
 }
@@ -454,13 +612,13 @@ func (r *RankingAggregate) getRealScore(timeScore int64) int64 {
 func (r *RankingAggregate) getRealScoreTime(timeScore int64) int64 {
 	timeFactor := timeScore & ((1 << r.TimeBitLen) - 1)
 	var realTime int64
-	
+
 	if r.SortType == SortTypeDescending {
 		realTime = (timeFactor * r.TimeUnit) + r.StartTime
 	} else {
 		realTime = r.EndTime - (timeFactor * r.TimeUnit)
 	}
-	
+
 	return realTime
 }
 
@@ -509,11 +667,11 @@ func (r *RankingAggregate) limitSize() {
 // updateStatistics 更新统计信息
 func (r *RankingAggregate) updateStatistics() {
 	r.ActiveEntries = int64(len(r.Entries))
-	
+
 	if len(r.Entries) > 0 {
 		// 更新最高分
 		r.TopScore = r.getRealScore(r.Entries[0].TimeScore)
-		
+
 		// 计算平均分
 		totalScore := int64(0)
 		for _, entry := range r.Entries {
@@ -524,7 +682,7 @@ func (r *RankingAggregate) updateStatistics() {
 		r.TopScore = 0
 		r.AverageScore = 0.0
 	}
-	
+
 	r.LastScoreUpdate = time.Now()
 }
 
@@ -533,7 +691,7 @@ func (r *RankingAggregate) isInTimeRange() bool {
 	if r.EndTime == 0 {
 		return true // 永久排行榜
 	}
-	
+
 	now := time.Now().Unix()
 	return now >= r.StartTime && now <= r.EndTime
 }
@@ -565,12 +723,12 @@ const (
 	DefaultTimeBitLen = 24
 	DefaultTimeUnit   = 60
 	DefaultMaxSize    = 5000
-	
+
 	// 排行榜限制
-	MaxRankingSize    = 10000
-	MinRankingSize    = 10
-	MaxNameLength     = 100
-	MaxDescLength     = 500
+	MaxRankingSize = 10000
+	MinRankingSize = 10
+	MaxNameLength  = 100
+	MaxDescLength  = 500
 )
 
 // 验证方法
@@ -580,35 +738,35 @@ func (r *RankingAggregate) Validate() error {
 	if r.RankID == 0 {
 		return NewRankingValidationError("rank_id", r.RankID, "rank_id cannot be zero", "required")
 	}
-	
+
 	if r.Name == "" {
 		return NewRankingValidationError("name", r.Name, "name cannot be empty", "required")
 	}
-	
+
 	if len(r.Name) > MaxNameLength {
 		return NewRankingValidationError("name", r.Name, fmt.Sprintf("name length cannot exceed %d", MaxNameLength), "max_length")
 	}
-	
+
 	if len(r.Description) > MaxDescLength {
 		return NewRankingValidationError("description", r.Description, fmt.Sprintf("description length cannot exceed %d", MaxDescLength), "max_length")
 	}
-	
+
 	if r.MaxSize < MinRankingSize || r.MaxSize > MaxRankingSize {
 		return NewRankingValidationError("max_size", r.MaxSize, fmt.Sprintf("max_size must be between %d and %d", MinRankingSize, MaxRankingSize), "range")
 	}
-	
+
 	if r.TimeBitLen == 0 || r.TimeBitLen > 32 {
 		return NewRankingValidationError("time_bit_len", r.TimeBitLen, "time_bit_len must be between 1 and 32", "range")
 	}
-	
+
 	if r.TimeUnit <= 0 {
 		return NewRankingValidationError("time_unit", r.TimeUnit, "time_unit must be positive", "positive")
 	}
-	
+
 	if r.EndTime != 0 && r.StartTime >= r.EndTime {
 		return NewRankingValidationError("time_range", map[string]int64{"start": r.StartTime, "end": r.EndTime}, "start_time must be less than end_time", "time_range")
 	}
-	
+
 	return nil
 }
 
@@ -616,7 +774,7 @@ func (r *RankingAggregate) Validate() error {
 func (r *RankingAggregate) Clone() *RankingAggregate {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	clone := &RankingAggregate{
 		ID:              r.ID,
 		RankID:          r.RankID,
@@ -644,40 +802,40 @@ func (r *RankingAggregate) Clone() *RankingAggregate {
 		UpdatedAt:       r.UpdatedAt,
 		dirty:           r.dirty,
 	}
-	
+
 	// 深拷贝重置时间
 	if r.ResetTime != nil {
 		resetTime := *r.ResetTime
 		clone.ResetTime = &resetTime
 	}
-	
+
 	// 深拷贝条目
 	clone.Entries = make([]*RankEntry, len(r.Entries))
 	for i, entry := range r.Entries {
 		entryCopy := *entry
 		clone.Entries[i] = &entryCopy
 	}
-	
+
 	// 深拷贝黑名单
 	if r.Blacklist != nil {
 		clone.Blacklist = r.Blacklist.Clone()
 	}
-	
+
 	// 深拷贝奖励配置
 	if r.RewardConfig != nil {
 		rewardConfig := *r.RewardConfig
 		clone.RewardConfig = &rewardConfig
 	}
-	
+
 	// 深拷贝缓存配置
 	if r.CacheConfig != nil {
 		cacheConfig := *r.CacheConfig
 		clone.CacheConfig = &cacheConfig
 	}
-	
+
 	// 深拷贝事件
 	clone.events = make([]RankingEvent, len(r.events))
 	copy(clone.events, r.events)
-	
+
 	return clone
 }

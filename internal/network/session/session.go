@@ -135,6 +135,17 @@ func (s *TCPSession) SetAttribute(key string, value interface{}) {
 	s.attributes[key] = value
 }
 
+// NewSession 创建新会话（简单实现，用于兼容）
+func NewSession(id string) Session {
+	return &TCPSession{
+		id:           id,
+		conn:         nil, // 没有实际连接
+		lastActivity: time.Now(),
+		active:       true,
+		attributes:   make(map[string]interface{}),
+	}
+}
+
 // 错误定义
 var (
 	ErrSessionClosed = fmt.Errorf("session is closed")

@@ -8,6 +8,7 @@ import (
 // Crop 作物实体
 type Crop struct {
 	ID                  string
+	PlayerID            string
 	SeedType            SeedType
 	Quantity            int
 	GrowthStage         GrowthStage
@@ -30,12 +31,13 @@ type Crop struct {
 }
 
 // NewCrop 创建作物
-func NewCrop(id string, seedType SeedType, quantity int, soil *Soil, climateZone string) *Crop {
+func NewCrop(id string, playerID string, seedType SeedType, quantity int, soil *Soil, climateZone string) *Crop {
 	now := time.Now()
 	growthDuration := seedType.GetGrowthDuration()
 
 	return &Crop{
 		ID:                  id,
+		PlayerID:            playerID,
 		SeedType:            seedType,
 		Quantity:            quantity,
 		GrowthStage:         GrowthStageSeed,
@@ -61,6 +63,11 @@ func NewCrop(id string, seedType SeedType, quantity int, soil *Soil, climateZone
 // GetID 获取ID
 func (c *Crop) GetID() string {
 	return c.ID
+}
+
+// GetPlayerID 获取玩家ID
+func (c *Crop) GetPlayerID() string {
+	return c.PlayerID
 }
 
 // GetSeedType 获取种子类型
@@ -101,6 +108,26 @@ func (c *Crop) GetWaterLevel() float64 {
 // GetNutrientLevel 获取营养等级
 func (c *Crop) GetNutrientLevel() float64 {
 	return c.NutrientLevel
+}
+
+// GetPlotID 获取地块ID (暂时返回空字符串，需要在Crop结构体中添加PlotID字段)
+func (c *Crop) GetPlotID() string {
+	return "" // TODO: Add PlotID field to Crop struct
+}
+
+// GetSeedID 获取种子ID (暂时返回空字符串，需要在Crop结构体中添加SeedID字段)
+func (c *Crop) GetSeedID() string {
+	return "" // TODO: Add SeedID field to Crop struct
+}
+
+// GetCropType 获取作物类型 (返回种子类型的字符串表示)
+func (c *Crop) GetCropType() string {
+	return c.SeedType.String()
+}
+
+// GetCurrentStage 获取当前阶段 (返回生长阶段的字符串表示)
+func (c *Crop) GetCurrentStage() string {
+	return c.GrowthStage.String()
 }
 
 // IsHarvestable 检查是否可收获
@@ -469,6 +496,8 @@ type Plot struct {
 	Name        string
 	Size        PlotSize
 	SoilType    SoilType
+	Fertility   float64
+	Moisture    float64
 	Crop        *Crop
 	IsAvailable bool
 	LastUsed    time.Time
@@ -484,6 +513,8 @@ func NewPlot(id, name string, size PlotSize, soilType SoilType) *Plot {
 		Name:        name,
 		Size:        size,
 		SoilType:    soilType,
+		Fertility:   50.0, // 默认肥力
+		Moisture:    30.0, // 默认湿度
 		Crop:        nil,
 		IsAvailable: true,
 		LastUsed:    now,
@@ -512,9 +543,27 @@ func (p *Plot) GetSoilType() SoilType {
 	return p.SoilType
 }
 
+// GetFertility 获取肥力
+func (p *Plot) GetFertility() float64 {
+	return p.Fertility
+}
+
+// GetMoisture 获取湿度
+func (p *Plot) GetMoisture() float64 {
+	return p.Moisture
+}
+
 // GetCrop 获取作物
 func (p *Plot) GetCrop() *Crop {
 	return p.Crop
+}
+
+// GetCropID 获取作物ID
+func (p *Plot) GetCropID() string {
+	if p.Crop != nil {
+		return p.Crop.GetID()
+	}
+	return ""
 }
 
 // HasCrop 检查是否有作物

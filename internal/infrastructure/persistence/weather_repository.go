@@ -270,8 +270,7 @@ func (r *MongoWeatherRepository) Update(weatherAggregate *weather.WeatherAggrega
 }
 
 // Delete 删除天气记录
-func (r *MongoWeatherRepository) Delete(weatherID string) error {
-	ctx := context.Background()
+func (r *MongoWeatherRepository) Delete(ctx context.Context, weatherID string) error {
 
 	filter := bson.M{"weather_id": weatherID}
 
@@ -291,6 +290,33 @@ func (r *MongoWeatherRepository) Delete(weatherID string) error {
 		r.logger.Warn("Failed to delete weather cache", "error", err, "weather_id", weatherID)
 	}
 
+	return nil
+}
+
+// DeleteBatch 批量删除天气记录
+func (r *MongoWeatherRepository) DeleteBatch(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	filter := bson.M{"weather_id": bson.M{"$in": ids}}
+
+	result, err := r.collection.DeleteMany(ctx, filter)
+	if err != nil {
+		r.logger.Error("Failed to delete weather batch", "error", err, "ids", ids)
+		return fmt.Errorf("failed to delete weather batch: %w", err)
+	}
+
+	// 批量清除缓存
+	cacheKeys := make([]string, len(ids))
+	for i, id := range ids {
+		cacheKeys[i] = fmt.Sprintf("weather:%s", id)
+	}
+	if err := r.cache.DeleteBatch(ctx, cacheKeys); err != nil {
+		r.logger.Warn("Failed to delete weather cache batch", "error", err, "ids", ids)
+	}
+
+	r.logger.Info("Batch deleted weather records", "deleted_count", result.DeletedCount, "requested_count", len(ids))
 	return nil
 }
 
@@ -322,6 +348,44 @@ func (r *MongoWeatherRepository) FindByWeatherType(weatherType weather.WeatherTy
 	}
 
 	return weathers, nil
+}
+
+// FindActiveWeather 查找活跃天气
+func (r *MongoWeatherRepository) FindActiveWeather(ctx context.Context, sceneID string) (*weather.WeatherAggregate, error) {
+	// 先从缓存获取
+	cacheKey := fmt.Sprintf("weather:active:%s", sceneID)
+	var cachedWeather *weather.WeatherAggregate
+	if err := r.cache.Get(ctx, cacheKey, &cachedWeather); err == nil && cachedWeather != nil {
+		return cachedWeather, nil
+	}
+
+	// 从数据库获取当前时间的活跃天气
+	now := time.Now()
+	filter := bson.M{
+		"scene_id":   sceneID,
+		"start_time": bson.M{"$lte": now},
+		"end_time":   bson.M{"$gte": now},
+		"is_active":  true,
+	}
+
+	var doc WeatherDocument
+	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // 没有找到活跃天气
+		}
+		r.logger.Error("Failed to find active weather", "error", err, "scene_id", sceneID)
+		return nil, fmt.Errorf("failed to find active weather: %w", err)
+	}
+
+	weatherAggregate := r.documentToAggregate(&doc)
+
+	// 更新缓存
+	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, 5*time.Minute); err != nil {
+		r.logger.Warn("Failed to cache active weather", "error", err, "scene_id", sceneID)
+	}
+
+	return weatherAggregate, nil
 }
 
 // FindSpecialWeather 查找特殊天气
@@ -410,11 +474,11 @@ func (r *MongoWeatherRepository) aggregateToDocument(weatherAggregate *weather.W
 	}
 
 	return &WeatherDocument{
-		WeatherID:   weatherAggregate.GetID(),
-		RegionID:    weatherAggregate.GetRegionID(),
-		WeatherType: string(weatherAggregate.GetWeatherType()),
-		Intensity:   weatherAggregate.GetIntensity(),
-		Temperature: weatherAggregate.GetTemperature(),
+			WeatherID:   weatherAggregate.GetID(),
+			RegionID:    weatherAggregate.GetRegionID(),
+			WeatherType: string(weatherAggregate.GetWeatherType()),
+			Intensity:   weatherAggregate.GetIntensity().GetMultiplier(),
+			Temperature: weatherAggregate.GetTemperature(),
 		Humidity:    weatherAggregate.GetHumidity(),
 		WindSpeed:   weatherAggregate.GetWindSpeed(),
 		Visibility:  weatherAggregate.GetVisibility(),
@@ -434,8 +498,8 @@ func (r *MongoWeatherRepository) documentToAggregate(doc *WeatherDocument) *weat
 	effects := make([]*weather.WeatherEffect, len(doc.Effects))
 	for i, effect := range doc.Effects {
 		effects[i] = weather.NewWeatherEffect(
-			weather.EffectType(effect.EffectType),
-			weather.EffectTargetType(effect.TargetType),
+			effect.EffectType,
+			effect.TargetType,
 			effect.Modifier,
 			time.Duration(effect.Duration)*time.Second,
 		)
@@ -445,7 +509,7 @@ func (r *MongoWeatherRepository) documentToAggregate(doc *WeatherDocument) *weat
 	return weather.ReconstructWeatherAggregate(
 		doc.WeatherID,
 		doc.RegionID,
-		weather.WeatherType(doc.WeatherType),
+		weather.ParseWeatherType(doc.WeatherType),
 		doc.Intensity,
 		doc.Temperature,
 		doc.Humidity,
@@ -462,45 +526,64 @@ func (r *MongoWeatherRepository) documentToAggregate(doc *WeatherDocument) *weat
 	)
 }
 
+// CleanupExpiredWeather 清理过期天气数据
+func (r *MongoWeatherRepository) CleanupExpiredWeather(ctx context.Context, beforeTime time.Time) (int64, error) {
+	filter := bson.M{
+		"updated_at": bson.M{"$lt": beforeTime},
+		"is_active":  false,
+	}
+
+	result, err := r.collection.DeleteMany(ctx, filter)
+	if err != nil {
+		r.logger.Error("Failed to cleanup expired weather", "error", err, "before_time", beforeTime)
+		return 0, fmt.Errorf("failed to cleanup expired weather: %w", err)
+	}
+
+	r.logger.Info("Cleaned up expired weather", "deleted_count", result.DeletedCount, "before_time", beforeTime)
+	return result.DeletedCount, nil
+}
+
+// CleanupOldHistory 清理旧的天气历史记录
+func (r *MongoWeatherRepository) CleanupOldHistory(ctx context.Context, sceneID string, keepDays int) (int64, error) {
+	cutoffTime := time.Now().AddDate(0, 0, -keepDays)
+	filter := bson.M{
+		"scene_id":   sceneID,
+		"created_at": bson.M{"$lt": cutoffTime},
+	}
+
+	result, err := r.collection.DeleteMany(ctx, filter)
+	if err != nil {
+		r.logger.Error("Failed to cleanup old weather history", "error", err, "scene_id", sceneID, "keep_days", keepDays)
+		return 0, fmt.Errorf("failed to cleanup old weather history: %w", err)
+	}
+
+	r.logger.Info("Cleaned up old weather history", "deleted_count", result.DeletedCount, "scene_id", sceneID, "keep_days", keepDays)
+	return result.DeletedCount, nil
+}
+
 // CreateIndexes 创建索引
 func (r *MongoWeatherRepository) CreateIndexes(ctx context.Context) error {
 	indexes := []mongo.IndexModel{
 		{
-			Keys:    bson.D{{Key: "weather_id", Value: 1}},
-			Options: options.Index().SetUnique(true),
+			Keys: bson.D{{"scene_id", 1}},
 		},
 		{
-			Keys: bson.D{{Key: "region_id", Value: 1}},
+			Keys: bson.D{{"region", 1}},
 		},
 		{
-			Keys: bson.D{{Key: "weather_type", Value: 1}},
+			Keys: bson.D{{"weather_type", 1}},
 		},
 		{
-			Keys: bson.D{{Key: "start_time", Value: -1}},
+			Keys: bson.D{{"start_time", 1}},
 		},
 		{
-			Keys: bson.D{{Key: "end_time", Value: -1}},
+			Keys: bson.D{{"end_time", 1}},
 		},
 		{
-			Keys: bson.D{{Key: "is_special", Value: 1}},
-		},
-		{
-			Keys: bson.D{{Key: "region_id", Value: 1}, {Key: "start_time", Value: -1}},
-		},
-		{
-			Keys: bson.D{{Key: "region_id", Value: 1}, {Key: "end_time", Value: -1}},
-		},
-		{
-			Keys: bson.D{{Key: "weather_type", Value: 1}, {Key: "start_time", Value: -1}},
+			Keys: bson.D{{"is_active", 1}},
 		},
 	}
 
 	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
-	if err != nil {
-		r.logger.Error("Failed to create weather indexes", "error", err)
-		return fmt.Errorf("failed to create weather indexes: %w", err)
-	}
-
-	r.logger.Info("Weather indexes created successfully")
-	return nil
+	return err
 }

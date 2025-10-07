@@ -140,20 +140,20 @@ func (r *MongoHangupRepository) FindActiveByPlayer(playerID string) (*hangup.Han
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil // 没有活跃的挂机记�?		}
-			r.logger.Error("Failed to find active hangup", "error", err, "player_id", playerID)
-			return nil, fmt.Errorf("failed to find active hangup: %w", err)
+			return nil, nil // 没有活跃的挂机记录
 		}
-
-		hangupAggregate := r.documentToAggregate(&doc)
-
-		// 更新缓存
-		if err := r.cache.Set(ctx, cacheKey, hangupAggregate, time.Minute*30); err != nil {
-			r.logger.Warn("Failed to cache active hangup", "error", err, "player_id", playerID)
-		}
-
-		return hangupAggregate, nil
+		r.logger.Error("Failed to find active hangup", "error", err, "player_id", playerID)
+		return nil, fmt.Errorf("failed to find active hangup: %w", err)
 	}
+
+	hangupAggregate := r.documentToAggregate(&doc)
+
+	// 更新缓存
+	if err := r.cache.Set(ctx, cacheKey, hangupAggregate, time.Minute*30); err != nil {
+		r.logger.Warn("Failed to cache active hangup", "error", err, "player_id", playerID)
+	}
+
+	return hangupAggregate, nil
 }
 
 // FindHistoryByPlayer 查找玩家的挂机历�?
@@ -359,6 +359,20 @@ func (r *MongoHangupRepository) aggregateToDocument(hangupAggregate *hangup.Hang
 	return doc
 }
 
+// stringToHangupStatus 字符串转挂机状态
+func (r *MongoHangupRepository) stringToHangupStatus(status string) hangup.HangupStatus {
+	switch status {
+	case "offline":
+		return hangup.HangupStatusOffline
+	case "online":
+		return hangup.HangupStatusOnline
+	case "paused":
+		return hangup.HangupStatusPaused
+	default:
+		return hangup.HangupStatusOffline
+	}
+}
+
 // documentToAggregate 文档转聚合根
 func (r *MongoHangupRepository) documentToAggregate(doc *HangupDocument) *hangup.HangupAggregate {
 	rewards := make([]hangup.RewardItem, len(doc.Rewards))
@@ -386,7 +400,7 @@ func (r *MongoHangupRepository) documentToAggregate(doc *HangupDocument) *hangup
 		time.Duration(doc.Duration)*time.Second,
 		doc.Efficiency,
 		doc.BaseRate,
-		hangup.HangupStatus(doc.Status),
+		r.stringToHangupStatus(doc.Status),
 		rewards,
 		doc.CreatedAt,
 		doc.UpdatedAt,

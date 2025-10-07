@@ -21,6 +21,7 @@ type BuildingRepository interface {
 	FindByCategory(ctx context.Context, category BuildingCategory) ([]*BuildingAggregate, error)
 	FindByStatus(ctx context.Context, status BuildingStatus) ([]*BuildingAggregate, error)
 	FindByPosition(ctx context.Context, position *Position) (*BuildingAggregate, error)
+	FindByPlayerAndPosition(ctx context.Context, playerID uint64, position *Position) (*BuildingAggregate, error)
 	FindByArea(ctx context.Context, area *Area) ([]*BuildingAggregate, error)
 	FindByQuery(ctx context.Context, query *BuildingQuery) ([]*BuildingAggregate, int64, error)
 

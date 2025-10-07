@@ -1,6 +1,7 @@
 package ranking
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -327,6 +328,76 @@ type RankEntryQuery struct {
 	OrderDesc        bool       `json:"order_desc,omitempty"`
 	Offset           int        `json:"offset,omitempty"`
 	Limit            int        `json:"limit,omitempty"`
+}
+
+// GetSort 获取排序字段
+func (q *RankEntryQuery) GetSort() string {
+	return q.OrderBy
+}
+
+// GetSortOrder 获取排序顺序
+func (q *RankEntryQuery) GetSortOrder() bool {
+	return q.OrderDesc
+}
+
+// GetLimit 获取限制数量
+func (q *RankEntryQuery) GetLimit() int {
+	return q.Limit
+}
+
+// GetOffset 获取偏移量
+func (q *RankEntryQuery) GetOffset() int {
+	return q.Offset
+}
+
+// GetMinRank 获取最小排名
+func (q *RankEntryQuery) GetMinRank() *int32 {
+	if q.MinRank != nil {
+		minRank := int32(*q.MinRank)
+		return &minRank
+	}
+	return nil
+}
+
+// GetMaxRank 获取最大排名
+func (q *RankEntryQuery) GetMaxRank() *int32 {
+	if q.MaxRank != nil {
+		maxRank := int32(*q.MaxRank)
+		return &maxRank
+	}
+	return nil
+}
+
+// GetMinScore 获取最小分数
+func (q *RankEntryQuery) GetMinScore() *int64 {
+	if q.MinScore != nil {
+		return q.MinScore
+	}
+	return nil
+}
+
+// GetMaxScore 获取最大分数
+func (q *RankEntryQuery) GetMaxScore() *int64 {
+	if q.MaxScore != nil {
+		return q.MaxScore
+	}
+	return nil
+}
+
+// GetRankingID 获取排行榜ID
+func (q *RankEntryQuery) GetRankingID() string {
+	if q.RankID != nil {
+		return fmt.Sprintf("%d", *q.RankID)
+	}
+	return ""
+}
+
+// GetPlayerID 获取玩家ID
+func (q *RankEntryQuery) GetPlayerID() uint64 {
+	if q.PlayerID != nil {
+		return *q.PlayerID
+	}
+	return 0
 }
 
 // BlacklistQuery 黑名单查询条件

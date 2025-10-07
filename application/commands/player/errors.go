@@ -14,4 +14,8 @@ var (
 	ErrInvalidHealAmount       = errors.New("invalid heal amount")
 	ErrPlayerOffline           = errors.New("player is offline")
 	ErrInsufficientPermission  = errors.New("insufficient permission")
+	ErrInvalidUsername         = errors.New("invalid username")
+	ErrInvalidPassword         = errors.New("invalid password")
+	ErrInvalidEmail            = errors.New("invalid email")
+	ErrInvalidRequest          = errors.New("invalid request")
 )

@@ -16,7 +16,7 @@ type EventDispatcher struct {
 	subscriber Subscriber
 	logger     logger.Logger
 	config     *DispatcherConfig
-	handlers   map[string][]EventHandler
+	handlers   map[string][]events.EventHandler
 	mu         sync.RWMutex
 	stats      *DispatcherStats
 	ctx        context.Context
@@ -40,28 +40,28 @@ type DispatcherConfig struct {
 
 // EventMessage 事件消息
 type EventMessage struct {
-	Event      events.DomainEvent `json:"event"`
-	Timestamp  time.Time          `json:"timestamp"`
-	RetryCount int                `json:"retry_count"`
-	Metadata   map[string]string  `json:"metadata"`
+	Event      DomainEvent       `json:"event"`
+	Timestamp  time.Time         `json:"timestamp"`
+	RetryCount int               `json:"retry_count"`
+	Metadata   map[string]string `json:"metadata"`
 }
 
 // Dispatcher 事件分发器接口
 type Dispatcher interface {
 	// RegisterHandler 注册事件处理器
-	RegisterHandler(eventType string, handler EventHandler) error
+	RegisterHandler(eventType string, handler events.EventHandler) error
 
 	// UnregisterHandler 取消注册事件处理器
 	UnregisterHandler(eventType string, handlerName string) error
 
 	// Dispatch 分发事件
-	Dispatch(ctx context.Context, event events.DomainEvent) error
+	Dispatch(ctx context.Context, event DomainEvent) error
 
 	// DispatchAsync 异步分发事件
-	DispatchAsync(ctx context.Context, event events.DomainEvent) error
+	DispatchAsync(ctx context.Context, event DomainEvent) error
 
 	// DispatchBatch 批量分发事件
-	DispatchBatch(ctx context.Context, events []events.DomainEvent) error
+	DispatchBatch(ctx context.Context, events []DomainEvent) error
 
 	// Start 启动分发器
 	Start(ctx context.Context) error
@@ -96,7 +96,7 @@ func NewEventDispatcher(publisher Publisher, subscriber Subscriber, config *Disp
 		subscriber: subscriber,
 		logger:     logger,
 		config:     config,
-		handlers:   make(map[string][]EventHandler),
+		handlers:   make(map[string][]events.EventHandler),
 		ctx:        ctx,
 		cancel:     cancel,
 		eventQueue: make(chan *EventMessage, config.QueueSize),
@@ -115,7 +115,7 @@ func NewEventDispatcher(publisher Publisher, subscriber Subscriber, config *Disp
 }
 
 // RegisterHandler 注册事件处理器
-func (d *EventDispatcher) RegisterHandler(eventType string, handler EventHandler) error {
+func (d *EventDispatcher) RegisterHandler(eventType string, handler events.EventHandler) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -165,7 +165,7 @@ func (d *EventDispatcher) UnregisterHandler(eventType string, handlerName string
 }
 
 // Dispatch 分发事件
-func (d *EventDispatcher) Dispatch(ctx context.Context, event events.DomainEvent) error {
+func (d *EventDispatcher) Dispatch(ctx context.Context, event DomainEvent) error {
 	// 直接发布事件
 	err := d.publisher.PublishEvent(ctx, event)
 	if err != nil {
@@ -180,7 +180,7 @@ func (d *EventDispatcher) Dispatch(ctx context.Context, event events.DomainEvent
 }
 
 // DispatchAsync 异步分发事件
-func (d *EventDispatcher) DispatchAsync(ctx context.Context, event events.DomainEvent) error {
+func (d *EventDispatcher) DispatchAsync(ctx context.Context, event DomainEvent) error {
 	eventMsg := &EventMessage{
 		Event:      event,
 		Timestamp:  time.Now(),
@@ -203,7 +203,7 @@ func (d *EventDispatcher) DispatchAsync(ctx context.Context, event events.Domain
 }
 
 // DispatchBatch 批量分发事件
-func (d *EventDispatcher) DispatchBatch(ctx context.Context, events []events.DomainEvent) error {
+func (d *EventDispatcher) DispatchBatch(ctx context.Context, events []DomainEvent) error {
 	if len(events) == 0 {
 		return nil
 	}
@@ -397,7 +397,7 @@ func (d *EventDispatcher) processBatch() {
 
 // processBatchEvents 处理批量事件
 func (d *EventDispatcher) processBatchEvents(batch []*EventMessage) {
-	events := make([]events.DomainEvent, len(batch))
+	events := make([]DomainEvent, len(batch))
 	for i, eventMsg := range batch {
 		events[i] = eventMsg.Event
 	}

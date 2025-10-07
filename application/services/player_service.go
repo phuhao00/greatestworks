@@ -195,6 +195,29 @@ type GetPlayerQuery struct {
 	PlayerID string `json:"player_id" validate:"required"`
 }
 
+// DeletePlayer 删除玩家
+func (s *PlayerService) DeletePlayer(ctx context.Context, playerID string) error {
+	// 解析玩家ID
+	pid := player.PlayerIDFromString(playerID)
+
+	// 查找玩家
+	p, err := s.playerRepo.FindByID(ctx, pid)
+	if err != nil {
+		return fmt.Errorf("查找玩家失败: %w", err)
+	}
+	if p == nil {
+		return player.ErrPlayerNotFound
+	}
+
+	// 删除玩家
+	if err := s.playerRepo.Delete(ctx, pid); err != nil {
+		return fmt.Errorf("删除玩家失败: %w", err)
+	}
+
+	log.Printf("删除玩家成功: %s (ID: %s)", p.Name(), p.ID().String())
+	return nil
+}
+
 // GetPlayerResult 获取玩家结果
 type GetPlayerResult struct {
 	PlayerID string              `json:"player_id"`

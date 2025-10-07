@@ -1,12 +1,14 @@
 package weather
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
 
 // WeatherAggregate 天气聚合根
 type WeatherAggregate struct {
+	id              string
 	sceneID         string
 	currentWeather  *WeatherState
 	weatherHistory  []*WeatherState
@@ -17,6 +19,7 @@ type WeatherAggregate struct {
 	nextChangeTime  time.Time
 	changeInterval  time.Duration
 	randomSeed      int64
+	createdAt       time.Time
 	updatedAt       time.Time
 	version         int
 }
@@ -25,6 +28,7 @@ type WeatherAggregate struct {
 func NewWeatherAggregate(sceneID string) *WeatherAggregate {
 	now := time.Now()
 	return &WeatherAggregate{
+		id:              generateWeatherID(sceneID),
 		sceneID:         sceneID,
 		currentWeather:  NewWeatherState(WeatherTypeSunny, WeatherIntensityNormal),
 		weatherHistory:  make([]*WeatherState, 0),
@@ -35,14 +39,142 @@ func NewWeatherAggregate(sceneID string) *WeatherAggregate {
 		nextChangeTime:  now.Add(30 * time.Minute), // 默认30分钟变化一次
 		changeInterval:  30 * time.Minute,
 		randomSeed:      now.UnixNano(),
+		createdAt:       now,
 		updatedAt:       now,
 		version:         1,
 	}
 }
 
+// ReconstructWeatherAggregate 从持久化数据重建天气聚合根
+func ReconstructWeatherAggregate(
+	id string,
+	sceneID string,
+	weatherType WeatherType,
+	intensity float64,
+	temperature float64,
+	humidity float64,
+	windSpeed float64,
+	visibility float64,
+	startTime time.Time,
+	endTime time.Time,
+	duration time.Duration,
+	isSpecial bool,
+	description string,
+	effects []*WeatherEffect,
+	createdAt time.Time,
+	updatedAt time.Time,
+) *WeatherAggregate {
+	// 创建天气效果映射
+	weatherEffects := make(map[string]*WeatherEffect)
+	for _, effect := range effects {
+		weatherEffects[effect.GetEffectType()] = effect
+	}
+
+	// 根据强度创建 WeatherIntensity
+	weatherIntensity := WeatherIntensityNormal
+	if intensity <= 0.5 {
+		weatherIntensity = WeatherIntensityLight
+	} else if intensity >= 1.5 {
+		weatherIntensity = WeatherIntensityHeavy
+	}
+
+	// 创建当前天气状态
+	currentWeather := &WeatherState{
+		WeatherType: weatherType,
+		Intensity:   weatherIntensity,
+		Temperature: temperature,
+		Humidity:    humidity,
+		WindSpeed:   windSpeed,
+		Visibility:  visibility,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Duration:    duration,
+	}
+
+	return &WeatherAggregate{
+		id:              id,
+		sceneID:         sceneID,
+		currentWeather:  currentWeather,
+		weatherHistory:  make([]*WeatherState, 0),
+		weatherForecast: make([]*WeatherForecast, 0),
+		weatherEffects:  weatherEffects,
+		seasonalPattern: NewSeasonalPattern(),
+		lastUpdateTime:  updatedAt,
+		nextChangeTime:  endTime,
+		changeInterval:  30 * time.Minute,
+		randomSeed:      createdAt.UnixNano(),
+		createdAt:       createdAt,
+		updatedAt:       updatedAt,
+		version:         1,
+	}
+}
+
+// GetID 获取天气ID
+func (w *WeatherAggregate) GetID() string {
+	return w.id
+}
+
 // GetSceneID 获取场景ID
 func (w *WeatherAggregate) GetSceneID() string {
 	return w.sceneID
+}
+
+// GetRegionID 获取区域ID（与场景ID相同）
+func (w *WeatherAggregate) GetRegionID() string {
+	return w.sceneID
+}
+
+// GetEffects 获取天气效果（别名方法）
+func (w *WeatherAggregate) GetEffects() map[string]*WeatherEffect {
+	return w.weatherEffects
+}
+
+// GetWeatherType 获取当前天气类型
+func (w *WeatherAggregate) GetWeatherType() WeatherType {
+	if w.currentWeather == nil {
+		return WeatherTypeSunny
+	}
+	return w.currentWeather.WeatherType
+}
+
+// GetIntensity 获取当前天气强度
+func (w *WeatherAggregate) GetIntensity() WeatherIntensity {
+	if w.currentWeather == nil {
+		return WeatherIntensityNormal
+	}
+	return w.currentWeather.Intensity
+}
+
+// GetTemperature 获取当前温度
+func (w *WeatherAggregate) GetTemperature() float64 {
+	if w.currentWeather == nil {
+		return 20.0 // 默认温度
+	}
+	return w.currentWeather.Temperature
+}
+
+// GetHumidity 获取当前湿度
+func (w *WeatherAggregate) GetHumidity() float64 {
+	if w.currentWeather == nil {
+		return 50.0 // 默认湿度
+	}
+	return w.currentWeather.Humidity
+}
+
+// GetWindSpeed 获取当前风速
+func (w *WeatherAggregate) GetWindSpeed() float64 {
+	if w.currentWeather == nil {
+		return 5.0 // 默认风速
+	}
+	return w.currentWeather.WindSpeed
+}
+
+// GetVisibility 获取当前能见度
+func (w *WeatherAggregate) GetVisibility() float64 {
+	if w.currentWeather == nil {
+		return 10.0 // 默认能见度（公里）
+	}
+	return w.currentWeather.Visibility
 }
 
 // GetCurrentWeather 获取当前天气
@@ -287,6 +419,58 @@ func (w *WeatherAggregate) GetUpdatedAt() time.Time {
 	return w.updatedAt
 }
 
+// GetCreatedAt 获取创建时间
+func (w *WeatherAggregate) GetCreatedAt() time.Time {
+	return w.createdAt
+}
+
+// GetStartTime 获取当前天气开始时间
+func (w *WeatherAggregate) GetStartTime() time.Time {
+	if w.currentWeather == nil {
+		return time.Time{}
+	}
+	return w.currentWeather.StartTime
+}
+
+// GetEndTime 获取当前天气结束时间
+func (w *WeatherAggregate) GetEndTime() time.Time {
+	if w.currentWeather == nil {
+		return time.Time{}
+	}
+	return w.currentWeather.EndTime
+}
+
+// GetDuration 获取当前天气持续时间
+func (w *WeatherAggregate) GetDuration() time.Duration {
+	if w.currentWeather == nil {
+		return 0
+	}
+	return w.currentWeather.Duration
+}
+
+// IsSpecialWeather 检查是否为特殊天气
+func (w *WeatherAggregate) IsSpecialWeather() bool {
+	if w.currentWeather == nil {
+		return false
+	}
+	// 特殊天气包括暴风雨、雪天、雾天等
+	specialWeathers := []WeatherType{WeatherTypeStormy, WeatherTypeSnowy, WeatherTypeFoggy} // TODO: 修复WeatherTypeHail和WeatherTypeBlizzard
+	for _, special := range specialWeathers {
+		if w.currentWeather.WeatherType == special {
+			return true
+		}
+	}
+	return false
+}
+
+// GetDescription 获取当前天气描述
+func (w *WeatherAggregate) GetDescription() string {
+	if w.currentWeather == nil {
+		return "无天气信息"
+	}
+	return w.generateWeatherDescription(w.currentWeather.WeatherType, w.currentWeather.Intensity)
+}
+
 // 私有方法
 
 // addToHistory 添加到历史记录
@@ -368,28 +552,28 @@ func (w *WeatherAggregate) generateWeatherEffects(weatherType WeatherType, inten
 
 	switch weatherType {
 	case WeatherTypeSunny:
-		effects = append(effects, NewWeatherEffect("visibility_boost", 1.2*intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("movement_speed_boost", 1.1*intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("visibility_boost", "visibility", 1.2*intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("movement_speed_boost", "movement", 1.1*intensity.GetMultiplier(), w.currentWeather.Duration))
 
 	case WeatherTypeRainy:
-		effects = append(effects, NewWeatherEffect("visibility_reduction", 0.8/intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("fire_damage_reduction", 0.7/intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("water_damage_boost", 1.2*intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("visibility_reduction", "visibility", 0.8/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("fire_damage_reduction", "fire", 0.7/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("water_damage_boost", "water", 1.2*intensity.GetMultiplier(), w.currentWeather.Duration))
 
 	case WeatherTypeSnowy:
-		effects = append(effects, NewWeatherEffect("movement_speed_reduction", 0.8/intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("ice_damage_boost", 1.3*intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("cold_resistance_reduction", 0.9/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("movement_speed_reduction", "movement", 0.8/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("ice_damage_boost", "ice", 1.3*intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("cold_resistance_reduction", "cold", 0.9/intensity.GetMultiplier(), w.currentWeather.Duration))
 
 	case WeatherTypeStormy:
-		effects = append(effects, NewWeatherEffect("lightning_damage_boost", 1.5*intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("accuracy_reduction", 0.9/intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("wind_resistance_reduction", 0.8/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("lightning_damage_boost", "lightning", 1.5*intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("accuracy_reduction", "accuracy", 0.9/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("wind_resistance_reduction", "wind", 0.8/intensity.GetMultiplier(), w.currentWeather.Duration))
 
 	case WeatherTypeFoggy:
-		effects = append(effects, NewWeatherEffect("visibility_severe_reduction", 0.5/intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("detection_range_reduction", 0.6/intensity.GetMultiplier(), w.currentWeather.Duration))
-		effects = append(effects, NewWeatherEffect("stealth_boost", 1.3*intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("visibility_severe_reduction", "visibility", 0.5/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("detection_range_reduction", "detection", 0.6/intensity.GetMultiplier(), w.currentWeather.Duration))
+		effects = append(effects, NewWeatherEffect("stealth_boost", "stealth", 1.3*intensity.GetMultiplier(), w.currentWeather.Duration))
 	}
 
 	return effects
@@ -550,4 +734,12 @@ func (w *WeatherAggregate) selectRandomIntensity(weatherType WeatherType) Weathe
 func (w *WeatherAggregate) updateVersion() {
 	w.version++
 	w.updatedAt = time.Now()
+}
+
+// generateWeatherID 生成天气ID
+func generateWeatherID(sceneID string) string {
+	if sceneID == "" {
+		sceneID = "default"
+	}
+	return fmt.Sprintf("weather_%s_%d", sceneID, time.Now().UnixNano())
 }

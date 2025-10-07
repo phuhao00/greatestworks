@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"strconv"
 	"time"
 	
 	"github.com/gin-gonic/gin"
@@ -239,10 +238,12 @@ func (h *PlayerHandler) DeletePlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行删除玩家命令
-	cmd := &playerCmd.DeletePlayerCommand{PlayerID: player.PlayerIDFromString(playerIDStr)}
+	cmd := &playerCmd.DeletePlayerCommand{
+		PlayerID: playerIDStr,
+	}
 	_, err := handlers.ExecuteTyped[*playerCmd.DeletePlayerCommand, *playerCmd.DeletePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
-		h.logger.Error("Failed to delete player", "error", err, "player_id", playerID)
+		h.logger.Error("Failed to delete player", "error", err, "player_id", playerIDStr)
 		HandleError(c, err)
 		return
 	}
@@ -324,7 +325,7 @@ func (h *PlayerHandler) MovePlayer(c *gin.Context) {
 	
 	// 执行移动玩家命令
 	cmd := &playerCmd.MovePlayerCommand{
-		PlayerID: player.PlayerIDFromString(playerIDStr),
+		PlayerID: playerIDStr,
 		Position: playerCmd.Position{
 			X: req.X,
 			Y: req.Y,
@@ -334,7 +335,7 @@ func (h *PlayerHandler) MovePlayer(c *gin.Context) {
 	
 	result, err := handlers.ExecuteTyped[*playerCmd.MovePlayerCommand, *playerCmd.MovePlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
-		h.logger.Error("Failed to move player", "error", err, "player_id", playerID)
+		h.logger.Error("Failed to move player", "error", err, "player_id", playerIDStr)
 		HandleError(c, err)
 		return
 	}
@@ -368,20 +369,21 @@ func (h *PlayerHandler) LevelUpPlayer(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 执行玩家升级命令
-	cmd := &playerCmd.LevelUpPlayerCommand{PlayerID: player.PlayerIDFromString(playerIDStr)}
+	cmd := &playerCmd.LevelUpPlayerCommand{PlayerID: playerIDStr}
 	result, err := handlers.ExecuteTyped[*playerCmd.LevelUpPlayerCommand, *playerCmd.LevelUpPlayerResult](ctx, h.commandBus, cmd)
 	if err != nil {
-		h.logger.Error("Failed to level up player", "error", err, "player_id", playerID)
+		h.logger.Error("Failed to level up player", "error", err, "player_id", playerIDStr)
 		HandleError(c, err)
 		return
 	}
 	
 	// 构造响应
 	response := map[string]interface{}{
-		"success":    result.Success,
+		"success":    result.LeveledUp,
 		"old_level":  result.OldLevel,
 		"new_level":  result.NewLevel,
-		"exp_used":   result.ExpUsed,
+		"old_exp":    result.OldExp,
+		"new_exp":    result.NewExp,
 		"leveled_up_at": time.Now(),
 	}
 	
@@ -398,10 +400,12 @@ func (h *PlayerHandler) GetPlayerStats(c *gin.Context) {
 	ctx := context.Background()
 	
 	// 查询玩家统计信息
-	query := &playerQuery.GetPlayerStatsQuery{PlayerID: player.PlayerIDFromString(playerIDStr)}
+	query := &playerQuery.GetPlayerStatsQuery{
+		PlayerID: player.PlayerIDFromString(playerIDStr),
+	}
 	result, err := handlers.ExecuteQueryTyped[*playerQuery.GetPlayerStatsQuery, *playerQuery.GetPlayerStatsResult](ctx, h.queryBus, query)
 	if err != nil {
-		h.logger.Error("Failed to get player stats", "error", err, "player_id", playerID)
+		h.logger.Error("Failed to get player stats", "error", err, "player_id", playerIDStr)
 		HandleError(c, err)
 		return
 	}

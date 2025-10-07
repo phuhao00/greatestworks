@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"

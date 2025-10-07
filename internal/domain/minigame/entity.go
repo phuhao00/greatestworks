@@ -34,6 +34,7 @@ type GameSession struct {
 	Achievements []string               `json:"achievements" bson:"achievements"`
 	Statistics   map[string]interface{} `json:"statistics" bson:"statistics"`
 	GameData     map[string]interface{} `json:"game_data" bson:"game_data"`
+	Rewards      []*GameReward          `json:"rewards" bson:"rewards"`
 	LastActivity time.Time              `json:"last_activity" bson:"last_activity"`
 	CreatedAt    time.Time              `json:"created_at" bson:"created_at"`
 	UpdatedAt    time.Time              `json:"updated_at" bson:"updated_at"`
@@ -49,6 +50,26 @@ type GameReward struct {
 	ItemCount  int        `json:"item_count,omitempty" bson:"item_count,omitempty"`
 	GameID     string     `json:"game_id" bson:"game_id"`
 	Timestamp  time.Time  `json:"timestamp" bson:"timestamp"`
+}
+
+// GetType 获取奖励类型
+func (gr *GameReward) GetType() RewardType {
+	return gr.RewardType
+}
+
+// GetItemID 获取物品ID
+func (gr *GameReward) GetItemID() string {
+	return gr.ItemID
+}
+
+// GetQuantity 获取数量
+func (gr *GameReward) GetQuantity() int {
+	return int(gr.Amount)
+}
+
+// GetReason 获取奖励原因
+func (gr *GameReward) GetReason() string {
+	return "game_completion" // 默认原因，可以根据需要扩展
 }
 
 // NewGameSession 创建新的游戏会话
@@ -70,6 +91,7 @@ func NewGameSession(gameID string, playerID uint64, sessionToken string) *GameSe
 		Achievements: make([]string, 0),
 		Statistics:   make(map[string]interface{}),
 		GameData:     make(map[string]interface{}),
+		Rewards:      make([]*GameReward, 0),
 		LastActivity: now,
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -179,14 +201,46 @@ func (gs *GameSession) GetGameData(key string) (interface{}, bool) {
 	return value, exists
 }
 
-// SetStatistic 设置统计数据
+// SetStatistic 设置统计信息
 func (gs *GameSession) SetStatistic(key string, value interface{}) {
 	if gs.Statistics == nil {
 		gs.Statistics = make(map[string]interface{})
 	}
 	gs.Statistics[key] = value
-	gs.LastActivity = time.Now()
 	gs.UpdatedAt = time.Now()
+}
+
+// SetStatus 设置会话状态
+func (gs *GameSession) SetStatus(status SessionStatus) {
+	gs.Status = PlayerStatus(status)
+	gs.UpdatedAt = time.Now()
+}
+
+// SetScore 设置分数
+func (gs *GameSession) SetScore(score int64) {
+	gs.Score = score
+	gs.UpdatedAt = time.Now()
+}
+
+// SetTimeElapsed 设置已用时间
+func (gs *GameSession) SetTimeElapsed(elapsed time.Duration) {
+	gs.PlayTime = elapsed
+	gs.UpdatedAt = time.Now()
+}
+
+// SetSettings 设置游戏设置
+func (gs *GameSession) SetSettings(settings map[string]interface{}) {
+	gs.GameData = settings
+	gs.UpdatedAt = time.Now()
+}
+
+// SetTimestamps 设置时间戳
+func (gs *GameSession) SetTimestamps(startedAt, expiresAt, completedAt time.Time) {
+	gs.JoinedAt = startedAt
+	gs.LastActivity = expiresAt
+	if !completedAt.IsZero() {
+		gs.UpdatedAt = completedAt
+	}
 }
 
 // GetStatistic 获取统计数据
@@ -276,6 +330,90 @@ func (gs *GameSession) Clone() *GameSession {
 	}
 
 	return clone
+}
+
+// GetID 获取会话ID
+func (gs *GameSession) GetID() string {
+	return gs.ID
+}
+
+// GetMinigameID 获取小游戏ID
+func (gs *GameSession) GetMinigameID() string {
+	return gs.GameID
+}
+
+// GetPlayerID 获取玩家ID
+func (gs *GameSession) GetPlayerID() uint64 {
+	return gs.PlayerID
+}
+
+// GetRewards 获取奖励列表
+func (gs *GameSession) GetRewards() []*GameReward {
+	return gs.Rewards
+}
+
+// GetStatus 获取会话状态
+func (gs *GameSession) GetStatus() SessionStatus {
+	return SessionStatus(gs.Status)
+}
+
+// GetScore 获取分数
+func (gs *GameSession) GetScore() int64 {
+	return gs.Score
+}
+
+// GetTimeLimit 获取时间限制
+func (gs *GameSession) GetTimeLimit() time.Duration {
+	// 假设没有专门的时间限制字段，返回默认值
+	return 30 * time.Minute
+}
+
+// GetTimeElapsed 获取已用时间
+func (gs *GameSession) GetTimeElapsed() time.Duration {
+	return gs.PlayTime
+}
+
+// GetSettings 获取游戏设置
+func (gs *GameSession) GetSettings() map[string]interface{} {
+	return gs.GameData
+}
+
+// GetStartedAt 获取开始时间
+func (gs *GameSession) GetStartedAt() time.Time {
+	return gs.JoinedAt
+}
+
+// GetExpiresAt 获取过期时间
+func (gs *GameSession) GetExpiresAt() time.Time {
+	return gs.LastActivity
+}
+
+// GetCompletedAt 获取完成时间
+func (gs *GameSession) GetCompletedAt() time.Time {
+	// 如果状态是完成状态，返回更新时间，否则返回零值
+	if gs.Status == PlayerStatusFinished {
+		return gs.UpdatedAt
+	}
+	return time.Time{}
+}
+
+// GetCreatedAt 获取创建时间
+func (gs *GameSession) GetCreatedAt() time.Time {
+	return gs.CreatedAt
+}
+
+// GetUpdatedAt 获取更新时间
+func (gs *GameSession) GetUpdatedAt() time.Time {
+	return gs.UpdatedAt
+}
+
+// AddReward 添加奖励
+func (gs *GameSession) AddReward(reward *GameReward) {
+	if gs.Rewards == nil {
+		gs.Rewards = make([]*GameReward, 0)
+	}
+	gs.Rewards = append(gs.Rewards, reward)
+	gs.UpdatedAt = time.Now()
 }
 
 // GameScore 游戏分数实体

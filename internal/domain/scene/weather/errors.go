@@ -83,6 +83,7 @@ var (
 	ErrDataNotFound            = errors.New("weather data not found")
 	ErrDataValidationFailed    = errors.New("weather data validation failed")
 	ErrDataSerializationFailed = errors.New("weather data serialization failed")
+	ErrWeatherNotFound         = errors.New("weather not found")
 
 	// 系统相关错误
 	ErrSystemNotInitialized = errors.New("weather system not initialized")

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
-	"greatestworks/application/commands/player"
+	playerCommands "greatestworks/application/commands/player"
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 )
@@ -97,7 +97,7 @@ func (h *RegisterHandler) Register(c *gin.Context) {
 	ctx := context.Background()
 
 	// 创建用户账户和玩家角色
-	cmd := &player.CreatePlayerWithAccountCommand{
+	cmd := &playerCommands.CreatePlayerWithAccountCommand{
 		Username:     req.Username,
 		PasswordHash: hashedPassword,
 		Email:        req.Email,
@@ -106,7 +106,7 @@ func (h *RegisterHandler) Register(c *gin.Context) {
 		Gender:       req.Gender,
 	}
 
-	result, err := handlers.ExecuteTyped[*player.CreatePlayerWithAccountCommand, *player.CreatePlayerWithAccountResult](ctx, h.commandBus, cmd)
+	result, err := handlers.ExecuteTyped[*playerCommands.CreatePlayerWithAccountCommand, *playerCommands.CreatePlayerWithAccountResult](ctx, h.commandBus, cmd)
 	if err != nil {
 		h.logger.Error("Failed to create player account", "error", err, "username", req.Username)
 		c.JSON(500, gin.H{"error": "Failed to create account", "success": false})

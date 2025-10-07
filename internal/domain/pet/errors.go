@@ -1,10 +1,16 @@
 package pet
 
 import (
+	"errors"
 	"fmt"
 )
 
 // 宠物领域错误定义
+
+// 常用错误变量
+var (
+	ErrPetNotFound = errors.New("pet not found")
+)
 
 // PetError 宠物错误基础接口
 type PetError interface {

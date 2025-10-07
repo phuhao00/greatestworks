@@ -229,6 +229,113 @@ func (h *HangupAggregate) GetUpdatedAt() time.Time {
 	return h.updatedAt
 }
 
+// GetID 获取挂机ID (暂时使用playerID作为ID)
+func (h *HangupAggregate) GetID() string {
+	return h.playerID
+}
+
+// GetLocationID 获取地点ID
+func (h *HangupAggregate) GetLocationID() string {
+	if h.currentLocation == nil {
+		return ""
+	}
+	return h.currentLocation.GetID()
+}
+
+// GetStartTime 获取开始时间
+func (h *HangupAggregate) GetStartTime() time.Time {
+	return h.lastOnlineTime
+}
+
+// GetEndTime 获取结束时间
+func (h *HangupAggregate) GetEndTime() time.Time {
+	return h.lastOfflineTime
+}
+
+// GetDuration 获取持续时间
+func (h *HangupAggregate) GetDuration() time.Duration {
+	return h.totalHangupTime
+}
+
+// GetEfficiency 获取效率
+func (h *HangupAggregate) GetEfficiency() float64 {
+	if h.efficiencyBonus == nil {
+		return 1.0
+	}
+	return h.efficiencyBonus.GetTotalBonus()
+}
+
+// GetBaseRate 获取基础速率 (经验速率)
+func (h *HangupAggregate) GetBaseRate() float64 {
+	if h.currentLocation == nil {
+		return 0.0
+	}
+	return h.currentLocation.GetBaseExpRate()
+}
+
+// GetStatus 获取状态
+func (h *HangupAggregate) GetStatus() HangupStatus {
+	return h.hangupStatus
+}
+
+// GetRewards 获取奖励列表
+func (h *HangupAggregate) GetRewards() []RewardItem {
+	if h.offlineReward == nil {
+		return []RewardItem{}
+	}
+	return h.offlineReward.Items
+}
+
+// GetCreatedAt 获取创建时间
+func (h *HangupAggregate) GetCreatedAt() time.Time {
+	return h.lastOnlineTime // 使用第一次在线时间作为创建时间
+}
+
+// ReconstructHangupAggregate 重构挂机聚合根（用于从持久化数据恢复）
+func ReconstructHangupAggregate(
+	hangupID string,
+	playerID string,
+	locationID string,
+	startTime time.Time,
+	endTime time.Time,
+	duration time.Duration,
+	efficiency float64,
+	baseRate float64,
+	status HangupStatus,
+	rewards []RewardItem,
+	createdAt time.Time,
+	updatedAt time.Time,
+) *HangupAggregate {
+	// 创建基础聚合根
+	aggregate := &HangupAggregate{
+		playerID:        playerID,
+		currentLocation: nil, // 需要根据locationID重新加载
+		offlineReward:   nil,
+		hangupStatus:    status,
+		efficiencyBonus: NewEfficiencyBonus(),
+		lastOnlineTime:  startTime,
+		lastOfflineTime: endTime,
+		totalHangupTime: duration,
+		dailyHangupTime: duration,
+		lastResetDate:   createdAt.Truncate(24 * time.Hour),
+		updatedAt:       updatedAt,
+		version:         1,
+	}
+
+	// 如果有奖励，创建离线奖励对象
+	if len(rewards) > 0 {
+		aggregate.offlineReward = &OfflineReward{
+			Items:           rewards,
+			OfflineDuration: duration,
+			LocationID:      locationID,
+			CalculatedAt:    updatedAt,
+			IsClaimed:       false,
+		}
+	}
+
+	return aggregate
+}
+
 // 私有方法
 
 // checkLocationRequirements 检查地点要求

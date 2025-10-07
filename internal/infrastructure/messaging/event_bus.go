@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
-	"greatestworks/internal/domain/player"
-	"greatestworks/internal/domain/battle"
+
+	"greatestworks/internal/events"
 )
 
 // DomainEvent 领域事件接口
@@ -17,18 +16,87 @@ type DomainEvent interface {
 	AggregateID() string
 	OccurredAt() time.Time
 	Version() int
+	GetEventType() string
+	GetEventID() string
+	GetAggregateType() string
+	GetTimestamp() time.Time
+	GetAggregateID() string
+	GetVersion() int
+	GetMetadata() map[string]interface{}
 }
 
-// EventHandler 事件处理器接口
-type EventHandler interface {
-	Handle(ctx context.Context, event DomainEvent) error
-	GetHandlerName() string
-	GetEventTypes() []string
+// BaseDomainEvent 基础领域事件
+type BaseDomainEvent struct {
+	eventID     string
+	eventType   string
+	aggregateID string
+	occurredAt  time.Time
+	version     int
+}
+
+// EventID 获取事件ID
+func (e *BaseDomainEvent) EventID() string {
+	return e.eventID
+}
+
+// EventType 获取事件类型
+func (e *BaseDomainEvent) EventType() string {
+	return e.eventType
+}
+
+// AggregateID 获取聚合根ID
+func (e *BaseDomainEvent) AggregateID() string {
+	return e.aggregateID
+}
+
+// OccurredAt 获取发生时间
+func (e *BaseDomainEvent) OccurredAt() time.Time {
+	return e.occurredAt
+}
+
+// Version 获取版本
+func (e *BaseDomainEvent) Version() int {
+	return e.version
+}
+
+// GetEventType 获取事件类型
+func (e *BaseDomainEvent) GetEventType() string {
+	return e.eventType
+}
+
+// GetEventID 获取事件ID
+func (e *BaseDomainEvent) GetEventID() string {
+	return e.eventID
+}
+
+// GetAggregateType 获取聚合根类型
+func (e *BaseDomainEvent) GetAggregateType() string {
+	return e.aggregateID
+}
+
+// GetTimestamp 获取时间戳
+func (e *BaseDomainEvent) GetTimestamp() time.Time {
+	return e.occurredAt
+}
+
+// GetAggregateID 获取聚合根ID
+func (e *BaseDomainEvent) GetAggregateID() string {
+	return e.aggregateID
+}
+
+// GetVersion 获取版本
+func (e *BaseDomainEvent) GetVersion() int {
+	return e.version
+}
+
+// GetMetadata 获取元数据
+func (e *BaseDomainEvent) GetMetadata() map[string]interface{} {
+	return make(map[string]interface{})
 }
 
 // EventBus 事件总线
 type EventBus struct {
-	handlers map[string][]EventHandler
+	handlers map[string][]events.EventHandler
 	mu       sync.RWMutex
 	stats    *EventBusStats
 }
@@ -45,7 +113,7 @@ type EventBusStats struct {
 // NewEventBus 创建事件总线
 func NewEventBus() *EventBus {
 	return &EventBus{
-		handlers: make(map[string][]EventHandler),
+		handlers: make(map[string][]events.EventHandler),
 		stats: &EventBusStats{
 			ByEventType: make(map[string]int64),
 			StartTime:   time.Now(),
@@ -54,10 +122,10 @@ func NewEventBus() *EventBus {
 }
 
 // Subscribe 订阅事件
-func (bus *EventBus) Subscribe(handler EventHandler) error {
+func (bus *EventBus) Subscribe(handler events.EventHandler) error {
 	bus.mu.Lock()
 	defer bus.mu.Unlock()
-	
+
 	for _, eventType := range handler.GetEventTypes() {
 		// 检查处理器是否已存在
 		for _, existingHandler := range bus.handlers[eventType] {
@@ -65,10 +133,10 @@ func (bus *EventBus) Subscribe(handler EventHandler) error {
 				return fmt.Errorf("handler %s already subscribed to event %s", handler.GetHandlerName(), eventType)
 			}
 		}
-		
+
 		bus.handlers[eventType] = append(bus.handlers[eventType], handler)
 	}
-	
+
 	return nil
 }
 
@@ -76,7 +144,7 @@ func (bus *EventBus) Subscribe(handler EventHandler) error {
 func (bus *EventBus) Unsubscribe(handlerName string, eventType string) error {
 	bus.mu.Lock()
 	defer bus.mu.Unlock()
-	
+
 	handlers := bus.handlers[eventType]
 	for i, handler := range handlers {
 		if handler.GetHandlerName() == handlerName {
@@ -84,7 +152,7 @@ func (bus *EventBus) Unsubscribe(handlerName string, eventType string) error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("handler %s not found for event %s", handlerName, eventType)
 }
 
@@ -93,25 +161,33 @@ func (bus *EventBus) Publish(ctx context.Context, event DomainEvent) error {
 	bus.mu.RLock()
 	handlers := bus.handlers[event.EventType()]
 	bus.mu.RUnlock()
-	
+
 	bus.stats.TotalPublished++
 	bus.stats.ByEventType[event.EventType()]++
-	
+
 	if len(handlers) == 0 {
 		// 没有处理器，直接返回
 		return nil
 	}
-	
+
 	// 并发处理所有处理器
 	var wg sync.WaitGroup
 	errorChan := make(chan error, len(handlers))
-	
+
 	for _, handler := range handlers {
 		wg.Add(1)
-		go func(h EventHandler) {
+		go func(h events.EventHandler) {
 			defer wg.Done()
-			
-			if err := h.Handle(ctx, event); err != nil {
+
+			// 将DomainEvent转换为events.Event
+			eventWrapper := &events.BaseEvent{
+				ID:        event.GetEventID(),
+				Type:      event.GetEventType(),
+				Data:      event,
+				Timestamp: event.GetTimestamp(),
+				UserID:    event.GetAggregateID(),
+			}
+			if err := h.Handle(ctx, eventWrapper); err != nil {
 				errorChan <- fmt.Errorf("handler %s failed: %w", h.GetHandlerName(), err)
 				bus.stats.TotalFailed++
 			} else {
@@ -119,20 +195,20 @@ func (bus *EventBus) Publish(ctx context.Context, event DomainEvent) error {
 			}
 		}(handler)
 	}
-	
+
 	wg.Wait()
 	close(errorChan)
-	
+
 	// 收集错误
 	var errors []error
 	for err := range errorChan {
 		errors = append(errors, err)
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("event handling failed: %v", errors)
 	}
-	
+
 	return nil
 }
 
@@ -150,7 +226,7 @@ func (bus *EventBus) PublishAsync(ctx context.Context, event DomainEvent) {
 func (bus *EventBus) GetStats() *EventBusStats {
 	bus.mu.RLock()
 	defer bus.mu.RUnlock()
-	
+
 	stats := &EventBusStats{
 		TotalPublished: bus.stats.TotalPublished,
 		TotalHandled:   bus.stats.TotalHandled,
@@ -158,11 +234,11 @@ func (bus *EventBus) GetStats() *EventBusStats {
 		ByEventType:    make(map[string]int64),
 		StartTime:      bus.stats.StartTime,
 	}
-	
+
 	for eventType, count := range bus.stats.ByEventType {
 		stats.ByEventType[eventType] = count
 	}
-	
+
 	return stats
 }
 

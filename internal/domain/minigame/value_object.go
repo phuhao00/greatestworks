@@ -539,6 +539,22 @@ func (gr *GameRules) Clone() *GameRules {
 	return clone
 }
 
+// ToMap 转换为映射
+func (gr *GameRules) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"win_conditions":  gr.WinConditions,
+		"lose_conditions": gr.LoseConditions,
+		"scoring_rules":   gr.ScoringRules,
+		"time_limit":      gr.TimeLimit,
+		"move_limit":      gr.MoveLimit,
+		"special_rules":   gr.SpecialRules,
+		"penalties":       gr.Penalties,
+		"bonuses":         gr.Bonuses,
+		"created_at":      gr.CreatedAt,
+		"updated_at":      gr.UpdatedAt,
+	}
+}
+
 // WinCondition 胜利条件
 type WinCondition struct {
 	Type        string      `json:"type" bson:"type"`
@@ -635,6 +651,22 @@ func (gs *GameSettings) Clone() *GameSettings {
 	}
 
 	return clone
+}
+
+// ToMap 转换为映射
+func (gs *GameSettings) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"sound_enabled":   gs.SoundEnabled,
+		"music_enabled":   gs.MusicEnabled,
+		"effects_enabled": gs.EffectsEnabled,
+		"language":        gs.Language,
+		"theme":           gs.Theme,
+		"quality":         gs.Quality.String(),
+		"controls":        gs.Controls,
+		"custom_settings": gs.CustomSettings,
+		"created_at":      gs.CreatedAt,
+		"updated_at":      gs.UpdatedAt,
+	}
 }
 
 // GameQuality 游戏质量
@@ -969,5 +1001,68 @@ func GetGameDifficultyByString(s string) (GameDifficulty, error) {
 		return GameDifficultyCustom, nil
 	default:
 		return 0, fmt.Errorf("unknown game difficulty: %s", s)
+	}
+}
+
+// GetRewardTypeByString 根据字符串获取奖励类型
+func GetRewardTypeByString(s string) (RewardType, error) {
+	switch s {
+	case "coin":
+		return RewardTypeCoin, nil
+	case "exp":
+		return RewardTypeExp, nil
+	case "item":
+		return RewardTypeItem, nil
+	case "currency":
+		return RewardTypeCurrency, nil
+	default:
+		return RewardTypeCoin, fmt.Errorf("unknown reward type: %s", s)
+	}
+}
+
+// SessionStatus 会话状态
+type SessionStatus int32
+
+const (
+	SessionStatusActive    SessionStatus = iota + 1 // 活跃
+	SessionStatusExpired                            // 过期
+	SessionStatusCompleted                          // 完成
+	SessionStatusCancelled                          // 取消
+)
+
+// String 返回会话状态的字符串表示
+func (ss SessionStatus) String() string {
+	switch ss {
+	case SessionStatusActive:
+		return "active"
+	case SessionStatusExpired:
+		return "expired"
+	case SessionStatusCompleted:
+		return "completed"
+	case SessionStatusCancelled:
+		return "cancelled"
+	default:
+		return "unknown"
+	}
+}
+
+// IsValid 检查会话状态是否有效
+func (ss SessionStatus) IsValid() bool {
+	return ss >= SessionStatusActive && ss <= SessionStatusCancelled
+}
+
+// ParseSessionStatus 根据字符串解析会话状态
+func ParseSessionStatus(s string) SessionStatus {
+	switch s {
+	case "active":
+		return SessionStatusActive
+	case "expired":
+		return SessionStatusExpired
+	case "completed":
+		return SessionStatusCompleted
+	case "cancelled":
+		return SessionStatusCancelled
+	default:
+		return SessionStatusActive // 默认为活跃状态
 	}
 }

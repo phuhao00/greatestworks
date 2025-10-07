@@ -25,9 +25,11 @@ type Logger interface {
 
 // Event 事件接口
 type Event interface {
+	GetID() string
 	GetType() string
 	GetData() interface{}
 	GetTimestamp() time.Time
+	GetPlayerID() string
 }
 
 // Handler 事件处理器
@@ -43,6 +45,7 @@ type EventBus struct {
 
 // BaseEvent 基础事件结构
 type BaseEvent struct {
+	ID        string      `json:"id"`
 	Type      string      `json:"type"`
 	Data      interface{} `json:"data"`
 	Timestamp time.Time   `json:"timestamp"`
@@ -63,6 +66,16 @@ func (e *BaseEvent) GetData() interface{} {
 // GetTimestamp 获取时间戳
 func (e *BaseEvent) GetTimestamp() time.Time {
 	return e.Timestamp
+}
+
+// GetID 获取事件ID
+func (e *BaseEvent) GetID() string {
+	return e.ID
+}
+
+// GetPlayerID 获取玩家ID
+func (e *BaseEvent) GetPlayerID() string {
+	return e.UserID
 }
 
 // NewEventBus 创建事件总线

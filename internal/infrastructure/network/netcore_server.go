@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"greatestworks/internal/infrastructure/logger"
 )
 
 // Logger 简单的日志接口
@@ -118,7 +116,7 @@ type NetcoreServerInterface interface {
 }
 
 // NewNetcoreServer 创建netcore服务器
-func NewNetcoreServer(config *ServerConfig, logger logger.Logger) NetcoreServerInterface {
+func NewNetcoreServer(config *ServerConfig, logger Logger) NetcoreServerInterface {
 	if config == nil {
 		config = &ServerConfig{
 			Host:               "0.0.0.0",

@@ -7,8 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"greatestworks/application/commands/player"
-	"greatestworks/application/queries/player"
+	playerQueries "greatestworks/application/queries/player"
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
 )
@@ -70,8 +69,8 @@ func (h *LoginHandler) Login(c *gin.Context) {
 	ctx := context.Background()
 
 	// 验证用户凭据（这里简化处理，实际应该查询用户表）
-	query := &player.GetPlayerByUsernameQuery{Username: req.Username}
-	result, err := handlers.ExecuteQueryTyped[*player.GetPlayerByUsernameQuery, *player.GetPlayerResult](ctx, h.queryBus, query)
+	query := &playerQueries.GetPlayerByUsernameQuery{Username: req.Username}
+	result, err := handlers.ExecuteQueryTyped[*playerQueries.GetPlayerByUsernameQuery, *playerQueries.GetPlayerByUsernameResult](ctx, h.queryBus, query)
 	if err != nil {
 		h.logger.Error("Failed to get player by username", "error", err, "username", req.Username)
 		c.JSON(401, gin.H{"error": "Invalid credentials", "success": false})

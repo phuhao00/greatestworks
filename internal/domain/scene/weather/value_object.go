@@ -17,6 +17,8 @@ const (
 	WeatherTypeStormy
 	WeatherTypeFoggy
 	WeatherTypeHazy
+	WeatherTypeHail
+	WeatherTypeBlizzard
 )
 
 // String 返回天气类型字符串
@@ -38,6 +40,10 @@ func (wt WeatherType) String() string {
 		return "foggy"
 	case WeatherTypeHazy:
 		return "hazy"
+	case WeatherTypeHail:
+		return "hail"
+	case WeatherTypeBlizzard:
+		return "blizzard"
 	default:
 		return "unknown"
 	}
@@ -62,6 +68,10 @@ func (wt WeatherType) GetDescription() string {
 		return "雾天"
 	case WeatherTypeHazy:
 		return "霾天"
+	case WeatherTypeHail:
+		return "冰雹"
+	case WeatherTypeBlizzard:
+		return "暴雪"
 	default:
 		return "未知天气"
 	}
@@ -69,7 +79,35 @@ func (wt WeatherType) GetDescription() string {
 
 // IsValid 检查天气类型是否有效
 func (wt WeatherType) IsValid() bool {
-	return wt >= WeatherTypeSunny && wt <= WeatherTypeHazy
+	return wt >= WeatherTypeSunny && wt <= WeatherTypeBlizzard
+}
+
+// ParseWeatherType 从字符串解析天气类型
+func ParseWeatherType(s string) WeatherType {
+	switch s {
+	case "sunny":
+		return WeatherTypeSunny
+	case "cloudy":
+		return WeatherTypeCloudy
+	case "rainy":
+		return WeatherTypeRainy
+	case "snowy":
+		return WeatherTypeSnowy
+	case "windy":
+		return WeatherTypeWindy
+	case "stormy":
+		return WeatherTypeStormy
+	case "foggy":
+		return WeatherTypeFoggy
+	case "hazy":
+		return WeatherTypeHazy
+	case "hail":
+		return WeatherTypeHail
+	case "blizzard":
+		return WeatherTypeBlizzard
+	default:
+		return WeatherTypeSunny // 默认返回晴天
+	}
 }
 
 // GetBaseTemperature 获取基础温度
@@ -91,6 +129,10 @@ func (wt WeatherType) GetBaseTemperature() float64 {
 		return 10.0
 	case WeatherTypeHazy:
 		return 22.0
+	case WeatherTypeHail:
+		return 8.0
+	case WeatherTypeBlizzard:
+		return -15.0
 	default:
 		return 20.0
 	}
@@ -115,6 +157,10 @@ func (wt WeatherType) GetBaseHumidity() float64 {
 		return 95.0
 	case WeatherTypeHazy:
 		return 65.0
+	case WeatherTypeHail:
+		return 80.0
+	case WeatherTypeBlizzard:
+		return 85.0
 	default:
 		return 50.0
 	}
@@ -139,6 +185,10 @@ func (wt WeatherType) GetBaseWindSpeed() float64 {
 		return 3.0
 	case WeatherTypeHazy:
 		return 8.0
+	case WeatherTypeHail:
+		return 25.0
+	case WeatherTypeBlizzard:
+		return 60.0
 	default:
 		return 10.0
 	}
@@ -163,6 +213,10 @@ func (wt WeatherType) GetBaseVisibility() float64 {
 		return 1.0
 	case WeatherTypeHazy:
 		return 6.0
+	case WeatherTypeHail:
+		return 4.0
+	case WeatherTypeBlizzard:
+		return 2.0
 	default:
 		return 10.0
 	}

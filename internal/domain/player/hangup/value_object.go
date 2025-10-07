@@ -101,15 +101,19 @@ func (lt LocationType) GetGoldMultiplier() float64 {
 
 // RewardItem 奖励物品值对象
 type RewardItem struct {
+	Type     string `json:"type"`
 	ItemID   string `json:"item_id"`
-	Quantity int    `json:"quantity"`
+	Quantity int64  `json:"quantity"`
+	Quality  string `json:"quality"`
 }
 
 // NewRewardItem 创建奖励物品
-func NewRewardItem(itemID string, quantity int) RewardItem {
+func NewRewardItem(itemType, itemID string, quantity int64, quality string) RewardItem {
 	return RewardItem{
+		Type:     itemType,
 		ItemID:   itemID,
 		Quantity: quantity,
+		Quality:  quality,
 	}
 }
 

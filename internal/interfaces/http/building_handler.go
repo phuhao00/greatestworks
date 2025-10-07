@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"greatestworks/application/handlers"
 	"greatestworks/internal/infrastructure/logger"
@@ -81,4 +80,22 @@ func (h *BuildingHandler) GetPlayerBuildings(c *gin.Context) {
 func (h *BuildingHandler) CollectResources(c *gin.Context) {
 	// TODO: 实现收集资源逻辑
 	SuccessResponse(c, map[string]string{"message": "CollectResources not implemented yet"})
+}
+
+// StartConstruction 开始建造
+func (h *BuildingHandler) StartConstruction(c *gin.Context) {
+	// TODO: 实现开始建造逻辑
+	SuccessResponse(c, map[string]string{"message": "StartConstruction not implemented yet"})
+}
+
+// StartUpgrade 开始升级
+func (h *BuildingHandler) StartUpgrade(c *gin.Context) {
+	// TODO: 实现开始升级逻辑
+	SuccessResponse(c, map[string]string{"message": "StartUpgrade not implemented yet"})
+}
+
+// DemolishBuilding 拆除建筑
+func (h *BuildingHandler) DemolishBuilding(c *gin.Context) {
+	// TODO: 实现拆除建筑逻辑
+	SuccessResponse(c, map[string]string{"message": "DemolishBuilding not implemented yet"})
 }

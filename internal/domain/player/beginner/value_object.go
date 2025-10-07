@@ -1,6 +1,9 @@
 package beginner
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // StepType 步骤类型
 type StepType int
@@ -321,7 +324,7 @@ func (sc *StepCondition) checkItemCondition(playerData map[string]interface{}) b
 					case OperatorExists:
 						return quantity > 0
 					case OperatorGreaterEqual:
-						if requiredQuantity, ok := sc.target.(int); ok {
+						if requiredQuantity, err := strconv.Atoi(sc.target); err == nil {
 							return quantity >= requiredQuantity
 						}
 					default:
@@ -340,9 +343,7 @@ func (sc *StepCondition) checkQuestCondition(playerData map[string]interface{}) 
 		if questMap, ok := quests.(map[string]string); ok {
 			if targetQuest, ok := sc.value.(string); ok {
 				if status, hasQuest := questMap[targetQuest]; hasQuest {
-					if targetStatus, ok := sc.target.(string); ok {
-						return status == targetStatus
-					}
+					return status == sc.target
 				}
 			}
 		}
@@ -356,7 +357,7 @@ func (sc *StepCondition) checkKillCondition(playerData map[string]interface{}) b
 		if killMap, ok := kills.(map[string]int); ok {
 			if targetMonster, ok := sc.value.(string); ok {
 				if killCount, hasKill := killMap[targetMonster]; hasKill {
-					if requiredCount, ok := sc.target.(int); ok {
+					if requiredCount, err := strconv.Atoi(sc.target); err == nil {
 						return sc.compareValues(killCount, requiredCount)
 					}
 				}
@@ -386,11 +387,9 @@ func (sc *StepCondition) checkInteractCondition(playerData map[string]interface{
 func (sc *StepCondition) checkEquipCondition(playerData map[string]interface{}) bool {
 	if equipment, exists := playerData["equipment"]; exists {
 		if equipMap, ok := equipment.(map[string]string); ok {
-			if targetSlot, ok := sc.target.(string); ok {
-				if targetItem, ok := sc.value.(string); ok {
-					if equippedItem, hasSlot := equipMap[targetSlot]; hasSlot {
-						return equippedItem == targetItem
-					}
+			if targetItem, ok := sc.value.(string); ok {
+				if equippedItem, hasSlot := equipMap[sc.target]; hasSlot {
+					return equippedItem == targetItem
 				}
 			}
 		}
@@ -404,7 +403,7 @@ func (sc *StepCondition) checkSkillCondition(playerData map[string]interface{}) 
 		if skillMap, ok := skills.(map[string]int); ok {
 			if targetSkill, ok := sc.value.(string); ok {
 				if skillLevel, hasSkill := skillMap[targetSkill]; hasSkill {
-					if requiredLevel, ok := sc.target.(int); ok {
+					if requiredLevel, err := strconv.Atoi(sc.target); err == nil {
 						return sc.compareValues(skillLevel, requiredLevel)
 					}
 				}

@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"greatestworks/internal/events"
 	"greatestworks/internal/infrastructure/logger"
 
 	"github.com/nats-io/nats.go"
-	// "greatestworks/internal/domain/events" // TODO: 实现事件系统
 )
 
 // NATSSubscriber NATS消息订阅者
@@ -47,18 +47,6 @@ type MessageHandler interface {
 	GetHandlerName() string
 }
 
-// EventHandler 事件处理器接口
-type EventHandler interface {
-	// HandleEvent 处理领域事件
-	HandleEvent(ctx context.Context, event events.DomainEvent) error
-
-	// GetEventTypes 获取支持的事件类型
-	GetEventTypes() []string
-
-	// GetHandlerName 获取处理器名称
-	GetHandlerName() string
-}
-
 // Subscriber 消息订阅者接口
 type Subscriber interface {
 	// Subscribe 订阅主题
@@ -68,10 +56,10 @@ type Subscriber interface {
 	SubscribeQueue(subject, queue string, handler MessageHandler) error
 
 	// SubscribeEvent 订阅领域事件
-	SubscribeEvent(eventType string, handler EventHandler) error
+	SubscribeEvent(eventType string, handler events.EventHandler) error
 
 	// SubscribeEventPattern 订阅事件模式
-	SubscribeEventPattern(pattern string, handler EventHandler) error
+	SubscribeEventPattern(pattern string, handler events.EventHandler) error
 
 	// Unsubscribe 取消订阅
 	Unsubscribe(subject string) error
@@ -187,7 +175,7 @@ func (s *NATSSubscriber) SubscribeQueue(subject, queue string, handler MessageHa
 }
 
 // SubscribeEvent 订阅领域事件
-func (s *NATSSubscriber) SubscribeEvent(eventType string, handler EventHandler) error {
+func (s *NATSSubscriber) SubscribeEvent(eventType string, handler events.EventHandler) error {
 	// 构建事件主题模式
 	subject := fmt.Sprintf("%s.events.*.%s", s.config.SubjectPrefix, eventType)
 
@@ -201,7 +189,7 @@ func (s *NATSSubscriber) SubscribeEvent(eventType string, handler EventHandler) 
 }
 
 // SubscribeEventPattern 订阅事件模式
-func (s *NATSSubscriber) SubscribeEventPattern(pattern string, handler EventHandler) error {
+func (s *NATSSubscriber) SubscribeEventPattern(pattern string, handler events.EventHandler) error {
 	// 构建完整的事件主题模式
 	fullPattern := fmt.Sprintf("%s.events.%s", s.config.SubjectPrefix, pattern)
 
@@ -457,7 +445,7 @@ func (s *NATSSubscriber) collectMetrics() {
 
 // 事件处理器包装器
 type eventHandlerWrapper struct {
-	handler EventHandler
+	handler events.EventHandler
 	logger  logger.Logger
 }
 
@@ -470,7 +458,15 @@ func (w *eventHandlerWrapper) Handle(ctx context.Context, msg *nats.Msg) error {
 	}
 
 	// 处理事件
-	return w.handler.HandleEvent(ctx, event)
+	// 将DomainEvent转换为events.Event
+	eventWrapper := &events.BaseEvent{
+		ID:        event.GetEventID(),
+		Type:      event.GetEventType(),
+		Data:      event,
+		Timestamp: event.GetTimestamp(),
+		UserID:    event.GetAggregateID(),
+	}
+	return w.handler.Handle(ctx, eventWrapper)
 }
 
 func (w *eventHandlerWrapper) GetHandlerName() string {
@@ -478,7 +474,7 @@ func (w *eventHandlerWrapper) GetHandlerName() string {
 }
 
 // parseEvent 解析事件
-func (w *eventHandlerWrapper) parseEvent(data []byte) (events.DomainEvent, error) {
+func (w *eventHandlerWrapper) parseEvent(data []byte) (DomainEvent, error) {
 	// 解析事件包装器
 	var eventWrapper map[string]interface{}
 	if err := json.Unmarshal(data, &eventWrapper); err != nil {
@@ -500,8 +496,16 @@ func (w *eventHandlerWrapper) parseEvent(data []byte) (events.DomainEvent, error
 		}
 	}
 
-	w.logger.Debug("Event parsed successfully", "event_type", eventType, "event_id", baseEvent.EventID)
-	return baseEvent, nil
+	w.logger.Debug("Event parsed successfully", "event_type", eventType, "event_id", baseEvent.GetID())
+	// 将BaseEvent转换为DomainEvent
+	domainEvent := &BaseDomainEvent{
+		eventID:     baseEvent.GetID(),
+		eventType:   baseEvent.GetType(),
+		aggregateID: baseEvent.GetPlayerID(),
+		occurredAt:  baseEvent.GetTimestamp(),
+		version:     1,
+	}
+	return domainEvent, nil
 }
 
 // 统计信息结构

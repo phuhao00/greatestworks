@@ -507,8 +507,8 @@ func (s *MinigameService) canOperateGame(minigame *MinigameAggregate, operatorID
 // handleGameEnd 处理游戏结束
 func (s *MinigameService) handleGameEnd(ctx context.Context, minigame *MinigameAggregate) error {
 	// 结算所有玩家会话
-	for playerID := range minigame.Players {
-		session, err := s.sessionRepo.FindByGameAndPlayer(ctx, minigame.ID, uint64(playerID))
+	for _, player := range minigame.Players {
+		session, err := s.sessionRepo.FindByGameAndPlayer(ctx, minigame.ID, player.PlayerID)
 		if err != nil {
 			continue // 忽略错误，继续处理其他玩家
 		}
@@ -520,7 +520,7 @@ func (s *MinigameService) handleGameEnd(ctx context.Context, minigame *MinigameA
 		}
 
 		// 发放完成奖励
-		go s.grantCompletionRewards(context.Background(), minigame.ID, uint64(playerID), session)
+		go s.grantCompletionRewards(context.Background(), minigame.ID, player.PlayerID, session)
 	}
 
 	return nil
@@ -722,6 +722,53 @@ type GameSessionQuery struct {
 	OrderDesc     bool          `json:"order_desc,omitempty"`
 	Limit         *int32        `json:"limit,omitempty"`
 	Offset        *int32        `json:"offset,omitempty"`
+}
+
+// GetPlayerID 获取玩家ID
+func (q *GameSessionQuery) GetPlayerID() uint64 {
+	if q.PlayerID != nil {
+		return *q.PlayerID
+	}
+	return 0
+}
+
+// GetMinigameID 获取小游戏ID
+func (q *GameSessionQuery) GetMinigameID() string {
+	if q.GameID != nil {
+		return *q.GameID
+	}
+	return ""
+}
+
+// GetStatus 获取状态
+func (q *GameSessionQuery) GetStatus() *PlayerStatus {
+	return q.Status
+}
+
+// GetSort 获取排序字段
+func (q *GameSessionQuery) GetSort() string {
+	return q.OrderBy
+}
+
+// GetSortOrder 获取排序顺序
+func (q *GameSessionQuery) GetSortOrder() bool {
+	return q.OrderDesc
+}
+
+// GetLimit 获取限制数量
+func (q *GameSessionQuery) GetLimit() int32 {
+	if q.Limit != nil {
+		return *q.Limit
+	}
+	return 0
+}
+
+// GetOffset 获取偏移量
+func (q *GameSessionQuery) GetOffset() int32 {
+	if q.Offset != nil {
+		return *q.Offset
+	}
+	return 0
 }
 
 // PlayerStatistics 玩家统计

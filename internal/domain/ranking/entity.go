@@ -59,6 +59,105 @@ type RankEntry struct {
 	mutex sync.RWMutex `json:"-" bson:"-"`
 }
 
+// GetID 获取条目ID
+func (re *RankEntry) GetID() string {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.ID
+}
+
+// GetRankingID 获取排行榜ID
+func (re *RankEntry) GetRankingID() uint32 {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.RankID
+}
+
+// GetPlayerID 获取玩家ID
+func (re *RankEntry) GetPlayerID() uint64 {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.PlayerID
+}
+
+// GetRank 获取排名
+func (re *RankEntry) GetRank() int64 {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.Rank
+}
+
+// GetScore 获取分数
+func (re *RankEntry) GetScore() int64 {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.Score
+}
+
+// GetPrevRank 获取前一排名
+func (re *RankEntry) GetPrevRank() *int64 {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.PreviousRank
+}
+
+// GetPrevScore 获取前一分数 (暂时返回0，可根据需要实现)
+func (re *RankEntry) GetPrevScore() int64 {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	// 从历史记录中获取前一分数
+	if len(re.ScoreHistory) > 0 {
+		return re.ScoreHistory[len(re.ScoreHistory)-1].Score
+	}
+	return 0
+}
+
+// GetMetadata 获取元数据
+func (re *RankEntry) GetMetadata() map[string]interface{} {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.Metadata
+}
+
+// GetCreatedAt 获取创建时间
+func (re *RankEntry) GetCreatedAt() time.Time {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.CreatedAt
+}
+
+// GetUpdatedAt 获取更新时间
+func (re *RankEntry) GetUpdatedAt() time.Time {
+	re.mutex.RLock()
+	defer re.mutex.RUnlock()
+	return re.UpdatedAt
+}
+
+// SetRank 设置排名
+func (re *RankEntry) SetRank(rank int64) {
+	re.mutex.Lock()
+	defer re.mutex.Unlock()
+	re.Rank = rank
+	re.UpdatedAt = time.Now()
+}
+
+// SetPrevious 设置前一排名和分数
+func (re *RankEntry) SetPrevious(prevRank *int64, prevScore int64) {
+	re.mutex.Lock()
+	defer re.mutex.Unlock()
+	re.PreviousRank = prevRank
+	// 可以添加前一分数的存储逻辑
+	re.UpdatedAt = time.Now()
+}
+
+// SetMetadata 设置元数据
+func (re *RankEntry) SetMetadata(metadata map[string]interface{}) {
+	re.mutex.Lock()
+	defer re.mutex.Unlock()
+	re.Metadata = metadata
+	re.UpdatedAt = time.Now()
+}
+
 // NewRankEntry 创建新的排行榜条目
 func NewRankEntry(playerID uint64, timeScore, realScore int64, metadata map[string]interface{}) *RankEntry {
 	now := time.Now()
@@ -81,6 +180,36 @@ func NewRankEntry(playerID uint64, timeScore, realScore int64, metadata map[stri
 		RewardsEarned:   make([]*RankRewardEarned, 0),
 		TotalRewardValue: 0,
 		Metadata:        metadata,
+		Tags:            make([]string, 0),
+		CustomData:      make(map[string]interface{}),
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+}
+
+// NewRankEntryFromRepository 创建新的排行榜条目（用于repository）
+func NewRankEntryFromRepository(entryID string, rankingID uint32, playerID uint64, score int64) *RankEntry {
+	now := time.Now()
+	return &RankEntry{
+		ID:              entryID,
+		PlayerID:        playerID,
+		RankID:          rankingID,
+		Score:           score,
+		TimeScore:       score,
+		Rank:            0,
+		IsActive:        true,
+		LastActive:      now,
+		ScoreHistory:    make([]*ScoreHistoryEntry, 0),
+		RankChange:      0,
+		BestRank:        0,
+		WorstRank:       0,
+		TotalUpdates:    1,
+		ConsecutiveDays: 1,
+		FirstEntryTime:  now,
+		LastUpdateTime:  now,
+		RewardsEarned:   make([]*RankRewardEarned, 0),
+		TotalRewardValue: 0,
+		Metadata:        make(map[string]interface{}),
 		Tags:            make([]string, 0),
 		CustomData:      make(map[string]interface{}),
 		CreatedAt:       now,
@@ -480,6 +609,18 @@ func (bl *Blacklist) GetPlayersByReason(reason string) []*BlacklistEntry {
 		}
 	}
 	return entries
+}
+
+// GetPlayerIDs 获取所有黑名单玩家ID
+func (bl *Blacklist) GetPlayerIDs() []uint64 {
+	bl.mutex.RLock()
+	defer bl.mutex.RUnlock()
+	
+	ids := make([]uint64, 0, len(bl.Players))
+	for playerID := range bl.Players {
+		ids = append(ids, playerID)
+	}
+	return ids
 }
 
 // Clear 清空黑名单

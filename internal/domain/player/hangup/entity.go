@@ -166,27 +166,27 @@ func (hl *HangupLocation) Deactivate() {
 // CalculateBaseReward 计算基础奖励
 func (hl *HangupLocation) CalculateBaseReward(duration time.Duration) *BaseReward {
 	hours := duration.Hours()
-	
+
 	// 限制最大离线时间
 	if hours > float64(hl.maxOfflineHours) {
 		hours = float64(hl.maxOfflineHours)
 	}
-	
+
 	// 计算基础奖励（这里使用简单的线性计算）
-	baseExp := int64(hours * 100 * hl.baseExpRate)   // 每小时100经验
-	baseGold := int64(hours * 50 * hl.baseGoldRate)  // 每小时50金币
-	
+	baseExp := int64(hours * 100 * hl.baseExpRate)  // 每小时100经验
+	baseGold := int64(hours * 50 * hl.baseGoldRate) // 每小时50金币
+
 	// 计算物品掉落
 	items := make([]RewardItem, 0)
 	for _, itemDrop := range hl.specialItems {
 		if itemDrop.ShouldDrop(hours) {
 			items = append(items, RewardItem{
 				ItemID:   itemDrop.ItemID,
-				Quantity: itemDrop.CalculateQuantity(hours),
+				Quantity: int64(itemDrop.CalculateQuantity(hours)),
 			})
 		}
 	}
-	
+
 	return &BaseReward{
 		Experience: baseExp,
 		Gold:       baseGold,
@@ -236,23 +236,23 @@ func (or *OfflineReward) IsEmpty() bool {
 func (or *OfflineReward) GetTotalValue() int64 {
 	// 简单的价值计算：经验 + 金币 + 物品价值
 	totalValue := or.Experience + or.Gold
-	
+
 	for _, item := range or.Items {
 		// 假设每个物品价值10金币
 		totalValue += int64(item.Quantity) * 10
 	}
-	
+
 	return totalValue
 }
 
 // EfficiencyBonus 效率加成实体
 type EfficiencyBonus struct {
-	vipBonus       float64            `json:"vip_bonus"`        // VIP加成
-	equipmentBonus float64            `json:"equipment_bonus"`  // 装备加成
-	skillBonus     float64            `json:"skill_bonus"`      // 技能加成
-	guildBonus     float64            `json:"guild_bonus"`      // 公会加成
-	eventBonus     float64            `json:"event_bonus"`      // 活动加成
-	specialBonus   map[string]float64 `json:"special_bonus"`    // 特殊加成
+	vipBonus       float64            `json:"vip_bonus"`       // VIP加成
+	equipmentBonus float64            `json:"equipment_bonus"` // 装备加成
+	skillBonus     float64            `json:"skill_bonus"`     // 技能加成
+	guildBonus     float64            `json:"guild_bonus"`     // 公会加成
+	eventBonus     float64            `json:"event_bonus"`     // 活动加成
+	specialBonus   map[string]float64 `json:"special_bonus"`   // 特殊加成
 	updatedAt      time.Time          `json:"updated_at"`
 }
 
@@ -338,18 +338,18 @@ func (eb *EfficiencyBonus) SetSpecialBonus(key string, bonus float64) {
 // GetTotalBonus 获取总加成
 func (eb *EfficiencyBonus) GetTotalBonus() float64 {
 	total := 1.0 + eb.vipBonus + eb.equipmentBonus + eb.skillBonus + eb.guildBonus + eb.eventBonus
-	
+
 	for _, bonus := range eb.specialBonus {
 		total += bonus
 	}
-	
+
 	return total
 }
 
 // ApplyBonus 应用加成到基础奖励
 func (eb *EfficiencyBonus) ApplyBonus(baseReward *BaseReward) *BaseReward {
 	totalBonus := eb.GetTotalBonus()
-	
+
 	return &BaseReward{
 		Experience: int64(float64(baseReward.Experience) * totalBonus),
 		Gold:       int64(float64(baseReward.Gold) * totalBonus),
@@ -396,11 +396,11 @@ func (hs *HangupStatistics) UpdateStatistics(sessionDuration time.Duration, rewa
 	hs.totalExperience += reward.Experience
 	hs.totalGold += reward.Gold
 	hs.totalItemsObtained += len(reward.Items)
-	
+
 	if sessionDuration > hs.longestSession {
 		hs.longestSession = sessionDuration
 	}
-	
+
 	hs.favoriteLocation = locationID // 简化实现，实际应该统计最常用的地点
 	hs.lastHangupDate = time.Now()
 	hs.updatedAt = time.Now()
