@@ -1,16 +1,17 @@
-# Greatest Works - MMO Game Server
+# Greatest Works - 分布式MMO游戏服务器
 
-基于Go语言和领域驱动设计(DDD)架构开发的大型多人在线游戏服务器，采用现代化微服务设计，支持高并发和分布式部署。
+基于Go语言和领域驱动设计(DDD)架构开发的分布式大型多人在线游戏服务器，采用现代化微服务设计，支持高并发和分布式部署。
 
 ## 🎯 项目概述
 
-这是一个企业级的MMO游戏服务器项目，采用领域驱动设计(Domain-Driven Design)架构模式，提供高性能、可扩展、易维护的游戏服务器解决方案。项目包含完整的游戏系统，如玩家管理、社交系统、战斗系统、建筑系统、宠物系统等。
+这是一个企业级的分布式MMO游戏服务器项目，采用领域驱动设计(Domain-Driven Design)架构模式，提供高性能、可扩展、易维护的游戏服务器解决方案。项目采用分布式多节点架构，支持独立部署和扩展。
 
 ## ✨ 核心特性
 
 - 🏗️ **DDD架构**: 采用领域驱动设计，清晰的架构分层和职责分离
-- 🚀 **高性能网络**: 基于netcore-go的TCP网络框架，支持高并发连接
-- 🔧 **微服务设计**: 模块化设计，支持独立部署和扩展
+- 🌐 **分布式设计**: 多节点独立部署，支持水平扩展
+- 🚀 **高性能网络**: 基于Go原生RPC + TCP + HTTP多协议支持
+- 🔧 **微服务架构**: 认证服务、网关服务、游戏服务独立部署
 - 💾 **多数据库支持**: MongoDB + Redis 混合存储策略
 - 🔐 **安全认证**: JWT认证系统，保障用户数据安全
 - 🎮 **完整游戏功能**: 涵盖现代MMO游戏的核心系统
@@ -19,34 +20,62 @@
 - 🐳 **容器化部署**: Docker和Kubernetes支持
 - 📚 **完整文档**: 详细的API文档和架构说明
 
-## 🏗️ DDD架构设计
+## 🏗️ 分布式架构设计
 
-本项目采用领域驱动设计(Domain-Driven Design)架构，将复杂的游戏业务逻辑按照领域进行划分，实现高内聚、低耦合的系统设计。
+本项目采用分布式多节点架构，将游戏服务器拆分为三个独立的服务节点：
 
-### 架构分层
+### 服务节点
 
-- **接口层 (Interfaces)**: 处理外部请求，包括TCP、HTTP接口
-- **应用层 (Application)**: 协调领域对象，处理业务用例
-- **领域层 (Domain)**: 核心业务逻辑和领域模型
-- **基础设施层 (Infrastructure)**: 技术实现，如数据库、缓存、消息队列
+#### 🔐 认证服务 (Auth Service)
+- **协议**: HTTP
+- **端口**: 8080
+- **职责**: 用户认证、授权、会话管理
+- **功能**: 登录、注册、令牌管理、权限控制
+
+#### 🌐 网关服务 (Gateway Service)  
+- **协议**: TCP
+- **端口**: 9090
+- **职责**: 客户端连接管理、协议转换、负载均衡
+- **功能**: 连接管理、消息路由、协议转换
+
+#### 🎮 游戏服务 (Game Service)
+- **协议**: Go原生RPC
+- **端口**: 8081
+- **职责**: 核心游戏逻辑、领域模型、业务规则
+- **功能**: 玩家管理、战斗系统、排行榜、社交系统
+
+### 通信协议
+
+```
+客户端 ──HTTP──> 认证服务
+  │
+  └──TCP──> 网关服务 ──RPC──> 游戏服务
+```
+
+- **客户端 ↔ 认证服务**: HTTP (RESTful API)
+- **客户端 ↔ 网关**: TCP (游戏协议)
+- **网关 ↔ 游戏服务**: Go原生RPC (内部通信)
+- **其他服务 ↔ 游戏服务**: Go原生RPC (服务间通信)
 
 ## 📁 项目结构
 
 ```
 greatestworks/
 ├── cmd/                        # 应用程序入口
-│   └── server/
-│       ├── bootstrap.go        # 启动引导
-│       └── main.go            # 主程序
-├── configs/                    # 配置模板
-│   ├── config.example.yaml    # 基础配置模板
-│   ├── config.dev.yaml.example # 开发环境配置
-│   ├── config.prod.yaml.example # 生产环境配置
+│   ├── auth-service/           # 认证服务
+│   │   └── main.go
+│   ├── gateway-service/        # 网关服务
+│   │   └── main.go
+│   └── game-service/           # 游戏服务
+│       └── main.go
+├── configs/                    # 配置文件
+│   ├── auth-service.yaml       # 认证服务配置
+│   ├── gateway-service.yaml    # 网关服务配置
+│   ├── game-service.yaml       # 游戏服务配置
 │   └── docker.yaml            # Docker环境配置
 ├── docs/                       # 项目文档
 │   ├── api/                   # API文档
 │   ├── architecture/          # 架构文档
-│   ├── deployment/            # 部署文档
 │   └── diagrams/              # 架构图表
 ├── application/                # 应用层
 │   ├── commands/              # 命令处理器
@@ -70,12 +99,14 @@ greatestworks/
 │   │   ├── config/           # 配置管理
 │   │   └── logging/          # 日志服务
 │   └── interfaces/            # 接口层
+│       ├── http/             # HTTP接口
 │       ├── tcp/              # TCP接口
-│       └── http/             # HTTP接口
+│       └── rpc/              # RPC接口
 ├── scripts/                    # 开发脚本
+│   ├── start-services.bat     # Windows启动脚本
+│   ├── start-services.sh      # Linux/Mac启动脚本
 │   ├── build.sh              # 构建脚本
-│   ├── deploy.sh             # 部署脚本
-│   └── test.sh               # 测试脚本
+│   └── deploy.sh             # 部署脚本
 ├── docker-compose.yml          # Docker编排
 ├── Dockerfile                  # Docker镜像
 ├── Makefile                   # 构建工具
@@ -87,12 +118,12 @@ greatestworks/
 
 ### 核心技术
 - **语言**: Go 1.21+
-- **架构模式**: 领域驱动设计 (DDD)
-- **网络框架**: netcore-go (TCP) + HTTP
+- **架构模式**: 领域驱动设计 (DDD) + 分布式架构
+- **网络协议**: HTTP + TCP + Go原生RPC
 - **数据库**: MongoDB (主数据库) + Redis (缓存)
-- **消息队列**: NATS
+- **消息队列**: NATS (可选)
 - **认证**: JWT + 自定义认证
-- **协议**: 自定义二进制协议 + JSON
+- **服务发现**: 支持Consul、Etcd等
 
 ### 开发工具
 - **构建工具**: Make + Go Modules
@@ -114,119 +145,78 @@ greatestworks/
 - **Go**: 1.21 或更高版本
 - **MongoDB**: 4.4+ (推荐 5.0+)
 - **Redis**: 6.0+ (推荐 7.0+)
-- **NATS**: 2.9+ (可选，用于消息队列)
 - **Docker**: 20.10+ (可选，用于容器化部署)
 
 ### 📦 安装依赖
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-org/greatestworks.git
+git clone https://github.com/phuhao00/greatestworks.git
 cd greatestworks
 
 # 安装Go依赖
 go mod tidy
-
-# 使用Make命令安装开发工具
-make setup
 ```
 
 ### ⚙️ 配置文件
 
-复制配置模板并根据环境进行配置：
+项目使用独立的配置文件，每个服务都有自己的配置：
 
 ```bash
-# 开发环境
-cp configs/config.dev.yaml.example config.yaml
+# 认证服务配置
+cp configs/auth-service.yaml configs/auth-service-dev.yaml
 
-# 生产环境
-cp configs/config.prod.yaml.example config.yaml
+# 网关服务配置  
+cp configs/gateway-service.yaml configs/gateway-service-dev.yaml
+
+# 游戏服务配置
+cp configs/game-service.yaml configs/game-service-dev.yaml
 ```
 
-基础配置示例：
+### 🎮 启动服务
 
-```yaml
-# 服务器配置
-server:
-  port: 8080
-  host: "0.0.0.0"
-  max_connections: 10000
-  read_timeout: 30s
-  write_timeout: 30s
-  shutdown_timeout: 10s
+#### 方式一：使用启动脚本（推荐）
 
-# 数据库配置
-database:
-  mongodb:
-    uri: "mongodb://localhost:27017"
-    database: "mmo_game"
-    max_pool_size: 100
-    connect_timeout: 10s
-  redis:
-    addr: "localhost:6379"
-    password: ""
-    db: 0
-    pool_size: 100
-    dial_timeout: 5s
-
-# 消息队列配置
-messaging:
-  nats:
-    url: "nats://localhost:4222"
-    max_reconnects: 10
-    reconnect_wait: 2s
-
-# 认证配置
-auth:
-  jwt:
-    secret: "your-super-secret-key-change-this-in-production"
-    expire: 24h
-    refresh_expire: 168h
-
-# 日志配置
-logging:
-  level: "info"
-  format: "json"
-  output: "stdout"
-
-# 游戏配置
-game:
-  max_level: 100
-  max_players: 1000
-  tick_rate: 20
-  save_interval: 300s
-```
-
-### 🎮 启动服务器
-
-#### 开发环境启动
+**Windows:**
 ```bash
-# 使用Make命令启动开发服务器
-make dev
-
-# 或者直接运行
-go run cmd/server/main.go
+scripts/start-services.bat
 ```
 
-#### 生产环境启动
+**Linux/Mac:**
 ```bash
-# 构建二进制文件
-make build
-
-# 启动服务器
-./bin/server -config=config.yaml
+./scripts/start-services.sh
 ```
 
-#### Docker启动
+#### 方式二：手动启动
+
 ```bash
-# 使用Docker Compose启动完整环境
+# 启动认证服务
+go run cmd/auth-service/main.go
+
+# 启动游戏服务（新终端）
+go run cmd/game-service/main.go
+
+# 启动网关服务（新终端）
+go run cmd/gateway-service/main.go
+```
+
+#### 方式三：Docker启动
+
+```bash
+# 启动完整环境
 docker-compose up -d
 
-# 仅启动游戏服务器
-docker run -d -p 8080:8080 \
-  -v $(pwd)/config.yaml:/app/config.yaml \
-  greatestworks:latest
+# 查看服务状态
+docker-compose ps
 ```
+
+### 🔧 服务地址
+
+启动后，各服务将在以下地址运行：
+
+- **认证服务**: http://localhost:8080
+- **游戏服务**: rpc://localhost:8081
+- **网关服务**: tcp://localhost:9090
 
 ## 🏛️ DDD领域架构
 
@@ -267,29 +257,12 @@ docker run -d -p 8080:8080 \
 - **核心实体**: Minigame, MinigameSession, MinigameReward
 - **主要功能**: 小游戏逻辑、积分计算、奖励发放
 
-### 支撑领域 (Supporting Domains)
-
-#### 🔐 认证与授权
-- JWT令牌管理
-- 用户权限控制
-- 安全策略实施
-
-#### 📊 监控与日志
-- 性能指标收集
-- 业务日志记录
-- 系统健康检查
-
-#### ⚙️ 配置管理
-- 多环境配置
-- 动态配置更新
-- 配置验证
-
 ## 🌐 网络协议设计
 
 ### 多协议支持
-- **TCP**: 主要游戏协议，低延迟、高可靠性
-- **HTTP**: RESTful API，用于管理后台和第三方集成
-- **WebSocket**: Web客户端支持，实时双向通信
+- **HTTP**: 认证服务，RESTful API
+- **TCP**: 网关服务，游戏客户端连接
+- **RPC**: 服务间通信，Go原生RPC
 
 ### TCP协议格式
 ```
@@ -324,19 +297,6 @@ docker run -d -p 8080:8080 \
 - **rankings**: 排行榜数据和历史
 - **minigames**: 小游戏记录和积分
 
-#### 配置和模板集合
-- **game_configs**: 游戏配置参数
-- **item_templates**: 物品模板数据
-- **skill_templates**: 技能模板配置
-- **building_templates**: 建筑模板信息
-- **pet_templates**: 宠物模板数据
-
-#### 日志和审计集合
-- **player_logs**: 玩家操作日志
-- **battle_logs**: 战斗详细日志
-- **admin_logs**: 管理操作日志
-- **system_events**: 系统事件记录
-
 ### Redis 缓存策略
 
 #### 热点数据缓存
@@ -350,11 +310,6 @@ docker run -d -p 8080:8080 \
 - **队伍信息**: `team:{team_id}`
 - **聊天频道**: `chat:{channel_id}`
 - **活动状态**: `event:{event_id}`
-
-#### 性能优化缓存
-- **查询结果**: `query:{hash}` (TTL: 5分钟)
-- **计算结果**: `calc:{type}:{id}` (TTL: 1小时)
-- **配置数据**: `config:{key}` (TTL: 24小时)
 
 ## 👨‍💻 开发指南
 
@@ -398,18 +353,6 @@ make clean      # 清理构建产物
 make docs       # 生成文档
 ```
 
-#### 代码生成
-```bash
-# 生成领域模板
-scripts/generate-domain.sh <domain_name>
-
-# 生成API接口
-scripts/generate-api.sh <api_name>
-
-# 生成数据库迁移
-scripts/generate-migration.sh <migration_name>
-```
-
 ### 📊 性能优化策略
 
 #### 数据库优化
@@ -430,63 +373,35 @@ scripts/generate-migration.sh <migration_name>
 - **压缩传输**: 大数据包启用压缩
 - **协议优化**: 使用二进制协议减少传输开销
 
-### 📈 监控与运维
-
-#### 日志管理
-- **结构化日志**: 使用JSON格式便于解析
-- **日志分级**: ERROR/WARN/INFO/DEBUG四个级别
-- **日志轮转**: 按大小和时间自动轮转
-- **敏感信息**: 避免记录密码等敏感数据
-
-#### 指标监控
-- **业务指标**: 在线人数、注册量、收入等
-- **性能指标**: 响应时间、吞吐量、错误率
-- **系统指标**: CPU、内存、磁盘、网络使用率
-- **自定义指标**: 游戏特定的业务指标
-
-#### 健康检查
-```go
-// HTTP健康检查接口
-GET /health
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "services": {
-    "database": "healthy",
-    "redis": "healthy",
-    "nats": "healthy"
-  }
-}
-```
-
 ## 🚀 部署指南
 
 ### 🐳 Docker部署
 
-#### 单容器部署
-```bash
-# 构建镜像
-make docker-build
-
-# 运行容器
-docker run -d \
-  --name greatestworks \
-  -p 8080:8080 \
-  -v $(pwd)/config.yaml:/app/config.yaml \
-  -e ENV=production \
-  greatestworks:latest
-```
-
 #### Docker Compose部署
 ```bash
-# 启动完整环境（包含MongoDB、Redis、NATS）
+# 启动完整环境（包含MongoDB、Redis）
 docker-compose up -d
 
 # 查看服务状态
 docker-compose ps
 
 # 查看日志
-docker-compose logs -f greatestworks
+docker-compose logs -f
+```
+
+#### 单容器部署
+```bash
+# 构建镜像
+docker build -t greatestworks .
+
+# 运行认证服务
+docker run -d --name auth-service -p 8080:8080 greatestworks auth-service
+
+# 运行游戏服务
+docker run -d --name game-service -p 8081:8081 greatestworks game-service
+
+# 运行网关服务
+docker run -d --name gateway-service -p 9090:9090 greatestworks gateway-service
 ```
 
 ### ☸️ Kubernetes部署
@@ -496,55 +411,26 @@ docker-compose logs -f greatestworks
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: greatestworks
+  name: auth-service
   namespace: gaming
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: greatestworks
+      app: auth-service
   template:
     metadata:
       labels:
-        app: greatestworks
+        app: auth-service
     spec:
       containers:
-      - name: server
+      - name: auth-service
         image: greatestworks:latest
         ports:
         - containerPort: 8080
         env:
-        - name: ENV
-          value: "production"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-```
-
-#### 服务暴露
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: greatestworks-service
-spec:
-  selector:
-    app: greatestworks
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
-  type: LoadBalancer
+        - name: SERVICE_TYPE
+          value: "auth-service"
 ```
 
 ### 🔧 生产环境配置
@@ -552,15 +438,13 @@ spec:
 #### 环境变量
 ```bash
 # 服务配置
+export SERVICE_TYPE="auth-service"  # auth-service, game-service, gateway-service
 export SERVER_PORT=8080
 export SERVER_HOST=0.0.0.0
 
 # 数据库配置
 export MONGODB_URI="mongodb://mongo-cluster:27017/gamedb"
 export REDIS_ADDR="redis-cluster:6379"
-
-# 消息队列
-export NATS_URL="nats://nats-cluster:4222"
 
 # 认证配置
 export JWT_SECRET="your-production-secret-key"
@@ -575,14 +459,14 @@ export LOG_FORMAT=json
 详细的API文档请参考：
 - [REST API文档](docs/api/rest-api.md)
 - [TCP协议文档](docs/api/tcp-protocol.md)
-- [WebSocket API文档](docs/api/websocket-api.md)
+- [RPC接口文档](docs/api/rpc-api.md)
 
 ## 🏗️ 架构文档
 
 深入了解系统架构：
 - [DDD设计文档](docs/architecture/ddd-design.md)
+- [分布式架构](docs/architecture/distributed-architecture.md)
 - [数据库设计](docs/architecture/database-design.md)
-- [微服务架构](docs/architecture/microservices.md)
 
 ## 🤝 贡献指南
 
@@ -607,15 +491,13 @@ export LOG_FORMAT=json
 
 ## 📞 联系我们
 
-- **项目主页**: [https://github.com/your-org/greatestworks](https://github.com/your-org/greatestworks)
-- **问题反馈**: [GitHub Issues](https://github.com/your-org/greatestworks/issues)
-- **讨论交流**: [GitHub Discussions](https://github.com/your-org/greatestworks/discussions)
-- **邮箱**: dev@greatestworks.com
-- **文档站点**: [https://docs.greatestworks.com](https://docs.greatestworks.com)
+- **项目主页**: [https://github.com/phuhao00/greatestworks](https://github.com/phuhao00/greatestworks)
+- **问题反馈**: [GitHub Issues](https://github.com/phuhao00/greatestworks/issues)
+- **讨论交流**: [GitHub Discussions](https://github.com/phuhao00/greatestworks/discussions)
 
 ## 📈 项目状态
 
-![Build Status](https://github.com/your-org/greatestworks/workflows/CI/badge.svg)
+![Build Status](https://github.com/phuhao00/greatestworks/workflows/CI/badge.svg)
 ![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Docker Pulls](https://img.shields.io/docker/pulls/greatestworks/server.svg)
@@ -623,21 +505,22 @@ export LOG_FORMAT=json
 ## 🎯 路线图
 
 ### v2.0.0 (计划中)
-- [ ] 微服务拆分和服务网格
+- [ ] 服务网格集成
 - [ ] GraphQL API支持
 - [ ] 实时数据分析和BI
 - [ ] 多语言客户端SDK
 - [ ] 云原生部署优化
 
 ### v1.5.0 (开发中)
-- [ ] WebSocket API完善
 - [ ] 管理后台界面
 - [ ] 性能监控面板
 - [ ] 自动化测试覆盖
+- [ ] 服务发现集成
 
 ### v1.0.0 ✅ (已发布)
-- [x] DDD架构重构完成
-- [x] 核心游戏系统实现
+- [x] 分布式架构重构完成
+- [x] 多节点服务分离
+- [x] Go原生RPC通信
 - [x] Docker容器化支持
 - [x] 基础监控和日志
 - [x] 完整文档体系
