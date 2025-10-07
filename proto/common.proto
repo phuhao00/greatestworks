@@ -55,3 +55,72 @@ message ServerInfo {
   int32 current_players = 5;
   bool is_online = 6;
 }
+
+// 物品类型枚举
+enum ItemType {
+  ITEM_TYPE_UNSPECIFIED = 0;
+  ITEM_TYPE_WEAPON = 1;      // 武器
+  ITEM_TYPE_ARMOR = 2;        // 护甲
+  ITEM_TYPE_ACCESSORY = 3;    // 饰品
+  ITEM_TYPE_CONSUMABLE = 4;   // 消耗品
+  ITEM_TYPE_MATERIAL = 5;     // 材料
+  ITEM_TYPE_QUEST = 6;        // 任务物品
+  ITEM_TYPE_CURRENCY = 7;     // 货币
+  ITEM_TYPE_SPECIAL = 8;      // 特殊物品
+}
+
+// 技能类型枚举
+enum SkillType {
+  SKILL_TYPE_UNSPECIFIED = 0;
+  SKILL_TYPE_ATTACK = 1;      // 攻击技能
+  SKILL_TYPE_DEFENSE = 2;      // 防御技能
+  SKILL_TYPE_HEAL = 3;         // 治疗技能
+  SKILL_TYPE_BUFF = 4;         // 增益技能
+  SKILL_TYPE_DEBUFF = 5;       // 减益技能
+  SKILL_TYPE_PASSIVE = 6;      // 被动技能
+  SKILL_TYPE_ULTIMATE = 7;     // 终极技能
+}
+
+// 聊天频道枚举
+enum ChatChannel {
+  CHAT_CHANNEL_UNSPECIFIED = 0;
+  CHAT_CHANNEL_WORLD = 1;      // 世界频道
+  CHAT_CHANNEL_GUILD = 2;      // 公会频道
+  CHAT_CHANNEL_TEAM = 3;        // 队伍频道
+  CHAT_CHANNEL_PRIVATE = 4;    // 私聊频道
+  CHAT_CHANNEL_SYSTEM = 5;     // 系统频道
+  CHAT_CHANNEL_TRADE = 6;      // 交易频道
+  CHAT_CHANNEL_HELP = 7;       // 帮助频道
+}
+
+// 任务状态枚举
+enum QuestStatus {
+  QUEST_STATUS_UNSPECIFIED = 0;
+  QUEST_STATUS_NOT_STARTED = 1; // 未开始
+  QUEST_STATUS_IN_PROGRESS = 2; // 进行中
+  QUEST_STATUS_COMPLETED = 3;   // 已完成
+  QUEST_STATUS_FAILED = 4;      // 已失败
+  QUEST_STATUS_CANCELLED = 5;   // 已取消
+}
+
+// 任务类型枚举
+enum QuestType {
+  QUEST_TYPE_UNSPECIFIED = 0;
+  QUEST_TYPE_MAIN = 1;         // 主线任务
+  QUEST_TYPE_SIDE = 2;         // 支线任务
+  QUEST_TYPE_DAILY = 3;        // 日常任务
+  QUEST_TYPE_WEEKLY = 4;       // 周常任务
+  QUEST_TYPE_EVENT = 5;        // 活动任务
+  QUEST_TYPE_ACHIEVEMENT = 6;  // 成就任务
+}
+
+// 物品稀有度枚举
+enum ItemRarity {
+  ITEM_RARITY_UNSPECIFIED = 0;
+  ITEM_RARITY_COMMON = 1;        // 普通
+  ITEM_RARITY_UNCOMMON = 2;      // 不常见
+  ITEM_RARITY_RARE = 3;          // 稀有
+  ITEM_RARITY_EPIC = 4;          // 史诗
+  ITEM_RARITY_LEGENDARY = 5;     // 传说
+  ITEM_RARITY_MYTHIC = 6;        // 神话
+}

@@ -1,0 +1,203 @@
+syntax = "proto3";
+
+package greatestworks.errors;
+
+option go_package = "greatestworks/internal/proto/errors";
+option csharp_namespace = "GreatestWorks.Errors";
+
+// 错误码枚举 - 通用错误 (1000-1999)
+enum CommonErrorCode {
+  COMMON_ERROR_CODE_UNSPECIFIED = 0;
+  
+  // 成功状态
+  ERR_SUCCESS = 0;              // 成功
+  
+  // 通用错误
+  ERR_UNKNOWN = 1000;           // 未知错误
+  ERR_INVALID_MESSAGE = 1001;   // 无效消息
+  ERR_AUTH_FAILED = 1002;       // 认证失败
+  ERR_PLAYER_NOT_FOUND = 1003;  // 玩家未找到
+  ERR_BATTLE_NOT_FOUND = 1004;  // 战斗未找到
+  ERR_UNKNOWN_MESSAGE = 1005;   // 未知消息类型
+  ERR_SERVER_BUSY = 1006;       // 服务器繁忙
+  ERR_INVALID_PLAYER = 1007;    // 无效玩家
+  ERR_PERMISSION_DENIED = 1008; // 权限不足
+  ERR_RATE_LIMITED = 1009;      // 请求过于频繁
+  ERR_MAINTENANCE = 1010;      // 服务器维护
+  ERR_INVALID_REQUEST = 1011;   // 无效请求
+  ERR_TIMEOUT = 1012;           // 请求超时
+  ERR_CONNECTION_LOST = 1013;   // 连接丢失
+  ERR_INVALID_TOKEN = 1014;     // 无效令牌
+  ERR_SESSION_EXPIRED = 1015;   // 会话过期
+}
+
+// 错误码枚举 - 战斗相关错误 (2000-2999)
+enum BattleErrorCode {
+  BATTLE_ERROR_CODE_UNSPECIFIED = 0;
+  
+  // 战斗基础错误
+  ERR_INVALID_CREATOR_ID = 2001;     // 无效创建者ID
+  ERR_INVALID_BATTLE_TYPE = 2002;    // 无效战斗类型
+  ERR_INVALID_BATTLE_ID = 2003;      // 无效战斗ID
+  ERR_INVALID_PLAYER_ID = 2004;      // 无效玩家ID
+  ERR_INVALID_TARGET_ID = 2005;      // 无效目标ID
+  ERR_INVALID_SKILL_ID = 2006;       // 无效技能ID
+  ERR_INVALID_TEAM = 2007;           // 无效队伍
+  ERR_BATTLE_ALREADY_STARTED = 2008; // 战斗已开始
+  ERR_BATTLE_NOT_STARTED = 2009;     // 战斗未开始
+  ERR_PLAYER_NOT_IN_BATTLE = 2010;   // 玩家不在战斗中
+  ERR_INSUFFICIENT_MANA = 2011;       // MP不足
+  ERR_SKILL_ON_COOLDOWN = 2012;      // 技能冷却中
+  ERR_INVALID_ACTION = 2013;         // 无效行动
+  ERR_BATTLE_FULL = 2014;            // 战斗已满
+  ERR_BATTLE_ENDED = 2015;           // 战斗已结束
+  ERR_NOT_YOUR_TURN = 2016;          // 不是你的回合
+  ERR_BATTLE_CANCELLED = 2017;       // 战斗已取消
+  ERR_INVALID_BATTLE_STATE = 2018;   // 无效战斗状态
+  ERR_BATTLE_TIMEOUT = 2019;         // 战斗超时
+}
+
+// 错误码枚举 - 宠物相关错误 (3000-3999)
+enum PetErrorCode {
+  PET_ERROR_CODE_UNSPECIFIED = 0;
+  
+  ERR_PET_NOT_FOUND = 3001;          // 宠物未找到
+  ERR_PET_ALREADY_ACTIVE = 3002;     // 宠物已激活
+  ERR_PET_NOT_ACTIVE = 3003;         // 宠物未激活
+  ERR_PET_LEVEL_TOO_LOW = 3004;      // 宠物等级过低
+  ERR_PET_EVOLUTION_FAIL = 3005;     // 宠物进化失败
+  ERR_PET_INSUFFICIENT_EXP = 3006;   // 宠物经验不足
+  ERR_PET_ALREADY_EVOLVED = 3007;    // 宠物已进化
+  ERR_PET_TRAINING_FAILED = 3008;    // 宠物训练失败
+  ERR_PET_FEEDING_FAILED = 3009;     // 宠物喂养失败
+  ERR_PET_SKILL_NOT_LEARNED = 3010;  // 宠物技能未学习
+  ERR_PET_INSUFFICIENT_ENERGY = 3011; // 宠物能量不足
+  ERR_PET_SICK = 3012;               // 宠物生病
+  ERR_PET_DEAD = 3013;               // 宠物死亡
+  ERR_PET_BOND_FAILED = 3014;        // 宠物羁绊失败
+}
+
+// 错误码枚举 - 物品相关错误 (4000-4999)
+enum ItemErrorCode {
+  ITEM_ERROR_CODE_UNSPECIFIED = 0;
+  
+  ERR_ITEM_NOT_FOUND = 4001;         // 物品未找到
+  ERR_ITEM_NOT_USABLE = 4002;        // 物品不可使用
+  ERR_INVENTORY_FULL = 4003;          // 背包已满
+  ERR_INSUFFICIENT_ITEM = 4004;      // 物品数量不足
+  ERR_ITEM_EQUIP_FAILED = 4005;      // 装备失败
+  ERR_ITEM_UNEQUIP_FAILED = 4006;    // 卸装失败
+  ERR_ITEM_CRAFT_FAILED = 4007;      // 制作失败
+  ERR_ITEM_ENHANCE_FAILED = 4008;    // 强化失败
+  ERR_ITEM_TRADE_FAILED = 4009;      // 交易失败
+  ERR_ITEM_DROP_FAILED = 4010;       // 丢弃失败
+  ERR_ITEM_PICKUP_FAILED = 4011;    // 拾取失败
+  ERR_ITEM_STACK_FULL = 4012;        // 物品堆叠已满
+  ERR_ITEM_NOT_TRADEABLE = 4013;     // 物品不可交易
+  ERR_ITEM_BOUND = 4014;             // 物品已绑定
+  ERR_ITEM_LEVEL_TOO_LOW = 4015;     // 物品等级过低
+}
+
+// 错误码枚举 - 建筑相关错误 (5000-5999)
+enum BuildingErrorCode {
+  BUILDING_ERROR_CODE_UNSPECIFIED = 0;
+  
+  ERR_BUILDING_NOT_FOUND = 5001;     // 建筑未找到
+  ERR_BUILDING_ALREADY_EXISTS = 5002; // 建筑已存在
+  ERR_BUILDING_INSUFFICIENT_RESOURCES = 5003; // 资源不足
+  ERR_BUILDING_UPGRADE_FAILED = 5004; // 升级失败
+  ERR_BUILDING_DESTROY_FAILED = 5005; // 摧毁失败
+  ERR_BUILDING_PRODUCE_FAILED = 5006; // 生产失败
+  ERR_BUILDING_COLLECT_FAILED = 5007; // 收集失败
+  ERR_BUILDING_REPAIR_FAILED = 5008;  // 修复失败
+  ERR_BUILDING_LEVEL_TOO_LOW = 5009;  // 建筑等级过低
+  ERR_BUILDING_LEVEL_TOO_HIGH = 5010; // 建筑等级过高
+  ERR_BUILDING_NOT_READY = 5011;     // 建筑未就绪
+  ERR_BUILDING_UNDER_CONSTRUCTION = 5012; // 建筑建造中
+}
+
+// 错误码枚举 - 社交相关错误 (6000-6999)
+enum SocialErrorCode {
+  SOCIAL_ERROR_CODE_UNSPECIFIED = 0;
+  
+  ERR_FRIEND_NOT_FOUND = 6001;       // 好友未找到
+  ERR_FRIEND_ALREADY_EXISTS = 6002;  // 好友已存在
+  ERR_FRIEND_REQUEST_FAILED = 6003;  // 好友请求失败
+  ERR_FRIEND_ACCEPT_FAILED = 6004;   // 接受好友失败
+  ERR_FRIEND_REJECT_FAILED = 6005;   // 拒绝好友失败
+  ERR_FRIEND_REMOVE_FAILED = 6006;   // 删除好友失败
+  ERR_GUILD_NOT_FOUND = 6007;        // 公会未找到
+  ERR_GUILD_ALREADY_EXISTS = 6008;   // 公会已存在
+  ERR_GUILD_CREATE_FAILED = 6009;    // 创建公会失败
+  ERR_GUILD_JOIN_FAILED = 6010;      // 加入公会失败
+  ERR_GUILD_LEAVE_FAILED = 6011;     // 离开公会失败
+  ERR_GUILD_PERMISSION_DENIED = 6012; // 公会权限不足
+  ERR_TEAM_NOT_FOUND = 6013;         // 队伍未找到
+  ERR_TEAM_ALREADY_EXISTS = 6014;     // 队伍已存在
+  ERR_TEAM_CREATE_FAILED = 6015;     // 创建队伍失败
+  ERR_TEAM_JOIN_FAILED = 6016;       // 加入队伍失败
+  ERR_TEAM_LEAVE_FAILED = 6017;      // 离开队伍失败
+  ERR_CHAT_MESSAGE_FAILED = 6018;    // 聊天消息失败
+  ERR_CHAT_CHANNEL_NOT_FOUND = 6019; // 聊天频道未找到
+  ERR_CHAT_PERMISSION_DENIED = 6020; // 聊天权限不足
+}
+
+// 错误码枚举 - 任务相关错误 (7000-7999)
+enum QuestErrorCode {
+  QUEST_ERROR_CODE_UNSPECIFIED = 0;
+  
+  ERR_QUEST_NOT_FOUND = 7001;        // 任务未找到
+  ERR_QUEST_ALREADY_ACCEPTED = 7002; // 任务已接受
+  ERR_QUEST_NOT_ACCEPTED = 7003;     // 任务未接受
+  ERR_QUEST_ALREADY_COMPLETED = 7004; // 任务已完成
+  ERR_QUEST_NOT_COMPLETED = 7005;    // 任务未完成
+  ERR_QUEST_ACCEPT_FAILED = 7006;    // 接受任务失败
+  ERR_QUEST_COMPLETE_FAILED = 7007;  // 完成任务失败
+  ERR_QUEST_CANCEL_FAILED = 7008;    // 取消任务失败
+  ERR_QUEST_REQUIREMENTS_NOT_MET = 7009; // 任务要求未满足
+  ERR_QUEST_REWARD_FAILED = 7010;   // 任务奖励失败
+  ERR_QUEST_LEVEL_TOO_LOW = 7011;   // 任务等级过低
+  ERR_QUEST_LEVEL_TOO_HIGH = 7012;  // 任务等级过高
+  ERR_QUEST_PREREQUISITE_NOT_MET = 7013; // 前置任务未完成
+}
+
+// 错误码枚举 - 系统相关错误 (8000-8999)
+enum SystemErrorCode {
+  SYSTEM_ERROR_CODE_UNSPECIFIED = 0;
+  
+  ERR_DATABASE_CONNECTION_FAILED = 8001; // 数据库连接失败
+  ERR_DATABASE_QUERY_FAILED = 8002;     // 数据库查询失败
+  ERR_DATABASE_UPDATE_FAILED = 8003;    // 数据库更新失败
+  ERR_DATABASE_INSERT_FAILED = 8004;   // 数据库插入失败
+  ERR_DATABASE_DELETE_FAILED = 8005;    // 数据库删除失败
+  ERR_CACHE_CONNECTION_FAILED = 8006;  // 缓存连接失败
+  ERR_CACHE_GET_FAILED = 8007;          // 缓存获取失败
+  ERR_CACHE_SET_FAILED = 8008;          // 缓存设置失败
+  ERR_CACHE_DELETE_FAILED = 8009;       // 缓存删除失败
+  ERR_REDIS_CONNECTION_FAILED = 8010;   // Redis连接失败
+  ERR_REDIS_OPERATION_FAILED = 8011;    // Redis操作失败
+  ERR_MONGODB_CONNECTION_FAILED = 8012; // MongoDB连接失败
+  ERR_MONGODB_OPERATION_FAILED = 8013;  // MongoDB操作失败
+  ERR_CONFIG_LOAD_FAILED = 8014;        // 配置加载失败
+  ERR_LOG_WRITE_FAILED = 8015;          // 日志写入失败
+}
+
+// 错误信息结构
+message ErrorInfo {
+  int32 error_code = 1;           // 错误码
+  string error_message = 2;        // 错误消息
+  string error_type = 3;          // 错误类型
+  string details = 4;             // 详细信息
+  int64 timestamp = 5;            // 时间戳
+  string request_id = 6;          // 请求ID
+  map<string, string> context = 7; // 上下文信息
+}
+
+// 错误响应结构
+message ErrorResponse {
+  bool success = 1;               // 是否成功
+  ErrorInfo error = 2;            // 错误信息
+  string message = 3;             // 响应消息
+  int64 timestamp = 4;            // 时间戳
+  string request_id = 5;          // 请求ID
+}

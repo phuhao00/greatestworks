@@ -149,6 +149,49 @@ message InventoryItem {
   string name = 2;
   int32 quantity = 3;
   int32 max_stack = 4;
-  string item_type = 5;
-  int32 rarity = 6;
+  greatestworks.common.ItemType item_type = 5;
+  greatestworks.common.ItemRarity rarity = 6;
+}
+
+// 玩家性别枚举
+enum PlayerGender {
+  PLAYER_GENDER_UNSPECIFIED = 0;
+  PLAYER_GENDER_MALE = 1;        // 男性
+  PLAYER_GENDER_FEMALE = 2;      // 女性
+  PLAYER_GENDER_OTHER = 3;       // 其他
+}
+
+// 玩家职业枚举
+enum PlayerClass {
+  PLAYER_CLASS_UNSPECIFIED = 0;
+  PLAYER_CLASS_WARRIOR = 1;      // 战士
+  PLAYER_CLASS_MAGE = 2;         // 法师
+  PLAYER_CLASS_ARCHER = 3;       // 弓箭手
+  PLAYER_CLASS_ASSASSIN = 4;     // 刺客
+  PLAYER_CLASS_PRIEST = 5;       // 牧师
+  PLAYER_CLASS_PALADIN = 6;      // 圣骑士
+  PLAYER_CLASS_DRUID = 7;        // 德鲁伊
+  PLAYER_CLASS_NECROMANCER = 8;  // 死灵法师
+}
+
+// 玩家等级枚举
+enum PlayerLevel {
+  PLAYER_LEVEL_UNSPECIFIED = 0;
+  PLAYER_LEVEL_BEGINNER = 1;     // 新手
+  PLAYER_LEVEL_INTERMEDIATE = 2; // 中级
+  PLAYER_LEVEL_ADVANCED = 3;     // 高级
+  PLAYER_LEVEL_EXPERT = 4;       // 专家
+  PLAYER_LEVEL_MASTER = 5;       // 大师
+  PLAYER_LEVEL_GRANDMASTER = 6;  // 宗师
+}
+
+// 玩家状态枚举
+enum PlayerStatus {
+  PLAYER_STATUS_UNSPECIFIED = 0;
+  PLAYER_STATUS_OFFLINE = 1;     // 离线
+  PLAYER_STATUS_ONLINE = 2;      // 在线
+  PLAYER_STATUS_IN_BATTLE = 3;   // 战斗中
+  PLAYER_STATUS_IN_QUEUE = 4;    // 排队中
+  PLAYER_STATUS_AFK = 5;         // 离开
+  PLAYER_STATUS_BANNED = 6;      // 被封禁
 }

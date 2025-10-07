@@ -2,42 +2,46 @@ package protocol
 
 import (
 	"fmt"
+	"greatestworks/internal/proto/messages"
 	"time"
 )
 
-// 协议消息类型定义
+// 协议消息类型定义 - 使用proto生成的常量
 const (
-	// 玩家相关协议 (0x1000 - 0x1FFF)
-	MsgPlayerLogin      uint32 = 0x1001
-	MsgPlayerLogout     uint32 = 0x1002
-	MsgPlayerMove       uint32 = 0x1003
-	MsgPlayerInfo       uint32 = 0x1004
-	MsgPlayerCreate     uint32 = 0x1005
-	MsgPlayerUpdate     uint32 = 0x1006
-	MsgPlayerDelete     uint32 = 0x1007
-	MsgPlayerLevelUp    uint32 = 0x1008
-	MsgPlayerExpGain    uint32 = 0x1009
-	MsgPlayerStatusSync uint32 = 0x100A
+	// 玩家相关协议 (0x1000 - 0x1FFF) - 使用proto生成的常量
+	MsgPlayerLogin      uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_LOGIN)
+	MsgPlayerLogout     uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_LOGOUT)
+	MsgPlayerMove       uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_MOVE)
+	MsgPlayerInfo       uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_INFO)
+	MsgPlayerCreate     uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_CREATE)
+	MsgPlayerUpdate     uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_UPDATE)
+	MsgPlayerDelete     uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_DELETE)
+	MsgPlayerLevelUp    uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_LEVEL)
+	MsgPlayerExpGain    uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_EXP_GAIN)
+	MsgPlayerStatusSync uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_SYNC)
+	MsgPlayerStatus     uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_STATUS)
+	MsgPlayerStats      uint32 = uint32(messages.PlayerMessageID_MSG_PLAYER_STATS)
 
-	// 战斗相关协议 (0x2000 - 0x2FFF)
-	MsgCreateBattle uint32 = 0x2001
-	MsgJoinBattle   uint32 = 0x2002
-	MsgStartBattle  uint32 = 0x2003
-	MsgBattleAction uint32 = 0x2004
-	MsgLeaveBattle  uint32 = 0x2005
-	MsgBattleResult uint32 = 0x2006
-	MsgBattleStatus uint32 = 0x2007
-	MsgBattleRound  uint32 = 0x2008
-	MsgBattleSkill  uint32 = 0x2009
-	MsgBattleDamage uint32 = 0x200A
+	// 战斗相关协议 (0x2000 - 0x2FFF) - 使用proto生成的常量
+	MsgCreateBattle uint32 = uint32(messages.BattleMessageID_MSG_CREATE_BATTLE)
+	MsgJoinBattle   uint32 = uint32(messages.BattleMessageID_MSG_JOIN_BATTLE)
+	MsgStartBattle  uint32 = uint32(messages.BattleMessageID_MSG_START_BATTLE)
+	MsgBattleAction uint32 = uint32(messages.BattleMessageID_MSG_BATTLE_ACTION)
+	MsgLeaveBattle  uint32 = uint32(messages.BattleMessageID_MSG_LEAVE_BATTLE)
+	MsgBattleResult uint32 = uint32(messages.BattleMessageID_MSG_BATTLE_RESULT)
+	MsgBattleStatus uint32 = uint32(messages.BattleMessageID_MSG_BATTLE_STATUS)
+	MsgBattleRound  uint32 = uint32(messages.BattleMessageID_MSG_BATTLE_ROUND)
+	MsgBattleSkill  uint32 = uint32(messages.BattleMessageID_MSG_SKILL_CAST)
+	MsgBattleDamage uint32 = uint32(messages.BattleMessageID_MSG_DAMAGE_DEALT)
 
-	// 查询相关协议 (0x3000 - 0x3FFF)
-	MsgGetPlayerInfo    uint32 = 0x3001
-	MsgGetOnlinePlayers uint32 = 0x3002
-	MsgGetBattleInfo    uint32 = 0x3003
-	MsgGetPlayerStats   uint32 = 0x3004
-	MsgGetBattleList    uint32 = 0x3005
-	MsgGetRankings      uint32 = 0x3006
+	// 查询相关协议 (0x3000 - 0x3FFF) - 使用proto生成的常量
+	MsgGetPlayerInfo    uint32 = uint32(messages.QueryMessageID_MSG_GET_PLAYER_INFO)
+	MsgGetOnlinePlayers uint32 = uint32(messages.QueryMessageID_MSG_GET_ONLINE_PLAYERS)
+	MsgGetBattleInfo    uint32 = uint32(messages.QueryMessageID_MSG_GET_BATTLE_INFO)
+	MsgGetPlayerStats   uint32 = uint32(messages.QueryMessageID_MSG_GET_PLAYER_INFO) // 使用玩家信息代替
+	MsgGetBattleList    uint32 = uint32(messages.QueryMessageID_MSG_GET_BATTLE_INFO) // 使用战斗信息代替
+	MsgGetRankings      uint32 = uint32(messages.QueryMessageID_MSG_GET_RANKING_LIST)
+	MsgGetServerInfo    uint32 = uint32(messages.QueryMessageID_MSG_GET_SERVER_INFO)
 
 	// 系统相关协议 (0x9000 - 0x9FFF)
 	// 使用message_types.go中定义的消息类型

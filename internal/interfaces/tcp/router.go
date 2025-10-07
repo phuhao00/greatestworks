@@ -212,7 +212,7 @@ func (r *Router) IsMessageTypeSupported(messageType uint16) bool {
 func (r *Router) sendUnhandledMessageError(session *connection.Session, msg *protocol.Message) error {
 	errorMsg := &protocol.ErrorResponse{
 		BaseResponse: protocol.NewBaseResponse(false, fmt.Sprintf("Unhandled message type: %d", msg.Header.MessageType)),
-		ErrorCode:    protocol.ErrCodeInvalidMessage,
+		ErrorCode:    int(protocol.ErrCodeInvalidMessage),
 		ErrorType:    "UNHANDLED_MESSAGE",
 	}
 

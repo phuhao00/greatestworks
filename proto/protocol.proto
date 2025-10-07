@@ -1,0 +1,297 @@
+syntax = "proto3";
+
+package greatestworks.protocol;
+
+option go_package = "greatestworks/internal/proto/protocol";
+option csharp_namespace = "GreatestWorks.Protocol";
+
+// 消息类型枚举 - 系统消息 (0x0000 - 0x00FF)
+enum SystemMessageType {
+  SYSTEM_MESSAGE_UNSPECIFIED = 0;
+  MSG_HEARTBEAT = 0x0001;  // 心跳消息
+  MSG_HANDSHAKE = 0x0002; // 握手消息
+  MSG_AUTH = 0x0003;      // 认证消息
+  MSG_DISCONNECT = 0x0004; // 断开连接
+  MSG_ERROR = 0x0005;     // 错误消息
+  MSG_PING = 0x0006;      // Ping消息
+  MSG_PONG = 0x0007;      // Pong消息
+}
+
+// 消息类型枚举 - 玩家相关消息 (0x0100 - 0x01FF)
+enum PlayerMessageType {
+  PLAYER_MESSAGE_UNSPECIFIED = 0;
+  MSG_PLAYER_LOGIN = 0x0101;    // 玩家登录
+  MSG_PLAYER_LOGOUT = 0x0102;   // 玩家登出
+  MSG_PLAYER_INFO = 0x0103;     // 玩家信息
+  MSG_PLAYER_MOVE = 0x0104;     // 玩家移动
+  MSG_PLAYER_CREATE = 0x0105;   // 创建玩家
+  MSG_PLAYER_UPDATE = 0x0106;   // 更新玩家
+  MSG_PLAYER_DELETE = 0x0107;   // 删除玩家
+  MSG_PLAYER_STATUS = 0x0108;   // 玩家状态
+  MSG_PLAYER_STATS = 0x0109;    // 玩家属性
+  MSG_PLAYER_LEVEL = 0x010A;    // 玩家升级
+}
+
+// 消息类型枚举 - 战斗相关消息 (0x0200 - 0x02FF)
+enum BattleMessageType {
+  BATTLE_MESSAGE_UNSPECIFIED = 0;
+  MSG_CREATE_BATTLE = 0x0201;  // 创建战斗
+  MSG_JOIN_BATTLE = 0x0202;    // 加入战斗
+  MSG_LEAVE_BATTLE = 0x0203;   // 离开战斗
+  MSG_START_BATTLE = 0x0204;   // 开始战斗
+  MSG_END_BATTLE = 0x0205;      // 结束战斗
+  MSG_BATTLE_ACTION = 0x0206;  // 战斗行动
+  MSG_BATTLE_RESULT = 0x0207;  // 战斗结果
+  MSG_BATTLE_STATUS = 0x0208;  // 战斗状态
+  MSG_SKILL_CAST = 0x0209;     // 技能释放
+  MSG_DAMAGE_DEALT = 0x020A;   // 伤害计算
+}
+
+// 消息类型枚举 - 宠物相关消息 (0x0300 - 0x03FF)
+enum PetMessageType {
+  PET_MESSAGE_UNSPECIFIED = 0;
+  MSG_PET_SUMMON = 0x0301;     // 召唤宠物
+  MSG_PET_DISMISS = 0x0302;    // 收回宠物
+  MSG_PET_INFO = 0x0303;       // 宠物信息
+  MSG_PET_MOVE = 0x0304;       // 宠物移动
+  MSG_PET_ACTION = 0x0305;     // 宠物行动
+  MSG_PET_LEVEL_UP = 0x0306;   // 宠物升级
+  MSG_PET_EVOLUTION = 0x0307; // 宠物进化
+  MSG_PET_TRAIN = 0x0308;      // 宠物训练
+  MSG_PET_FEED = 0x0309;       // 宠物喂养
+  MSG_PET_STATUS = 0x030A;     // 宠物状态
+}
+
+// 消息类型枚举 - 建筑相关消息 (0x0400 - 0x04FF)
+enum BuildingMessageType {
+  BUILDING_MESSAGE_UNSPECIFIED = 0;
+  MSG_BUILDING_CREATE = 0x0401;   // 创建建筑
+  MSG_BUILDING_UPGRADE = 0x0402;  // 升级建筑
+  MSG_BUILDING_DESTROY = 0x0403; // 摧毁建筑
+  MSG_BUILDING_INFO = 0x0404;    // 建筑信息
+  MSG_BUILDING_PRODUCE = 0x0405; // 建筑生产
+  MSG_BUILDING_COLLECT = 0x0406; // 收集资源
+  MSG_BUILDING_REPAIR = 0x0407;  // 修复建筑
+  MSG_BUILDING_STATUS = 0x0408;  // 建筑状态
+}
+
+// 消息类型枚举 - 社交相关消息 (0x0500 - 0x05FF)
+enum SocialMessageType {
+  SOCIAL_MESSAGE_UNSPECIFIED = 0;
+  MSG_CHAT_MESSAGE = 0x0501;     // 聊天消息
+  MSG_FRIEND_REQUEST = 0x0502;  // 好友请求
+  MSG_FRIEND_ACCEPT = 0x0503;    // 接受好友
+  MSG_FRIEND_REJECT = 0x0504;    // 拒绝好友
+  MSG_FRIEND_REMOVE = 0x0505;    // 删除好友
+  MSG_FRIEND_LIST = 0x0506;       // 好友列表
+  MSG_GUILD_CREATE = 0x0507;     // 创建公会
+  MSG_GUILD_JOIN = 0x0508;        // 加入公会
+  MSG_GUILD_LEAVE = 0x0509;       // 离开公会
+  MSG_GUILD_INFO = 0x050A;        // 公会信息
+  MSG_TEAM_CREATE = 0x050B;       // 创建队伍
+  MSG_TEAM_JOIN = 0x050C;         // 加入队伍
+  MSG_TEAM_LEAVE = 0x050D;        // 离开队伍
+  MSG_TEAM_INFO = 0x050E;          // 队伍信息
+}
+
+// 消息类型枚举 - 物品相关消息 (0x0600 - 0x06FF)
+enum ItemMessageType {
+  ITEM_MESSAGE_UNSPECIFIED = 0;
+  MSG_ITEM_USE = 0x0601;         // 使用物品
+  MSG_ITEM_EQUIP = 0x0602;       // 装备物品
+  MSG_ITEM_UNEQUIP = 0x0603;     // 卸下装备
+  MSG_ITEM_DROP = 0x0604;        // 丢弃物品
+  MSG_ITEM_PICKUP = 0x0605;      // 拾取物品
+  MSG_ITEM_TRADE = 0x0606;       // 交易物品
+  MSG_INVENTORY_INFO = 0x0607;   // 背包信息
+  MSG_ITEM_INFO = 0x0608;        // 物品信息
+  MSG_ITEM_CRAFT = 0x0609;       // 制作物品
+  MSG_ITEM_ENHANCE = 0x060A;     // 强化物品
+}
+
+// 消息类型枚举 - 任务相关消息 (0x0700 - 0x07FF)
+enum QuestMessageType {
+  QUEST_MESSAGE_UNSPECIFIED = 0;
+  MSG_QUEST_ACCEPT = 0x0701;     // 接受任务
+  MSG_QUEST_COMPLETE = 0x0702;   // 完成任务
+  MSG_QUEST_CANCEL = 0x0703;     // 取消任务
+  MSG_QUEST_PROGRESS = 0x0704;  // 任务进度
+  MSG_QUEST_LIST = 0x0705;       // 任务列表
+  MSG_QUEST_INFO = 0x0706;       // 任务信息
+  MSG_QUEST_REWARD = 0x0707;     // 任务奖励
+}
+
+// 消息类型枚举 - 查询相关消息 (0x0800 - 0x08FF)
+enum QueryMessageType {
+  QUERY_MESSAGE_UNSPECIFIED = 0;
+  MSG_GET_PLAYER_INFO = 0x0801;    // 获取玩家信息
+  MSG_GET_ONLINE_PLAYERS = 0x0802; // 获取在线玩家
+  MSG_GET_BATTLE_INFO = 0x0803;    // 获取战斗信息
+  MSG_GET_RANKING_LIST = 0x0804;   // 获取排行榜
+  MSG_GET_SERVER_INFO = 0x0805;    // 获取服务器信息
+}
+
+// 错误码枚举
+enum ErrorCode {
+  option allow_alias = true;
+  
+  ERROR_CODE_UNSPECIFIED = 0;
+  
+  // 通用错误 (0-999)
+  ERR_SUCCESS = 0;              // 成功
+  ERR_UNKNOWN = 1000;           // 未知错误
+  ERR_INVALID_MESSAGE = 1001;   // 无效消息
+  ERR_INVALID_PLAYER = 1002;    // 无效玩家
+  ERR_PLAYER_NOT_FOUND = 1003;  // 玩家未找到
+  ERR_PLAYER_OFFLINE = 1004;    // 玩家离线
+  ERR_AUTH_FAILED = 1005;       // 认证失败
+  ERR_PERMISSION_DENIED = 1006; // 权限不足
+  ERR_RATE_LIMITED = 1007;      // 请求过于频繁
+  ERR_SERVER_BUSY = 1008;       // 服务器繁忙
+  ERR_MAINTENANCE = 1009;      // 服务器维护
+  
+  // 战斗相关错误 (2000-2999)
+  ERR_BATTLE_NOT_FOUND = 2001;  // 战斗未找到
+  ERR_BATTLE_FULL = 2002;       // 战斗已满
+  ERR_BATTLE_STARTED = 2003;    // 战斗已开始
+  ERR_BATTLE_ENDED = 2004;      // 战斗已结束
+  ERR_INVALID_ACTION = 2005;    // 无效行动
+  ERR_NOT_YOUR_TURN = 2006;     // 不是你的回合
+  ERR_SKILL_COOLDOWN = 2007;    // 技能冷却中
+  ERR_INSUFFICIENT_MP = 2008;   // MP不足
+  
+  // 宠物相关错误 (3000-3999)
+  ERR_PET_NOT_FOUND = 3001;     // 宠物未找到
+  ERR_PET_ALREADY_ACTIVE = 3002; // 宠物已激活
+  ERR_PET_NOT_ACTIVE = 3003;    // 宠物未激活
+  ERR_PET_LEVEL_TOO_LOW = 3004; // 宠物等级过低
+  ERR_PET_EVOLUTION_FAIL = 3005; // 宠物进化失败
+  
+  // 物品相关错误 (4000-4999)
+  ERR_ITEM_NOT_FOUND = 4001;    // 物品未找到
+  ERR_ITEM_NOT_USABLE = 4002;   // 物品不可使用
+  ERR_INVENTORY_FULL = 4003;    // 背包已满
+  ERR_INSUFFICIENT_ITEM = 4004; // 物品数量不足
+  ERR_ITEM_EQUIP_FAILED = 4005; // 装备失败
+}
+
+// 玩家状态枚举
+enum PlayerStatus {
+  PLAYER_STATUS_UNSPECIFIED = 0;
+  PLAYER_STATUS_OFFLINE = 1;    // 离线
+  PLAYER_STATUS_ONLINE = 2;      // 在线
+  PLAYER_STATUS_IN_BATTLE = 3;   // 战斗中
+  PLAYER_STATUS_IN_QUEUE = 4;    // 排队中
+  PLAYER_STATUS_AFK = 5;         // 离开
+  PLAYER_STATUS_BANNED = 6;      // 被封禁
+}
+
+// 战斗状态枚举
+enum BattleStatus {
+  BATTLE_STATUS_UNSPECIFIED = 0;
+  BATTLE_STATUS_WAITING = 1;     // 等待中
+  BATTLE_STATUS_STARTING = 2;    // 开始中
+  BATTLE_STATUS_ACTIVE = 3;      // 进行中
+  BATTLE_STATUS_ENDING = 4;      // 结束中
+  BATTLE_STATUS_FINISHED = 5;    // 已结束
+  BATTLE_STATUS_CANCELLED = 6;   // 已取消
+}
+
+// 宠物状态枚举
+enum PetStatus {
+  PET_STATUS_UNSPECIFIED = 0;
+  PET_STATUS_IDLE = 1;           // 空闲
+  PET_STATUS_ACTIVE = 2;         // 活跃
+  PET_STATUS_BATTLE = 3;         // 战斗中
+  PET_STATUS_TRAINING = 4;       // 训练中
+  PET_STATUS_SLEEPING = 5;      // 睡眠中
+  PET_STATUS_SICK = 6;           // 生病
+  PET_STATUS_EVOLVING = 7;       // 进化中
+}
+
+// 物品稀有度枚举
+enum ItemRarity {
+  ITEM_RARITY_UNSPECIFIED = 0;
+  ITEM_RARITY_COMMON = 1;        // 普通
+  ITEM_RARITY_UNCOMMON = 2;      // 不常见
+  ITEM_RARITY_RARE = 3;          // 稀有
+  ITEM_RARITY_EPIC = 4;          // 史诗
+  ITEM_RARITY_LEGENDARY = 5;     // 传说
+  ITEM_RARITY_MYTHIC = 6;        // 神话
+}
+
+// 宠物稀有度枚举
+enum PetRarity {
+  PET_RARITY_UNSPECIFIED = 0;
+  PET_RARITY_COMMON = 1;         // 普通
+  PET_RARITY_UNCOMMON = 2;       // 不常见
+  PET_RARITY_RARE = 3;           // 稀有
+  PET_RARITY_EPIC = 4;           // 史诗
+  PET_RARITY_LEGENDARY = 5;      // 传说
+  PET_RARITY_MYTHIC = 6;         // 神话
+}
+
+// 消息标志位枚举
+enum MessageFlag {
+  MESSAGE_FLAG_UNSPECIFIED = 0;
+  MESSAGE_FLAG_REQUEST = 0x0001;    // 请求消息
+  MESSAGE_FLAG_RESPONSE = 0x0002;   // 响应消息
+  MESSAGE_FLAG_ERROR = 0x0004;     // 错误消息
+  MESSAGE_FLAG_ASYNC = 0x0008;     // 异步消息
+  MESSAGE_FLAG_BROADCAST = 0x0010; // 广播消息
+  MESSAGE_FLAG_ENCRYPTED = 0x0020; // 加密消息
+  MESSAGE_FLAG_COMPRESSED = 0x0040; // 压缩消息
+}
+
+// 协议常量
+message ProtocolConstants {
+  // 消息魔数
+  uint32 message_magic = 1; // 0x47574B53 "GWKS" - GreatestWorks
+  
+  // 消息头大小
+  uint32 message_header_size = 2; // 32字节
+  
+  // 最大消息体大小
+  uint32 max_message_body_size = 3; // 1MB
+  
+  // 心跳间隔（秒）
+  uint32 heartbeat_interval = 4; // 30秒
+  
+  // 连接超时（秒）
+  uint32 connection_timeout = 5; // 300秒
+  
+  // 重连间隔（秒）
+  uint32 reconnect_interval = 6; // 5秒
+  
+  // 最大重连次数
+  uint32 max_reconnect_attempts = 7; // 5次
+}
+
+// 消息头结构
+message MessageHeader {
+  uint32 magic = 1;        // 魔数标识
+  uint32 message_id = 2;    // 消息ID（用于请求响应匹配）
+  uint32 message_type = 3;  // 消息类型
+  uint32 flags = 4;         // 标志位
+  uint64 player_id = 5;    // 玩家ID
+  int64 timestamp = 6;      // 时间戳
+  uint32 sequence = 7;      // 序列号
+  uint32 length = 8;        // 消息体长度
+}
+
+// 基础响应结构
+message BaseResponse {
+  bool success = 1;
+  string message = 2;
+  ErrorCode error_code = 3;
+  int64 timestamp = 4;
+  string request_id = 5;
+}
+
+// 错误响应结构
+message ErrorResponse {
+  BaseResponse base = 1;
+  string error_type = 2;
+  string details = 3;
+  int64 error_time = 4;
+}

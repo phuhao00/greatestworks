@@ -2,112 +2,88 @@ package protocol
 
 import (
 	"fmt"
+	"greatestworks/internal/proto/messages"
+	"greatestworks/internal/proto/protocol"
 )
 
 // import (
 // 	"time"
 // )
 
-// 消息类型常量定义
+// 消息类型常量定义 - 使用proto生成的常量
 const (
 	// 系统消息 (0x0000 - 0x00FF)
-	MsgHeartbeat  uint32 = 0x0001 // 心跳消息
-	MsgHandshake  uint32 = 0x0002 // 握手消息
-	MsgAuth       uint32 = 0x0003 // 认证消息
-	MsgDisconnect uint32 = 0x0004 // 断开连接
-	MsgError      uint32 = 0x0005 // 错误消息
-	MsgPing       uint32 = 0x0006 // Ping消息
-	MsgPong       uint32 = 0x0007 // Pong消息
+	MsgHeartbeat  uint32 = uint32(messages.SystemMessageID_MSG_HEARTBEAT)
+	MsgHandshake  uint32 = uint32(messages.SystemMessageID_MSG_HANDSHAKE)
+	MsgAuth       uint32 = uint32(messages.SystemMessageID_MSG_AUTH)
+	MsgDisconnect uint32 = uint32(messages.SystemMessageID_MSG_DISCONNECT)
+	MsgError      uint32 = uint32(messages.SystemMessageID_MSG_ERROR)
+	MsgPing       uint32 = uint32(messages.SystemMessageID_MSG_PING)
+	MsgPong       uint32 = uint32(messages.SystemMessageID_MSG_PONG)
 
 	// 玩家相关消息 (0x0100 - 0x01FF) - 定义在game_protocol.go中
-	// MsgPlayerLogin   uint16 = 0x0101 // 玩家登录
-	// MsgPlayerLogout  uint16 = 0x0102 // 玩家登出
-	// MsgPlayerInfo    uint16 = 0x0103 // 玩家信息
-	// MsgPlayerMove    uint16 = 0x0104 // 玩家移动
-	// MsgPlayerCreate  uint16 = 0x0105 // 创建玩家
-	// MsgPlayerUpdate  uint16 = 0x0106 // 更新玩家
-	// MsgPlayerDelete  uint16 = 0x0107 // 删除玩家
-	MsgPlayerStatus uint16 = 0x0108 // 玩家状态
-	MsgPlayerStats  uint16 = 0x0109 // 玩家属性
-	MsgPlayerLevel  uint16 = 0x010A // 玩家升级
-
 	// 战斗相关消息 (0x0200 - 0x02FF) - 定义在game_protocol.go中
-	// MsgCreateBattle  uint16 = 0x0201 // 创建战斗
-	// MsgJoinBattle    uint16 = 0x0202 // 加入战斗
-	// MsgLeaveBattle   uint16 = 0x0203 // 离开战斗
-	// MsgStartBattle   uint16 = 0x0204 // 开始战斗 - 定义在game_protocol.go中
-	MsgEndBattle uint16 = 0x0205 // 结束战斗
-	// MsgBattleAction  uint16 = 0x0206 // 战斗行动 - 定义在game_protocol.go中
-	// MsgBattleResult  uint16 = 0x0207 // 战斗结果 - 定义在game_protocol.go中
-	// MsgBattleStatus  uint16 = 0x0208 // 战斗状态 - 定义在game_protocol.go中
-	MsgSkillCast   uint16 = 0x0209 // 技能释放
-	MsgDamageDealt uint16 = 0x020A // 伤害计算
 
-	// 宠物相关消息 (0x0300 - 0x03FF)
-	MsgPetSummon    uint16 = 0x0301 // 召唤宠物
-	MsgPetDismiss   uint16 = 0x0302 // 收回宠物
-	MsgPetInfo      uint16 = 0x0303 // 宠物信息
-	MsgPetMove      uint16 = 0x0304 // 宠物移动
-	MsgPetAction    uint16 = 0x0305 // 宠物行动
-	MsgPetLevelUp   uint16 = 0x0306 // 宠物升级
-	MsgPetEvolution uint16 = 0x0307 // 宠物进化
-	MsgPetTrain     uint16 = 0x0308 // 宠物训练
-	MsgPetFeed      uint16 = 0x0309 // 宠物喂养
-	MsgPetStatus    uint16 = 0x030A // 宠物状态
+	// 宠物相关消息 (0x0300 - 0x03FF) - 使用proto生成的常量
+	MsgPetSummon    uint32 = uint32(messages.PetMessageID_MSG_PET_SUMMON)    // 召唤宠物
+	MsgPetDismiss   uint32 = uint32(messages.PetMessageID_MSG_PET_DISMISS)   // 收回宠物
+	MsgPetInfo      uint32 = uint32(messages.PetMessageID_MSG_PET_INFO)      // 宠物信息
+	MsgPetMove      uint32 = uint32(messages.PetMessageID_MSG_PET_MOVE)      // 宠物移动
+	MsgPetAction    uint32 = uint32(messages.PetMessageID_MSG_PET_ACTION)    // 宠物行动
+	MsgPetLevelUp   uint32 = uint32(messages.PetMessageID_MSG_PET_LEVEL_UP)  // 宠物升级
+	MsgPetEvolution uint32 = uint32(messages.PetMessageID_MSG_PET_EVOLUTION) // 宠物进化
+	MsgPetTrain     uint32 = uint32(messages.PetMessageID_MSG_PET_TRAIN)     // 宠物训练
+	MsgPetFeed      uint32 = uint32(messages.PetMessageID_MSG_PET_FEED)      // 宠物喂养
+	MsgPetStatus    uint32 = uint32(messages.PetMessageID_MSG_PET_STATUS)    // 宠物状态
 
-	// 建筑相关消息 (0x0400 - 0x04FF)
-	MsgBuildingCreate  uint16 = 0x0401 // 创建建筑
-	MsgBuildingUpgrade uint16 = 0x0402 // 升级建筑
-	MsgBuildingDestroy uint16 = 0x0403 // 摧毁建筑
-	MsgBuildingInfo    uint16 = 0x0404 // 建筑信息
-	MsgBuildingProduce uint16 = 0x0405 // 建筑生产
-	MsgBuildingCollect uint16 = 0x0406 // 收集资源
-	MsgBuildingRepair  uint16 = 0x0407 // 修复建筑
-	MsgBuildingStatus  uint16 = 0x0408 // 建筑状态
+	// 建筑相关消息 (0x0400 - 0x04FF) - 使用proto生成的常量
+	MsgBuildingCreate  uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_CREATE)  // 创建建筑
+	MsgBuildingUpgrade uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_UPGRADE) // 升级建筑
+	MsgBuildingDestroy uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_DESTROY) // 摧毁建筑
+	MsgBuildingInfo    uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_INFO)    // 建筑信息
+	MsgBuildingProduce uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_PRODUCE) // 建筑生产
+	MsgBuildingCollect uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_COLLECT) // 收集资源
+	MsgBuildingRepair  uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_REPAIR)  // 修复建筑
+	MsgBuildingStatus  uint32 = uint32(messages.BuildingMessageID_MSG_BUILDING_STATUS)  // 建筑状态
 
-	// 社交相关消息 (0x0500 - 0x05FF)
-	MsgChatMessage   uint16 = 0x0501 // 聊天消息
-	MsgFriendRequest uint16 = 0x0502 // 好友请求
-	MsgFriendAccept  uint16 = 0x0503 // 接受好友
-	MsgFriendReject  uint16 = 0x0504 // 拒绝好友
-	MsgFriendRemove  uint16 = 0x0505 // 删除好友
-	MsgFriendList    uint16 = 0x0506 // 好友列表
-	MsgGuildCreate   uint16 = 0x0507 // 创建公会
-	MsgGuildJoin     uint16 = 0x0508 // 加入公会
-	MsgGuildLeave    uint16 = 0x0509 // 离开公会
-	MsgGuildInfo     uint16 = 0x050A // 公会信息
-	MsgTeamCreate    uint16 = 0x050B // 创建队伍
-	MsgTeamJoin      uint16 = 0x050C // 加入队伍
-	MsgTeamLeave     uint16 = 0x050D // 离开队伍
-	MsgTeamInfo      uint16 = 0x050E // 队伍信息
+	// 社交相关消息 (0x0500 - 0x05FF) - 使用proto生成的常量
+	MsgChatMessage   uint32 = uint32(messages.SocialMessageID_MSG_CHAT_MESSAGE)   // 聊天消息
+	MsgFriendRequest uint32 = uint32(messages.SocialMessageID_MSG_FRIEND_REQUEST) // 好友请求
+	MsgFriendAccept  uint32 = uint32(messages.SocialMessageID_MSG_FRIEND_ACCEPT)  // 接受好友
+	MsgFriendReject  uint32 = uint32(messages.SocialMessageID_MSG_FRIEND_REJECT)  // 拒绝好友
+	MsgFriendRemove  uint32 = uint32(messages.SocialMessageID_MSG_FRIEND_REMOVE)  // 删除好友
+	MsgFriendList    uint32 = uint32(messages.SocialMessageID_MSG_FRIEND_LIST)    // 好友列表
+	MsgGuildCreate   uint32 = uint32(messages.SocialMessageID_MSG_GUILD_CREATE)   // 创建公会
+	MsgGuildJoin     uint32 = uint32(messages.SocialMessageID_MSG_GUILD_JOIN)     // 加入公会
+	MsgGuildLeave    uint32 = uint32(messages.SocialMessageID_MSG_GUILD_LEAVE)    // 离开公会
+	MsgGuildInfo     uint32 = uint32(messages.SocialMessageID_MSG_GUILD_INFO)     // 公会信息
+	MsgTeamCreate    uint32 = uint32(messages.SocialMessageID_MSG_TEAM_CREATE)    // 创建队伍
+	MsgTeamJoin      uint32 = uint32(messages.SocialMessageID_MSG_TEAM_JOIN)      // 加入队伍
+	MsgTeamLeave     uint32 = uint32(messages.SocialMessageID_MSG_TEAM_LEAVE)     // 离开队伍
+	MsgTeamInfo      uint32 = uint32(messages.SocialMessageID_MSG_TEAM_INFO)      // 队伍信息
 
-	// 物品相关消息 (0x0600 - 0x06FF)
-	MsgItemUse       uint16 = 0x0601 // 使用物品
-	MsgItemEquip     uint16 = 0x0602 // 装备物品
-	MsgItemUnequip   uint16 = 0x0603 // 卸下装备
-	MsgItemDrop      uint16 = 0x0604 // 丢弃物品
-	MsgItemPickup    uint16 = 0x0605 // 拾取物品
-	MsgItemTrade     uint16 = 0x0606 // 交易物品
-	MsgInventoryInfo uint16 = 0x0607 // 背包信息
-	MsgItemInfo      uint16 = 0x0608 // 物品信息
-	MsgItemCraft     uint16 = 0x0609 // 制作物品
-	MsgItemEnhance   uint16 = 0x060A // 强化物品
+	// 物品相关消息 (0x0600 - 0x06FF) - 使用proto生成的常量
+	MsgItemUse       uint32 = uint32(messages.ItemMessageID_MSG_ITEM_USE)       // 使用物品
+	MsgItemEquip     uint32 = uint32(messages.ItemMessageID_MSG_ITEM_EQUIP)     // 装备物品
+	MsgItemUnequip   uint32 = uint32(messages.ItemMessageID_MSG_ITEM_UNEQUIP)   // 卸下装备
+	MsgItemDrop      uint32 = uint32(messages.ItemMessageID_MSG_ITEM_DROP)      // 丢弃物品
+	MsgItemPickup    uint32 = uint32(messages.ItemMessageID_MSG_ITEM_PICKUP)    // 拾取物品
+	MsgItemTrade     uint32 = uint32(messages.ItemMessageID_MSG_ITEM_TRADE)     // 交易物品
+	MsgInventoryInfo uint32 = uint32(messages.ItemMessageID_MSG_INVENTORY_INFO) // 背包信息
+	MsgItemInfo      uint32 = uint32(messages.ItemMessageID_MSG_ITEM_INFO)      // 物品信息
+	MsgItemCraft     uint32 = uint32(messages.ItemMessageID_MSG_ITEM_CRAFT)     // 制作物品
+	MsgItemEnhance   uint32 = uint32(messages.ItemMessageID_MSG_ITEM_ENHANCE)   // 强化物品
 
-	// 任务相关消息 (0x0700 - 0x07FF)
-	MsgQuestAccept   uint16 = 0x0701 // 接受任务
-	MsgQuestComplete uint16 = 0x0702 // 完成任务
-	MsgQuestCancel   uint16 = 0x0703 // 取消任务
-	MsgQuestProgress uint16 = 0x0704 // 任务进度
-	MsgQuestList     uint16 = 0x0705 // 任务列表
-	MsgQuestInfo     uint16 = 0x0706 // 任务信息
-	MsgQuestReward   uint16 = 0x0707 // 任务奖励
+	// 任务相关消息 (0x0700 - 0x07FF) - 使用proto生成的常量
+	MsgQuestAccept   uint32 = uint32(messages.QuestMessageID_MSG_QUEST_ACCEPT)   // 接受任务
+	MsgQuestComplete uint32 = uint32(messages.QuestMessageID_MSG_QUEST_COMPLETE) // 完成任务
+	MsgQuestCancel   uint32 = uint32(messages.QuestMessageID_MSG_QUEST_CANCEL)   // 取消任务
+	MsgQuestProgress uint32 = uint32(messages.QuestMessageID_MSG_QUEST_PROGRESS) // 任务进度
+	MsgQuestList     uint32 = uint32(messages.QuestMessageID_MSG_QUEST_LIST)     // 任务列表
+	MsgQuestInfo     uint32 = uint32(messages.QuestMessageID_MSG_QUEST_INFO)     // 任务信息
+	MsgQuestReward   uint32 = uint32(messages.QuestMessageID_MSG_QUEST_REWARD)   // 任务奖励
 
-	// 查询相关消息 (0x0800 - 0x08FF)
-	// MsgGetPlayerInfo    uint16 = 0x0801 // 获取玩家信息 - 定义在game_protocol.go中
-	// MsgGetOnlinePlayers uint16 = 0x0802 // 获取在线玩家 - 定义在game_protocol.go中
-	// MsgGetBattleInfo    uint16 = 0x0803 // 获取战斗信息 - 定义在game_protocol.go中
-	MsgGetRankingList uint16 = 0x0804 // 获取排行榜
-	MsgGetServerInfo  uint16 = 0x0805 // 获取服务器信息
+	// 查询相关消息 (0x0800 - 0x08FF) - 定义在game_protocol.go中
 )
 
 // 消息魔数
@@ -174,15 +150,15 @@ type Message struct {
 	Payload interface{}   `json:"payload"`
 }
 
-// 消息标志位
+// 消息标志位 - 使用proto生成的常量
 const (
-	FlagRequest    uint16 = 0x0001 // 请求消息
-	FlagResponse   uint16 = 0x0002 // 响应消息
-	FlagError      uint16 = 0x0004 // 错误消息
-	FlagAsync      uint16 = 0x0008 // 异步消息
-	FlagBroadcast  uint16 = 0x0010 // 广播消息
-	FlagEncrypted  uint16 = 0x0020 // 加密消息
-	FlagCompressed uint16 = 0x0040 // 压缩消息
+	FlagRequest    uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_REQUEST)    // 请求消息
+	FlagResponse   uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_RESPONSE)   // 响应消息
+	FlagError      uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_ERROR)      // 错误消息
+	FlagAsync      uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_ASYNC)      // 异步消息
+	FlagBroadcast  uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_BROADCAST)  // 广播消息
+	FlagEncrypted  uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_ENCRYPTED)  // 加密消息
+	FlagCompressed uint16 = uint16(protocol.MessageFlag_MESSAGE_FLAG_COMPRESSED) // 压缩消息
 )
 
 // BaseResponse 基础响应 - 定义在game_protocol.go中

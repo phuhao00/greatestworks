@@ -128,11 +128,62 @@ message BattleInfo {
 
 // 战斗状态
 enum BattleStatus {
-  BATTLE_STATUS_WAITING = 0;
-  BATTLE_STATUS_STARTING = 1;
-  BATTLE_STATUS_ACTIVE = 2;
-  BATTLE_STATUS_ENDING = 3;
-  BATTLE_STATUS_FINISHED = 4;
+  BATTLE_STATUS_UNSPECIFIED = 0;
+  BATTLE_STATUS_WAITING = 1;
+  BATTLE_STATUS_STARTING = 2;
+  BATTLE_STATUS_ACTIVE = 3;
+  BATTLE_STATUS_ENDING = 4;
+  BATTLE_STATUS_FINISHED = 5;
+  BATTLE_STATUS_CANCELLED = 6;
+}
+
+// 战斗类型枚举
+enum BattleType {
+  BATTLE_TYPE_UNSPECIFIED = 0;
+  BATTLE_TYPE_PVP = 1;           // 玩家对战
+  BATTLE_TYPE_PVE = 2;           // 玩家对环境
+  BATTLE_TYPE_ARENA = 3;         // 竞技场
+  BATTLE_TYPE_RAID = 4;          // 团队副本
+  BATTLE_TYPE_DUNGEON = 5;       // 地下城
+  BATTLE_TYPE_BOSS = 6;          // BOSS战
+  BATTLE_TYPE_TOURNAMENT = 7;    // 锦标赛
+}
+
+// 战斗行动类型枚举
+enum BattleActionType {
+  BATTLE_ACTION_TYPE_UNSPECIFIED = 0;
+  BATTLE_ACTION_TYPE_ATTACK = 1;     // 攻击
+  BATTLE_ACTION_TYPE_SKILL = 2;      // 技能
+  BATTLE_ACTION_TYPE_ITEM = 3;       // 使用物品
+  BATTLE_ACTION_TYPE_DEFEND = 4;     // 防御
+  BATTLE_ACTION_TYPE_ESCAPE = 5;     // 逃跑
+  BATTLE_ACTION_TYPE_WAIT = 6;       // 等待
+}
+
+// 战斗结果类型枚举
+enum BattleResultType {
+  BATTLE_RESULT_TYPE_UNSPECIFIED = 0;
+  BATTLE_RESULT_TYPE_VICTORY = 1;    // 胜利
+  BATTLE_RESULT_TYPE_DEFEAT = 2;     // 失败
+  BATTLE_RESULT_TYPE_DRAW = 3;       // 平局
+  BATTLE_RESULT_TYPE_ESCAPE = 4;     // 逃跑
+  BATTLE_RESULT_TYPE_TIMEOUT = 5;    // 超时
+  BATTLE_RESULT_TYPE_DISCONNECT = 6; // 断线
+}
+
+// 战斗事件类型枚举
+enum BattleEventType {
+  BATTLE_EVENT_TYPE_UNSPECIFIED = 0;
+  BATTLE_EVENT_TYPE_DAMAGE = 1;      // 伤害
+  BATTLE_EVENT_TYPE_HEAL = 2;        // 治疗
+  BATTLE_EVENT_TYPE_BUFF = 3;        // 增益
+  BATTLE_EVENT_TYPE_DEBUFF = 4;     // 减益
+  BATTLE_EVENT_TYPE_CRITICAL = 5;    // 暴击
+  BATTLE_EVENT_TYPE_MISS = 6;        // 未命中
+  BATTLE_EVENT_TYPE_DODGE = 7;       // 闪避
+  BATTLE_EVENT_TYPE_BLOCK = 8;       // 格挡
+  BATTLE_EVENT_TYPE_DEATH = 9;       // 死亡
+  BATTLE_EVENT_TYPE_REVIVE = 10;    // 复活
 }
 
 // 战斗玩家

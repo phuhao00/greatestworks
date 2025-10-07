@@ -1,17 +1,20 @@
 package protocol
 
-import "errors"
+import (
+	"errors"
+	protoerrors "greatestworks/internal/proto/errors"
+)
 
-// Error codes
+// Error codes - 使用proto生成的常量
 const (
-	ErrCodeInvalidMessage = 1001
-	ErrCodeAuthFailed     = 1002
-	ErrCodePlayerNotFound = 1003
-	ErrCodeBattleNotFound = 1004
-	ErrCodeUnknownMessage = 1005
-	ErrCodeServerBusy     = 1006
-	ErrCodeInvalidPlayer  = 1007
-	ErrCodeUnknown        = 1999
+	ErrCodeInvalidMessage = int32(protoerrors.CommonErrorCode_ERR_INVALID_MESSAGE)
+	ErrCodeAuthFailed     = int32(protoerrors.CommonErrorCode_ERR_AUTH_FAILED)
+	ErrCodePlayerNotFound = int32(protoerrors.CommonErrorCode_ERR_PLAYER_NOT_FOUND)
+	ErrCodeBattleNotFound = int32(protoerrors.CommonErrorCode_ERR_BATTLE_NOT_FOUND)
+	ErrCodeUnknownMessage = int32(protoerrors.CommonErrorCode_ERR_UNKNOWN_MESSAGE)
+	ErrCodeServerBusy     = int32(protoerrors.CommonErrorCode_ERR_SERVER_BUSY)
+	ErrCodeInvalidPlayer  = int32(protoerrors.CommonErrorCode_ERR_INVALID_PLAYER)
+	ErrCodeUnknown        = int32(protoerrors.CommonErrorCode_ERR_UNKNOWN)
 )
 
 // Error definitions for protocol

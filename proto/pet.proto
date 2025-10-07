@@ -151,7 +151,71 @@ message PetSkill {
   string description = 3;
   int32 level = 4;
   int32 max_level = 5;
-  string skill_type = 6;
+  PetSkillType skill_type = 6;
   int32 cooldown = 7;
   int32 mana_cost = 8;
+}
+
+// 宠物稀有度枚举
+enum PetRarity {
+  PET_RARITY_UNSPECIFIED = 0;
+  PET_RARITY_COMMON = 1;         // 普通
+  PET_RARITY_UNCOMMON = 2;       // 不常见
+  PET_RARITY_RARE = 3;           // 稀有
+  PET_RARITY_EPIC = 4;           // 史诗
+  PET_RARITY_LEGENDARY = 5;      // 传说
+  PET_RARITY_MYTHIC = 6;         // 神话
+}
+
+// 宠物品质枚举
+enum PetQuality {
+  PET_QUALITY_UNSPECIFIED = 0;
+  PET_QUALITY_POOR = 1;          // 劣质
+  PET_QUALITY_FAIR = 2;          // 一般
+  PET_QUALITY_GOOD = 3;          // 良好
+  PET_QUALITY_EXCELLENT = 4;     // 优秀
+  PET_QUALITY_PERFECT = 5;       // 完美
+}
+
+// 宠物技能类型枚举
+enum PetSkillType {
+  PET_SKILL_TYPE_UNSPECIFIED = 0;
+  PET_SKILL_TYPE_ATTACK = 1;     // 攻击技能
+  PET_SKILL_TYPE_DEFENSE = 2;    // 防御技能
+  PET_SKILL_TYPE_HEAL = 3;       // 治疗技能
+  PET_SKILL_TYPE_BUFF = 4;       // 增益技能
+  PET_SKILL_TYPE_DEBUFF = 5;     // 减益技能
+  PET_SKILL_TYPE_PASSIVE = 6;    // 被动技能
+  PET_SKILL_TYPE_ULTIMATE = 7;   // 终极技能
+}
+
+// 宠物心情枚举
+enum PetMood {
+  PET_MOOD_UNSPECIFIED = 0;
+  PET_MOOD_VERY_HAPPY = 1;       // 非常开心
+  PET_MOOD_HAPPY = 2;            // 开心
+  PET_MOOD_NORMAL = 3;            // 正常
+  PET_MOOD_SAD = 4;               // 难过
+  PET_MOOD_VERY_SAD = 5;          // 非常难过
+  PET_MOOD_ANGRY = 6;             // 愤怒
+  PET_MOOD_SICK = 7;              // 生病
+}
+
+// 宠物训练类型枚举
+enum PetTrainingType {
+  PET_TRAINING_TYPE_UNSPECIFIED = 0;
+  PET_TRAINING_TYPE_STRENGTH = 1;    // 力量训练
+  PET_TRAINING_TYPE_AGILITY = 2;      // 敏捷训练
+  PET_TRAINING_TYPE_INTELLIGENCE = 3; // 智力训练
+  PET_TRAINING_TYPE_ENDURANCE = 4;   // 耐力训练
+  PET_TRAINING_TYPE_BALANCED = 5;    // 平衡训练
+}
+
+// 宠物训练强度枚举
+enum PetTrainingIntensity {
+  PET_TRAINING_INTENSITY_UNSPECIFIED = 0;
+  PET_TRAINING_INTENSITY_LIGHT = 1;   // 轻度训练
+  PET_TRAINING_INTENSITY_MODERATE = 2; // 中度训练
+  PET_TRAINING_INTENSITY_INTENSE = 3;  // 强度训练
+  PET_TRAINING_INTENSITY_EXTREME = 4;  // 极限训练
 }
