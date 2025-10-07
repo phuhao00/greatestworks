@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	// "greatestworks/application/services" // TODO: 实现services
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 	// "greatestworks/internal/proto/pet" // TODO: 实现pet proto
 )
 
@@ -64,7 +64,7 @@ func (s *PetRPCService) handleCreatePet(ctx context.Context, data []byte) ([]byt
 
 	// return json.Marshal(result)
 
-	// 临时返回空结果
+	// 临时返回空结�?
 	return json.Marshal(map[string]interface{}{"message": "Pet service not implemented"})
 }
 

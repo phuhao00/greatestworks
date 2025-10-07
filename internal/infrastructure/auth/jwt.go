@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
 // JWTConfig JWT配置
@@ -46,7 +46,7 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
-// TokenPair 令牌对
+// TokenPair 令牌�?
 type TokenPair struct {
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
@@ -73,7 +73,7 @@ func NewJWTService(config *JWTConfig, logger logger.Logger) *JWTService {
 	}
 }
 
-// GenerateTokenPair 生成令牌对
+// GenerateTokenPair 生成令牌�?
 func (s *JWTService) GenerateTokenPair(userID, username, email, role string, metadata map[string]string) (*TokenPair, error) {
 	now := time.Now()
 	accessExpiresAt := now.Add(s.config.AccessTokenTTL)
@@ -167,7 +167,7 @@ func (s *JWTService) ValidateToken(tokenString string) (*UserClaims, error) {
 		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
-	// 检查令牌是否有效
+	// 检查令牌是否有�?
 	if !token.Valid {
 		s.logger.Warn("Token is not valid")
 		return nil, errors.New("token is not valid")
@@ -199,7 +199,7 @@ func (s *JWTService) RefreshToken(refreshTokenString string) (*TokenPair, error)
 		return nil, fmt.Errorf("invalid refresh token: %w", err)
 	}
 
-	// 生成新的令牌对
+	// 生成新的令牌�?
 	newTokenPair, err := s.GenerateTokenPair(
 		claims.UserID,
 		claims.Username,
@@ -240,7 +240,7 @@ func (s *JWTService) GetTokenInfo(tokenString string) (*UserClaims, error) {
 	return claims, nil
 }
 
-// IsTokenExpired 检查令牌是否过期
+// IsTokenExpired 检查令牌是否过�?
 func (s *JWTService) IsTokenExpired(tokenString string) bool {
 	claims, err := s.GetTokenInfo(tokenString)
 	if err != nil {
@@ -254,15 +254,15 @@ func (s *JWTService) IsTokenExpired(tokenString string) bool {
 	return claims.ExpiresAt.Time.Before(time.Now())
 }
 
-// RevokeToken 撤销令牌（这里需要配合黑名单实现）
+// RevokeToken 撤销令牌（这里需要配合黑名单实现�?
 func (s *JWTService) RevokeToken(tokenString string) error {
 	claims, err := s.GetTokenInfo(tokenString)
 	if err != nil {
 		return err
 	}
 
-	// TODO: 将令牌添加到黑名单
-	// 这里可以使用Redis或数据库存储被撤销的令牌
+	// TODO: 将令牌添加到黑名�?
+	// 这里可以使用Redis或数据库存储被撤销的令�?
 
 	s.logger.Info("Token revoked", "user_id", claims.UserID, "jti", claims.ID)
 	return nil
@@ -282,7 +282,7 @@ func (s *JWTService) validateClaims(claims *UserClaims) error {
 		return errors.New("token is not yet valid")
 	}
 
-	// 验证签发者
+	// 验证签发�?
 	if claims.Issuer != s.config.Issuer {
 		return fmt.Errorf("invalid issuer: expected %s, got %s", s.config.Issuer, claims.Issuer)
 	}
@@ -323,7 +323,7 @@ func (s *JWTService) generateJTI() string {
 	return fmt.Sprintf("jti_%d_%s", time.Now().UnixNano(), s.generateRandomString(16))
 }
 
-// generateRandomString 生成随机字符串
+// generateRandomString 生成随机字符�?
 func (s *JWTService) generateRandomString(length int) string {
 	bytes := make([]byte, length/2)
 	rand.Read(bytes)
@@ -347,7 +347,7 @@ func (s *JWTService) UpdateConfig(config *JWTConfig) {
 
 // GetConfig 获取配置
 func (s *JWTService) GetConfig() *JWTConfig {
-	// 返回配置副本，隐藏密钥
+	// 返回配置副本，隐藏密�?
 	return &JWTConfig{
 		Secret:           "[HIDDEN]",
 		Issuer:           s.config.Issuer,

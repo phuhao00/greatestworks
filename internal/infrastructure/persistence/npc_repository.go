@@ -3,7 +3,6 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,853 +10,267 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"greatestworks/internal/domain/npc"
-	"greatestworks/internal/infrastructure/cache"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// MongoNPCRepository MongoDB NPC仓储实现
-type MongoNPCRepository struct {
-	db         *mongo.Database
-	cache      cache.Cache
-	logger     logger.Logger
+// NPCRepository NPC仓储
+type NPCRepository struct {
 	collection *mongo.Collection
+	logger     logging.Logger
 }
 
-// NewMongoNPCRepository 创建MongoDB NPC仓储
-func NewMongoNPCRepository(db *mongo.Database, cache cache.Cache, logger logger.Logger) npc.NPCRepository {
-	return &MongoNPCRepository{
-		db:         db,
-		cache:      cache,
-		logger:     logger,
+// NewNPCRepository 创建NPC仓储
+func NewNPCRepository(db *mongo.Database, logger logging.Logger) *NPCRepository {
+	return &NPCRepository{
 		collection: db.Collection("npcs"),
+		logger:     logger,
 	}
 }
 
-// NPCDocument MongoDB NPC文档结构
-type NPCDocument struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	NPCID       string             `bson:"npc_id"`
-	Name        string             `bson:"name"`
-	Description string             `bson:"description"`
-	Type        string             `bson:"type"`
-	Status      string             `bson:"status"`
-	Location    LocationDoc        `bson:"location"`
-	Attributes  NPCAttributesDoc   `bson:"attributes"`
-	Behavior    BehaviorDoc        `bson:"behavior"`
-	Dialogues   []string           `bson:"dialogues"`
-	Quests      []string           `bson:"quests"`
-	ShopID      string             `bson:"shop_id,omitempty"`
-	Statistics  StatisticsDoc      `bson:"statistics"`
-	CreatedAt   time.Time          `bson:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at"`
+// NPCRecord NPC记录
+type NPCRecord struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name      string             `bson:"name" json:"name"`
+	Type      string             `bson:"type" json:"type"`
+	Level     int                `bson:"level" json:"level"`
+	Health    int64              `bson:"health" json:"health"`
+	MaxHealth int64              `bson:"max_health" json:"max_health"`
+	Attack    int64              `bson:"attack" json:"attack"`
+	Defense   int64              `bson:"defense" json:"defense"`
+	Position  Position           `bson:"position" json:"position"`
+	Status    string             `bson:"status" json:"status"`
+	LastSeen  time.Time          `bson:"last_seen" json:"last_seen"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
-// LocationDoc 位置文档
-type LocationDoc struct {
-	X      float64 `bson:"x"`
-	Y      float64 `bson:"y"`
-	Z      float64 `bson:"z"`
-	Region string  `bson:"region"`
-	Zone   string  `bson:"zone"`
+// Position 位置信息
+type Position struct {
+	X float64 `bson:"x" json:"x"`
+	Y float64 `bson:"y" json:"y"`
+	Z float64 `bson:"z" json:"z"`
 }
 
-// NPCAttributesDoc NPC属性文档
-type NPCAttributesDoc struct {
-	Level        int     `bson:"level"`
-	Health       int64   `bson:"health"`
-	MaxHealth    int64   `bson:"max_health"`
-	Attack       int64   `bson:"attack"`
-	Defense      int64   `bson:"defense"`
-	Speed        float64 `bson:"speed"`
-	Intelligence int64   `bson:"intelligence"`
-	Charisma     int64   `bson:"charisma"`
-}
+// CreateNPC 创建NPC
+func (r *NPCRepository) CreateNPC(ctx context.Context, npc *NPCRecord) error {
+	npc.CreatedAt = time.Now()
+	npc.UpdatedAt = time.Now()
+	npc.LastSeen = time.Now()
 
-// BehaviorDoc 行为文档
-type BehaviorDoc struct {
-	Type        string            `bson:"type"`
-	State       string            `bson:"state"`
-	LastAction  time.Time         `bson:"last_action"`
-	CooldownEnd time.Time         `bson:"cooldown_end"`
-	PatrolRoute []LocationDoc     `bson:"patrol_route"`
-	Schedule    map[string]string `bson:"schedule"`
-}
-
-// StatisticsDoc 统计文档
-type StatisticsDoc struct {
-	TotalInteractions int64     `bson:"total_interactions"`
-	TotalDialogues    int64     `bson:"total_dialogues"`
-	TotalQuests       int64     `bson:"total_quests"`
-	TotalTrades       int64     `bson:"total_trades"`
-	LastInteraction   time.Time `bson:"last_interaction"`
-	PopularityScore   float64   `bson:"popularity_score"`
-}
-
-// Save 保存NPC
-func (r *MongoNPCRepository) Save(npcAggregate *npc.NPCAggregate) error {
-	ctx := context.Background()
-	doc := r.aggregateToDocument(npcAggregate)
-	doc.UpdatedAt = time.Now()
-
-	if doc.ID.IsZero() {
-		doc.CreatedAt = time.Now()
-		result, err := r.collection.InsertOne(ctx, doc)
-		if err != nil {
-			r.logger.Error("Failed to insert NPC", "error", err, "npc_id", npcAggregate.GetID())
-			return fmt.Errorf("failed to insert NPC: %w", err)
-		}
-
-		if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-			doc.ID = oid
-		}
-	} else {
-		filter := bson.M{"npc_id": npcAggregate.GetID()}
-		update := bson.M{"$set": doc}
-
-		_, err := r.collection.UpdateOne(ctx, filter, update)
-		if err != nil {
-			r.logger.Error("Failed to update NPC", "error", err, "npc_id", npcAggregate.GetID())
-			return fmt.Errorf("failed to update NPC: %w", err)
-		}
+	_, err := r.collection.InsertOne(ctx, npc)
+	if err != nil {
+		r.logger.Error("创建NPC失败", map[string]interface{}{
+			"name":  npc.Name,
+			"type":  npc.Type,
+			"error": err.Error(),
+		})
+		return fmt.Errorf("创建NPC失败: %w", err)
 	}
 
-	// 更新缓存
-	cacheKey := fmt.Sprintf("npc:%s", npcAggregate.GetID())
-	if err := r.cache.Set(ctx, cacheKey, npcAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache NPC", "error", err, "npc_id", npcAggregate.GetID())
-	}
+	r.logger.Info("NPC创建成功", map[string]interface{}{
+		"name":  npc.Name,
+		"type":  npc.Type,
+		"level": npc.Level,
+	})
 
 	return nil
 }
 
-// FindByID 根据ID查找NPC
-func (r *MongoNPCRepository) FindByID(npcID string) (*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	// 先从缓存获取
-	cacheKey := fmt.Sprintf("npc:%s", npcID)
-	var cachedNPC *npc.NPCAggregate
-	if err := r.cache.Get(ctx, cacheKey, &cachedNPC); err == nil && cachedNPC != nil {
-		return cachedNPC, nil
+// GetNPC 获取NPC
+func (r *NPCRepository) GetNPC(ctx context.Context, id string) (*NPCRecord, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	// 从数据库获取
-	filter := bson.M{"npc_id": npcID}
-	var doc NPCDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	var npc NPCRecord
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&npc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, npc.ErrNPCNotFound
+			return nil, fmt.Errorf("NPC不存在")
 		}
-		r.logger.Error("Failed to find NPC", "error", err, "npc_id", npcID)
-		return nil, fmt.Errorf("failed to find NPC: %w", err)
+		r.logger.Error("获取NPC失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("获取NPC失败: %w", err)
 	}
 
-	npcAggregate := r.documentToAggregate(&doc)
-
-	// 更新缓存
-	if err := r.cache.Set(ctx, cacheKey, npcAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache NPC", "error", err, "npc_id", npcID)
-	}
-
-	return npcAggregate, nil
+	return &npc, nil
 }
 
-// FindByType 根据类型查找NPC
-func (r *MongoNPCRepository) FindByType(npcType npc.NPCType) ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"type": string(npcType)}
-	cursor, err := r.collection.Find(ctx, filter)
+// UpdateNPC 更新NPC
+func (r *NPCRepository) UpdateNPC(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		r.logger.Error("Failed to find NPCs by type", "error", err, "type", npcType)
-		return nil, fmt.Errorf("failed to find NPCs by type: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs by type", "error", err, "type", npcType)
-		return nil, fmt.Errorf("failed to decode NPCs by type: %w", err)
+		return fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
-	}
+	updates["updated_at"] = time.Now()
 
-	return npcs, nil
-}
-
-// FindByStatus 根据状态查找NPC
-func (r *MongoNPCRepository) FindByStatus(status npc.NPCStatus) ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"status": string(status)}
-	cursor, err := r.collection.Find(ctx, filter)
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objectID},
+		bson.M{"$set": updates},
+	)
 	if err != nil {
-		r.logger.Error("Failed to find NPCs by status", "error", err, "status", status)
-		return nil, fmt.Errorf("failed to find NPCs by status: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs by status", "error", err, "status", status)
-		return nil, fmt.Errorf("failed to decode NPCs by status: %w", err)
+		r.logger.Error("更新NPC失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return fmt.Errorf("更新NPC失败: %w", err)
 	}
 
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("NPC不存在")
 	}
 
-	return npcs, nil
+	r.logger.Info("NPC更新成功", map[string]interface{}{
+		"id": id,
+	})
+
+	return nil
 }
 
-// FindByLocation 根据位置查找NPC
-func (r *MongoNPCRepository) FindByLocation(location *npc.Location, radius float64) ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	// 使用地理位置查询
-	filter := bson.M{
-		"location.x": bson.M{
-			"$gte": location.GetX() - radius,
-			"$lte": location.GetX() + radius,
-		},
-		"location.y": bson.M{
-			"$gte": location.GetY() - radius,
-			"$lte": location.GetY() + radius,
-		},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter)
+// DeleteNPC 删除NPC
+func (r *NPCRepository) DeleteNPC(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		r.logger.Error("Failed to find NPCs by location", "error", err)
-		return nil, fmt.Errorf("failed to find NPCs by location: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs by location", "error", err)
-		return nil, fmt.Errorf("failed to decode NPCs by location: %w", err)
+		return fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
-	}
-
-	return npcs, nil
-}
-
-// FindByRegion 根据区域查找NPC
-func (r *MongoNPCRepository) FindByRegion(region string) ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"location.region": region}
-	cursor, err := r.collection.Find(ctx, filter)
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.Error("Failed to find NPCs by region", "error", err, "region", region)
-		return nil, fmt.Errorf("failed to find NPCs by region: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs by region", "error", err, "region", region)
-		return nil, fmt.Errorf("failed to decode NPCs by region: %w", err)
-	}
-
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
-	}
-
-	return npcs, nil
-}
-
-// Update 更新NPC
-func (r *MongoNPCRepository) Update(npcAggregate *npc.NPCAggregate) error {
-	return r.Save(npcAggregate)
-}
-
-// Delete 删除NPC
-func (r *MongoNPCRepository) Delete(npcID string) error {
-	ctx := context.Background()
-
-	filter := bson.M{"npc_id": npcID}
-
-	result, err := r.collection.DeleteOne(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to delete NPC", "error", err, "npc_id", npcID)
-		return fmt.Errorf("failed to delete NPC: %w", err)
+		r.logger.Error("删除NPC失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return fmt.Errorf("删除NPC失败: %w", err)
 	}
 
 	if result.DeletedCount == 0 {
-		return npc.ErrNPCNotFound
+		return fmt.Errorf("NPC不存在")
 	}
 
-	// 清除缓存
-	cacheKey := fmt.Sprintf("npc:%s", npcID)
-	if err := r.cache.Delete(ctx, cacheKey); err != nil {
-		r.logger.Warn("Failed to delete NPC cache", "error", err, "npc_id", npcID)
-	}
+	r.logger.Info("NPC删除成功", map[string]interface{}{
+		"id": id,
+	})
 
 	return nil
 }
 
-// FindActiveNPCs 查找活跃的NPC
-func (r *MongoNPCRepository) FindActiveNPCs() ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
+// GetNPCsByType 根据类型获取NPC列表
+func (r *NPCRepository) GetNPCsByType(ctx context.Context, npcType string, limit, offset int) ([]*NPCRecord, error) {
+	filter := bson.M{"type": npcType}
+	opts := options.Find().
+		SetSort(bson.D{{"created_at", -1}}).
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset))
 
-	filter := bson.M{"status": string(npc.NPCStatusActive)}
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to find active NPCs", "error", err)
-		return nil, fmt.Errorf("failed to find active NPCs: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode active NPCs", "error", err)
-		return nil, fmt.Errorf("failed to decode active NPCs: %w", err)
-	}
-
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
-	}
-
-	return npcs, nil
-}
-
-// FindNPCsWithShops 查找有商店的NPC
-func (r *MongoNPCRepository) FindNPCsWithShops() ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"shop_id": bson.M{"$exists": true, "$ne": ""}}
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to find NPCs with shops", "error", err)
-		return nil, fmt.Errorf("failed to find NPCs with shops: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs with shops", "error", err)
-		return nil, fmt.Errorf("failed to decode NPCs with shops: %w", err)
-	}
-
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
-	}
-
-	return npcs, nil
-}
-
-// FindNPCsWithQuests 查找有任务的NPC
-func (r *MongoNPCRepository) FindNPCsWithQuests() ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"quests": bson.M{"$exists": true, "$not": bson.M{"$size": 0}}}
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to find NPCs with quests", "error", err)
-		return nil, fmt.Errorf("failed to find NPCs with quests: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs with quests", "error", err)
-		return nil, fmt.Errorf("failed to decode NPCs with quests: %w", err)
-	}
-
-	npcs := make([]*npc.NPCAggregate, len(docs))
-	for i, doc := range docs {
-		npcs[i] = r.documentToAggregate(&doc)
-	}
-
-	return npcs, nil
-}
-
-// Count 计数查询
-func (r *MongoNPCRepository) Count() (int64, error) {
-	ctx := context.Background()
-
-	count, err := r.collection.CountDocuments(ctx, bson.M{})
-	if err != nil {
-		r.logger.Error("Failed to count NPCs", "error", err)
-		return 0, fmt.Errorf("failed to count NPCs: %w", err)
-	}
-
-	return count, nil
-}
-
-// CountByType 根据类型计数
-func (r *MongoNPCRepository) CountByType(npcType npc.NPCType) (int64, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"type": string(npcType)}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to count NPCs by type", "error", err, "type", npcType)
-		return 0, fmt.Errorf("failed to count NPCs by type: %w", err)
-	}
-
-	return count, nil
-}
-
-// CountByRegion 根据区域计数
-func (r *MongoNPCRepository) CountByRegion(region string) (int64, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"location.region": region}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to count NPCs by region", "error", err, "region", region)
-		return 0, fmt.Errorf("failed to count NPCs by region: %w", err)
-	}
-
-	return count, nil
-}
-
-// CountByStatus 根据状态统计NPC数量
-func (r *MongoNPCRepository) CountByStatus(status npc.NPCStatus) (int64, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"status": string(status)}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to count NPCs by status", "error", err, "status", status)
-		return 0, fmt.Errorf("failed to count NPCs by status: %w", err)
-	}
-
-	return count, nil
-}
-
-// 私有方法
-
-// aggregateToDocument 聚合根转文档
-func (r *MongoNPCRepository) aggregateToDocument(npcAggregate *npc.NPCAggregate) *NPCDocument {
-	location := npcAggregate.GetLocation()
-	attributes := npcAggregate.GetAttributes()
-	behavior := npcAggregate.GetBehavior()
-	statistics := npcAggregate.GetStatistics()
-
-	// 转换巡逻路线
-	patrolRoute := make([]LocationDoc, 0)
-	// Access patrol points directly from behavior
-	for _, loc := range behavior.PatrolPoints {
-		patrolRoute = append(patrolRoute, LocationDoc{
-			X:      loc.GetX(),
-			Y:      loc.GetY(),
-			Z:      loc.GetZ(),
-			Region: loc.GetRegion(),
-			Zone:   loc.GetZone(),
-		})
-	}
-
-	return &NPCDocument{
-		NPCID:       npcAggregate.GetID(),
-		Name:        npcAggregate.GetName(),
-		Description: npcAggregate.GetDescription(),
-		Type:        string(npcAggregate.GetType()),
-		Status:      string(npcAggregate.GetStatus()),
-		Location: LocationDoc{
-			X:      location.GetX(),
-			Y:      location.GetY(),
-			Z:      location.GetZ(),
-			Region: location.GetRegion(),
-			Zone:   location.GetZone(),
-		},
-		Attributes: NPCAttributesDoc{
-			Level:        attributes.GetLevel(),
-			Health:       int64(attributes.GetHealth()),
-			MaxHealth:    int64(attributes.GetMaxHealth()),
-			Attack:       int64(attributes.GetAttack()),
-			Defense:      int64(attributes.GetDefense()),
-			Speed:        attributes.GetSpeed(),
-			Intelligence: int64(attributes.GetIntelligence()),
-			Charisma:     int64(attributes.GetIntelligence()), // Use Intelligence as fallback
-		},
-		Behavior: BehaviorDoc{
-			Type:        string(behavior.Type),
-			State:       string(behavior.State),
-			LastAction:  behavior.LastMove,
-			CooldownEnd: behavior.LastMove.Add(behavior.PauseTime),
-			PatrolRoute: patrolRoute,
-			Schedule:    make(map[string]string),
-		},
-		Dialogues: r.extractDialogueIDs(npcAggregate),
-		Quests:    r.extractQuestIDs(npcAggregate),
-		ShopID:    r.extractShopID(npcAggregate),
-		Statistics: StatisticsDoc{
-			TotalInteractions: 0, // NPCStatistics doesn't have this field
-			TotalDialogues:    int64(statistics.TotalDialogues),
-			TotalQuests:       int64(statistics.TotalQuests),
-			TotalTrades:       0, // NPCStatistics doesn't have this field
-			LastInteraction:   statistics.LastActiveAt,
-			PopularityScore:   0.0, // NPCStatistics doesn't have this field
-		},
-		CreatedAt: npcAggregate.GetCreatedAt(),
-		UpdatedAt: npcAggregate.GetUpdatedAt(),
-	}
-}
-
-// documentToAggregate 文档转聚合根
-func (r *MongoNPCRepository) documentToAggregate(doc *NPCDocument) *npc.NPCAggregate {
-	// 转换巡逻路线
-	patrolRoute := make([]*npc.Location, len(doc.Behavior.PatrolRoute))
-	for i, loc := range doc.Behavior.PatrolRoute {
-		patrolRoute[i] = npc.NewLocation(loc.X, loc.Y, loc.Z, loc.Region, loc.Zone)
-	}
-
-	// Parse NPC type and status
-	npcType, err := r.parseNPCType(doc.Type)
-	if err != nil {
-		return nil
-	}
-
-	npcStatus, err := r.parseNPCStatus(doc.Status)
-	if err != nil {
-		return nil
-	}
-
-	// Create new NPC aggregate with basic info
-	npcAggregate := npc.NewNPCAggregate(
-		doc.NPCID,
-		doc.Name,
-		doc.Description,
-		npcType,
-	)
-
-	// Set status
-	err = npcAggregate.SetStatus(npcStatus)
-	if err != nil {
-		return nil
-	}
-
-	// Set location
-	location := npc.NewLocation(doc.Location.X, doc.Location.Y, doc.Location.Z, doc.Location.Region, doc.Location.Zone)
-	err = npcAggregate.MoveTo(location)
-	if err != nil {
-		return nil
-	}
-
-	return npcAggregate
-}
-
-// CreateIndexes 创建索引
-func (r *MongoNPCRepository) CreateIndexes() error {
-	ctx := context.Background()
-
-	// 创建复合索引
-	indexes := []mongo.IndexModel{
-		{
-			Keys: bson.D{{"npc_id", 1}},
-			Options: options.Index().SetUnique(true),
-		},
-		{
-			Keys: bson.D{{"type", 1}, {"status", 1}},
-		},
-		{
-			Keys: bson.D{{"location.region", 1}, {"location.zone", 1}},
-		},
-		{
-			Keys: bson.D{{"status", 1}, {"updated_at", -1}},
-		},
-	}
-
-	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
-	if err != nil {
-		r.logger.Error("Failed to create indexes", "error", err)
-		return fmt.Errorf("failed to create indexes: %w", err)
-	}
-
-	r.logger.Info("NPC indexes created successfully")
-	return nil
-}
-
-// Helper methods for extracting IDs
-
-// extractDialogueIDs 提取对话ID列表
-func (r *MongoNPCRepository) extractDialogueIDs(npcAggregate *npc.NPCAggregate) []string {
-	dialogues := npcAggregate.GetAllDialogues()
-	ids := make([]string, 0, len(dialogues))
-	for id := range dialogues {
-		ids = append(ids, id)
-	}
-	return ids
-}
-
-// extractQuestIDs 提取任务ID列表
-func (r *MongoNPCRepository) extractQuestIDs(npcAggregate *npc.NPCAggregate) []string {
-	quests := npcAggregate.GetAllQuests()
-	ids := make([]string, 0, len(quests))
-	for id := range quests {
-		ids = append(ids, id)
-	}
-	return ids
-}
-
-// extractShopID 提取商店ID
-func (r *MongoNPCRepository) extractShopID(npcAggregate *npc.NPCAggregate) string {
-	shop := npcAggregate.GetShop()
-	if shop == nil {
-		return ""
-	}
-	return shop.GetID()
-}
-
-// parseNPCType 解析NPC类型
-func (r *MongoNPCRepository) parseNPCType(typeStr string) (npc.NPCType, error) {
-	switch typeStr {
-	case "merchant":
-		return npc.NPCTypeMerchant, nil
-	case "guard":
-		return npc.NPCTypeGuard, nil
-	case "villager":
-		return npc.NPCTypeVillager, nil
-	case "quest_giver":
-		return npc.NPCTypeQuestGiver, nil
-	case "trainer":
-		return npc.NPCTypeTrainer, nil
-	default:
-		return npc.NPCTypeVillager, nil // default type
-	}
-}
-
-// parseNPCStatus 解析NPC状态
-func (r *MongoNPCRepository) parseNPCStatus(statusStr string) (npc.NPCStatus, error) {
-	switch statusStr {
-	case "active":
-		return npc.NPCStatusActive, nil
-	case "inactive":
-		return npc.NPCStatusInactive, nil
-	case "hidden":
-		return npc.NPCStatusHidden, nil
-	case "busy":
-		return npc.NPCStatusBusy, nil
-	default:
-		return npc.NPCStatusActive, nil // default status
-	}
-}
-
-// DeleteBatch 批量删除NPC
-func (r *MongoNPCRepository) DeleteBatch(ids []string) error {
-	ctx := context.Background()
-
-	filter := bson.M{"npc_id": bson.M{"$in": ids}}
-	result, err := r.collection.DeleteMany(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to delete NPCs in batch", "error", err, "ids", ids)
-		return fmt.Errorf("failed to delete NPCs in batch: %w", err)
-	}
-
-	r.logger.Info("NPCs deleted in batch", "count", result.DeletedCount, "ids", ids)
-	return nil
-}
-
-// FindWithPagination 分页查找NPC
-func (r *MongoNPCRepository) FindWithPagination(query *npc.NPCQuery) (*npc.NPCPageResult, error) {
-	ctx := context.Background()
-
-	// 构建查询条件
-	filter := bson.M{}
-
-	if query.Name != "" {
-		filter["name"] = bson.M{"$regex": query.Name, "$options": "i"}
-	}
-	if query.Type != nil {
-		filter["type"] = string(*query.Type)
-	}
-	if query.Status != nil {
-		filter["status"] = string(*query.Status)
-	}
-	if query.Region != "" {
-		filter["location.region"] = query.Region
-	}
-	if query.Zone != "" {
-		filter["location.zone"] = query.Zone
-	}
-
-	// 计算总数
-	total, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to count NPCs", "error", err)
-		return nil, fmt.Errorf("failed to count NPCs: %w", err)
-	}
-
-	// 构建查询选项
-	opts := options.Find()
-	if query.Limit > 0 {
-		opts.SetLimit(int64(query.Limit))
-	}
-	if query.Offset > 0 {
-		opts.SetSkip(int64(query.Offset))
-	}
-	if query.OrderBy != "" {
-		order := 1
-		if query.OrderDesc {
-			order = -1
-		}
-		opts.SetSort(bson.D{{query.OrderBy, order}})
-	}
-
-	// 执行查询
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("Failed to find NPCs with pagination", "error", err)
-		return nil, fmt.Errorf("failed to find NPCs with pagination: %w", err)
+		r.logger.Error("根据类型获取NPC失败", map[string]interface{}{
+			"type":  npcType,
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("根据类型获取NPC失败: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs", "error", err)
-		return nil, fmt.Errorf("failed to decode NPCs: %w", err)
+	var npcs []*NPCRecord
+	if err = cursor.All(ctx, &npcs); err != nil {
+		return nil, fmt.Errorf("解析NPC列表失败: %w", err)
 	}
 
-	// 转换为聚合根
-	npcs := make([]*npc.NPCAggregate, 0, len(docs))
-	for _, doc := range docs {
-		npcAggregate := r.documentToAggregate(&doc)
-		if npcAggregate != nil {
-			npcs = append(npcs, npcAggregate)
-		}
-	}
+	r.logger.Info("根据类型获取NPC成功", map[string]interface{}{
+		"type":  npcType,
+		"count": len(npcs),
+	})
 
-	// 计算是否还有更多数据
-	hasMore := int64(query.Offset+len(npcs)) < total
-
-	return &npc.NPCPageResult{
-		Items:   npcs,
-		Total:   total,
-		Offset:  query.Offset,
-		Limit:   query.Limit,
-		HasMore: hasMore,
-	}, nil
+	return npcs, nil
 }
 
-// SaveBatch 批量保存NPC
-func (r *MongoNPCRepository) SaveBatch(npcs []*npc.NPCAggregate) error {
-	ctx := context.Background()
-
-	if len(npcs) == 0 {
-		return nil
-	}
-
-	// 准备批量操作
-	var operations []mongo.WriteModel
-	for _, npcAggregate := range npcs {
-		doc := r.aggregateToDocument(npcAggregate)
-		doc.UpdatedAt = time.Now()
-
-		if doc.ID.IsZero() {
-			doc.CreatedAt = time.Now()
-			insertModel := mongo.NewInsertOneModel().SetDocument(doc)
-			operations = append(operations, insertModel)
-		} else {
-			filter := bson.M{"npc_id": npcAggregate.GetID()}
-			update := bson.M{"$set": doc}
-			updateModel := mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true)
-			operations = append(operations, updateModel)
-		}
-	}
-
-	// 执行批量操作
-	result, err := r.collection.BulkWrite(ctx, operations)
-	if err != nil {
-		r.logger.Error("Failed to save NPCs in batch", "error", err)
-		return fmt.Errorf("failed to save NPCs in batch: %w", err)
-	}
-
-	r.logger.Info("NPCs saved in batch", "inserted", result.InsertedCount, "modified", result.ModifiedCount)
-	return nil
-}
-
-// FindNearbyNPCs 查找附近的NPC
-func (r *MongoNPCRepository) FindNearbyNPCs(location *npc.Location, radius float64, npcType npc.NPCType) ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	// 构建查询条件
+// GetNPCsByPosition 根据位置获取NPC列表
+func (r *NPCRepository) GetNPCsByPosition(ctx context.Context, x, y, z float64, radius float64) ([]*NPCRecord, error) {
 	filter := bson.M{
-		"location.region": location.GetRegion(),
-		"location.zone":   location.GetZone(),
-	}
-
-	// 如果指定了NPC类型，添加类型过滤
-	if string(npcType) != "" {
-		filter["type"] = string(npcType)
+		"position.x": bson.M{
+			"$gte": x - radius,
+			"$lte": x + radius,
+		},
+		"position.y": bson.M{
+			"$gte": y - radius,
+			"$lte": y + radius,
+		},
+		"position.z": bson.M{
+			"$gte": z - radius,
+			"$lte": z + radius,
+		},
 	}
 
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
-		r.logger.Error("Failed to find nearby NPCs", "error", err, "location", location, "radius", radius)
-		return nil, fmt.Errorf("failed to find nearby NPCs: %w", err)
+		r.logger.Error("根据位置获取NPC失败", map[string]interface{}{
+			"x":      x,
+			"y":      y,
+			"z":      z,
+			"radius": radius,
+			"error":  err.Error(),
+		})
+		return nil, fmt.Errorf("根据位置获取NPC失败: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode nearby NPCs", "error", err)
-		return nil, fmt.Errorf("failed to decode nearby NPCs: %w", err)
+	var npcs []*NPCRecord
+	if err = cursor.All(ctx, &npcs); err != nil {
+		return nil, fmt.Errorf("解析NPC列表失败: %w", err)
 	}
 
-	// 过滤距离范围内的NPC
-	npcs := make([]*npc.NPCAggregate, 0)
-	for _, doc := range docs {
-		// 计算距离
-		dx := doc.Location.X - location.GetX()
-		dy := doc.Location.Y - location.GetY()
-		dz := doc.Location.Z - location.GetZ()
-		distance := math.Sqrt(dx*dx + dy*dy + dz*dz)
-
-		if distance <= radius {
-			npcAggregate := r.documentToAggregate(&doc)
-			if npcAggregate != nil {
-				npcs = append(npcs, npcAggregate)
-			}
-		}
-	}
+	r.logger.Info("根据位置获取NPC成功", map[string]interface{}{
+		"x":      x,
+		"y":      y,
+		"z":      z,
+		"radius": radius,
+		"count":  len(npcs),
+	})
 
 	return npcs, nil
 }
 
-
-
-// FindByZone 根据区域查找NPC
-func (r *MongoNPCRepository) FindByZone(zone string) ([]*npc.NPCAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"location.zone": zone}
-	cursor, err := r.collection.Find(ctx, filter)
+// UpdateNPCPosition 更新NPC位置
+func (r *NPCRepository) UpdateNPCPosition(ctx context.Context, id string, position Position) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		r.logger.Error("Failed to find NPCs by zone", "error", err, "zone", zone)
-		return nil, fmt.Errorf("failed to find NPCs by zone: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []NPCDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode NPCs by zone", "error", err, "zone", zone)
-		return nil, fmt.Errorf("failed to decode NPCs by zone: %w", err)
+		return fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	npcs := make([]*npc.NPCAggregate, 0, len(docs))
-	for _, doc := range docs {
-		npcAggregate := r.documentToAggregate(&doc)
-		if npcAggregate != nil {
-			npcs = append(npcs, npcAggregate)
-		}
+	updates := bson.M{
+		"position":   position,
+		"last_seen":  time.Now(),
+		"updated_at": time.Now(),
 	}
 
-	return npcs, nil
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objectID},
+		bson.M{"$set": updates},
+	)
+	if err != nil {
+		r.logger.Error("更新NPC位置失败", map[string]interface{}{
+			"id":       id,
+			"position": position,
+			"error":    err.Error(),
+		})
+		return fmt.Errorf("更新NPC位置失败: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("NPC不存在")
+	}
+
+	r.logger.Info("NPC位置更新成功", map[string]interface{}{
+		"id":       id,
+		"position": position,
+	})
+
+	return nil
 }

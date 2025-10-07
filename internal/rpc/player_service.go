@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"greatestworks/application/services"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
 // PlayerRPCService 玩家RPC服务

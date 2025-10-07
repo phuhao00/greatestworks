@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// AuthMiddleware 认证中间件
+// AuthMiddleware 认证中间�?
 type AuthMiddleware struct {
 	jwtSecret string
 	logger    logger.Logger
 }
 
-// NewAuthMiddleware 创建认证中间件
+// NewAuthMiddleware 创建认证中间�?
 func NewAuthMiddleware(jwtSecret string, logger logger.Logger) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtSecret: jwtSecret,
@@ -24,7 +24,7 @@ func NewAuthMiddleware(jwtSecret string, logger logger.Logger) *AuthMiddleware {
 	}
 }
 
-// RequireAuth 需要认证的中间件
+// RequireAuth 需要认证的中间�?
 func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := m.extractToken(c)
@@ -53,7 +53,7 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	}
 }
 
-// RequireRole 需要特定角色的中间件
+// RequireRole 需要特定角色的中间�?
 func (m *AuthMiddleware) RequireRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 首先检查是否已认证
@@ -73,7 +73,7 @@ func (m *AuthMiddleware) RequireRole(roles ...string) gin.HandlerFunc {
 			return
 		}
 
-		// 检查用户角色
+		// 检查用户角�?
 		userRole := jwtClaims.Role
 		for _, role := range roles {
 			if userRole == role {
@@ -88,7 +88,7 @@ func (m *AuthMiddleware) RequireRole(roles ...string) gin.HandlerFunc {
 	}
 }
 
-// RequireGM GM权限中间件
+// RequireGM GM权限中间�?
 func (m *AuthMiddleware) RequireGM() gin.HandlerFunc {
 	return m.RequireRole("gm", "admin", "super_admin")
 }
@@ -103,14 +103,14 @@ func (m *AuthMiddleware) RequireSuperAdmin() gin.HandlerFunc {
 	return m.RequireRole("super_admin")
 }
 
-// OptionalAuth 可选认证中间件（不强制要求认证）
+// OptionalAuth 可选认证中间件（不强制要求认证�?
 func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := m.extractToken(c)
 		if token != "" {
 			claims, err := m.validateToken(token)
 			if err == nil {
-				// 认证成功，存储用户信息
+				// 认证成功，存储用户信�?
 				c.Set("player_id", claims.PlayerID)
 				c.Set("username", claims.Username)
 				c.Set("role", claims.Role)
@@ -128,7 +128,7 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	}
 }
 
-// RefreshTokenMiddleware 刷新令牌中间件
+// RefreshTokenMiddleware 刷新令牌中间�?
 func (m *AuthMiddleware) RefreshTokenMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, exists := c.Get("token_claims")
@@ -143,9 +143,9 @@ func (m *AuthMiddleware) RefreshTokenMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 检查令牌是否即将过期（剩余时间少于1小时）
+		// 检查令牌是否即将过期（剩余时间少于1小时�?
 		if time.Until(jwtClaims.ExpiresAt.Time) < time.Hour {
-			// 生成新令牌
+			// 生成新令�?
 			newToken, expiresAt, err := m.generateJWT(jwtClaims.PlayerID, jwtClaims.Username, jwtClaims.Role)
 			if err != nil {
 				m.logger.Error("Failed to generate refresh token", "error", err)
@@ -161,12 +161,12 @@ func (m *AuthMiddleware) RefreshTokenMiddleware() gin.HandlerFunc {
 	}
 }
 
-// CORSMiddleware CORS中间件
+// CORSMiddleware CORS中间�?
 func (m *AuthMiddleware) CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 		
-		// 允许的源列表（在生产环境中应该配置具体的域名）
+		// 允许的源列表（在生产环境中应该配置具体的域名�?
 		allowedOrigins := []string{
 			"http://localhost:3000",
 			"http://localhost:8080",
@@ -205,7 +205,7 @@ func (m *AuthMiddleware) CORSMiddleware() gin.HandlerFunc {
 
 // extractToken 从请求中提取令牌
 func (m *AuthMiddleware) extractToken(c *gin.Context) string {
-	// 从Authorization头提取
+	// 从Authorization头提�?
 	auth := c.GetHeader("Authorization")
 	if auth != "" {
 		if strings.HasPrefix(auth, "Bearer ") {
@@ -213,7 +213,7 @@ func (m *AuthMiddleware) extractToken(c *gin.Context) string {
 		}
 	}
 
-	// 从查询参数提取
+	// 从查询参数提�?
 	token := c.Query("token")
 	if token != "" {
 		return token
@@ -271,7 +271,7 @@ func (m *AuthMiddleware) generateJWT(playerID, username, role string) (string, t
 	return tokenString, expiresAt, nil
 }
 
-// GetCurrentUser 获取当前用户信息的辅助函数
+// GetCurrentUser 获取当前用户信息的辅助函�?
 func GetCurrentUser(c *gin.Context) (*JWTClaims, bool) {
 	claims, exists := c.Get("token_claims")
 	if !exists {
@@ -282,7 +282,7 @@ func GetCurrentUser(c *gin.Context) (*JWTClaims, bool) {
 	return jwtClaims, ok
 }
 
-// IsAuthenticated 检查是否已认证的辅助函数
+// IsAuthenticated 检查是否已认证的辅助函�?
 func IsAuthenticated(c *gin.Context) bool {
 	authenticated, exists := c.Get("authenticated")
 	if !exists {
@@ -293,7 +293,7 @@ func IsAuthenticated(c *gin.Context) bool {
 	return ok && auth
 }
 
-// GetPlayerID 获取当前玩家ID的辅助函数
+// GetPlayerID 获取当前玩家ID的辅助函�?
 func GetPlayerID(c *gin.Context) (string, bool) {
 	playerID, exists := c.Get("player_id")
 	if !exists {

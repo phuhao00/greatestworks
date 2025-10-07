@@ -10,660 +10,334 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"greatestworks/internal/domain/scene/weather"
-	"greatestworks/internal/infrastructure/cache"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// MongoWeatherRepository MongoDB天气仓储实现
-type MongoWeatherRepository struct {
-	db         *mongo.Database
-	cache      cache.Cache
-	logger     logger.Logger
+// WeatherRepository 天气仓储
+type WeatherRepository struct {
 	collection *mongo.Collection
+	logger     logging.Logger
 }
 
-// NewMongoWeatherRepository 创建MongoDB天气仓储
-func NewMongoWeatherRepository(db *mongo.Database, cache cache.Cache, logger logger.Logger) weather.WeatherRepository {
-	return &MongoWeatherRepository{
-		db:         db,
-		cache:      cache,
-		logger:     logger,
+// NewWeatherRepository 创建天气仓储
+func NewWeatherRepository(db *mongo.Database, logger logging.Logger) *WeatherRepository {
+	return &WeatherRepository{
 		collection: db.Collection("weather"),
+		logger:     logger,
 	}
 }
 
-// WeatherDocument MongoDB天气文档结构
-type WeatherDocument struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	WeatherID   string             `bson:"weather_id"`
-	RegionID    string             `bson:"region_id"`
-	WeatherType string             `bson:"weather_type"`
-	Intensity   float64            `bson:"intensity"`
-	Temperature float64            `bson:"temperature"`
-	Humidity    float64            `bson:"humidity"`
-	WindSpeed   float64            `bson:"wind_speed"`
-	Visibility  float64            `bson:"visibility"`
-	StartTime   time.Time          `bson:"start_time"`
-	EndTime     time.Time          `bson:"end_time"`
-	Duration    int64              `bson:"duration"` // 秒数
-	IsSpecial   bool               `bson:"is_special"`
-	Description string             `bson:"description"`
-	Effects     []WeatherEffect    `bson:"effects"`
-	CreatedAt   time.Time          `bson:"created_at"`
-	UpdatedAt   time.Time          `bson:"updated_at"`
+// WeatherRecord 天气记录
+type WeatherRecord struct {
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Region        string             `bson:"region" json:"region"`
+	WeatherType   string             `bson:"weather_type" json:"weather_type"`
+	Temperature   int                `bson:"temperature" json:"temperature"`
+	Humidity      int                `bson:"humidity" json:"humidity"`
+	WindSpeed     int                `bson:"wind_speed" json:"wind_speed"`
+	WindDirection string             `bson:"wind_direction" json:"wind_direction"`
+	Pressure      int                `bson:"pressure" json:"pressure"`
+	Visibility    int                `bson:"visibility" json:"visibility"`
+	Description   string             `bson:"description" json:"description"`
+	StartTime     time.Time          `bson:"start_time" json:"start_time"`
+	EndTime       time.Time          `bson:"end_time" json:"end_time"`
+	CreatedAt     time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt     time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
-// WeatherEffect 天气影响
-type WeatherEffect struct {
-	EffectType string  `bson:"effect_type"`
-	TargetType string  `bson:"target_type"`
-	Modifier   float64 `bson:"modifier"`
-	Duration   int64   `bson:"duration"` // 秒数
-}
+// CreateWeather 创建天气记录
+func (r *WeatherRepository) CreateWeather(ctx context.Context, weather *WeatherRecord) error {
+	weather.CreatedAt = time.Now()
+	weather.UpdatedAt = time.Now()
 
-// Save 保存天气记录
-func (r *MongoWeatherRepository) Save(ctx context.Context, weatherAggregate *weather.WeatherAggregate) error {
-	doc := r.aggregateToDocument(weatherAggregate)
-	doc.UpdatedAt = time.Now()
-
-	if doc.ID.IsZero() {
-		doc.CreatedAt = time.Now()
-		result, err := r.collection.InsertOne(ctx, doc)
-		if err != nil {
-			r.logger.Error("Failed to insert weather", "error", err, "weather_id", weatherAggregate.GetID())
-			return fmt.Errorf("failed to insert weather: %w", err)
-		}
-
-		if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-			doc.ID = oid
-		}
-	} else {
-		filter := bson.M{"weather_id": weatherAggregate.GetID()}
-		update := bson.M{"$set": doc}
-
-		_, err := r.collection.UpdateOne(ctx, filter, update)
-		if err != nil {
-			r.logger.Error("Failed to update weather", "error", err, "weather_id", weatherAggregate.GetID())
-			return fmt.Errorf("failed to update weather: %w", err)
-		}
+	_, err := r.collection.InsertOne(ctx, weather)
+	if err != nil {
+		r.logger.Error("创建天气记录失败", map[string]interface{}{
+			"region":       weather.Region,
+			"weather_type": weather.WeatherType,
+			"error":        err.Error(),
+		})
+		return fmt.Errorf("创建天气记录失败: %w", err)
 	}
 
-	// 更新缓存
-	cacheKey := fmt.Sprintf("weather:%s", weatherAggregate.GetID())
-	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache weather", "error", err, "weather_id", weatherAggregate.GetID())
-	}
+	r.logger.Info("天气记录创建成功", map[string]interface{}{
+		"region":       weather.Region,
+		"weather_type": weather.WeatherType,
+		"temperature":  weather.Temperature,
+	})
 
 	return nil
 }
 
-// FindByID 根据ID查找天气记录
-func (r *MongoWeatherRepository) FindByID(ctx context.Context, weatherID string) (*weather.WeatherAggregate, error) {
-	// 先从缓存获取
-	cacheKey := fmt.Sprintf("weather:%s", weatherID)
-	var cachedWeather *weather.WeatherAggregate
-	if err := r.cache.Get(ctx, cacheKey, &cachedWeather); err == nil && cachedWeather != nil {
-		return cachedWeather, nil
+// GetWeather 获取天气记录
+func (r *WeatherRepository) GetWeather(ctx context.Context, id string) (*WeatherRecord, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	// 从数据库获取
-	filter := bson.M{"weather_id": weatherID}
-	var doc WeatherDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	var weather WeatherRecord
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&weather)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, weather.ErrWeatherNotFound
+			return nil, fmt.Errorf("天气记录不存在")
 		}
-		r.logger.Error("Failed to find weather", "error", err, "weather_id", weatherID)
-		return nil, fmt.Errorf("failed to find weather: %w", err)
+		r.logger.Error("获取天气记录失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("获取天气记录失败: %w", err)
 	}
 
-	weatherAggregate := r.documentToAggregate(&doc)
-
-	// 更新缓存
-	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache weather", "error", err, "weather_id", weatherID)
-	}
-
-	return weatherAggregate, nil
+	return &weather, nil
 }
 
-// FindBySceneID 根据场景ID查找天气记录
-func (r *MongoWeatherRepository) FindBySceneID(ctx context.Context, sceneID string) (*weather.WeatherAggregate, error) {
-	// 先从缓存获取
-	cacheKey := fmt.Sprintf("weather:scene:%s", sceneID)
-	var cachedWeather *weather.WeatherAggregate
-	if err := r.cache.Get(ctx, cacheKey, &cachedWeather); err == nil && cachedWeather != nil {
-		return cachedWeather, nil
-	}
-
-	// 从数据库获取当前活跃的天气
-	filter := bson.M{
-		"scene_id":  sceneID,
-		"is_active": true,
-	}
-
-	var doc WeatherDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+// UpdateWeather 更新天气记录
+func (r *WeatherRepository) UpdateWeather(ctx context.Context, id string, updates map[string]interface{}) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, weather.ErrWeatherNotFound
-		}
-		r.logger.Error("Failed to find weather by scene ID", "error", err, "scene_id", sceneID)
-		return nil, fmt.Errorf("failed to find weather by scene ID: %w", err)
+		return fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	weatherAggregate := r.documentToAggregate(&doc)
+	updates["updated_at"] = time.Now()
 
-	// 更新缓存
-	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache weather by scene ID", "error", err, "scene_id", sceneID)
-	}
-
-	return weatherAggregate, nil
-}
-
-// FindCurrentByRegion 查找区域当前天气
-func (r *MongoWeatherRepository) FindCurrentByRegion(regionID string) (*weather.WeatherAggregate, error) {
-	ctx := context.Background()
-
-	// 先从缓存获取
-	cacheKey := fmt.Sprintf("weather:current:%s", regionID)
-	var cachedWeather *weather.WeatherAggregate
-	if err := r.cache.Get(ctx, cacheKey, &cachedWeather); err == nil && cachedWeather != nil {
-		return cachedWeather, nil
-	}
-
-	// 从数据库获取当前时间的天气
-	now := time.Now()
-	filter := bson.M{
-		"region_id":  regionID,
-		"start_time": bson.M{"$lte": now},
-		"end_time":   bson.M{"$gte": now},
-	}
-
-	var doc WeatherDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objectID},
+		bson.M{"$set": updates},
+	)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, weather.ErrWeatherNotFound
-		}
-		r.logger.Error("Failed to find current weather", "error", err, "region_id", regionID)
-		return nil, fmt.Errorf("failed to find current weather: %w", err)
+		r.logger.Error("更新天气记录失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return fmt.Errorf("更新天气记录失败: %w", err)
 	}
 
-	weatherAggregate := r.documentToAggregate(&doc)
-
-	// 更新缓存（较短时间，因为天气会变化）
-	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, time.Minute*10); err != nil {
-		r.logger.Warn("Failed to cache current weather", "error", err, "region_id", regionID)
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("天气记录不存在")
 	}
 
-	return weatherAggregate, nil
+	r.logger.Info("天气记录更新成功", map[string]interface{}{
+		"id": id,
+	})
+
+	return nil
 }
 
-// FindBySceneIDs 根据场景ID列表查找天气记录
-func (r *MongoWeatherRepository) FindBySceneIDs(ctx context.Context, sceneIDs []string) ([]*weather.WeatherAggregate, error) {
-	// TODO: 实现FindBySceneIDs方法
-	return nil, fmt.Errorf("FindBySceneIDs not implemented")
-}
-
-// FindWeatherByTimeRange 根据时间范围查找天气
-func (r *MongoWeatherRepository) FindWeatherByTimeRange(ctx context.Context, regionID string, startTime, endTime time.Time) ([]*weather.WeatherAggregate, error) {
-	// TODO: 实现FindWeatherByTimeRange方法
-	return nil, fmt.Errorf("FindWeatherByTimeRange not implemented")
-}
-
-// FindWeatherByType 根据天气类型查找天气
-func (r *MongoWeatherRepository) FindWeatherByType(ctx context.Context, weatherType weather.WeatherType, limit int) ([]*weather.WeatherAggregate, error) {
-	// TODO: 实现FindWeatherByType方法
-	return nil, fmt.Errorf("FindWeatherByType not implemented")
-}
-
-// GetWeatherCount 获取天气记录数量
-func (r *MongoWeatherRepository) GetWeatherCount(ctx context.Context, sceneID string) (int64, error) {
-	// TODO: 实现GetWeatherCount方法
-	return 0, fmt.Errorf("GetWeatherCount not implemented")
-}
-
-// GetWeatherCountByType 根据天气类型获取天气记录数量
-func (r *MongoWeatherRepository) GetWeatherCountByType(ctx context.Context, sceneID string, weatherType weather.WeatherType) (int64, error) {
-	// TODO: 实现GetWeatherCountByType方法
-	return 0, fmt.Errorf("GetWeatherCountByType not implemented")
-}
-
-// GetWeatherStatistics 获取天气统计信息
-func (r *MongoWeatherRepository) GetWeatherStatistics(ctx context.Context, sceneID string, period time.Duration) (*weather.WeatherStatistics, error) {
-	// TODO: 实现GetWeatherStatistics方法
-	return nil, fmt.Errorf("GetWeatherStatistics not implemented")
-}
-
-// SaveBatch 批量保存天气记录
-func (r *MongoWeatherRepository) SaveBatch(ctx context.Context, weathers []*weather.WeatherAggregate) error {
-	// TODO: 实现SaveBatch方法
-	return fmt.Errorf("SaveBatch not implemented")
-}
-
-// UpdateBatch 批量更新天气记录
-func (r *MongoWeatherRepository) UpdateBatch(ctx context.Context, weathers []*weather.WeatherAggregate) error {
-	// TODO: 实现UpdateBatch方法
-	return fmt.Errorf("UpdateBatch not implemented")
-}
-
-// FindByRegionAndTimeRange 根据区域和时间范围查找天气
-func (r *MongoWeatherRepository) FindByRegionAndTimeRange(regionID string, startTime, endTime time.Time) ([]*weather.WeatherAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{
-		"region_id": regionID,
-		"$or": []bson.M{
-			{
-				"start_time": bson.M{
-					"$gte": startTime,
-					"$lte": endTime,
-				},
-			},
-			{
-				"end_time": bson.M{
-					"$gte": startTime,
-					"$lte": endTime,
-				},
-			},
-			{
-				"start_time": bson.M{"$lte": startTime},
-				"end_time":   bson.M{"$gte": endTime},
-			},
-		},
-	}
-
-	opts := options.Find().SetSort(bson.D{{Key: "start_time", Value: 1}})
-
-	cursor, err := r.collection.Find(ctx, filter, opts)
+// DeleteWeather 删除天气记录
+func (r *WeatherRepository) DeleteWeather(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		r.logger.Error("Failed to find weather by time range", "error", err, "region_id", regionID)
-		return nil, fmt.Errorf("failed to find weather by time range: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []WeatherDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode weather by time range", "error", err, "region_id", regionID)
-		return nil, fmt.Errorf("failed to decode weather by time range: %w", err)
+		return fmt.Errorf("无效的ID格式: %w", err)
 	}
 
-	weathers := make([]*weather.WeatherAggregate, len(docs))
-	for i, doc := range docs {
-		weathers[i] = r.documentToAggregate(&doc)
-	}
-
-	return weathers, nil
-}
-
-// FindAllCurrent 查找所有区域的当前天气
-func (r *MongoWeatherRepository) FindAllCurrent() ([]*weather.WeatherAggregate, error) {
-	ctx := context.Background()
-
-	// 先从缓存获取
-	cacheKey := "weather:all:current"
-	var cachedWeathers []*weather.WeatherAggregate
-	if err := r.cache.Get(ctx, cacheKey, &cachedWeathers); err == nil && len(cachedWeathers) > 0 {
-		return cachedWeathers, nil
-	}
-
-	// 从数据库获取
-	now := time.Now()
-	filter := bson.M{
-		"start_time": bson.M{"$lte": now},
-		"end_time":   bson.M{"$gte": now},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter)
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
-		r.logger.Error("Failed to find all current weather", "error", err)
-		return nil, fmt.Errorf("failed to find all current weather: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []WeatherDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode all current weather", "error", err)
-		return nil, fmt.Errorf("failed to decode all current weather: %w", err)
-	}
-
-	weathers := make([]*weather.WeatherAggregate, len(docs))
-	for i, doc := range docs {
-		weathers[i] = r.documentToAggregate(&doc)
-	}
-
-	// 更新缓存
-	if err := r.cache.Set(ctx, cacheKey, weathers, time.Minute*5); err != nil {
-		r.logger.Warn("Failed to cache all current weather", "error", err)
-	}
-
-	return weathers, nil
-}
-
-// Update 更新天气记录
-func (r *MongoWeatherRepository) Update(ctx context.Context, weatherAggregate *weather.WeatherAggregate) error {
-	return r.Save(ctx, weatherAggregate)
-}
-
-// Delete 删除天气记录
-func (r *MongoWeatherRepository) Delete(ctx context.Context, weatherID string) error {
-
-	filter := bson.M{"weather_id": weatherID}
-
-	result, err := r.collection.DeleteOne(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to delete weather", "error", err, "weather_id", weatherID)
-		return fmt.Errorf("failed to delete weather: %w", err)
+		r.logger.Error("删除天气记录失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return fmt.Errorf("删除天气记录失败: %w", err)
 	}
 
 	if result.DeletedCount == 0 {
-		return weather.ErrWeatherNotFound
+		return fmt.Errorf("天气记录不存在")
 	}
 
-	// 清除缓存
-	cacheKey := fmt.Sprintf("weather:%s", weatherID)
-	if err := r.cache.Delete(ctx, cacheKey); err != nil {
-		r.logger.Warn("Failed to delete weather cache", "error", err, "weather_id", weatherID)
-	}
+	r.logger.Info("天气记录删除成功", map[string]interface{}{
+		"id": id,
+	})
 
 	return nil
 }
 
-// DeleteBatch 批量删除天气记录
-func (r *MongoWeatherRepository) DeleteBatch(ctx context.Context, ids []string) error {
-	if len(ids) == 0 {
-		return nil
-	}
-
-	filter := bson.M{"weather_id": bson.M{"$in": ids}}
-
-	result, err := r.collection.DeleteMany(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to delete weather batch", "error", err, "ids", ids)
-		return fmt.Errorf("failed to delete weather batch: %w", err)
-	}
-
-	// 批量清除缓存
-	cacheKeys := make([]string, len(ids))
-	for i, id := range ids {
-		cacheKeys[i] = fmt.Sprintf("weather:%s", id)
-	}
-	if err := r.cache.DeleteBatch(ctx, cacheKeys); err != nil {
-		r.logger.Warn("Failed to delete weather cache batch", "error", err, "ids", ids)
-	}
-
-	r.logger.Info("Batch deleted weather records", "deleted_count", result.DeletedCount, "requested_count", len(ids))
-	return nil
-}
-
-// FindByWeatherType 根据天气类型查找
-func (r *MongoWeatherRepository) FindByWeatherType(weatherType weather.WeatherType, limit int) ([]*weather.WeatherAggregate, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"weather_type": string(weatherType)}
-	opts := options.Find().
-		SetSort(bson.D{{Key: "start_time", Value: -1}}).
-		SetLimit(int64(limit))
-
-	cursor, err := r.collection.Find(ctx, filter, opts)
-	if err != nil {
-		r.logger.Error("Failed to find weather by type", "error", err, "weather_type", weatherType)
-		return nil, fmt.Errorf("failed to find weather by type: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []WeatherDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode weather by type", "error", err, "weather_type", weatherType)
-		return nil, fmt.Errorf("failed to decode weather by type: %w", err)
-	}
-
-	weathers := make([]*weather.WeatherAggregate, len(docs))
-	for i, doc := range docs {
-		weathers[i] = r.documentToAggregate(&doc)
-	}
-
-	return weathers, nil
-}
-
-// FindActiveWeather 查找活跃天气
-func (r *MongoWeatherRepository) FindActiveWeather(ctx context.Context, sceneID string) (*weather.WeatherAggregate, error) {
-	// 先从缓存获取
-	cacheKey := fmt.Sprintf("weather:active:%s", sceneID)
-	var cachedWeather *weather.WeatherAggregate
-	if err := r.cache.Get(ctx, cacheKey, &cachedWeather); err == nil && cachedWeather != nil {
-		return cachedWeather, nil
-	}
-
-	// 从数据库获取当前时间的活跃天气
+// GetCurrentWeather 获取当前天气
+func (r *WeatherRepository) GetCurrentWeather(ctx context.Context, region string) (*WeatherRecord, error) {
 	now := time.Now()
 	filter := bson.M{
-		"scene_id":   sceneID,
+		"region":     region,
 		"start_time": bson.M{"$lte": now},
 		"end_time":   bson.M{"$gte": now},
-		"is_active":  true,
 	}
 
-	var doc WeatherDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	opts := options.FindOne().SetSort(bson.D{{"start_time", -1}})
+
+	var weather WeatherRecord
+	err := r.collection.FindOne(ctx, filter, opts).Decode(&weather)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil // 没有找到活跃天气
+			return nil, fmt.Errorf("当前没有天气记录")
 		}
-		r.logger.Error("Failed to find active weather", "error", err, "scene_id", sceneID)
-		return nil, fmt.Errorf("failed to find active weather: %w", err)
+		r.logger.Error("获取当前天气失败", map[string]interface{}{
+			"region": region,
+			"error":  err.Error(),
+		})
+		return nil, fmt.Errorf("获取当前天气失败: %w", err)
 	}
 
-	weatherAggregate := r.documentToAggregate(&doc)
-
-	// 更新缓存
-	if err := r.cache.Set(ctx, cacheKey, weatherAggregate, 5*time.Minute); err != nil {
-		r.logger.Warn("Failed to cache active weather", "error", err, "scene_id", sceneID)
-	}
-
-	return weatherAggregate, nil
+	return &weather, nil
 }
 
-// FindSpecialWeather 查找特殊天气
-func (r *MongoWeatherRepository) FindSpecialWeather(limit int) ([]*weather.WeatherAggregate, error) {
-	ctx := context.Background()
+// GetWeatherHistory 获取天气历史
+func (r *WeatherRepository) GetWeatherHistory(ctx context.Context, region string, startTime, endTime time.Time, limit, offset int) ([]*WeatherRecord, error) {
+	filter := bson.M{
+		"region":     region,
+		"start_time": bson.M{"$gte": startTime, "$lte": endTime},
+	}
 
-	filter := bson.M{"is_special": true}
 	opts := options.Find().
-		SetSort(bson.D{{Key: "start_time", Value: -1}}).
-		SetLimit(int64(limit))
+		SetSort(bson.D{{"start_time", -1}}).
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset))
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("Failed to find special weather", "error", err)
-		return nil, fmt.Errorf("failed to find special weather: %w", err)
+		r.logger.Error("获取天气历史失败", map[string]interface{}{
+			"region":     region,
+			"start_time": startTime,
+			"end_time":   endTime,
+			"error":      err.Error(),
+		})
+		return nil, fmt.Errorf("获取天气历史失败: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var docs []WeatherDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode special weather", "error", err)
-		return nil, fmt.Errorf("failed to decode special weather: %w", err)
+	var weathers []*WeatherRecord
+	if err = cursor.All(ctx, &weathers); err != nil {
+		return nil, fmt.Errorf("解析天气历史失败: %w", err)
 	}
 
-	weathers := make([]*weather.WeatherAggregate, len(docs))
-	for i, doc := range docs {
-		weathers[i] = r.documentToAggregate(&doc)
-	}
+	r.logger.Info("获取天气历史成功", map[string]interface{}{
+		"region": region,
+		"count":  len(weathers),
+	})
 
 	return weathers, nil
 }
 
-// Count 计数查询
-func (r *MongoWeatherRepository) Count() (int64, error) {
-	ctx := context.Background()
+// GetWeatherByType 根据天气类型获取记录
+func (r *WeatherRepository) GetWeatherByType(ctx context.Context, weatherType string, limit, offset int) ([]*WeatherRecord, error) {
+	filter := bson.M{"weather_type": weatherType}
+	opts := options.Find().
+		SetSort(bson.D{{"start_time", -1}}).
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset))
 
-	count, err := r.collection.CountDocuments(ctx, bson.M{})
+	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("Failed to count weather", "error", err)
-		return 0, fmt.Errorf("failed to count weather: %w", err)
-	}
-
-	return count, nil
-}
-
-// CountByRegion 根据区域计数
-func (r *MongoWeatherRepository) CountByRegion(regionID string) (int64, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"region_id": regionID}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to count weather by region", "error", err, "region_id", regionID)
-		return 0, fmt.Errorf("failed to count weather by region: %w", err)
-	}
-
-	return count, nil
-}
-
-// CountByType 根据类型计数
-func (r *MongoWeatherRepository) CountByType(weatherType weather.WeatherType) (int64, error) {
-	ctx := context.Background()
-
-	filter := bson.M{"weather_type": string(weatherType)}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to count weather by type", "error", err, "weather_type", weatherType)
-		return 0, fmt.Errorf("failed to count weather by type: %w", err)
-	}
-
-	return count, nil
-}
-
-// 私有方法
-
-// aggregateToDocument 聚合根转文档
-func (r *MongoWeatherRepository) aggregateToDocument(weatherAggregate *weather.WeatherAggregate) *WeatherDocument {
-	effects := make([]WeatherEffect, 0)
-	for _, effect := range weatherAggregate.GetEffects() {
-		effects = append(effects, WeatherEffect{
-			EffectType: string(effect.GetEffectType()),
-			TargetType: string(effect.GetTargetType()),
-			Modifier:   effect.GetModifier(),
-			Duration:   int64(effect.GetDuration().Seconds()),
+		r.logger.Error("根据天气类型获取记录失败", map[string]interface{}{
+			"weather_type": weatherType,
+			"error":        err.Error(),
 		})
+		return nil, fmt.Errorf("根据天气类型获取记录失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var weathers []*WeatherRecord
+	if err = cursor.All(ctx, &weathers); err != nil {
+		return nil, fmt.Errorf("解析天气记录失败: %w", err)
 	}
 
-	return &WeatherDocument{
-		WeatherID:   weatherAggregate.GetID(),
-		RegionID:    weatherAggregate.GetRegionID(),
-		WeatherType: string(weatherAggregate.GetWeatherType()),
-		Intensity:   weatherAggregate.GetIntensity().GetMultiplier(),
-		Temperature: weatherAggregate.GetTemperature(),
-		Humidity:    weatherAggregate.GetHumidity(),
-		WindSpeed:   weatherAggregate.GetWindSpeed(),
-		Visibility:  weatherAggregate.GetVisibility(),
-		StartTime:   weatherAggregate.GetStartTime(),
-		EndTime:     weatherAggregate.GetEndTime(),
-		Duration:    int64(weatherAggregate.GetDuration().Seconds()),
-		IsSpecial:   weatherAggregate.IsSpecialWeather(),
-		Description: weatherAggregate.GetDescription(),
-		Effects:     effects,
-		CreatedAt:   weatherAggregate.GetCreatedAt(),
-		UpdatedAt:   weatherAggregate.GetUpdatedAt(),
-	}
+	r.logger.Info("根据天气类型获取记录成功", map[string]interface{}{
+		"weather_type": weatherType,
+		"count":        len(weathers),
+	})
+
+	return weathers, nil
 }
 
-// documentToAggregate 文档转聚合根
-func (r *MongoWeatherRepository) documentToAggregate(doc *WeatherDocument) *weather.WeatherAggregate {
-	effects := make([]*weather.WeatherEffect, len(doc.Effects))
-	for i, effect := range doc.Effects {
-		effects[i] = weather.NewWeatherEffect(
-			effect.EffectType,
-			effect.TargetType,
-			effect.Modifier,
-			time.Duration(effect.Duration)*time.Second,
-		)
+// GetWeatherStats 获取天气统计
+func (r *WeatherRepository) GetWeatherStats(ctx context.Context, region string, startTime, endTime time.Time) (map[string]interface{}, error) {
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"region":     region,
+				"start_time": bson.M{"$gte": startTime, "$lte": endTime},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":             "$weather_type",
+				"count":           bson.M{"$sum": 1},
+				"avg_temperature": bson.M{"$avg": "$temperature"},
+				"avg_humidity":    bson.M{"$avg": "$humidity"},
+				"avg_wind_speed":  bson.M{"$avg": "$wind_speed"},
+			},
+		},
 	}
 
-	// 这里需要根据实际的WeatherAggregate构造函数来实现
-	return weather.ReconstructWeatherAggregate(
-		doc.WeatherID,
-		doc.RegionID,
-		weather.ParseWeatherType(doc.WeatherType),
-		doc.Intensity,
-		doc.Temperature,
-		doc.Humidity,
-		doc.WindSpeed,
-		doc.Visibility,
-		doc.StartTime,
-		doc.EndTime,
-		time.Duration(doc.Duration)*time.Second,
-		doc.IsSpecial,
-		doc.Description,
-		effects,
-		doc.CreatedAt,
-		doc.UpdatedAt,
-	)
-}
-
-// CleanupExpiredWeather 清理过期天气数据
-func (r *MongoWeatherRepository) CleanupExpiredWeather(ctx context.Context, beforeTime time.Time) (int64, error) {
-	filter := bson.M{
-		"updated_at": bson.M{"$lt": beforeTime},
-		"is_active":  false,
-	}
-
-	result, err := r.collection.DeleteMany(ctx, filter)
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		r.logger.Error("Failed to cleanup expired weather", "error", err, "before_time", beforeTime)
-		return 0, fmt.Errorf("failed to cleanup expired weather: %w", err)
+		r.logger.Error("获取天气统计失败", map[string]interface{}{
+			"region":     region,
+			"start_time": startTime,
+			"end_time":   endTime,
+			"error":      err.Error(),
+		})
+		return nil, fmt.Errorf("获取天气统计失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("解析天气统计失败: %w", err)
 	}
 
-	r.logger.Info("Cleaned up expired weather", "deleted_count", result.DeletedCount, "before_time", beforeTime)
-	return result.DeletedCount, nil
+	stats := make(map[string]interface{})
+	for _, result := range results {
+		weatherType := result["_id"].(string)
+		stats[weatherType] = map[string]interface{}{
+			"count":           result["count"],
+			"avg_temperature": result["avg_temperature"],
+			"avg_humidity":    result["avg_humidity"],
+			"avg_wind_speed":  result["avg_wind_speed"],
+		}
+	}
+
+	r.logger.Info("获取天气统计成功", map[string]interface{}{
+		"region": region,
+		"stats":  stats,
+	})
+
+	return stats, nil
 }
 
-// CleanupOldHistory 清理旧的天气历史记录
-func (r *MongoWeatherRepository) CleanupOldHistory(ctx context.Context, sceneID string, keepDays int) (int64, error) {
-	cutoffTime := time.Now().AddDate(0, 0, -keepDays)
+// GetWeatherForecast 获取天气预报
+func (r *WeatherRepository) GetWeatherForecast(ctx context.Context, region string, days int) ([]*WeatherRecord, error) {
+	startTime := time.Now()
+	endTime := startTime.AddDate(0, 0, days)
+
 	filter := bson.M{
-		"scene_id":   sceneID,
-		"created_at": bson.M{"$lt": cutoffTime},
+		"region":     region,
+		"start_time": bson.M{"$gte": startTime, "$lte": endTime},
 	}
 
-	result, err := r.collection.DeleteMany(ctx, filter)
+	opts := options.Find().
+		SetSort(bson.D{{"start_time", 1}}).
+		SetLimit(int64(days * 24)) // 假设每小时一条记录
+
+	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("Failed to cleanup old weather history", "error", err, "scene_id", sceneID, "keep_days", keepDays)
-		return 0, fmt.Errorf("failed to cleanup old weather history: %w", err)
+		r.logger.Error("获取天气预报失败", map[string]interface{}{
+			"region": region,
+			"days":   days,
+			"error":  err.Error(),
+		})
+		return nil, fmt.Errorf("获取天气预报失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var weathers []*WeatherRecord
+	if err = cursor.All(ctx, &weathers); err != nil {
+		return nil, fmt.Errorf("解析天气预报失败: %w", err)
 	}
 
-	r.logger.Info("Cleaned up old weather history", "deleted_count", result.DeletedCount, "scene_id", sceneID, "keep_days", keepDays)
-	return result.DeletedCount, nil
-}
+	r.logger.Info("获取天气预报成功", map[string]interface{}{
+		"region": region,
+		"days":   days,
+		"count":  len(weathers),
+	})
 
-// CreateIndexes 创建索引
-func (r *MongoWeatherRepository) CreateIndexes(ctx context.Context) error {
-	indexes := []mongo.IndexModel{
-		{
-			Keys: bson.D{{"scene_id", 1}},
-		},
-		{
-			Keys: bson.D{{"region", 1}},
-		},
-		{
-			Keys: bson.D{{"weather_type", 1}},
-		},
-		{
-			Keys: bson.D{{"start_time", 1}},
-		},
-		{
-			Keys: bson.D{{"end_time", 1}},
-		},
-		{
-			Keys: bson.D{{"is_active", 1}},
-		},
-	}
-
-	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
-	return err
+	return weathers, nil
 }

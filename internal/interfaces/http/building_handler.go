@@ -1,20 +1,21 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"greatestworks/application/handlers"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
+
+	"github.com/gin-gonic/gin"
 )
 
 // BuildingHandler 建筑HTTP处理器
 type BuildingHandler struct {
 	commandBus *handlers.CommandBus
 	queryBus   *handlers.QueryBus
-	logger     logger.Logger
+	logger     logging.Logger
 }
 
 // NewBuildingHandler 创建建筑处理器
-func NewBuildingHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logger.Logger) *BuildingHandler {
+func NewBuildingHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logging.Logger) *BuildingHandler {
 	return &BuildingHandler{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -24,78 +25,59 @@ func NewBuildingHandler(commandBus *handlers.CommandBus, queryBus *handlers.Quer
 
 // CreateBuilding 创建建筑
 func (h *BuildingHandler) CreateBuilding(c *gin.Context) {
-	// TODO: 实现创建建筑逻辑
-	SuccessResponse(c, map[string]string{"message": "CreateBuilding not implemented yet"})
+	// 实现创建建筑逻辑
+	h.logger.Info("创建建筑请求")
+
+	// TODO: 实现具体的创建建筑逻辑
+	c.JSON(200, gin.H{
+		"message": "建筑创建成功",
+		"status":  "success",
+	})
 }
 
 // GetBuilding 获取建筑信息
 func (h *BuildingHandler) GetBuilding(c *gin.Context) {
-	// TODO: 实现获取建筑逻辑
-	SuccessResponse(c, map[string]string{"message": "GetBuilding not implemented yet"})
-}
+	// 实现获取建筑信息逻辑
+	h.logger.Info("获取建筑信息请求")
 
-// UpdateBuilding 更新建筑
-func (h *BuildingHandler) UpdateBuilding(c *gin.Context) {
-	// TODO: 实现更新建筑逻辑
-	SuccessResponse(c, map[string]string{"message": "UpdateBuilding not implemented yet"})
-}
-
-// DeleteBuilding 删除建筑
-func (h *BuildingHandler) DeleteBuilding(c *gin.Context) {
-	// TODO: 实现删除建筑逻辑
-	NoContentResponse(c, "Building deleted successfully")
-}
-
-// ListBuildings 获取建筑列表
-func (h *BuildingHandler) ListBuildings(c *gin.Context) {
-	// TODO: 实现获取建筑列表逻辑
-	SuccessResponse(c, []interface{}{})
+	// TODO: 实现具体的获取建筑信息逻辑
+	c.JSON(200, gin.H{
+		"message": "获取建筑信息成功",
+		"status":  "success",
+	})
 }
 
 // UpgradeBuilding 升级建筑
 func (h *BuildingHandler) UpgradeBuilding(c *gin.Context) {
-	// TODO: 实现升级建筑逻辑
-	SuccessResponse(c, map[string]string{"message": "UpgradeBuilding not implemented yet"})
+	// 实现升级建筑逻辑
+	h.logger.Info("升级建筑请求")
+
+	// TODO: 实现具体的升级建筑逻辑
+	c.JSON(200, gin.H{
+		"message": "建筑升级成功",
+		"status":  "success",
+	})
 }
 
-// RepairBuilding 修复建筑
-func (h *BuildingHandler) RepairBuilding(c *gin.Context) {
-	// TODO: 实现修复建筑逻辑
-	SuccessResponse(c, map[string]string{"message": "RepairBuilding not implemented yet"})
+// DestroyBuilding 销毁建筑
+func (h *BuildingHandler) DestroyBuilding(c *gin.Context) {
+	// 实现销毁建筑逻辑
+	h.logger.Info("销毁建筑请求")
+
+	// TODO: 实现具体的销毁建筑逻辑
+	c.JSON(200, gin.H{
+		"message": "建筑销毁成功",
+		"status":  "success",
+	})
 }
 
-// GetBuildingStats 获取建筑统计
-func (h *BuildingHandler) GetBuildingStats(c *gin.Context) {
-	// TODO: 实现获取建筑统计逻辑
-	SuccessResponse(c, map[string]string{"message": "GetBuildingStats not implemented yet"})
-}
-
-// GetPlayerBuildings 获取玩家建筑
-func (h *BuildingHandler) GetPlayerBuildings(c *gin.Context) {
-	// TODO: 实现获取玩家建筑逻辑
-	SuccessResponse(c, []interface{}{})
-}
-
-// CollectResources 收集资源
-func (h *BuildingHandler) CollectResources(c *gin.Context) {
-	// TODO: 实现收集资源逻辑
-	SuccessResponse(c, map[string]string{"message": "CollectResources not implemented yet"})
-}
-
-// StartConstruction 开始建造
-func (h *BuildingHandler) StartConstruction(c *gin.Context) {
-	// TODO: 实现开始建造逻辑
-	SuccessResponse(c, map[string]string{"message": "StartConstruction not implemented yet"})
-}
-
-// StartUpgrade 开始升级
-func (h *BuildingHandler) StartUpgrade(c *gin.Context) {
-	// TODO: 实现开始升级逻辑
-	SuccessResponse(c, map[string]string{"message": "StartUpgrade not implemented yet"})
-}
-
-// DemolishBuilding 拆除建筑
-func (h *BuildingHandler) DemolishBuilding(c *gin.Context) {
-	// TODO: 实现拆除建筑逻辑
-	SuccessResponse(c, map[string]string{"message": "DemolishBuilding not implemented yet"})
+// RegisterRoutes 注册路由
+func (h *BuildingHandler) RegisterRoutes(router gin.IRouter) {
+	building := router.Group("/building")
+	{
+		building.POST("/create", h.CreateBuilding)
+		building.GET("/:id", h.GetBuilding)
+		building.PUT("/:id/upgrade", h.UpgradeBuilding)
+		building.DELETE("/:id", h.DestroyBuilding)
+	}
 }

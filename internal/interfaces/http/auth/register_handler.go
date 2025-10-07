@@ -9,16 +9,16 @@ import (
 
 	playerCommands "greatestworks/application/commands/player"
 	"greatestworks/application/handlers"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// RegisterHandler 注册处理器
+// RegisterHandler 注册处理�?
 type RegisterHandler struct {
 	commandBus *handlers.CommandBus
 	logger     logger.Logger
 }
 
-// NewRegisterHandler 创建注册处理器
+// NewRegisterHandler 创建注册处理�?
 func NewRegisterHandler(commandBus *handlers.CommandBus, logger logger.Logger) *RegisterHandler {
 	return &RegisterHandler{
 		commandBus: commandBus,
@@ -72,14 +72,14 @@ func (h *RegisterHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// 验证用户名唯一性
+	// 验证用户名唯一�?
 	if !h.isUsernameAvailable(req.Username) {
 		h.logger.Warn("Username already exists", "username", req.Username)
 		c.JSON(409, gin.H{"error": "Username already exists", "success": false})
 		return
 	}
 
-	// 验证邮箱唯一性
+	// 验证邮箱唯一�?
 	if !h.isEmailAvailable(req.Email) {
 		h.logger.Warn("Email already exists", "email", req.Email)
 		c.JSON(409, gin.H{"error": "Email already exists", "success": false})
@@ -96,7 +96,7 @@ func (h *RegisterHandler) Register(c *gin.Context) {
 
 	ctx := context.Background()
 
-	// 创建用户账户和玩家角色
+	// 创建用户账户和玩家角�?
 	cmd := &playerCommands.CreatePlayerWithAccountCommand{
 		Username:     req.Username,
 		PasswordHash: hashedPassword,
@@ -127,7 +127,7 @@ func (h *RegisterHandler) Register(c *gin.Context) {
 	c.JSON(201, gin.H{"data": response, "success": true, "message": "Account created successfully"})
 }
 
-// CheckUsername 检查用户名可用性
+// CheckUsername 检查用户名可用�?
 func (h *RegisterHandler) CheckUsername(c *gin.Context) {
 	var req CheckUsernameRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -150,7 +150,7 @@ func (h *RegisterHandler) CheckUsername(c *gin.Context) {
 	c.JSON(200, gin.H{"data": response, "success": true})
 }
 
-// CheckEmail 检查邮箱可用性
+// CheckEmail 检查邮箱可用�?
 func (h *RegisterHandler) CheckEmail(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
@@ -185,7 +185,7 @@ func (h *RegisterHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	// 检查邮箱是否存在
+	// 检查邮箱是否存�?
 	if h.isEmailAvailable(req.Email) {
 		h.logger.Warn("Reset password attempt for non-existent email", "email", req.Email)
 		// 为了安全，不透露邮箱是否存在
@@ -215,33 +215,33 @@ func (h *RegisterHandler) hashPassword(password string) (string, error) {
 
 // isUsernameAvailable 检查用户名是否可用
 func (h *RegisterHandler) isUsernameAvailable(username string) bool {
-	// 这里应该查询数据库检查用户名是否已存在
-	// 临时实现：简单的内存检查
-	// TODO: 实现数据库查询
+	// 这里应该查询数据库检查用户名是否已存�?
+	// 临时实现：简单的内存检�?
+	// TODO: 实现数据库查�?
 	return true // 暂时返回true
 }
 
-// isEmailAvailable 检查邮箱是否可用
+// isEmailAvailable 检查邮箱是否可�?
 func (h *RegisterHandler) isEmailAvailable(email string) bool {
 	// 这里应该查询数据库检查邮箱是否已存在
-	// 临时实现：简单的内存检查
-	// TODO: 实现数据库查询
+	// 临时实现：简单的内存检�?
+	// TODO: 实现数据库查�?
 	return true // 暂时返回true
 }
 
 // generateResetToken 生成重置令牌
 func (h *RegisterHandler) generateResetToken(email string) string {
-	// 这里应该生成安全的重置令牌
-	// 临时实现：简单的时间戳
-	// TODO: 实现安全的令牌生成
+	// 这里应该生成安全的重置令�?
+	// 临时实现：简单的时间�?
+	// TODO: 实现安全的令牌生�?
 	return "reset_token_" + email
 }
 
-// sendResetEmail 发送重置邮件
+// sendResetEmail 发送重置邮�?
 func (h *RegisterHandler) sendResetEmail(email, token string) error {
 	// 这里应该发送实际的邮件
 	// 临时实现：仅记录日志
-	// TODO: 实现邮件发送服务
+	// TODO: 实现邮件发送服�?
 	h.logger.Info("Reset email would be sent", "email", email, "token", token)
 	return nil
 }

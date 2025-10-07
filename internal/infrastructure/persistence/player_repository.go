@@ -12,179 +12,200 @@ import (
 
 	"greatestworks/internal/domain/player"
 	"greatestworks/internal/infrastructure/cache"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
 // MongoPlayerRepository MongoDB玩家仓储实现
 type MongoPlayerRepository struct {
-	db         *mongo.Database
-	cache      cache.Cache
-	logger     logger.Logger
 	collection *mongo.Collection
+	cache      cache.Cache
+	logger     logging.Logger
 }
 
 // NewMongoPlayerRepository 创建MongoDB玩家仓储
-func NewMongoPlayerRepository(db *mongo.Database, cache cache.Cache, logger logger.Logger) player.Repository {
+func NewMongoPlayerRepository(db *mongo.Database, cache cache.Cache, logger logging.Logger) *MongoPlayerRepository {
 	return &MongoPlayerRepository{
-		db:         db,
+		collection: db.Collection("players"),
 		cache:      cache,
 		logger:     logger,
-		collection: db.Collection("players"),
 	}
 }
 
-// PlayerDocument MongoDB玩家文档结构
+// PlayerDocument 玩家文档结构
 type PlayerDocument struct {
-	ID          primitive.ObjectID     `bson:"_id,omitempty"`
-	PlayerID    string                 `bson:"player_id"`
-	Username    string                 `bson:"username"`
-	Nickname    string                 `bson:"nickname"`
-	Level       int                    `bson:"level"`
-	Experience  int64                  `bson:"experience"`
-	Gold        int64                  `bson:"gold"`
-	Diamond     int64                  `bson:"diamond"`
-	VIPLevel    int                    `bson:"vip_level"`
-	Status      int                    `bson:"status"`
-	LastLoginAt time.Time              `bson:"last_login_at"`
-	CreatedAt   time.Time              `bson:"created_at"`
-	UpdatedAt   time.Time              `bson:"updated_at"`
-	Version     int64                  `bson:"version"`
-	Position    PositionDocument       `bson:"position"`
-	Stats       StatsDocument          `bson:"stats"`
-	Attributes  map[string]interface{} `bson:"attributes"`
-	Settings    map[string]interface{} `bson:"settings"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name      string             `bson:"name" json:"name"`
+	Level     int                `bson:"level" json:"level"`
+	Exp       int64              `bson:"exp" json:"exp"`
+	Status    int                `bson:"status" json:"status"`
+	Position  PlayerPosition     `bson:"position" json:"position"`
+	Stats     PlayerStats        `bson:"stats" json:"stats"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	Version   int64              `bson:"version" json:"version"`
 }
 
-// PositionDocument 位置文档
-type PositionDocument struct {
-	X float64 `bson:"x"`
-	Y float64 `bson:"y"`
-	Z float64 `bson:"z"`
+// PlayerPosition 玩家位置值对象
+type PlayerPosition struct {
+	X float64 `bson:"x" json:"x"`
+	Y float64 `bson:"y" json:"y"`
+	Z float64 `bson:"z" json:"z"`
 }
 
-// StatsDocument 统计信息文档
-type StatsDocument struct {
-	Health    int `bson:"health"`
-	MaxHealth int `bson:"max_health"`
-	Mana      int `bson:"mana"`
-	MaxMana   int `bson:"max_mana"`
-	Attack    int `bson:"attack"`
-	Defense   int `bson:"defense"`
-	Speed     int `bson:"speed"`
+// PlayerStats 玩家属性值对象
+type PlayerStats struct {
+	HP      int `bson:"hp" json:"hp"`
+	MaxHP   int `bson:"max_hp" json:"max_hp"`
+	MP      int `bson:"mp" json:"mp"`
+	MaxMP   int `bson:"max_mp" json:"max_mp"`
+	Attack  int `bson:"attack" json:"attack"`
+	Defense int `bson:"defense" json:"defense"`
+	Speed   int `bson:"speed" json:"speed"`
 }
 
 // Save 保存玩家
-func (r *MongoPlayerRepository) Save(ctx context.Context, playerAggregate *player.Player) error {
-	doc := r.aggregateToDocument(playerAggregate)
-	doc.UpdatedAt = time.Now()
+func (r *MongoPlayerRepository) Save(ctx context.Context, p *player.Player) error {
+	doc := r.toDocument(p)
 
+	// 设置时间戳
+	now := time.Now()
 	if doc.ID.IsZero() {
-		doc.CreatedAt = time.Now()
-		result, err := r.collection.InsertOne(ctx, doc)
-		if err != nil {
-			r.logger.Error("Failed to insert player", "error", err, "player_id", playerAggregate.ID())
-			return fmt.Errorf("failed to insert player: %w", err)
-		}
+		doc.CreatedAt = now
+	}
+	doc.UpdatedAt = now
 
-		// 更新聚合根ID
-		if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
-			doc.ID = oid
-		}
-	} else {
-		filter := bson.M{"player_id": playerAggregate.ID()}
-		update := bson.M{"$set": doc}
+	// 使用Upsert操作
+	filter := bson.M{"name": p.Name()}
+	opts := options.Replace().SetUpsert(true)
 
-		_, err := r.collection.UpdateOne(ctx, filter, update)
-		if err != nil {
-			r.logger.Error("Failed to update player", "error", err, "player_id", playerAggregate.ID())
-			return fmt.Errorf("failed to update player: %w", err)
-		}
+	_, err := r.collection.ReplaceOne(ctx, filter, doc, opts)
+	if err != nil {
+		r.logger.Error("保存玩家失败", map[string]interface{}{
+			"name":  p.Name(),
+			"error": err.Error(),
+		})
+		return fmt.Errorf("保存玩家失败: %w", err)
 	}
 
 	// 更新缓存
-	cacheKey := fmt.Sprintf("player:%s", playerAggregate.ID())
-	if err := r.cache.Set(ctx, cacheKey, playerAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache player", "error", err, "player_id", playerAggregate.ID())
+	cacheKey := fmt.Sprintf("player:id:%s", p.ID().String())
+	if err := r.cache.Set(ctx, cacheKey, p, time.Hour); err != nil {
+		r.logger.Warn("更新玩家缓存失败", map[string]interface{}{
+			"name":  p.Name(),
+			"error": err.Error(),
+		})
 	}
+
+	r.logger.Info("玩家保存成功", map[string]interface{}{
+		"name":  p.Name(),
+		"level": p.Level(),
+	})
 
 	return nil
 }
 
 // FindByID 根据ID查找玩家
-func (r *MongoPlayerRepository) FindByID(ctx context.Context, playerID player.PlayerID) (*player.Player, error) {
+func (r *MongoPlayerRepository) FindByID(ctx context.Context, id string) (*player.Player, error) {
 	// 先从缓存获取
-	cacheKey := fmt.Sprintf("player:%s", playerID)
+	cacheKey := fmt.Sprintf("player:id:%s", id)
 	var cachedPlayer *player.Player
 	if err := r.cache.Get(ctx, cacheKey, &cachedPlayer); err == nil && cachedPlayer != nil {
 		return cachedPlayer, nil
 	}
 
 	// 从数据库获取
-	filter := bson.M{"player_id": playerID.String()}
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("无效的ID格式: %w", err)
+	}
+
+	filter := bson.M{"_id": objectID}
 	var doc PlayerDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
+	err = r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, player.ErrPlayerNotFound
 		}
-		r.logger.Error("Failed to find player", "error", err, "player_id", playerID)
-		return nil, fmt.Errorf("failed to find player: %w", err)
+		r.logger.Error("查找玩家失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("查找玩家失败: %w", err)
 	}
 
-	playerAggregate := r.documentToAggregate(&doc)
+	// 转换为领域对象
+	playerAggregate, err := r.toAggregate(&doc)
+	if err != nil {
+		return nil, fmt.Errorf("转换玩家对象失败: %w", err)
+	}
 
 	// 更新缓存
 	if err := r.cache.Set(ctx, cacheKey, playerAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache player", "error", err, "player_id", playerID)
+		r.logger.Warn("更新玩家缓存失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
 	}
 
 	return playerAggregate, nil
 }
 
-// FindByUsername 根据用户名查找玩家
-func (r *MongoPlayerRepository) FindByUsername(ctx context.Context, username string) (*player.Player, error) {
+// FindByName 根据名称查找玩家
+func (r *MongoPlayerRepository) FindByName(ctx context.Context, name string) (*player.Player, error) {
 	// 先从缓存获取
-	cacheKey := fmt.Sprintf("player:username:%s", username)
+	cacheKey := fmt.Sprintf("player:name:%s", name)
 	var cachedPlayer *player.Player
 	if err := r.cache.Get(ctx, cacheKey, &cachedPlayer); err == nil && cachedPlayer != nil {
 		return cachedPlayer, nil
 	}
 
 	// 从数据库获取
-	filter := bson.M{"username": username}
+	filter := bson.M{"name": name}
 	var doc PlayerDocument
 	err := r.collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, player.ErrPlayerNotFound
 		}
-		r.logger.Error("Failed to find player by username", "error", err, "username", username)
-		return nil, fmt.Errorf("failed to find player by username: %w", err)
+		r.logger.Error("根据名称查找玩家失败", map[string]interface{}{
+			"name":  name,
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("根据名称查找玩家失败: %w", err)
 	}
 
-	playerAggregate := r.documentToAggregate(&doc)
+	// 转换为领域对象
+	playerAggregate, err := r.toAggregate(&doc)
+	if err != nil {
+		return nil, fmt.Errorf("转换玩家对象失败: %w", err)
+	}
 
 	// 更新缓存
 	if err := r.cache.Set(ctx, cacheKey, playerAggregate, time.Hour); err != nil {
-		r.logger.Warn("Failed to cache player by username", "error", err, "username", username)
+		r.logger.Warn("更新玩家缓存失败", map[string]interface{}{
+			"name":  name,
+			"error": err.Error(),
+		})
 	}
 
 	return playerAggregate, nil
-}
-
-// Update 更新玩家
-func (r *MongoPlayerRepository) Update(ctx context.Context, playerAggregate *player.Player) error {
-	return r.Save(ctx, playerAggregate)
 }
 
 // Delete 删除玩家
-func (r *MongoPlayerRepository) Delete(ctx context.Context, playerID player.PlayerID) error {
-	filter := bson.M{"player_id": playerID.String()}
+func (r *MongoPlayerRepository) Delete(ctx context.Context, id string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("无效的ID格式: %w", err)
+	}
 
+	filter := bson.M{"_id": objectID}
 	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		r.logger.Error("Failed to delete player", "error", err, "player_id", playerID.String())
-		return fmt.Errorf("failed to delete player: %w", err)
+		r.logger.Error("删除玩家失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
+		return fmt.Errorf("删除玩家失败: %w", err)
 	}
 
 	if result.DeletedCount == 0 {
@@ -192,383 +213,122 @@ func (r *MongoPlayerRepository) Delete(ctx context.Context, playerID player.Play
 	}
 
 	// 清除缓存
-	cacheKey := fmt.Sprintf("player:%s", playerID)
+	cacheKey := fmt.Sprintf("player:id:%s", id)
 	if err := r.cache.Delete(ctx, cacheKey); err != nil {
-		r.logger.Warn("Failed to delete player cache", "error", err, "player_id", playerID)
+		r.logger.Warn("清除玩家缓存失败", map[string]interface{}{
+			"id":    id,
+			"error": err.Error(),
+		})
 	}
+
+	r.logger.Info("玩家删除成功", map[string]interface{}{
+		"id": id,
+	})
 
 	return nil
 }
 
-// List 列表查询玩家
-func (r *MongoPlayerRepository) List(ctx context.Context, query *player.PlayerQuery) ([]*player.Player, error) {
-	filter := r.buildFilter(query)
-	opts := r.buildOptions(query)
+// List 获取玩家列表
+func (r *MongoPlayerRepository) List(ctx context.Context, limit, offset int) ([]*player.Player, error) {
+	opts := options.Find().
+		SetSort(bson.D{{"created_at", -1}}).
+		SetLimit(int64(limit)).
+		SetSkip(int64(offset))
 
-	cursor, err := r.collection.Find(ctx, filter, opts)
+	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
-		r.logger.Error("Failed to list players", "error", err)
-		return nil, fmt.Errorf("failed to list players: %w", err)
+		r.logger.Error("获取玩家列表失败", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, fmt.Errorf("获取玩家列表失败: %w", err)
 	}
 	defer cursor.Close(ctx)
 
 	var docs []PlayerDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode players", "error", err)
-		return nil, fmt.Errorf("failed to decode players: %w", err)
+	if err = cursor.All(ctx, &docs); err != nil {
+		return nil, fmt.Errorf("解析玩家列表失败: %w", err)
 	}
 
-	players := make([]*player.Player, len(docs))
-	for i, doc := range docs {
-		players[i] = r.documentToAggregate(&doc)
+	players := make([]*player.Player, 0, len(docs))
+	for _, doc := range docs {
+		playerAggregate, err := r.toAggregate(&doc)
+		if err != nil {
+			r.logger.Error("转换玩家对象失败", map[string]interface{}{
+				"id":    doc.ID.Hex(),
+				"error": err.Error(),
+			})
+			continue
+		}
+		players = append(players, playerAggregate)
 	}
+
+	r.logger.Info("获取玩家列表成功", map[string]interface{}{
+		"count": len(players),
+	})
 
 	return players, nil
 }
 
-// Count 计数查询
-func (r *MongoPlayerRepository) Count(ctx context.Context, query *player.PlayerQuery) (int64, error) {
-	filter := r.buildFilter(query)
-
-	count, err := r.collection.CountDocuments(ctx, filter)
+// Count 获取玩家总数
+func (r *MongoPlayerRepository) Count(ctx context.Context) (int64, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{})
 	if err != nil {
-		r.logger.Error("Failed to count players", "error", err)
-		return 0, fmt.Errorf("failed to count players: %w", err)
+		r.logger.Error("获取玩家总数失败", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return 0, fmt.Errorf("获取玩家总数失败: %w", err)
 	}
 
 	return count, nil
 }
 
-// FindByLevel 根据等级范围查找玩家
-func (r *MongoPlayerRepository) FindByLevel(ctx context.Context, minLevel, maxLevel int) ([]*player.Player, error) {
-	filter := bson.M{
-		"level": bson.M{
-			"$gte": minLevel,
-			"$lte": maxLevel,
-		},
+// toDocument 转换为文档
+func (r *MongoPlayerRepository) toDocument(p *player.Player) *PlayerDocument {
+	position := p.GetPosition()
+	stats := p.Stats()
+
+	doc := &PlayerDocument{
+		Name:      p.Name(),
+		Level:     p.Level(),
+		Exp:       p.Exp(),
+		Status:    int(p.Status()),
+		Position:  PlayerPosition{X: position.X, Y: position.Y, Z: position.Z},
+		Stats:     PlayerStats{HP: stats.HP, MaxHP: stats.MaxHP, MP: stats.MP, MaxMP: stats.MaxMP, Attack: stats.Attack, Defense: stats.Defense, Speed: stats.Speed},
+		CreatedAt: p.CreatedAt(),
+		UpdatedAt: p.UpdatedAt(),
+		Version:   p.Version(),
 	}
 
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to find players by level", "error", err)
-		return nil, fmt.Errorf("failed to find players by level: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []PlayerDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode players by level", "error", err)
-		return nil, fmt.Errorf("failed to decode players by level: %w", err)
+	// 如果有ID，转换为ObjectID
+	if p.ID().String() != "" {
+		if objectID, err := primitive.ObjectIDFromHex(p.ID().String()); err == nil {
+			doc.ID = objectID
+		}
 	}
 
-	players := make([]*player.Player, len(docs))
-	for i, doc := range docs {
-		players[i] = r.documentToAggregate(&doc)
-	}
-
-	return players, nil
+	return doc
 }
 
-// FindOnlinePlayers 查找在线玩家
-func (r *MongoPlayerRepository) FindOnlinePlayers(ctx context.Context, limit int) ([]*player.Player, error) {
-	filter := bson.M{
-		"status": "online",
-		"last_login_at": bson.M{
-			"$gte": time.Now().Add(-time.Hour), // 1小时内登录的视为在线
-		},
-	}
+// toAggregate 转换为聚合根
+func (r *MongoPlayerRepository) toAggregate(doc *PlayerDocument) (*player.Player, error) {
+	// 使用ReconstructPlayer方法从持久化数据重建玩家聚合根
+	playerID := player.PlayerIDFromString(doc.ID.Hex())
+	status := player.PlayerStatus(doc.Status)
+	position := player.Position{X: doc.Position.X, Y: doc.Position.Y, Z: doc.Position.Z}
+	stats := player.PlayerStats{HP: doc.Stats.HP, MaxHP: doc.Stats.MaxHP, MP: doc.Stats.MP, MaxMP: doc.Stats.MaxMP, Attack: doc.Stats.Attack, Defense: doc.Stats.Defense, Speed: doc.Stats.Speed}
 
-	opts := options.Find()
-	if limit > 0 {
-		opts.SetLimit(int64(limit))
-	}
-
-	cursor, err := r.collection.Find(ctx, filter, opts)
-	if err != nil {
-		r.logger.Error("Failed to find online players", "error", err)
-		return nil, fmt.Errorf("failed to find online players: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []PlayerDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode online players", "error", err)
-		return nil, fmt.Errorf("failed to decode online players: %w", err)
-	}
-
-	players := make([]*player.Player, len(docs))
-	for i, doc := range docs {
-		players[i] = r.documentToAggregate(&doc)
-	}
-
-	return players, nil
-}
-
-// FindPlayersByLevel 根据等级范围查找玩家
-func (r *MongoPlayerRepository) FindPlayersByLevel(ctx context.Context, minLevel, maxLevel int) ([]*player.Player, error) {
-	filter := bson.M{
-		"level": bson.M{
-			"$gte": minLevel,
-			"$lte": maxLevel,
-		},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to find players by level", "error", err)
-		return nil, fmt.Errorf("failed to find players by level: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var docs []PlayerDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		r.logger.Error("Failed to decode players by level", "error", err)
-		return nil, fmt.Errorf("failed to decode players by level: %w", err)
-	}
-
-	players := make([]*player.Player, len(docs))
-	for i, doc := range docs {
-		players[i] = r.documentToAggregate(&doc)
-	}
-
-	return players, nil
-}
-
-// UpdateLastLogin 更新最后登录时间
-func (r *MongoPlayerRepository) UpdateLastLogin(ctx context.Context, playerID player.PlayerID) error {
-	filter := bson.M{"player_id": playerID.String()}
-	update := bson.M{
-		"$set": bson.M{
-			"last_login_at": time.Now(),
-			"updated_at":    time.Now(),
-		},
-	}
-
-	_, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		r.logger.Error("Failed to update last login", "error", err, "player_id", playerID)
-		return fmt.Errorf("failed to update last login: %w", err)
-	}
-
-	// 清除缓存
-	cacheKey := fmt.Sprintf("player:%s", playerID)
-	if err := r.cache.Delete(ctx, cacheKey); err != nil {
-		r.logger.Warn("Failed to delete player cache after login update", "error", err, "player_id", playerID)
-	}
-
-	return nil
-}
-
-// 私有方法
-
-// aggregateToDocument 聚合根转文档
-func (r *MongoPlayerRepository) aggregateToDocument(playerAggregate *player.Player) *PlayerDocument {
-	position := playerAggregate.GetPosition()
-	stats := playerAggregate.Stats()
-
-	return &PlayerDocument{
-		PlayerID:    playerAggregate.ID().String(),
-		Username:    playerAggregate.Name(),
-		Nickname:    playerAggregate.Name(), // 使用Name作为Nickname
-		Level:       playerAggregate.Level(),
-		Experience:  playerAggregate.Exp(),
-		Gold:        0, // 默认值，需要根据实际业务添加
-		Diamond:     0, // 默认值，需要根据实际业务添加
-		VIPLevel:    0, // 默认值，需要根据实际业务添加
-		Status:      int(playerAggregate.Status()),
-		LastLoginAt: time.Now(), // 默认值，需要根据实际业务添加
-		CreatedAt:   playerAggregate.CreatedAt(),
-		UpdatedAt:   playerAggregate.UpdatedAt(),
-		Version:     playerAggregate.Version(),
-		Position: PositionDocument{
-			X: position.X,
-			Y: position.Y,
-			Z: position.Z,
-		},
-		Stats: StatsDocument{
-			Health:    stats.HP,
-			MaxHealth: stats.MaxHP,
-			Mana:      stats.MP,
-			MaxMana:   stats.MaxMP,
-			Attack:    stats.Attack,
-			Defense:   stats.Defense,
-			Speed:     stats.Speed,
-		},
-		Attributes: make(map[string]interface{}), // 默认值，需要根据实际业务添加
-		Settings:   make(map[string]interface{}), // 默认值，需要根据实际业务添加
-	}
-}
-
-// documentToAggregate 文档转聚合根
-func (r *MongoPlayerRepository) documentToAggregate(doc *PlayerDocument) *player.Player {
-	// 转换状态
-	playerStatus := player.PlayerStatus(doc.Status)
-
-	// 转换位置
-	position := player.Position{
-		X: doc.Position.X,
-		Y: doc.Position.Y,
-		Z: doc.Position.Z,
-	}
-
-	// 转换统计信息
-	stats := player.PlayerStats{
-		HP:      doc.Stats.Health,
-		MaxHP:   doc.Stats.MaxHealth,
-		MP:      doc.Stats.Mana,
-		MaxMP:   doc.Stats.MaxMana,
-		Attack:  doc.Stats.Attack,
-		Defense: doc.Stats.Defense,
-		Speed:   doc.Stats.Speed,
-	}
-
-	// 使用ReconstructPlayer重建Player聚合根
-	return player.ReconstructPlayer(
-		player.PlayerIDFromString(doc.PlayerID),
-		doc.Username,
+	p := player.ReconstructPlayer(
+		playerID,
+		doc.Name,
 		doc.Level,
-		doc.Experience,
-		playerStatus,
+		doc.Exp,
+		status,
 		position,
 		stats,
 		doc.CreatedAt,
 		doc.UpdatedAt,
 		doc.Version,
 	)
-}
 
-// buildFilter 构建查询过滤器
-func (r *MongoPlayerRepository) buildFilter(query *player.PlayerQuery) bson.M {
-	filter := bson.M{}
-
-	if query.Username != "" {
-		filter["username"] = bson.M{"$regex": query.Username, "$options": "i"}
-	}
-
-	if query.Nickname != "" {
-		filter["nickname"] = bson.M{"$regex": query.Nickname, "$options": "i"}
-	}
-
-	if query.MinLevel > 0 {
-		if filter["level"] == nil {
-			filter["level"] = bson.M{}
-		}
-		filter["level"].(bson.M)["$gte"] = query.MinLevel
-	}
-
-	if query.MaxLevel > 0 {
-		if filter["level"] == nil {
-			filter["level"] = bson.M{}
-		}
-		filter["level"].(bson.M)["$lte"] = query.MaxLevel
-	}
-
-	if query.Status != nil {
-		filter["status"] = int(*query.Status)
-	}
-
-	if !query.CreatedAfter.IsZero() {
-		if filter["created_at"] == nil {
-			filter["created_at"] = bson.M{}
-		}
-		filter["created_at"].(bson.M)["$gte"] = query.CreatedAfter
-	}
-
-	if !query.CreatedBefore.IsZero() {
-		if filter["created_at"] == nil {
-			filter["created_at"] = bson.M{}
-		}
-		filter["created_at"].(bson.M)["$lte"] = query.CreatedBefore
-	}
-
-	return filter
-}
-
-// buildOptions 构建查询选项
-func (r *MongoPlayerRepository) buildOptions(query *player.PlayerQuery) *options.FindOptions {
-	opts := options.Find()
-
-	if query.Limit > 0 {
-		opts.SetLimit(int64(query.Limit))
-	}
-
-	if query.Offset > 0 {
-		opts.SetSkip(int64(query.Offset))
-	}
-
-	if query.OrderBy != "" {
-		sortOrder := 1
-		if query.Order == "desc" {
-			sortOrder = -1
-		}
-		opts.SetSort(bson.D{{Key: query.OrderBy, Value: sortOrder}})
-	}
-
-	return opts
-}
-
-// CreateIndexes 创建索引
-func (r *MongoPlayerRepository) CreateIndexes(ctx context.Context) error {
-	indexes := []mongo.IndexModel{
-		{
-			Keys:    bson.D{{Key: "player_id", Value: 1}},
-			Options: options.Index().SetUnique(true),
-		},
-		{
-			Keys:    bson.D{{Key: "username", Value: 1}},
-			Options: options.Index().SetUnique(true),
-		},
-		{
-			Keys: bson.D{{Key: "level", Value: -1}},
-		},
-		{
-			Keys: bson.D{{Key: "status", Value: 1}},
-		},
-		{
-			Keys: bson.D{{Key: "last_login_at", Value: -1}},
-		},
-		{
-			Keys: bson.D{{Key: "created_at", Value: -1}},
-		},
-		{
-			Keys: bson.D{{Key: "vip_level", Value: -1}},
-		},
-	}
-
-	_, err := r.collection.Indexes().CreateMany(ctx, indexes)
-	if err != nil {
-		r.logger.Error("Failed to create player indexes", "error", err)
-		return fmt.Errorf("failed to create player indexes: %w", err)
-	}
-
-	r.logger.Info("Player indexes created successfully")
-	return nil
-}
-
-// FindByName 根据名称查找玩家
-func (r *MongoPlayerRepository) FindByName(ctx context.Context, name string) (*player.Player, error) {
-	filter := bson.M{"username": name}
-
-	var doc PlayerDocument
-	err := r.collection.FindOne(ctx, filter).Decode(&doc)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil
-		}
-		r.logger.Error("Failed to find player by name", "error", err, "name", name)
-		return nil, fmt.Errorf("failed to find player by name: %w", err)
-	}
-
-	return r.documentToAggregate(&doc), nil
-}
-
-// ExistsByName 检查名称是否存在
-func (r *MongoPlayerRepository) ExistsByName(ctx context.Context, name string) bool {
-	filter := bson.M{"username": name}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		r.logger.Error("Failed to check if player exists by name", "error", err, "name", name)
-		return false
-	}
-	return count > 0
+	return p, nil
 }

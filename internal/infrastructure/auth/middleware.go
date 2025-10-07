@@ -10,16 +10,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// AuthMiddleware 认证中间件
+// AuthMiddleware 认证中间�?
 type AuthMiddleware struct {
 	jwtService *JWTService
 	logger     logger.Logger
 }
 
-// NewAuthMiddleware 创建认证中间件
+// NewAuthMiddleware 创建认证中间�?
 func NewAuthMiddleware(jwtService *JWTService, logger logger.Logger) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtService: jwtService,
@@ -27,7 +27,7 @@ func NewAuthMiddleware(jwtService *JWTService, logger logger.Logger) *AuthMiddle
 	}
 }
 
-// RequireAuth HTTP认证中间件
+// RequireAuth HTTP认证中间�?
 func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 从请求头获取令牌
@@ -54,7 +54,7 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		// 将用户信息添加到上下文
+		// 将用户信息添加到上下�?
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Set("email", claims.Email)
@@ -68,10 +68,10 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	}
 }
 
-// RequireRole 角色验证中间件
+// RequireRole 角色验证中间�?
 func (m *AuthMiddleware) RequireRole(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 先进行认证
+		// 先进行认�?
 		m.RequireAuth()(c)
 		if c.IsAborted() {
 			return
@@ -127,7 +127,7 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 		// 从请求头获取令牌
 		token := m.extractTokenFromRequest(c.Request)
 		if token == "" {
-			// 没有令牌，继续处理但不设置用户信息
+			// 没有令牌，继续处理但不设置用户信�?
 			c.Next()
 			return
 		}
@@ -141,7 +141,7 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
-		// 将用户信息添加到上下文
+		// 将用户信息添加到上下�?
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Set("email", claims.Email)
@@ -158,11 +158,11 @@ func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 
 // RateLimitByUser 按用户限流中间件
 func (m *AuthMiddleware) RateLimitByUser(requestsPerMinute int) gin.HandlerFunc {
-	// 简化的限流实现，实际应该使用Redis或其他存储
+	// 简化的限流实现，实际应该使用Redis或其他存�?
 	userRequests := make(map[string][]time.Time)
 
 	return func(c *gin.Context) {
-		// 先进行认证
+		// 先进行认�?
 		m.RequireAuth()(c)
 		if c.IsAborted() {
 			return
@@ -178,7 +178,7 @@ func (m *AuthMiddleware) RateLimitByUser(requestsPerMinute int) gin.HandlerFunc 
 		now := time.Now()
 		oneMinuteAgo := now.Add(-time.Minute)
 
-		// 清理过期的请求记录
+		// 清理过期的请求记�?
 		if requests, exists := userRequests[userIDStr]; exists {
 			validRequests := make([]time.Time, 0)
 			for _, reqTime := range requests {
@@ -189,7 +189,7 @@ func (m *AuthMiddleware) RateLimitByUser(requestsPerMinute int) gin.HandlerFunc 
 			userRequests[userIDStr] = validRequests
 		}
 
-		// 检查是否超过限制
+		// 检查是否超过限�?
 		if len(userRequests[userIDStr]) >= requestsPerMinute {
 			m.logger.Warn("Rate limit exceeded", "user_id", userIDStr, "requests", len(userRequests[userIDStr]))
 			c.JSON(http.StatusTooManyRequests, gin.H{
@@ -208,13 +208,13 @@ func (m *AuthMiddleware) RateLimitByUser(requestsPerMinute int) gin.HandlerFunc 
 
 // extractTokenFromRequest 从请求中提取令牌
 func (m *AuthMiddleware) extractTokenFromRequest(r *http.Request) string {
-	// 从Authorization头获取
+	// 从Authorization头获�?
 	auth := r.Header.Get("Authorization")
 	if auth != "" {
 		return m.jwtService.ExtractTokenFromBearer(auth)
 	}
 
-	// 从查询参数获取
+	// 从查询参数获�?
 	token := r.URL.Query().Get("token")
 	if token != "" {
 		return token
@@ -267,13 +267,13 @@ func IsAuthenticated(c *gin.Context) bool {
 	return exists
 }
 
-// IsAdmin 检查是否是管理员
+// IsAdmin 检查是否是管理�?
 func IsAdmin(c *gin.Context) bool {
 	role, exists := GetUserRoleFromContext(c)
 	return exists && role == "admin"
 }
 
-// HasRole 检查是否具有指定角色
+// HasRole 检查是否具有指定角�?
 func HasRole(c *gin.Context, requiredRole string) bool {
 	role, exists := GetUserRoleFromContext(c)
 	if !exists {
@@ -282,13 +282,13 @@ func HasRole(c *gin.Context, requiredRole string) bool {
 	return role == requiredRole || role == "admin"
 }
 
-// TCPAuthValidator TCP认证验证器
+// TCPAuthValidator TCP认证验证�?
 type TCPAuthValidator struct {
 	jwtService *JWTService
 	logger     logger.Logger
 }
 
-// NewTCPAuthValidator 创建TCP认证验证器
+// NewTCPAuthValidator 创建TCP认证验证�?
 func NewTCPAuthValidator(jwtService *JWTService, logger logger.Logger) *TCPAuthValidator {
 	return &TCPAuthValidator{
 		jwtService: jwtService,
@@ -301,9 +301,9 @@ func (v *TCPAuthValidator) ValidateToken(token string) (*UserClaims, error) {
 	return v.jwtService.ValidateToken(token)
 }
 
-// ValidateTokenWithContext 带上下文的令牌验证
+// ValidateTokenWithContext 带上下文的令牌验�?
 func (v *TCPAuthValidator) ValidateTokenWithContext(ctx context.Context, token string) (*UserClaims, error) {
-	// 检查上下文是否已取消
+	// 检查上下文是否已取�?
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -320,7 +320,7 @@ func (v *TCPAuthValidator) ValidateTokenWithContext(ctx context.Context, token s
 	return claims, nil
 }
 
-// CreateAuthContext 创建认证上下文
+// CreateAuthContext 创建认证上下�?
 func (v *TCPAuthValidator) CreateAuthContext(ctx context.Context, claims *UserClaims) context.Context {
 	ctx = context.WithValue(ctx, "user_id", claims.UserID)
 	ctx = context.WithValue(ctx, "username", claims.Username)
@@ -332,7 +332,7 @@ func (v *TCPAuthValidator) CreateAuthContext(ctx context.Context, claims *UserCl
 	return ctx
 }
 
-// GetUserFromTCPContext 从TCP上下文获取用户信息
+// GetUserFromTCPContext 从TCP上下文获取用户信�?
 func GetUserFromTCPContext(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value("user_claims").(*UserClaims)
 	return claims, ok
@@ -344,13 +344,13 @@ func GetUserIDFromTCPContext(ctx context.Context) (string, bool) {
 	return userID, ok
 }
 
-// GetUserRoleFromTCPContext 从TCP上下文获取用户角色
+// GetUserRoleFromTCPContext 从TCP上下文获取用户角�?
 func GetUserRoleFromTCPContext(ctx context.Context) (string, bool) {
 	role, ok := ctx.Value("role").(string)
 	return role, ok
 }
 
-// RequireTCPRole 检查TCP上下文中的用户角色
+// RequireTCPRole 检查TCP上下文中的用户角�?
 func RequireTCPRole(ctx context.Context, requiredRole string) error {
 	role, exists := GetUserRoleFromTCPContext(ctx)
 	if !exists {

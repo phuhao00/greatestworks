@@ -9,10 +9,10 @@ import (
 
 	playerQueries "greatestworks/application/queries/player"
 	"greatestworks/application/handlers"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// LoginHandler 登录处理器
+// LoginHandler 登录处理�?
 type LoginHandler struct {
 	commandBus *handlers.CommandBus
 	queryBus   *handlers.QueryBus
@@ -20,7 +20,7 @@ type LoginHandler struct {
 	jwtSecret  string
 }
 
-// NewLoginHandler 创建登录处理器
+// NewLoginHandler 创建登录处理�?
 func NewLoginHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logger.Logger, jwtSecret string) *LoginHandler {
 	return &LoginHandler{
 		commandBus: commandBus,
@@ -129,7 +129,7 @@ func (h *LoginHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 生成新令牌
+	// 生成新令�?
 	newToken, expiresAt, err := h.generateJWT(claims.PlayerID, claims.Username, claims.Role)
 	if err != nil {
 		h.logger.Error("Failed to generate new JWT token", "error", err)
@@ -137,7 +137,7 @@ func (h *LoginHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 返回新令牌
+	// 返回新令�?
 	response := &LoginResponse{
 		Token:     newToken,
 		PlayerID:  claims.PlayerID,
@@ -173,8 +173,8 @@ func (h *LoginHandler) Logout(c *gin.Context) {
 	// 记录登出日志
 	h.logger.Info("User logged out", "username", claims.Username, "player_id", claims.PlayerID)
 
-	// 在实际应用中，这里应该将令牌加入黑名单
-	// TODO: 实现令牌黑名单机制
+	// 在实际应用中，这里应该将令牌加入黑名�?
+	// TODO: 实现令牌黑名单机�?
 
 	c.JSON(200, gin.H{"success": true, "message": "Logout successful"})
 }

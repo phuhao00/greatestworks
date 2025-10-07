@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// RPCServer netcore-go RPC服务器
+// RPCServer netcore-go RPC服务�?
 type RPCServer struct {
 	services map[string]Service
 	logger   logger.Logger
@@ -21,7 +21,7 @@ type Service interface {
 	HandleRequest(ctx context.Context, method string, data []byte) ([]byte, error)
 }
 
-// NewRPCServer 创建RPC服务器
+// NewRPCServer 创建RPC服务�?
 func NewRPCServer(logger logger.Logger) *RPCServer {
 	return &RPCServer{
 		services: make(map[string]Service),
@@ -35,7 +35,7 @@ func (s *RPCServer) RegisterService(service Service) {
 	defer s.mu.Unlock()
 
 	s.services[service.GetName()] = service
-	s.logger.Info("RPC服务已注册", "service", service.GetName())
+	s.logger.Info("RPC服务已注�?, "service", service.GetName())
 }
 
 // UnregisterService 注销服务
@@ -54,7 +54,7 @@ func (s *RPCServer) HandleRequest(ctx context.Context, serviceName, method strin
 	s.mu.RUnlock()
 
 	if !exists {
-		return nil, fmt.Errorf("服务不存在: %s", serviceName)
+		return nil, fmt.Errorf("服务不存�? %s", serviceName)
 	}
 
 	return service.HandleRequest(ctx, method, data)
@@ -73,14 +73,14 @@ func (s *RPCServer) GetServices() []string {
 	return services
 }
 
-// Start 启动RPC服务器
+// Start 启动RPC服务�?
 func (s *RPCServer) Start() error {
-	s.logger.Info("RPC服务器启动", "services", s.GetServices())
+	s.logger.Info("RPC服务器启�?, "services", s.GetServices())
 	return nil
 }
 
-// Stop 停止RPC服务器
+// Stop 停止RPC服务�?
 func (s *RPCServer) Stop() error {
-	s.logger.Info("RPC服务器停止")
+	s.logger.Info("RPC服务器停�?)
 	return nil
 }

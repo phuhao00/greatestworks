@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
 // BattleRPCService 战斗RPC服务
@@ -62,7 +62,7 @@ func (s *BattleRPCService) handleCreateBattle(ctx context.Context, data []byte) 
 
 	// return json.Marshal(result)
 
-	// 临时返回空结果
+	// 临时返回空结�?
 	return json.Marshal(map[string]interface{}{"message": "Battle service not implemented"})
 }
 

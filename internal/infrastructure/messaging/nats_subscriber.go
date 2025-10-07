@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"greatestworks/internal/events"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 
 	"github.com/nats-io/nats.go"
 )
 
-// NATSSubscriber NATS消息订阅者
+// NATSSubscriber NATS消息订阅�?
 type NATSSubscriber struct {
 	conn          *nats.Conn
 	logger        logger.Logger
@@ -26,7 +26,7 @@ type NATSSubscriber struct {
 	stats         *SubscriberStats
 }
 
-// SubscriberConfig 订阅者配置
+// SubscriberConfig 订阅者配�?
 type SubscriberConfig struct {
 	SubjectPrefix     string        `json:"subject_prefix" yaml:"subject_prefix"`
 	QueueGroup        string        `json:"queue_group" yaml:"queue_group"`
@@ -38,16 +38,16 @@ type SubscriberConfig struct {
 	DeadLetterSubject string        `json:"dead_letter_subject" yaml:"dead_letter_subject"`
 }
 
-// MessageHandler 消息处理器接口
+// MessageHandler 消息处理器接�?
 type MessageHandler interface {
 	// Handle 处理消息
 	Handle(ctx context.Context, msg *nats.Msg) error
 
-	// GetHandlerName 获取处理器名称
+	// GetHandlerName 获取处理器名�?
 	GetHandlerName() string
 }
 
-// Subscriber 消息订阅者接口
+// Subscriber 消息订阅者接�?
 type Subscriber interface {
 	// Subscribe 订阅主题
 	Subscribe(subject string, handler MessageHandler) error
@@ -64,17 +64,17 @@ type Subscriber interface {
 	// Unsubscribe 取消订阅
 	Unsubscribe(subject string) error
 
-	// Start 启动订阅者
+	// Start 启动订阅�?
 	Start(ctx context.Context) error
 
-	// Stop 停止订阅者
+	// Stop 停止订阅�?
 	Stop() error
 
 	// GetStats 获取统计信息
 	GetStats() *SubscriberStats
 }
 
-// NewNATSSubscriber 创建NATS订阅者
+// NewNATSSubscriber 创建NATS订阅�?
 func NewNATSSubscriber(conn *nats.Conn, config *SubscriberConfig, logger logger.Logger) Subscriber {
 	if config == nil {
 		config = &SubscriberConfig{
@@ -115,7 +115,7 @@ func (s *NATSSubscriber) Subscribe(subject string, handler MessageHandler) error
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// 添加处理器
+	// 添加处理�?
 	s.handlers[fullSubject] = append(s.handlers[fullSubject], handler)
 
 	// 如果已经有订阅，直接返回
@@ -124,7 +124,7 @@ func (s *NATSSubscriber) Subscribe(subject string, handler MessageHandler) error
 		return nil
 	}
 
-	// 创建新订阅
+	// 创建新订�?
 	sub, err := s.conn.Subscribe(fullSubject, s.createMessageCallback(fullSubject))
 	if err != nil {
 		s.logger.Error("Failed to subscribe to subject", "error", err, "subject", fullSubject)
@@ -151,7 +151,7 @@ func (s *NATSSubscriber) SubscribeQueue(subject, queue string, handler MessageHa
 
 	subKey := fmt.Sprintf("%s:%s", fullSubject, queueName)
 
-	// 添加处理器
+	// 添加处理�?
 	s.handlers[subKey] = append(s.handlers[subKey], handler)
 
 	// 如果已经有订阅，直接返回
@@ -190,7 +190,7 @@ func (s *NATSSubscriber) SubscribeEvent(eventType string, handler events.EventHa
 
 // SubscribeEventPattern 订阅事件模式
 func (s *NATSSubscriber) SubscribeEventPattern(pattern string, handler events.EventHandler) error {
-	// 构建完整的事件主题模式
+	// 构建完整的事件主题模�?
 	fullPattern := fmt.Sprintf("%s.events.%s", s.config.SubjectPrefix, pattern)
 
 	// 创建事件处理器包装器
@@ -228,7 +228,7 @@ func (s *NATSSubscriber) Unsubscribe(subject string) error {
 	return nil
 }
 
-// Start 启动订阅者
+// Start 启动订阅�?
 func (s *NATSSubscriber) Start(ctx context.Context) error {
 	s.logger.Info("Starting NATS subscriber")
 
@@ -237,7 +237,7 @@ func (s *NATSSubscriber) Start(ctx context.Context) error {
 		go s.collectMetrics()
 	}
 
-	// 等待上下文取消
+	// 等待上下文取�?
 	select {
 	case <-ctx.Done():
 		s.logger.Info("NATS subscriber context cancelled")
@@ -248,14 +248,14 @@ func (s *NATSSubscriber) Start(ctx context.Context) error {
 	}
 }
 
-// Stop 停止订阅者
+// Stop 停止订阅�?
 func (s *NATSSubscriber) Stop() error {
 	s.logger.Info("Stopping NATS subscriber")
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// 取消所有订阅
+	// 取消所有订�?
 	for subject, sub := range s.subscriptions {
 		if err := sub.Unsubscribe(); err != nil {
 			s.logger.Error("Failed to unsubscribe during stop", "error", err, "subject", subject)
@@ -266,7 +266,7 @@ func (s *NATSSubscriber) Stop() error {
 	s.subscriptions = make(map[string]*nats.Subscription)
 	s.handlers = make(map[string][]MessageHandler)
 
-	// 取消上下文
+	// 取消上下�?
 	s.cancel()
 
 	s.logger.Info("NATS subscriber stopped successfully")
@@ -319,7 +319,7 @@ func (s *NATSSubscriber) createMessageCallback(subjectKey string) nats.MsgHandle
 		// 更新统计信息
 		s.updateStats(subjectKey, true, 0)
 
-		// 获取处理器
+		// 获取处理�?
 		s.mu.RLock()
 		handlers := s.handlers[subjectKey]
 		s.mu.RUnlock()
@@ -335,7 +335,7 @@ func (s *NATSSubscriber) createMessageCallback(subjectKey string) nats.MsgHandle
 				s.logger.Error("Message handling failed", "error", err, "subject", msg.Subject, "handler", handler.GetHandlerName())
 				s.updateStats(subjectKey, false, time.Since(start))
 
-				// 发送到死信队列（如果配置了）
+				// 发送到死信队列（如果配置了�?
 				if s.config.DeadLetterSubject != "" {
 					s.sendToDeadLetter(msg, err)
 				}
@@ -412,11 +412,11 @@ func (s *NATSSubscriber) sendToDeadLetter(msg *nats.Msg, err error) {
 
 // getRetryCount 获取重试次数
 func (s *NATSSubscriber) getRetryCount(msg *nats.Msg) int {
-	// 从消息头部获取重试次数
+	// 从消息头部获取重试次�?
 	if msg.Header != nil {
 		if retryCountStr := msg.Header.Get("Retry-Count"); retryCountStr != "" {
 			// 解析重试次数
-			// 这里简化处理，实际应该解析字符串
+			// 这里简化处理，实际应该解析字符�?
 			return 1
 		}
 	}
@@ -475,7 +475,7 @@ func (w *eventHandlerWrapper) GetHandlerName() string {
 
 // parseEvent 解析事件
 func (w *eventHandlerWrapper) parseEvent(data []byte) (DomainEvent, error) {
-	// 解析事件包装器
+	// 解析事件包装�?
 	var eventWrapper map[string]interface{}
 	if err := json.Unmarshal(data, &eventWrapper); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal event wrapper: %w", err)

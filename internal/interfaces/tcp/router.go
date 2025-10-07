@@ -1,10 +1,11 @@
 package tcp
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
-	// "greatestworks/internal/infrastructure/logger" // 暂时注释掉
+	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/tcp/connection"
 	"greatestworks/internal/interfaces/tcp/handlers"
 	"greatestworks/internal/interfaces/tcp/protocol"
@@ -14,18 +15,18 @@ import (
 
 // MessageHandler 消息处理器接口
 type MessageHandler interface {
-	HandleMessage(conn *connection.Connection, msg *protocol.Message) error
+	HandleMessage(session *connection.Session, msg *protocol.Message) error
 }
 
 // Router TCP消息路由器
 type Router struct {
 	handlers map[uint16]MessageHandler
 	mutex    sync.RWMutex
-	logger   Logger
+	logger   logging.Logger
 }
 
 // NewRouter 创建新的路由器
-func NewRouter(logger Logger) *Router {
+func NewRouter(logger logging.Logger) *Router {
 	return &Router{
 		handlers: make(map[uint16]MessageHandler),
 		logger:   logger,
@@ -124,7 +125,7 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 }
 
 // RouteMessage 路由消息到对应的处理器
-func (r *Router) RouteMessage(conn *connection.Connection, msg *protocol.Message) error {
+func (r *Router) RouteMessage(session *connection.Session, msg *protocol.Message) error {
 	r.mutex.RLock()
 	handler, exists := r.handlers[uint16(msg.Header.MessageType)]
 	r.mutex.RUnlock()
@@ -132,27 +133,27 @@ func (r *Router) RouteMessage(conn *connection.Connection, msg *protocol.Message
 	if !exists {
 		r.logger.Info("No handler found for message type",
 			"message_type", msg.Header.MessageType,
-			"conn_id", conn.ID,
-			"player_id", conn.PlayerID)
-		return r.sendUnhandledMessageError(conn, msg)
+			"session_id", session.ID,
+			"user_id", session.UserID)
+		return r.sendUnhandledMessageError(session, msg)
 	}
 
 	// 记录消息处理日志
 	r.logger.Debug("Routing message",
 		"message_type", msg.Header.MessageType,
 		"message_id", msg.Header.MessageID,
-		"conn_id", conn.ID,
-		"player_id", conn.PlayerID)
+		"session_id", session.ID,
+		"user_id", session.UserID)
 
 	// 调用处理器
-	err := handler.HandleMessage(conn, msg)
+	err := handler.HandleMessage(session, msg)
 	if err != nil {
 		r.logger.Error("Message handler error",
 			"error", err,
 			"message_type", msg.Header.MessageType,
 			"message_id", msg.Header.MessageID,
-			"conn_id", conn.ID,
-			"player_id", conn.PlayerID)
+			"session_id", session.ID,
+			"user_id", session.UserID)
 		return err
 	}
 
@@ -208,7 +209,7 @@ func (r *Router) IsMessageTypeSupported(messageType uint16) bool {
 }
 
 // sendUnhandledMessageError 发送未处理消息错误
-func (r *Router) sendUnhandledMessageError(conn *connection.Connection, msg *protocol.Message) error {
+func (r *Router) sendUnhandledMessageError(session *connection.Session, msg *protocol.Message) error {
 	errorMsg := &protocol.ErrorResponse{
 		BaseResponse: protocol.NewBaseResponse(false, fmt.Sprintf("Unhandled message type: %d", msg.Header.MessageType)),
 		ErrorCode:    protocol.ErrCodeInvalidMessage,
@@ -228,7 +229,13 @@ func (r *Router) sendUnhandledMessageError(conn *connection.Connection, msg *pro
 		Payload: errorMsg,
 	}
 
-	return conn.SendMessage(errorResponse)
+	// 序列化消息并发送
+	data, err := json.Marshal(errorResponse)
+	if err != nil {
+		return fmt.Errorf("序列化错误消息失败: %w", err)
+	}
+
+	return session.Send(data)
 }
 
 // ValidateMessage 验证消息格式

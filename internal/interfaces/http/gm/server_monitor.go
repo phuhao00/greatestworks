@@ -9,7 +9,7 @@ import (
 
 	"greatestworks/application/handlers"
 	// "greatestworks/application/queries" // TODO: 实现查询系统
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/http/auth"
 )
 
@@ -27,7 +27,7 @@ func NewServerMonitorHandler(queryBus *handlers.QueryBus, logger logger.Logger) 
 	}
 }
 
-// ServerStatusResponse 服务器状态响应
+// ServerStatusResponse 服务器状态响�?
 type ServerStatusResponse struct {
 	ServerInfo  ServerInfo  `json:"server_info"`
 	SystemInfo  SystemInfo  `json:"system_info"`
@@ -38,7 +38,7 @@ type ServerStatusResponse struct {
 	Timestamp   time.Time   `json:"timestamp"`
 }
 
-// ServerInfo 服务器信息
+// ServerInfo 服务器信�?
 type ServerInfo struct {
 	Name        string    `json:"name"`
 	Version     string    `json:"version"`
@@ -120,7 +120,7 @@ type MetricsHistoryResponse struct {
 	DataPoints []MetricDataPoint `json:"data_points"`
 }
 
-// MetricDataPoint 指标数据点
+// MetricDataPoint 指标数据�?
 type MetricDataPoint struct {
 	Timestamp time.Time `json:"timestamp"`
 	Value     float64   `json:"value"`
@@ -154,12 +154,12 @@ type AlertSummary struct {
 	Total    int `json:"total"`
 }
 
-// GetServerStatus 获取服务器状态
+// GetServerStatus 获取服务器状�?
 func (h *ServerMonitorHandler) GetServerStatus(c *gin.Context) {
 	// ctx := context.Background()
 
-	// 查询服务器状态
-	// TODO: 修复system包引用
+	// 查询服务器状�?
+	// TODO: 修复system包引�?
 	// query := &system.GetServerStatusQuery{}
 	// result, err := handlers.ExecuteQueryTyped[*system.GetServerStatusQuery, *system.GetServerStatusResult](ctx, h.queryBus, query)
 	// result := &struct{}{} // TODO: 修复system.GetServerStatusResult类型
@@ -169,11 +169,11 @@ func (h *ServerMonitorHandler) GetServerStatus(c *gin.Context) {
 	// 	return
 	// }
 
-	// 获取系统运行时信息
+	// 获取系统运行时信�?
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	// 构造响应
+	// 构造响�?
 	response := &ServerStatusResponse{
 		ServerInfo: ServerInfo{
 			Name:        "",         // TODO: result.ServerName,
@@ -268,7 +268,7 @@ func (h *ServerMonitorHandler) GetMetricsHistory(c *gin.Context) {
 	// ctx := context.Background()
 
 	// 查询指标历史数据
-	// TODO: 修复system包引用
+	// TODO: 修复system包引�?
 	// query := &system.GetMetricsHistoryQuery{
 	// 	Metric:    req.Metric,
 	// 	TimeRange: req.TimeRange,
@@ -283,7 +283,7 @@ func (h *ServerMonitorHandler) GetMetricsHistory(c *gin.Context) {
 	// 	return
 	// }
 
-	// 构造响应
+	// 构造响�?
 	// TODO: 修复result.DataPoints
 	// dataPoints := make([]MetricDataPoint, len(result.DataPoints))
 	// for i, dp := range result.DataPoints {
@@ -314,7 +314,7 @@ func (h *ServerMonitorHandler) GetAlerts(c *gin.Context) {
 	// ctx := context.Background()
 
 	// 查询告警信息
-	// TODO: 修复system包引用
+	// TODO: 修复system包引�?
 	// query := &system.GetAlertsQuery{}
 	// result, err := handlers.ExecuteQueryTyped[*system.GetAlertsQuery, *system.GetAlertsResult](ctx, h.queryBus, query)
 	// result := &struct{}{} // TODO: 修复system.GetAlertsResult类型
@@ -324,7 +324,7 @@ func (h *ServerMonitorHandler) GetAlerts(c *gin.Context) {
 	// 	return
 	// }
 
-	// 构造响应
+	// 构造响�?
 	// TODO: 修复result.ActiveAlerts
 	// activeAlerts := make([]Alert, len(result.ActiveAlerts))
 	// for i, alert := range result.ActiveAlerts {
@@ -397,7 +397,7 @@ func (h *ServerMonitorHandler) GetOnlinePlayers(c *gin.Context) {
 	// ctx := context.Background()
 
 	// 查询在线玩家
-	// TODO: 修复system包引用
+	// TODO: 修复system包引�?
 	// query := &system.GetOnlinePlayersQuery{
 	// 	Page:     page,
 	// 	PageSize: pageSize,
@@ -410,7 +410,7 @@ func (h *ServerMonitorHandler) GetOnlinePlayers(c *gin.Context) {
 	// 	return
 	// }
 
-	// 构造响应
+	// 构造响�?
 	// TODO: 修复result.Players
 	// players := make([]map[string]interface{}, len(result.Players))
 	// for i, player := range result.Players {
@@ -451,7 +451,7 @@ func (h *ServerMonitorHandler) GetOnlinePlayers(c *gin.Context) {
 	c.JSON(200, gin.H{"data": response, "success": true})
 }
 
-// RestartServer 重启服务器（仅超级管理员）
+// RestartServer 重启服务器（仅超级管理员�?
 func (h *ServerMonitorHandler) RestartServer(c *gin.Context) {
 	type RestartRequest struct {
 		Reason       string `json:"reason" binding:"required"`
@@ -473,10 +473,10 @@ func (h *ServerMonitorHandler) RestartServer(c *gin.Context) {
 	h.logger.Warn("Server restart initiated by GM", "gm_user", gmUser.Username, "reason", req.Reason, "delay_minutes", req.DelayMinutes)
 
 	// TODO: 实现服务器重启逻辑
-	// 1. 通知所有在线玩家
+	// 1. 通知所有在线玩�?
 	// 2. 等待延迟时间
-	// 3. 优雅关闭服务器
-	// 4. 重启服务器
+	// 3. 优雅关闭服务�?
+	// 4. 重启服务�?
 
 	response := map[string]interface{}{
 		"message":       "Server restart scheduled",

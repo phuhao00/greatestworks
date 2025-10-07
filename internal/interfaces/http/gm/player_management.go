@@ -9,18 +9,18 @@ import (
 	playerCmd "greatestworks/application/commands/player"
 	"greatestworks/application/handlers"
 	playerQuery "greatestworks/application/queries/player"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/http/auth"
 )
 
-// PlayerManagementHandler GM玩家管理处理器
+// PlayerManagementHandler GM玩家管理处理�?
 type PlayerManagementHandler struct {
 	commandBus *handlers.CommandBus
 	queryBus   *handlers.QueryBus
 	logger     logger.Logger
 }
 
-// NewPlayerManagementHandler 创建GM玩家管理处理器
+// NewPlayerManagementHandler 创建GM玩家管理处理�?
 func NewPlayerManagementHandler(commandBus *handlers.CommandBus, queryBus *handlers.QueryBus, logger logger.Logger) *PlayerManagementHandler {
 	return &PlayerManagementHandler{
 		commandBus: commandBus,
@@ -64,7 +64,7 @@ type PlayerUpdateRequest struct {
 type PlayerBanRequest struct {
 	PlayerID  string    `json:"player_id" binding:"required"`
 	Reason    string    `json:"reason" binding:"required"`
-	Duration  int       `json:"duration"` // 封禁时长（小时），0表示永久
+	Duration  int       `json:"duration"` // 封禁时长（小时）�?表示永久
 	BanType   string    `json:"ban_type" binding:"required,oneof=login chat trade all"`
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
 }
@@ -103,7 +103,7 @@ type PositionResponse struct {
 	Z float64 `json:"z"`
 }
 
-// StatsResponse 属性响应
+// StatsResponse 属性响�?
 type StatsResponse struct {
 	HP      int `json:"hp"`
 	MaxHP   int `json:"max_hp"`
@@ -133,7 +133,7 @@ func (h *PlayerManagementHandler) SearchPlayers(c *gin.Context) {
 		return
 	}
 
-	// 设置默认值
+	// 设置默认�?
 	if req.Page == 0 {
 		req.Page = 1
 	}
@@ -173,7 +173,7 @@ func (h *PlayerManagementHandler) SearchPlayers(c *gin.Context) {
 	// 	return
 	// }
 
-	// 构造响应
+	// 构造响�?
 	players := make([]*GMPlayerResponse, len(result.Players))
 	for i, p := range result.Players {
 		players[i] = &GMPlayerResponse{
@@ -264,7 +264,7 @@ func (h *PlayerManagementHandler) GetPlayerDetail(c *gin.Context) {
 		return
 	}
 
-	// 构造详细响应
+	// 构造详细响�?
 	p := result.Player
 	response := &GMPlayerResponse{
 		ID:       p.ID,

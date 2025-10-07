@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// TokenHandler Token管理处理器
+// TokenHandler Token管理处理�?
 type TokenHandler struct {
 	jwtSecret string
 	logger    logger.Logger
 }
 
-// NewTokenHandler 创建Token处理器
+// NewTokenHandler 创建Token处理�?
 func NewTokenHandler(jwtSecret string, logger logger.Logger) *TokenHandler {
 	return &TokenHandler{
 		jwtSecret: jwtSecret,
@@ -73,7 +73,7 @@ func (h *TokenHandler) ValidateToken(c *gin.Context) {
 		return
 	}
 
-	// 检查令牌是否即将过期
+	// 检查令牌是否即将过�?
 	timeUntilExpiry := time.Until(claims.ExpiresAt.Time)
 	message := "Token is valid"
 	if timeUntilExpiry < time.Hour {
@@ -109,7 +109,7 @@ func (h *TokenHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 检查令牌是否可以刷新（距离过期时间不超过7天）
+	// 检查令牌是否可以刷新（距离过期时间不超�?天）
 	timeUntilExpiry := time.Until(claims.ExpiresAt.Time)
 	if timeUntilExpiry > 7*24*time.Hour {
 		h.logger.Warn("Token refresh attempted too early", "player_id", claims.PlayerID, "time_until_expiry", timeUntilExpiry)
@@ -117,7 +117,7 @@ func (h *TokenHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	// 生成新令牌
+	// 生成新令�?
 	newToken, expiresAt, err := h.generateJWT(claims.PlayerID, claims.Username, claims.Role)
 	if err != nil {
 		h.logger.Error("Failed to generate new JWT token", "error", err)
@@ -128,7 +128,7 @@ func (h *TokenHandler) RefreshToken(c *gin.Context) {
 	// 记录令牌刷新日志
 	h.logger.Info("Token refreshed successfully", "player_id", claims.PlayerID, "username", claims.Username)
 
-	// 返回新令牌
+	// 返回新令�?
 	response := &LoginResponse{
 		Token:     newToken,
 		PlayerID:  claims.PlayerID,
@@ -157,8 +157,8 @@ func (h *TokenHandler) RevokeToken(c *gin.Context) {
 		return
 	}
 
-	// 在实际应用中，这里应该将令牌加入黑名单
-	// TODO: 实现令牌黑名单机制（Redis存储）
+	// 在实际应用中，这里应该将令牌加入黑名�?
+	// TODO: 实现令牌黑名单机制（Redis存储�?
 	h.addToBlacklist(req.Token, claims.ExpiresAt.Time)
 
 	// 记录撤销日志
@@ -195,7 +195,7 @@ func (h *TokenHandler) GetTokenInfo(c *gin.Context) {
 	c.JSON(200, gin.H{"data": response, "success": true})
 }
 
-// RevokeAllTokens 撤销用户的所有令牌
+// RevokeAllTokens 撤销用户的所有令�?
 func (h *TokenHandler) RevokeAllTokens(c *gin.Context) {
 	// 获取当前用户信息
 	claims, exists := c.Get("token_claims")
@@ -211,7 +211,7 @@ func (h *TokenHandler) RevokeAllTokens(c *gin.Context) {
 		return
 	}
 
-	// 在实际应用中，这里应该撤销用户的所有令牌
+	// 在实际应用中，这里应该撤销用户的所有令�?
 	// TODO: 实现用户令牌全部撤销机制
 	h.revokeAllUserTokens(jwtClaims.PlayerID)
 
@@ -273,28 +273,28 @@ func (h *TokenHandler) generateJWT(playerID, username, role string) (string, tim
 
 // addToBlacklist 将令牌加入黑名单
 func (h *TokenHandler) addToBlacklist(token string, expiresAt time.Time) {
-	// TODO: 实现Redis黑名单存储
+	// TODO: 实现Redis黑名单存�?
 	// 这里应该将令牌存储到Redis中，设置过期时间为令牌的过期时间
 	h.logger.Debug("Token added to blacklist", "token_hash", h.hashToken(token), "expires_at", expiresAt)
 }
 
 // isTokenBlacklisted 检查令牌是否在黑名单中
 func (h *TokenHandler) isTokenBlacklisted(token string) bool {
-	// TODO: 实现Redis黑名单检查
-	// 这里应该从Redis中检查令牌是否存在
+	// TODO: 实现Redis黑名单检�?
+	// 这里应该从Redis中检查令牌是否存�?
 	return false // 临时返回false
 }
 
-// revokeAllUserTokens 撤销用户的所有令牌
+// revokeAllUserTokens 撤销用户的所有令�?
 func (h *TokenHandler) revokeAllUserTokens(playerID string) {
 	// TODO: 实现用户令牌全部撤销
 	// 可以通过在Redis中设置用户的令牌版本号来实现
 	h.logger.Debug("All tokens revoked for user", "player_id", playerID)
 }
 
-// hashToken 对令牌进行哈希处理（用于存储）
+// hashToken 对令牌进行哈希处理（用于存储�?
 func (h *TokenHandler) hashToken(token string) string {
 	// TODO: 实现令牌哈希
-	// 可以使用SHA256等哈希算法
+	// 可以使用SHA256等哈希算�?
 	return "hashed_" + token[:10] // 临时实现
 }

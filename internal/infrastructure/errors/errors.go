@@ -8,15 +8,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 )
 
-// ErrorCode 错误码类型
+// ErrorCode 错误码类�?
 type ErrorCode int
 
 // 预定义错误码
 const (
-	// 通用错误码 (1000-1999)
+	// 通用错误�?(1000-1999)
 	ErrUnknown ErrorCode = 1000 + iota
 	ErrInternalServer
 	ErrInvalidRequest
@@ -28,7 +28,7 @@ const (
 	ErrRateLimitExceeded
 	ErrMaintenanceMode
 
-	// 认证错误码 (2000-2999)
+	// 认证错误�?(2000-2999)
 	ErrUnauthorized ErrorCode = 2000 + iota
 	ErrInvalidToken
 	ErrTokenExpired
@@ -40,7 +40,7 @@ const (
 	ErrInsufficientPrivileges
 	ErrSessionExpired
 
-	// 用户错误码 (3000-3999)
+	// 用户错误�?(3000-3999)
 	ErrUserNotFound ErrorCode = 3000 + iota
 	ErrUserAlreadyExists
 	ErrInvalidUserData
@@ -52,7 +52,7 @@ const (
 	ErrUserSuspended
 	ErrEmailNotVerified
 
-	// 玩家错误码 (4000-4999)
+	// 玩家错误�?(4000-4999)
 	ErrPlayerNotFound ErrorCode = 4000 + iota
 	ErrPlayerAlreadyExists
 	ErrInvalidPlayerData
@@ -64,7 +64,7 @@ const (
 	ErrInsufficientGold
 	ErrInventoryFull
 
-	// 战斗错误码 (5000-5999)
+	// 战斗错误�?(5000-5999)
 	ErrBattleNotFound ErrorCode = 5000 + iota
 	ErrBattleAlreadyExists
 	ErrBattleFull
@@ -88,7 +88,7 @@ const (
 	ErrMigrationFailed
 	ErrBackupFailed
 
-	// 网络错误码 (7000-7999)
+	// 网络错误�?(7000-7999)
 	ErrConnectionFailed ErrorCode = 7000 + iota
 	ErrConnectionTimeout
 	ErrConnectionLost
@@ -139,7 +139,7 @@ func (e *AppError) WithDetails(details string) *AppError {
 	return e
 }
 
-// WithMetadata 添加元数据
+// WithMetadata 添加元数�?
 func (e *AppError) WithMetadata(key string, value interface{}) *AppError {
 	if e.Metadata == nil {
 		e.Metadata = make(map[string]interface{})
@@ -225,7 +225,7 @@ func WrapError(err error, code ErrorCode, message string) *AppError {
 		return nil
 	}
 
-	// 如果已经是AppError，更新信息
+	// 如果已经是AppError，更新信�?
 	if appErr, ok := err.(*AppError); ok {
 		appErr.Code = code
 		appErr.Message = message
@@ -241,14 +241,14 @@ func WrapError(err error, code ErrorCode, message string) *AppError {
 	}
 }
 
-// getStack 获取调用栈
+// getStack 获取调用�?
 func getStack() string {
 	buf := make([]byte, 1024)
 	n := runtime.Stack(buf, false)
 	return string(buf[:n])
 }
 
-// 预定义错误
+// 预定义错�?
 var (
 	// 通用错误
 	ErrInternal         = NewError(ErrInternalServer, "Internal server error")
@@ -286,19 +286,19 @@ var (
 	ErrNotInBattleErr    = NewError(ErrNotInBattle, "Not in battle")
 )
 
-// ErrorHandler 错误处理器
+// ErrorHandler 错误处理�?
 type ErrorHandler struct {
 	logger logger.Logger
 }
 
-// NewErrorHandler 创建错误处理器
+// NewErrorHandler 创建错误处理�?
 func NewErrorHandler(logger logger.Logger) *ErrorHandler {
 	return &ErrorHandler{
 		logger: logger,
 	}
 }
 
-// HandleError HTTP错误处理中间件
+// HandleError HTTP错误处理中间�?
 func (h *ErrorHandler) HandleError() gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
 		var err error
@@ -318,7 +318,7 @@ func (h *ErrorHandler) HandleError() gin.HandlerFunc {
 			"method", c.Request.Method,
 			"stack", getStack())
 
-		// 创建内部服务器错误
+		// 创建内部服务器错�?
 		appErr := NewErrorWithCause(ErrInternalServer, "Internal server error", err)
 		h.HandleAppError(c, appErr)
 	})
@@ -344,7 +344,7 @@ func (h *ErrorHandler) HandleAppError(c *gin.Context, err *AppError) {
 	// 记录错误
 	h.logError(c, err)
 
-	// 构造响应
+	// 构造响�?
 	response := h.buildErrorResponse(err)
 
 	// 返回错误响应
@@ -377,7 +377,7 @@ func (h *ErrorHandler) logError(c *gin.Context, err *AppError) {
 
 	// 根据错误级别记录日志
 	if err.Code >= 6000 || err.Code == ErrInternalServer {
-		// 系统级错误
+		// 系统级错�?
 		logFields = append(logFields, "stack", err.Stack)
 		h.logger.Error("System error occurred", logFields...)
 	} else if err.Code >= 2000 && err.Code < 3000 {
@@ -389,7 +389,7 @@ func (h *ErrorHandler) logError(c *gin.Context, err *AppError) {
 	}
 }
 
-// buildErrorResponse 构造错误响应
+// buildErrorResponse 构造错误响�?
 func (h *ErrorHandler) buildErrorResponse(err *AppError) map[string]interface{} {
 	response := map[string]interface{}{
 		"success":   false,
@@ -428,7 +428,7 @@ func IsAppError(err error) (*AppError, bool) {
 	return appErr, ok
 }
 
-// GetErrorCode 获取错误码
+// GetErrorCode 获取错误�?
 func GetErrorCode(err error) ErrorCode {
 	if appErr, ok := IsAppError(err); ok {
 		return appErr.Code
@@ -436,7 +436,7 @@ func GetErrorCode(err error) ErrorCode {
 	return ErrUnknown
 }
 
-// IsErrorCode 检查是否是指定错误码
+// IsErrorCode 检查是否是指定错误�?
 func IsErrorCode(err error, code ErrorCode) bool {
 	return GetErrorCode(err) == code
 }

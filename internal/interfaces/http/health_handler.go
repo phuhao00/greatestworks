@@ -4,58 +4,78 @@ import (
 	"net/http"
 	"time"
 
+	"greatestworks/internal/infrastructure/logging"
+
 	"github.com/gin-gonic/gin"
-	"greatestworks/internal/infrastructure/logger"
 )
 
 // HealthHandler 健康检查处理器
 type HealthHandler struct {
-	logger logger.Logger
+	logger logging.Logger
 }
 
 // NewHealthHandler 创建健康检查处理器
-func NewHealthHandler(logger logger.Logger) *HealthHandler {
+func NewHealthHandler(logger logging.Logger) *HealthHandler {
 	return &HealthHandler{
 		logger: logger,
 	}
 }
 
-// Check 健康检查
-func (h *HealthHandler) Check(c *gin.Context) {
-	response := map[string]interface{}{
+// HealthCheck 健康检查
+func (h *HealthHandler) HealthCheck(c *gin.Context) {
+	h.logger.Info("健康检查请求")
+
+	// TODO: 实现具体的健康检查逻辑
+	// 1. 检查数据库连接
+	// 2. 检查缓存连接
+	// 3. 检查其他依赖服务
+
+	c.JSON(http.StatusOK, gin.H{
 		"status":    "ok",
-		"timestamp": time.Now().Unix(),
-		"service":   "greatestworks",
+		"message":   "服务运行正常",
+		"timestamp": time.Now().Format(time.RFC3339),
 		"version":   "1.0.0",
-	}
-
-	c.JSON(http.StatusOK, response)
+	})
 }
 
-// Ready 就绪检查
-func (h *HealthHandler) Ready(c *gin.Context) {
-	// TODO: 添加依赖服务检查逻辑
-	// 例如：数据库连接、缓存连接等
+// ReadinessCheck 就绪检查
+func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
+	h.logger.Info("就绪检查请求")
 
-	response := map[string]interface{}{
+	// TODO: 实现具体的就绪检查逻辑
+	// 1. 检查所有依赖服务是否就绪
+	// 2. 检查数据库连接是否正常
+	// 3. 检查缓存连接是否正常
+
+	c.JSON(http.StatusOK, gin.H{
 		"status":    "ready",
-		"timestamp": time.Now().Unix(),
-		"checks": map[string]string{
-			"database": "ok",
-			"cache":    "ok",
-		},
-	}
-
-	c.JSON(http.StatusOK, response)
+		"message":   "服务已就绪",
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
 }
 
-// Live 存活检查
-func (h *HealthHandler) Live(c *gin.Context) {
-	response := map[string]interface{}{
-		"status":    "alive",
-		"timestamp": time.Now().Unix(),
-		"uptime":    time.Since(time.Now()).Seconds(), // TODO: 实际启动时间
-	}
+// LivenessCheck 存活检查
+func (h *HealthHandler) LivenessCheck(c *gin.Context) {
+	h.logger.Info("存活检查请求")
 
-	c.JSON(http.StatusOK, response)
+	// TODO: 实现具体的存活检查逻辑
+	// 1. 检查服务是否还在运行
+	// 2. 检查内存使用情况
+	// 3. 检查CPU使用情况
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":    "alive",
+		"message":   "服务存活",
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
+}
+
+// RegisterRoutes 注册路由
+func (h *HealthHandler) RegisterRoutes(router *gin.Engine) {
+	health := router.Group("/health")
+	{
+		health.GET("/", h.HealthCheck)
+		health.GET("/ready", h.ReadinessCheck)
+		health.GET("/live", h.LivenessCheck)
+	}
 }

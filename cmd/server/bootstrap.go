@@ -12,7 +12,6 @@ import (
 
 	"greatestworks/application/handlers"
 	"greatestworks/application/services"
-	"greatestworks/internal/infrastructure/logger"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/infrastructure/monitoring"
 	"greatestworks/internal/infrastructure/persistence"
@@ -39,7 +38,7 @@ type Bootstrap struct {
 
 	// Game server specific fields
 	Logger       logging.Logger
-	Metrics      *monitoring.PrometheusRegistry
+	Metrics      *monitoring.MetricsCollector
 	ShutdownChan chan os.Signal
 }
 
@@ -90,7 +89,7 @@ func (sb *ServerBootstrap) Initialize() error {
 // initializeLogging initializes the logging system
 func (sb *ServerBootstrap) initializeLogging() error {
 	// 使用简单的控制台日志
-	logger, err := logging.NewConsoleLogger(&logging.Config{})
+	logger, err := logging.NewSimpleLogger(&logging.Config{})
 	if err != nil {
 		return err
 	}
@@ -101,7 +100,7 @@ func (sb *ServerBootstrap) initializeLogging() error {
 // initializeMetrics initializes the monitoring system
 func (sb *ServerBootstrap) initializeMetrics() error {
 	// 使用简单的监控注册表
-	registry := monitoring.NewPrometheusRegistry()
+	registry := monitoring.NewMetricsCollector()
 	sb.bootstrap.Metrics = registry
 	return nil
 }
@@ -325,32 +324,126 @@ func (s *SimpleLoggerAdapter) Trace(msg string, args ...interface{}) {
 	s.logger.Trace(msg, args...)
 }
 
-func (s *SimpleLoggerAdapter) WithFields(fields map[string]interface{}) logger.Logger {
+func (s *SimpleLoggerAdapter) WithFields(fields logging.Fields) logging.Logger {
 	return s
 }
 
-func (s *SimpleLoggerAdapter) WithField(key string, value interface{}) logger.Logger {
+func (s *SimpleLoggerAdapter) WithField(key string, value interface{}) logging.Logger {
 	return s
 }
 
-func (s *SimpleLoggerAdapter) WithError(err error) logger.Logger {
+func (s *SimpleLoggerAdapter) WithError(err error) logging.Logger {
 	return s
 }
 
-func (s *SimpleLoggerAdapter) SetLevel(level logger.LogLevel) {
+func (s *SimpleLoggerAdapter) SetLevel(level logging.Level) {
 	// 简单实现，不做任何操作
 }
 
-func (s *SimpleLoggerAdapter) GetLevel() logger.LogLevel {
-	return logger.LevelInfo
+func (s *SimpleLoggerAdapter) GetLevel() logging.Level {
+	return logging.InfoLevel
 }
 
-func (s *SimpleLoggerAdapter) SetFormatter(formatter logger.Formatter) {
+func (s *SimpleLoggerAdapter) SetFormatter(formatter interface{}) {
 	// 简单实现，不做任何操作
 }
 
-func (s *SimpleLoggerAdapter) AddHook(hook logger.Hook) {
+func (s *SimpleLoggerAdapter) AddHook(hook interface{}) {
 	// 简单实现，不做任何操作
+}
+
+// 实现logging.Logger接口的Context方法
+func (s *SimpleLoggerAdapter) TraceContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Trace(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) DebugContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Debug(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) InfoContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Info(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) WarnContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Warn(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) ErrorContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Error(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) FatalContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Fatal(msg, args...)
+}
+
+func (s *SimpleLoggerAdapter) PanicContext(ctx context.Context, msg string, args ...interface{}) {
+	s.logger.Panic(msg, args...)
+}
+
+// 实现logging.Logger接口的其他方法
+func (s *SimpleLoggerAdapter) TraceWithFields(msg string, fields logging.Fields) {
+	s.logger.Trace(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) DebugWithFields(msg string, fields logging.Fields) {
+	s.logger.Debug(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) InfoWithFields(msg string, fields logging.Fields) {
+	s.logger.Info(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) WarnWithFields(msg string, fields logging.Fields) {
+	s.logger.Warn(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) ErrorWithFields(msg string, fields logging.Fields) {
+	s.logger.Error(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) FatalWithFields(msg string, fields logging.Fields) {
+	s.logger.Fatal(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) PanicWithFields(msg string, fields logging.Fields) {
+	s.logger.Panic(msg, fields)
+}
+
+func (s *SimpleLoggerAdapter) TraceWithError(err error, msg string, args ...interface{}) {
+	s.logger.Trace(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) DebugWithError(err error, msg string, args ...interface{}) {
+	s.logger.Debug(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) InfoWithError(err error, msg string, args ...interface{}) {
+	s.logger.Info(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) WarnWithError(err error, msg string, args ...interface{}) {
+	s.logger.Warn(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) ErrorWithError(err error, msg string, args ...interface{}) {
+	s.logger.Error(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) FatalWithError(err error, msg string, args ...interface{}) {
+	s.logger.Fatal(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) PanicWithError(err error, msg string, args ...interface{}) {
+	s.logger.Panic(msg, append([]interface{}{err}, args...)...)
+}
+
+func (s *SimpleLoggerAdapter) WithContext(ctx context.Context) logging.Logger {
+	return s
+}
+
+func (s *SimpleLoggerAdapter) Flush() error {
+	return nil
 }
 
 func (s *SimpleLoggerAdapter) Close() error {

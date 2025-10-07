@@ -6,20 +6,20 @@ import (
 	"fmt"
 	"time"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 
 	"github.com/nats-io/nats.go"
 	// "greatestworks/internal/domain/events" // TODO: 实现事件系统
 )
 
-// NATSPublisher NATS消息发布者
+// NATSPublisher NATS消息发布�?
 type NATSPublisher struct {
 	conn   *nats.Conn
 	logger logger.Logger
 	config *PublisherConfig
 }
 
-// PublisherConfig 发布者配置
+// PublisherConfig 发布者配�?
 type PublisherConfig struct {
 	SubjectPrefix   string        `json:"subject_prefix" yaml:"subject_prefix"`
 	Timeout         time.Duration `json:"timeout" yaml:"timeout"`
@@ -29,7 +29,7 @@ type PublisherConfig struct {
 	CompressionType string        `json:"compression_type" yaml:"compression_type"`
 }
 
-// Publisher 消息发布者接口
+// Publisher 消息发布者接�?
 type Publisher interface {
 	// PublishEvent 发布领域事件
 	PublishEvent(ctx context.Context, event DomainEvent) error
@@ -37,7 +37,7 @@ type Publisher interface {
 	// PublishEventAsync 异步发布领域事件
 	PublishEventAsync(ctx context.Context, event DomainEvent) error
 
-	// PublishMessage 发布普通消息
+	// PublishMessage 发布普通消�?
 	PublishMessage(ctx context.Context, subject string, data interface{}) error
 
 	// PublishMessageWithReply 发布带回复的消息
@@ -46,7 +46,7 @@ type Publisher interface {
 	// PublishBatch 批量发布消息
 	PublishBatch(ctx context.Context, messages []BatchMessage) error
 
-	// Close 关闭发布者
+	// Close 关闭发布�?
 	Close() error
 }
 
@@ -57,7 +57,7 @@ type BatchMessage struct {
 	Headers map[string]string `json:"headers,omitempty"`
 }
 
-// NewNATSPublisher 创建NATS发布者
+// NewNATSPublisher 创建NATS发布�?
 func NewNATSPublisher(conn *nats.Conn, config *PublisherConfig, logger logger.Logger) Publisher {
 	if config == nil {
 		config = &PublisherConfig{
@@ -83,7 +83,7 @@ func NewNATSPublisher(conn *nats.Conn, config *PublisherConfig, logger logger.Lo
 func (p *NATSPublisher) PublishEvent(ctx context.Context, event DomainEvent) error {
 	subject := p.buildEventSubject(event)
 
-	// 序列化事件
+	// 序列化事�?
 	data, err := p.serializeEvent(event)
 	if err != nil {
 		p.logger.Error("Failed to serialize event", "error", err, "event_type", event.GetEventType())
@@ -112,11 +112,11 @@ func (p *NATSPublisher) PublishEventAsync(ctx context.Context, event DomainEvent
 	return nil
 }
 
-// PublishMessage 发布普通消息
+// PublishMessage 发布普通消�?
 func (p *NATSPublisher) PublishMessage(ctx context.Context, subject string, data interface{}) error {
 	fullSubject := p.buildSubject(subject)
 
-	// 序列化数据
+	// 序列化数�?
 	payload, err := p.serializeData(data)
 	if err != nil {
 		p.logger.Error("Failed to serialize message data", "error", err, "subject", subject)
@@ -138,7 +138,7 @@ func (p *NATSPublisher) PublishMessage(ctx context.Context, subject string, data
 func (p *NATSPublisher) PublishMessageWithReply(ctx context.Context, subject string, data interface{}, timeout time.Duration) (*nats.Msg, error) {
 	fullSubject := p.buildSubject(subject)
 
-	// 序列化数据
+	// 序列化数�?
 	payload, err := p.serializeData(data)
 	if err != nil {
 		p.logger.Error("Failed to serialize request data", "error", err, "subject", subject)
@@ -165,13 +165,13 @@ func (p *NATSPublisher) PublishBatch(ctx context.Context, messages []BatchMessag
 		return nil
 	}
 
-	// 使用NATS的批量发布功能
+	// 使用NATS的批量发布功�?
 	var errors []error
 
 	for _, msg := range messages {
 		fullSubject := p.buildSubject(msg.Subject)
 
-		// 序列化数据
+		// 序列化数�?
 		payload, err := p.serializeData(msg.Data)
 		if err != nil {
 			p.logger.Error("Failed to serialize batch message data", "error", err, "subject", msg.Subject)
@@ -200,7 +200,7 @@ func (p *NATSPublisher) PublishBatch(ctx context.Context, messages []BatchMessag
 		}
 	}
 
-	// 刷新连接以确保消息发送
+	// 刷新连接以确保消息发�?
 	if err := p.conn.Flush(); err != nil {
 		p.logger.Error("Failed to flush batch messages", "error", err)
 		errors = append(errors, fmt.Errorf("failed to flush batch messages: %w", err))
@@ -215,7 +215,7 @@ func (p *NATSPublisher) PublishBatch(ctx context.Context, messages []BatchMessag
 	return nil
 }
 
-// Close 关闭发布者
+// Close 关闭发布�?
 func (p *NATSPublisher) Close() error {
 	if p.conn != nil && !p.conn.IsClosed() {
 		p.conn.Close()
@@ -232,7 +232,7 @@ func (p *NATSPublisher) buildEventSubject(event DomainEvent) string {
 	return fmt.Sprintf("%s.events.%s.%s", p.config.SubjectPrefix, event.GetAggregateType(), event.GetEventType())
 }
 
-// buildSubject 构建普通主题
+// buildSubject 构建普通主�?
 func (p *NATSPublisher) buildSubject(subject string) string {
 	if p.config.SubjectPrefix == "" {
 		return subject
@@ -240,9 +240,9 @@ func (p *NATSPublisher) buildSubject(subject string) string {
 	return fmt.Sprintf("%s.%s", p.config.SubjectPrefix, subject)
 }
 
-// serializeEvent 序列化事件
+// serializeEvent 序列化事�?
 func (p *NATSPublisher) serializeEvent(event DomainEvent) ([]byte, error) {
-	// 创建事件包装器
+	// 创建事件包装�?
 	eventWrapper := map[string]interface{}{
 		"event_id":       event.GetEventID(),
 		"event_type":     event.GetEventType(),
@@ -257,7 +257,7 @@ func (p *NATSPublisher) serializeEvent(event DomainEvent) ([]byte, error) {
 	return json.Marshal(eventWrapper)
 }
 
-// serializeData 序列化数据
+// serializeData 序列化数�?
 func (p *NATSPublisher) serializeData(data interface{}) ([]byte, error) {
 	// 如果已经是字节数组，直接返回
 	if bytes, ok := data.([]byte); ok {
@@ -269,7 +269,7 @@ func (p *NATSPublisher) serializeData(data interface{}) ([]byte, error) {
 		return []byte(str), nil
 	}
 
-	// 否则使用JSON序列化
+	// 否则使用JSON序列�?
 	return json.Marshal(data)
 }
 
@@ -278,7 +278,7 @@ func (p *NATSPublisher) publishWithRetry(ctx context.Context, subject string, da
 	var lastErr error
 
 	for i := 0; i <= p.config.RetryAttempts; i++ {
-		// 检查上下文是否已取消
+		// 检查上下文是否已取�?
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -288,7 +288,7 @@ func (p *NATSPublisher) publishWithRetry(ctx context.Context, subject string, da
 		// 尝试发布
 		err := p.conn.Publish(subject, data)
 		if err == nil {
-			// 刷新连接以确保消息发送
+			// 刷新连接以确保消息发�?
 			if flushErr := p.conn.Flush(); flushErr == nil {
 				return nil
 			} else {
@@ -298,7 +298,7 @@ func (p *NATSPublisher) publishWithRetry(ctx context.Context, subject string, da
 			lastErr = err
 		}
 
-		// 如果不是最后一次尝试，等待后重试
+		// 如果不是最后一次尝试，等待后重�?
 		if i < p.config.RetryAttempts {
 			p.logger.Warn("Publish attempt failed, retrying", "attempt", i+1, "error", lastErr, "subject", subject)
 
@@ -323,7 +323,7 @@ type EventMetrics struct {
 	LastPublished  time.Time        `json:"last_published"`
 }
 
-// PublisherStats 发布者统计信息
+// PublisherStats 发布者统计信�?
 type PublisherStats struct {
 	TotalPublished int64                    `json:"total_published"`
 	TotalFailed    int64                    `json:"total_failed"`

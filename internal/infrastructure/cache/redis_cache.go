@@ -6,407 +6,219 @@ import (
 	"fmt"
 	"time"
 
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 
 	"github.com/redis/go-redis/v9"
 )
 
-// Cache 缓存接口
-type Cache interface {
-	// 基础操作
-	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
-	Get(ctx context.Context, key string, dest interface{}) error
-	Delete(ctx context.Context, key string) error
-	Exists(ctx context.Context, key string) (bool, error)
-
-	// 批量操作
-	SetBatch(ctx context.Context, items map[string]interface{}, ttl time.Duration) error
-	GetBatch(ctx context.Context, keys []string) (map[string]interface{}, error)
-	DeleteBatch(ctx context.Context, keys []string) error
-
-	// TTL操作
-	SetTTL(ctx context.Context, key string, ttl time.Duration) error
-	GetTTL(ctx context.Context, key string) (time.Duration, error)
-
-	// 清理操作
-	Clear(ctx context.Context) error
-	FlushDB(ctx context.Context) error
-
-	// 健康检查
-	Ping(ctx context.Context) error
-	Close() error
-}
-
 // RedisCache Redis缓存实现
 type RedisCache struct {
 	client *redis.Client
-	logger logger.Logger
-	prefix string
+	logger logging.Logger
 }
 
 // NewRedisCache 创建Redis缓存
-func NewRedisCache(client *redis.Client, logger logger.Logger, prefix string) Cache {
+func NewRedisCache(client *redis.Client, logger logging.Logger) *RedisCache {
 	return &RedisCache{
 		client: client,
 		logger: logger,
-		prefix: prefix,
 	}
 }
 
-// Set 设置缓存
-func (r *RedisCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	fullKey := r.buildKey(key)
-
-	// 序列化值
-	data, err := r.serialize(value)
+// Set 设置值
+func (rc *RedisCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+	data, err := json.Marshal(value)
 	if err != nil {
-		r.logger.Error("Failed to serialize cache value", "error", err, "key", key)
-		return fmt.Errorf("failed to serialize cache value: %w", err)
+		return fmt.Errorf("序列化失败: %w", err)
 	}
 
-	// 设置到Redis
-	err = r.client.Set(ctx, fullKey, data, ttl).Err()
+	err = rc.client.Set(ctx, key, data, ttl).Err()
 	if err != nil {
-		r.logger.Error("Failed to set cache", "error", err, "key", key, "ttl", ttl)
-		return fmt.Errorf("failed to set cache: %w", err)
+		return fmt.Errorf("设置缓存失败: %w", err)
 	}
 
-	r.logger.Debug("Cache set successfully", "key", key, "ttl", ttl)
+	rc.logger.Info("缓存设置成功", map[string]interface{}{
+		"key": key,
+		"ttl": ttl,
+	})
+
 	return nil
 }
 
-// Get 获取缓存
-func (r *RedisCache) Get(ctx context.Context, key string, dest interface{}) error {
-	fullKey := r.buildKey(key)
-
-	// 从Redis获取
-	data, err := r.client.Get(ctx, fullKey).Result()
+// Get 获取值
+func (rc *RedisCache) Get(ctx context.Context, key string, dest interface{}) error {
+	data, err := rc.client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return ErrCacheNotFound
+			return fmt.Errorf("key not found: %s", key)
 		}
-		r.logger.Error("Failed to get cache", "error", err, "key", key)
-		return fmt.Errorf("failed to get cache: %w", err)
+		return fmt.Errorf("获取缓存失败: %w", err)
 	}
 
-	// 反序列化值
-	err = r.deserialize([]byte(data), dest)
+	err = json.Unmarshal([]byte(data), dest)
 	if err != nil {
-		r.logger.Error("Failed to deserialize cache value", "error", err, "key", key)
-		return fmt.Errorf("failed to deserialize cache value: %w", err)
+		return fmt.Errorf("反序列化失败: %w", err)
 	}
 
-	r.logger.Debug("Cache get successfully", "key", key)
+	rc.logger.Info("缓存获取成功", map[string]interface{}{
+		"key": key,
+	})
+
 	return nil
 }
 
-// Delete 删除缓存
-func (r *RedisCache) Delete(ctx context.Context, key string) error {
-	fullKey := r.buildKey(key)
-
-	err := r.client.Del(ctx, fullKey).Err()
+// Delete 删除值
+func (rc *RedisCache) Delete(ctx context.Context, key string) error {
+	err := rc.client.Del(ctx, key).Err()
 	if err != nil {
-		r.logger.Error("Failed to delete cache", "error", err, "key", key)
-		return fmt.Errorf("failed to delete cache: %w", err)
+		return fmt.Errorf("删除缓存失败: %w", err)
 	}
 
-	r.logger.Debug("Cache deleted successfully", "key", key)
+	rc.logger.Info("缓存删除成功", map[string]interface{}{
+		"key": key,
+	})
+
 	return nil
 }
 
-// Exists 检查缓存是否存在
-func (r *RedisCache) Exists(ctx context.Context, key string) (bool, error) {
-	fullKey := r.buildKey(key)
-
-	count, err := r.client.Exists(ctx, fullKey).Result()
+// Exists 检查键是否存在
+func (rc *RedisCache) Exists(ctx context.Context, key string) (bool, error) {
+	count, err := rc.client.Exists(ctx, key).Result()
 	if err != nil {
-		r.logger.Error("Failed to check cache existence", "error", err, "key", key)
-		return false, fmt.Errorf("failed to check cache existence: %w", err)
+		return false, fmt.Errorf("检查缓存存在性失败: %w", err)
 	}
 
 	return count > 0, nil
 }
 
-// SetBatch 批量设置缓存
-func (r *RedisCache) SetBatch(ctx context.Context, items map[string]interface{}, ttl time.Duration) error {
-	pipe := r.client.Pipeline()
+// SetBatch 批量设置
+func (rc *RedisCache) SetBatch(ctx context.Context, items map[string]interface{}, ttl time.Duration) error {
+	pipe := rc.client.Pipeline()
 
 	for key, value := range items {
-		fullKey := r.buildKey(key)
-
-		// 序列化值
-		data, err := r.serialize(value)
+		data, err := json.Marshal(value)
 		if err != nil {
-			r.logger.Error("Failed to serialize batch cache value", "error", err, "key", key)
-			continue
+			return fmt.Errorf("序列化失败: %w", err)
 		}
 
-		pipe.Set(ctx, fullKey, data, ttl)
+		pipe.Set(ctx, key, data, ttl)
 	}
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		r.logger.Error("Failed to set batch cache", "error", err, "count", len(items))
-		return fmt.Errorf("failed to set batch cache: %w", err)
+		return fmt.Errorf("批量设置缓存失败: %w", err)
 	}
 
-	r.logger.Debug("Batch cache set successfully", "count", len(items), "ttl", ttl)
+	rc.logger.Info("批量缓存设置成功", map[string]interface{}{
+		"count": len(items),
+		"ttl":   ttl,
+	})
+
 	return nil
 }
 
-// GetBatch 批量获取缓存
-func (r *RedisCache) GetBatch(ctx context.Context, keys []string) (map[string]interface{}, error) {
-	fullKeys := make([]string, len(keys))
+// GetBatch 批量获取
+func (rc *RedisCache) GetBatch(ctx context.Context, keys []string) (map[string]interface{}, error) {
+	pipe := rc.client.Pipeline()
+
+	cmds := make([]*redis.StringCmd, len(keys))
 	for i, key := range keys {
-		fullKeys[i] = r.buildKey(key)
+		cmds[i] = pipe.Get(ctx, key)
 	}
 
-	results, err := r.client.MGet(ctx, fullKeys...).Result()
-	if err != nil {
-		r.logger.Error("Failed to get batch cache", "error", err, "count", len(keys))
-		return nil, fmt.Errorf("failed to get batch cache: %w", err)
+	_, err := pipe.Exec(ctx)
+	if err != nil && err != redis.Nil {
+		return nil, fmt.Errorf("批量获取缓存失败: %w", err)
 	}
 
-	batchResults := make(map[string]interface{})
-	for i, result := range results {
-		if result != nil {
+	result := make(map[string]interface{})
+	for i, cmd := range cmds {
+		if cmd.Err() == nil {
 			var value interface{}
-			if err := r.deserialize([]byte(result.(string)), &value); err == nil {
-				batchResults[keys[i]] = value
+			err := json.Unmarshal([]byte(cmd.Val()), &value)
+			if err == nil {
+				result[keys[i]] = value
 			}
 		}
 	}
 
-	r.logger.Debug("Batch cache get successfully", "requested", len(keys), "found", len(batchResults))
-	return batchResults, nil
+	rc.logger.Info("批量缓存获取成功", map[string]interface{}{
+		"requested": len(keys),
+		"found":     len(result),
+	})
+
+	return result, nil
 }
 
-// DeleteBatch 批量删除缓存
-func (r *RedisCache) DeleteBatch(ctx context.Context, keys []string) error {
-	fullKeys := make([]string, len(keys))
-	for i, key := range keys {
-		fullKeys[i] = r.buildKey(key)
-	}
-
-	err := r.client.Del(ctx, fullKeys...).Err()
+// DeleteBatch 批量删除
+func (rc *RedisCache) DeleteBatch(ctx context.Context, keys []string) error {
+	err := rc.client.Del(ctx, keys...).Err()
 	if err != nil {
-		r.logger.Error("Failed to delete batch cache", "error", err, "count", len(keys))
-		return fmt.Errorf("failed to delete batch cache: %w", err)
+		return fmt.Errorf("批量删除缓存失败: %w", err)
 	}
 
-	r.logger.Debug("Batch cache deleted successfully", "count", len(keys))
+	rc.logger.Info("批量缓存删除成功", map[string]interface{}{
+		"count": len(keys),
+	})
+
 	return nil
 }
 
-// SetTTL 设置缓存过期时间
-func (r *RedisCache) SetTTL(ctx context.Context, key string, ttl time.Duration) error {
-	fullKey := r.buildKey(key)
-
-	err := r.client.Expire(ctx, fullKey, ttl).Err()
+// SetTTL 设置TTL
+func (rc *RedisCache) SetTTL(ctx context.Context, key string, ttl time.Duration) error {
+	err := rc.client.Expire(ctx, key, ttl).Err()
 	if err != nil {
-		r.logger.Error("Failed to set cache TTL", "error", err, "key", key, "ttl", ttl)
-		return fmt.Errorf("failed to set cache TTL: %w", err)
+		return fmt.Errorf("设置TTL失败: %w", err)
 	}
 
-	r.logger.Debug("Cache TTL set successfully", "key", key, "ttl", ttl)
+	rc.logger.Info("TTL设置成功", map[string]interface{}{
+		"key": key,
+		"ttl": ttl,
+	})
+
 	return nil
 }
 
-// GetTTL 获取缓存剩余过期时间
-func (r *RedisCache) GetTTL(ctx context.Context, key string) (time.Duration, error) {
-	fullKey := r.buildKey(key)
-
-	ttl, err := r.client.TTL(ctx, fullKey).Result()
+// GetTTL 获取TTL
+func (rc *RedisCache) GetTTL(ctx context.Context, key string) (time.Duration, error) {
+	ttl, err := rc.client.TTL(ctx, key).Result()
 	if err != nil {
-		r.logger.Error("Failed to get cache TTL", "error", err, "key", key)
-		return 0, fmt.Errorf("failed to get cache TTL: %w", err)
+		return 0, fmt.Errorf("获取TTL失败: %w", err)
 	}
 
 	return ttl, nil
 }
 
-// Clear 清理所有缓存（根据前缀）
-func (r *RedisCache) Clear(ctx context.Context) error {
-	pattern := r.buildKey("*")
-
-	// 使用SCAN命令获取所有匹配的键
-	var cursor uint64
-	var keys []string
-
-	for {
-		var scanKeys []string
-		var err error
-
-		scanKeys, cursor, err = r.client.Scan(ctx, cursor, pattern, 100).Result()
-		if err != nil {
-			r.logger.Error("Failed to scan cache keys", "error", err, "pattern", pattern)
-			return fmt.Errorf("failed to scan cache keys: %w", err)
-		}
-
-		keys = append(keys, scanKeys...)
-
-		if cursor == 0 {
-			break
-		}
-	}
-
-	// 批量删除键
-	if len(keys) > 0 {
-		err := r.client.Del(ctx, keys...).Err()
-		if err != nil {
-			r.logger.Error("Failed to clear cache", "error", err, "count", len(keys))
-			return fmt.Errorf("failed to clear cache: %w", err)
-		}
-	}
-
-	r.logger.Info("Cache cleared successfully", "count", len(keys))
-	return nil
-}
-
-// FlushDB 清空整个数据库
-func (r *RedisCache) FlushDB(ctx context.Context) error {
-	err := r.client.FlushDB(ctx).Err()
+// Clear 清空缓存
+func (rc *RedisCache) Clear(ctx context.Context) error {
+	err := rc.client.FlushDB(ctx).Err()
 	if err != nil {
-		r.logger.Error("Failed to flush database", "error", err)
-		return fmt.Errorf("failed to flush database: %w", err)
+		return fmt.Errorf("清空缓存失败: %w", err)
 	}
 
-	r.logger.Info("Database flushed successfully")
+	rc.logger.Info("缓存清空成功")
+
 	return nil
 }
 
-// Ping 健康检查
-func (r *RedisCache) Ping(ctx context.Context) error {
-	err := r.client.Ping(ctx).Err()
+// Size 获取缓存大小
+func (rc *RedisCache) Size() int64 {
+	// Redis没有直接的方法获取数据库大小
+	// 这里返回0，实际使用中可以通过INFO命令获取
+	return 0
+}
+
+// Keys 获取所有键
+func (rc *RedisCache) Keys() []string {
+	// 注意：在生产环境中，KEYS命令可能会阻塞Redis
+	// 建议使用SCAN命令进行迭代
+	keys, err := rc.client.Keys(context.Background(), "*").Result()
 	if err != nil {
-		r.logger.Error("Redis ping failed", "error", err)
-		return fmt.Errorf("redis ping failed: %w", err)
+		rc.logger.Error("获取键列表失败", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return []string{}
 	}
 
-	return nil
-}
-
-// Close 关闭连接
-func (r *RedisCache) Close() error {
-	err := r.client.Close()
-	if err != nil {
-		r.logger.Error("Failed to close Redis client", "error", err)
-		return fmt.Errorf("failed to close Redis client: %w", err)
-	}
-
-	r.logger.Info("Redis client closed successfully")
-	return nil
-}
-
-// 私有方法
-
-// buildKey 构建完整的缓存键
-func (r *RedisCache) buildKey(key string) string {
-	if r.prefix == "" {
-		return key
-	}
-	return fmt.Sprintf("%s:%s", r.prefix, key)
-}
-
-// serialize 序列化值
-func (r *RedisCache) serialize(value interface{}) ([]byte, error) {
-	switch v := value.(type) {
-	case string:
-		return []byte(v), nil
-	case []byte:
-		return v, nil
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool:
-		return json.Marshal(v)
-	default:
-		return json.Marshal(v)
-	}
-}
-
-// deserialize 反序列化值
-func (r *RedisCache) deserialize(data []byte, dest interface{}) error {
-	switch dest.(type) {
-	case *string:
-		*(dest.(*string)) = string(data)
-		return nil
-	case *[]byte:
-		*(dest.(*[]byte)) = data
-		return nil
-	default:
-		return json.Unmarshal(data, dest)
-	}
-}
-
-// 错误定义
-var (
-	ErrCacheNotFound = fmt.Errorf("cache not found")
-	ErrCacheExpired  = fmt.Errorf("cache expired")
-	ErrCacheInvalid  = fmt.Errorf("cache data invalid")
-)
-
-// CacheConfig Redis缓存配置
-type CacheConfig struct {
-	Addr         string        `json:"addr" yaml:"addr"`
-	Password     string        `json:"password" yaml:"password"`
-	DB           int           `json:"db" yaml:"db"`
-	PoolSize     int           `json:"pool_size" yaml:"pool_size"`
-	MinIdleConns int           `json:"min_idle_conns" yaml:"min_idle_conns"`
-	MaxRetries   int           `json:"max_retries" yaml:"max_retries"`
-	DialTimeout  time.Duration `json:"dial_timeout" yaml:"dial_timeout"`
-	ReadTimeout  time.Duration `json:"read_timeout" yaml:"read_timeout"`
-	WriteTimeout time.Duration `json:"write_timeout" yaml:"write_timeout"`
-	IdleTimeout  time.Duration `json:"idle_timeout" yaml:"idle_timeout"`
-	Prefix       string        `json:"prefix" yaml:"prefix"`
-}
-
-// NewRedisCacheFromConfig 从配置创建Redis缓存
-func NewRedisCacheFromConfig(config *CacheConfig, logger logger.Logger) (Cache, error) {
-	// 设置默认值
-	if config.PoolSize == 0 {
-		config.PoolSize = 10
-	}
-	if config.MinIdleConns == 0 {
-		config.MinIdleConns = 5
-	}
-	if config.MaxRetries == 0 {
-		config.MaxRetries = 3
-	}
-	if config.DialTimeout == 0 {
-		config.DialTimeout = 5 * time.Second
-	}
-	if config.ReadTimeout == 0 {
-		config.ReadTimeout = 3 * time.Second
-	}
-	if config.WriteTimeout == 0 {
-		config.WriteTimeout = 3 * time.Second
-	}
-	if config.IdleTimeout == 0 {
-		config.IdleTimeout = 5 * time.Minute
-	}
-
-	// 创建Redis客户端
-	client := redis.NewClient(&redis.Options{
-		Addr:         config.Addr,
-		Password:     config.Password,
-		DB:           config.DB,
-		PoolSize:     config.PoolSize,
-		MinIdleConns: config.MinIdleConns,
-		MaxRetries:   config.MaxRetries,
-		DialTimeout:  config.DialTimeout,
-		ReadTimeout:  config.ReadTimeout,
-		WriteTimeout: config.WriteTimeout,
-		ConnMaxIdleTime: config.IdleTimeout,
-	})
-
-	// 测试连接
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := client.Ping(ctx).Err(); err != nil {
-		client.Close()
-		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
-	}
-
-	logger.Info("Redis cache initialized successfully", "addr", config.Addr, "db", config.DB, "prefix", config.Prefix)
-
-	return NewRedisCache(client, logger, config.Prefix), nil
+	return keys
 }

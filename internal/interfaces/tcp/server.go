@@ -10,7 +10,7 @@ import (
 	"time"
 
 	appHandlers "greatestworks/application/handlers"
-	"greatestworks/internal/infrastructure/logger"
+	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/tcp/connection"
 	tcpHandlers "greatestworks/internal/interfaces/tcp/handlers"
 	"greatestworks/internal/interfaces/tcp/protocol"
@@ -22,7 +22,6 @@ type ServerConfig struct {
 	MaxConnections    int
 	ReadTimeout       time.Duration
 	WriteTimeout      time.Duration
-	HeartbeatConfig   *connection.HeartbeatConfig
 	EnableCompression bool
 	BufferSize        int
 }
@@ -34,7 +33,6 @@ func DefaultServerConfig() *ServerConfig {
 		MaxConnections:    10000,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      30 * time.Second,
-		HeartbeatConfig:   connection.DefaultHeartbeatConfig(),
 		EnableCompression: false,
 		BufferSize:        4096,
 	}
@@ -46,10 +44,9 @@ type TCPServer struct {
 	listener         net.Listener
 	gameHandler      *tcpHandlers.GameHandler
 	router           *Router
-	connManager      *connection.ConnectionManager
-	sessionManager   *connection.SessionManager
+	connManager      *connection.Manager
 	heartbeatManager *connection.HeartbeatManager
-	logger           logger.Logger
+	logger           logging.Logger
 	ctx              context.Context
 	cancel           context.CancelFunc
 	wg               sync.WaitGroup
@@ -58,7 +55,7 @@ type TCPServer struct {
 }
 
 // NewTCPServer 创建TCP服务器
-func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, queryBus *appHandlers.QueryBus, logger logger.Logger) *TCPServer {
+func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, queryBus *appHandlers.QueryBus, logger logging.Logger) *TCPServer {
 	if config == nil {
 		config = DefaultServerConfig()
 	}
@@ -66,22 +63,13 @@ func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, quer
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// 创建连接管理器
-	connManager := connection.NewConnectionManager(
-		config.MaxConnections,
-		config.HeartbeatConfig.Interval,
-		config.ReadTimeout,
-		config.WriteTimeout,
-		logger,
-	)
-
-	// 创建会话管理器
-	sessionManager := connection.NewSessionManager(logger)
+	connManager := connection.NewManager(logger)
 
 	// 创建心跳管理器
-	heartbeatManager := connection.NewHeartbeatManager(config.HeartbeatConfig, logger)
+	heartbeatManager := connection.NewHeartbeatManager(logger, 30*time.Second, 60*time.Second)
 
 	// 创建游戏处理器
-	gameHandler := tcpHandlers.NewGameHandler(commandBus, queryBus, connManager, logger)
+	gameHandler := tcpHandlers.NewGameHandler(commandBus, queryBus, logger)
 
 	// 创建路由器
 	router := NewRouter(logger)
@@ -92,16 +80,12 @@ func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, quer
 		gameHandler:      gameHandler,
 		router:           router,
 		connManager:      connManager,
-		sessionManager:   sessionManager,
 		heartbeatManager: heartbeatManager,
 		logger:           logger,
 		ctx:              ctx,
 		cancel:           cancel,
 		running:          false,
 	}
-
-	// 设置心跳管理器的断线回调
-	heartbeatManager.SetDisconnectCallback(server.handleConnectionDisconnect)
 
 	return server
 }
@@ -115,12 +99,17 @@ func (s *TCPServer) Start() error {
 	}
 	s.mutex.Unlock()
 
-	s.logger.Info("Starting TCP server", "address", s.config.Addr)
+	s.logger.Info("Starting TCP server", map[string]interface{}{
+		"address": s.config.Addr,
+	})
 
 	// 创建监听器
 	listener, err := net.Listen("tcp", s.config.Addr)
 	if err != nil {
-		s.logger.Error("Failed to create listener", "error", err, "address", s.config.Addr)
+		s.logger.Error("Failed to create listener", map[string]interface{}{
+			"error":   err.Error(),
+			"address": s.config.Addr,
+		})
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 
@@ -129,11 +118,16 @@ func (s *TCPServer) Start() error {
 	s.running = true
 	s.mutex.Unlock()
 
+	// 启动心跳管理器
+	go s.heartbeatManager.Start(s.ctx)
+
 	// 启动接受连接的协程
 	s.wg.Add(1)
 	go s.acceptConnections()
 
-	s.logger.Info("TCP server started successfully", "address", s.config.Addr)
+	s.logger.Info("TCP server started successfully", map[string]interface{}{
+		"address": s.config.Addr,
+	})
 	return nil
 }
 
@@ -155,18 +149,11 @@ func (s *TCPServer) Stop() error {
 	// 关闭监听器
 	if s.listener != nil {
 		if err := s.listener.Close(); err != nil {
-			s.logger.Error("Failed to close listener", "error", err)
+			s.logger.Error("Failed to close listener", map[string]interface{}{
+				"error": err.Error(),
+			})
 		}
 	}
-
-	// 停止心跳管理器
-	s.heartbeatManager.Stop()
-
-	// 停止会话管理器
-	s.sessionManager.Stop()
-
-	// 关闭所有连接
-	s.connManager.Close()
 
 	// 等待所有协程结束
 	s.wg.Wait()
@@ -202,17 +189,20 @@ func (s *TCPServer) acceptConnections() {
 				case <-s.ctx.Done():
 					return
 				default:
-					s.logger.Error("Failed to accept connection", "error", err)
+					s.logger.Error("Failed to accept connection", map[string]interface{}{
+						"error": err.Error(),
+					})
 					continue
 				}
 			}
 
 			// 检查连接数限制
-			stats := s.connManager.GetStats()
-			if stats.ActiveConnections >= int64(s.config.MaxConnections) {
-				s.logger.Warn("Connection limit reached, rejecting new connection",
-					"current_count", stats.ActiveConnections,
-					"max_connections", s.config.MaxConnections)
+			connectionCount := s.connManager.GetConnectionCount()
+			if connectionCount >= s.config.MaxConnections {
+				s.logger.Warn("Connection limit reached, rejecting new connection", map[string]interface{}{
+					"current_count":   connectionCount,
+					"max_connections": s.config.MaxConnections,
+				})
 				conn.Close()
 				continue
 			}
@@ -234,31 +224,30 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 		tcpConn.SetKeepAlivePeriod(30 * time.Second)
 	}
 
+	// 创建会话
+	session := connection.NewSession(fmt.Sprintf("session_%d", time.Now().UnixNano()), netConn, s.logger)
+
 	// 添加到连接管理器
-	conn, err := s.connManager.AddConnection(netConn)
-	if err != nil {
-		s.logger.Error("Failed to add connection to manager", "error", err, "conn_id", conn.ID)
-		conn.Close()
-		return
-	}
+	s.connManager.AddConnection(session)
 
 	// 添加到心跳管理器
-	s.heartbeatManager.AddConnection(conn)
+	s.heartbeatManager.AddSession(session)
 
-	s.logger.Info("New connection established", "conn_id", conn.ID, "remote_addr", netConn.RemoteAddr())
+	s.logger.Info("New connection established", map[string]interface{}{
+		"session_id":  session.ID,
+		"remote_addr": netConn.RemoteAddr(),
+	})
 
 	// 处理连接消息
 	defer func() {
 		// 清理连接
-		s.cleanupConnection(conn)
+		s.cleanupConnection(session)
 	}()
 
 	// 消息处理循环
 	for {
 		select {
 		case <-s.ctx.Done():
-			return
-		case <-conn.CloseChan:
 			return
 		default:
 			// 设置读取超时
@@ -268,25 +257,39 @@ func (s *TCPServer) handleConnection(netConn net.Conn) {
 			msg, err := s.readMessage(netConn)
 			if err != nil {
 				if err == io.EOF {
-					s.logger.Info("Connection closed by client", "conn_id", conn.ID)
+					s.logger.Info("Connection closed by client", map[string]interface{}{
+						"session_id": session.ID,
+					})
 				} else if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-					s.logger.Debug("Read timeout", "conn_id", conn.ID)
+					s.logger.Debug("Read timeout", map[string]interface{}{
+						"session_id": session.ID,
+					})
 					continue
 				} else {
-					s.logger.Error("Failed to read message", "error", err, "conn_id", conn.ID)
+					s.logger.Error("Failed to read message", map[string]interface{}{
+						"error":      err.Error(),
+						"session_id": session.ID,
+					})
 				}
 				return
 			}
 
 			// 验证消息
 			if err := s.router.ValidateMessage(msg); err != nil {
-				s.logger.Error("Invalid message received", "error", err, "conn_id", conn.ID)
+				s.logger.Error("Invalid message received", map[string]interface{}{
+					"error":      err.Error(),
+					"session_id": session.ID,
+				})
 				continue
 			}
 
 			// 路由消息
-			if err := s.router.RouteMessage(conn, msg); err != nil {
-				s.logger.Error("Failed to route message", "error", err, "conn_id", conn.ID, "message_type", msg.Header.MessageType)
+			if err := s.router.RouteMessage(session, msg); err != nil {
+				s.logger.Error("Failed to route message", map[string]interface{}{
+					"error":        err.Error(),
+					"session_id":   session.ID,
+					"message_type": msg.Header.MessageType,
+				})
 			}
 		}
 	}
@@ -327,39 +330,24 @@ func (s *TCPServer) readMessage(conn net.Conn) (*protocol.Message, error) {
 }
 
 // cleanupConnection 清理连接
-func (s *TCPServer) cleanupConnection(conn *connection.Connection) {
-	s.logger.Info("Cleaning up connection", "conn_id", conn.ID, "player_id", conn.PlayerID)
+func (s *TCPServer) cleanupConnection(session *connection.Session) {
+	s.logger.Info("Cleaning up connection", map[string]interface{}{
+		"session_id": session.ID,
+		"user_id":    session.UserID,
+	})
 
 	// 从心跳管理器移除
-	s.heartbeatManager.RemoveConnection(conn.ID)
-
-	// 从会话管理器移除
-	if conn.PlayerID != "" {
-		s.sessionManager.UnbindPlayerFromSession(conn.PlayerID)
-	}
+	s.heartbeatManager.RemoveSession(session.ID)
 
 	// 从连接管理器移除
-	s.connManager.RemoveConnection(conn.ID)
+	s.connManager.RemoveConnection(session.ID)
 
 	// 关闭连接
-	conn.Close()
+	session.Close()
 
-	s.logger.Debug("Connection cleanup completed", "conn_id", conn.ID)
-}
-
-// handleConnectionDisconnect 处理连接断开
-func (s *TCPServer) handleConnectionDisconnect(connID string) {
-	s.logger.Info("Handling connection disconnect", "conn_id", connID)
-
-	// 获取连接
-	conn, exists := s.connManager.GetConnection(connID)
-	if !exists {
-		s.logger.Warn("Connection not found for disconnect handling", "conn_id", connID)
-		return
-	}
-
-	// 清理连接
-	s.cleanupConnection(conn)
+	s.logger.Debug("Connection cleanup completed", map[string]interface{}{
+		"session_id": session.ID,
+	})
 }
 
 // IsRunning 检查服务器是否运行中
@@ -371,47 +359,18 @@ func (s *TCPServer) IsRunning() bool {
 
 // GetStats 获取服务器统计信息
 func (s *TCPServer) GetStats() map[string]interface{} {
-	connStats := s.connManager.GetStats()
-	sessionStats := s.sessionManager.GetStats()
-	heartbeatStats := s.heartbeatManager.GetStats()
+	connectionCount := s.connManager.GetConnectionCount()
+	activeSessionCount := s.heartbeatManager.GetActiveSessionCount()
 
 	return map[string]interface{}{
 		"running":          s.IsRunning(),
 		"address":          s.config.Addr,
 		"max_connections":  s.config.MaxConnections,
-		"connection_stats": connStats,
-		"session_stats":    sessionStats,
-		"heartbeat_stats":  heartbeatStats,
+		"connection_count": connectionCount,
+		"active_sessions":  activeSessionCount,
 		"router_stats": map[string]interface{}{
 			"handler_count": s.router.GetHandlerCount(),
 			"message_types": s.router.GetRegisteredMessageTypes(),
 		},
 	}
-}
-
-// BroadcastMessage 广播消息
-func (s *TCPServer) BroadcastMessage(msg *protocol.Message) error {
-	s.connManager.BroadcastMessage(msg)
-	return nil
-}
-
-// SendToPlayer 发送消息给指定玩家
-func (s *TCPServer) SendToPlayer(playerID string, msg *protocol.Message) error {
-	conn, exists := s.connManager.GetConnectionByPlayer(playerID)
-	if !exists {
-		return fmt.Errorf("player connection not found: %s", playerID)
-	}
-
-	return conn.SendMessage(msg)
-}
-
-// GetConnectionCount 获取连接数
-func (s *TCPServer) GetConnectionCount() int {
-	stats := s.connManager.GetStats()
-	return int(stats.ActiveConnections)
-}
-
-// GetActiveSessionCount 获取活跃会话数
-func (s *TCPServer) GetActiveSessionCount() int {
-	return s.sessionManager.GetActiveSessionCount()
 }
