@@ -143,19 +143,13 @@ greatestworks/
 │       ├── module.drawio      # 模块关系图
 │       ├── svr.frame.drawio   # 服务器架构图
 │       └── uml.drawio         # UML类图
-├── application/                # 应用层 (CQRS模式)
-│   ├── commands/              # 命令处理器
-│   │   ├── player/           # 玩家命令
-│   │   └── battle/           # 战斗命令
-│   ├── handlers/              # 事件处理器
-│   │   ├── command_bus.go    # 命令总线
-│   │   └── query_bus.go      # 查询总线
-│   ├── queries/               # 查询处理器
-│   │   ├── player/           # 玩家查询
-│   │   └── battle/           # 战斗查询
-│   └── services/              # 应用服务
-│       └── service_registry.go # 服务注册
 ├── internal/                   # 内部模块 (DDD架构)
+│   ├── application/           # 应用层 (CQRS + 服务编排)
+│   │   ├── commands/          # 命令处理器
+│   │   ├── handlers/          # 命令/查询总线实现
+│   │   ├── interfaces/        # 应用层接口契约
+│   │   ├── queries/           # 查询处理器
+│   │   └── services/          # 应用服务与 service_registry
 │   ├── domain/                # 领域层
 │   │   ├── player/           # 玩家领域
 │   │   │   ├── beginner/     # 新手引导
@@ -338,24 +332,19 @@ greatestworks/
 > 端口速查：游戏服务 `6060`、认证服务 `6061`、网关服务 `6062`，可根据部署环境在配置文件中调整。
 
 
-## 🎉 最新更新 (v1.1.0)
+## 🎉 最新更新 (2025-10)
 
-### ✅ 已完成的重大改进
+### ✅ 核心改进
 
-- **🔧 编译错误修复**: 修复了所有编译错误，项目现在可以正常构建
-- **📝 日志系统统一**: 统一了所有日志接口使用，采用结构化日志
-- **🏗️ 架构优化**: 完善了DDD架构实现，修复了事件接口不匹配问题
-- **🌐 编码问题解决**: 修复了文件编码问题，统一使用英文注释
-- **🔨 依赖注入**: 完善了依赖注入容器，支持泛型类型安全
-- **📊 错误处理**: 统一了错误处理机制，采用领域错误模式
-- **🎯 接口规范**: 修复了所有接口方法不匹配问题
+- **应用层内聚**: 将原 `application/*` 目录整体迁移至 `internal/application`，统一导入路径并引入集中式 `service_registry`。
+- **接口适配**: 同步更新 HTTP/TCP/RPC 适配层的依赖路径，保持命令与查询总线的运行一致性。
+- **构建可靠性**: 全量执行 `go fmt ./...` 与 `go test ./...`，确保代码风格统一且测试通过。
 
-### 🚀 技术债务清理
+### � 技术债务清理
 
-- 删除了重复的接口声明和文件
-- 统一了命名规范和代码风格
-- 完善了模块间的依赖关系
-- 优化了项目结构组织
+- 归档旧有的应用层入口说明，将文档与现有目录结构保持一致。
+- 补充最新的启动脚本说明，方便在 Windows / Linux 环境快速拉起服务。
+- 梳理文档链接与示例配置，移除失效路径。
 
 ## 🚀 快速开始
 
@@ -381,14 +370,17 @@ go mod tidy
 
 项目使用独立的配置文件，每个服务都有自己的配置：
 
+**Windows (PowerShell):**
+```powershell
+Copy-Item configs/auth-service.yaml configs/auth-service-dev.yaml
+Copy-Item configs/gateway-service.yaml configs/gateway-service-dev.yaml
+Copy-Item configs/game-service.yaml configs/game-service-dev.yaml
+```
+
+**Linux / macOS:**
 ```bash
-# 认证服务配置
 cp configs/auth-service.yaml configs/auth-service-dev.yaml
-
-# 网关服务配置  
 cp configs/gateway-service.yaml configs/gateway-service-dev.yaml
-
-# 游戏服务配置
 cp configs/game-service.yaml configs/game-service-dev.yaml
 ```
 
@@ -397,7 +389,7 @@ cp configs/game-service.yaml configs/game-service-dev.yaml
 #### 方式一：使用启动脚本（推荐）
 
 **Windows:**
-```bash
+```powershell
 scripts/start-services.bat
 ```
 
@@ -735,19 +727,12 @@ export LOG_LEVEL=info
 export LOG_FORMAT=json
 ```
 
-## 📚 API文档
+## 📚 文档与图示
 
-详细的API文档请参考：
-- [REST API文档](docs/api/rest-api.md)
-- [TCP协议文档](docs/api/tcp-protocol.md)
-- [RPC接口文档](docs/api/rpc-api.md)
-
-## 🏗️ 架构文档
-
-深入了解系统架构：
-- [DDD设计文档](docs/architecture/ddd-design.md)
-- [分布式架构](docs/architecture/distributed-architecture.md)
-- [数据库设计](docs/architecture/database-design.md)
+- `docs/diagrams/README.md`：架构示意与上下游关系说明，附带 module / svr.frame / uml 等 Draw.io 源文件。
+- `internal/readme.md`：内部模块快速索引，包括领域层、基础设施层与接口层的职责梳理。
+- `module.drawio.png`、`svr.drawio.png`：面向汇报的静态架构图，可直接嵌入文档或 PPT。
+- 若需要生成协议文档，可运行 `scripts/generate_proto.sh` / `.bat` 后在 `proto/` 目录查阅最新的 `.proto` 定义。
 
 ## 🤝 贡献指南
 
