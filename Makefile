@@ -101,3 +101,8 @@ logs:
 shell:
 	@echo "进入游戏服务容器..."
 	docker exec -it mmo-server /bin/sh
+
+# 运行模拟客户端
+simclient:
+	@echo "运行模拟客户端 (integration 模式)..."
+	go run ./tools/simclient/cmd/simclient -mode integration

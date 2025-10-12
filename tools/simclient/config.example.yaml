@@ -1,0 +1,41 @@
+auth:
+  enabled: true
+  base_url: "http://localhost:8080"
+  login_path: "/api/v1/auth/login"
+  username: "tester"
+  password: "tester123"
+  timeout: "5s"
+
+gateway:
+  host: "127.0.0.1"
+  port: 9090
+  connect_timeout: "3s"
+  read_timeout: "2s"
+  write_timeout: "2s"
+
+scenario:
+  name: "pet-feature-check"
+  type: "feature"
+  duration: "15s"
+  action_interval: "1s"
+  player_prefix: "loadtester"
+  stop_on_error: true
+  features:
+    - "player.basic"
+    - "pet.basic"
+  actions:
+    - name: "quest.accept"
+      message: "quest.accept"
+      expect_response: true
+      pause: "2s"
+
+load:
+  enabled: true
+  virtual_users: 100
+  concurrency: 20
+  ramp_up: "10s"
+  iterations: 2
+  stop_on_error: false
+
+metrics:
+  output: "console"
