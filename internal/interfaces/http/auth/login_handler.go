@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"greatestworks/application/handlers"
-	playerQueries "greatestworks/application/queries/player"
+	"greatestworks/internal/application/handlers"
+	playerQueries "greatestworks/internal/application/queries/player"
 	"greatestworks/internal/infrastructure/logging"
 )
 

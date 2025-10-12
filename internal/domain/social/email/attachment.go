@@ -4,13 +4,13 @@ import "time"
 
 // Attachment 邮件附件实体
 type Attachment struct {
-	ID         string
-	Type       AttachmentType
-	ItemID     string
-	Quantity   int64
-	Claimed    bool
-	ClaimedAt  *time.Time
-	ExpiresAt  *time.Time
+	ID        string
+	Type      AttachmentType
+	ItemID    string
+	Quantity  int64
+	Claimed   bool
+	ClaimedAt *time.Time
+	ExpiresAt *time.Time
 }
 
 // AttachmentType 附件类型
@@ -54,15 +54,15 @@ func (a *Attachment) Claim() error {
 	if a.Claimed {
 		return ErrAttachmentAlreadyClaimed
 	}
-	
+
 	if a.IsExpired() {
 		return ErrAttachmentExpired
 	}
-	
+
 	a.Claimed = true
 	claimedAt := time.Now()
 	a.ClaimedAt = &claimedAt
-	
+
 	return nil
 }
 

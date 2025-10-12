@@ -27,11 +27,11 @@ func NewSacredService() *SacredService {
 		rewardCalculator:   NewRewardCalculator(),
 		balanceRules:       NewBalanceRules(),
 	}
-	
+
 	// 初始化默认模板和规则
 	service.initializeDefaultTemplates()
 	service.initializeDifficultyCurves()
-	
+
 	return service
 }
 
@@ -40,21 +40,21 @@ func (s *SacredService) CreateSacredPlace(id, name, description, owner string) (
 	if id == "" || name == "" || owner == "" {
 		return nil, fmt.Errorf("invalid parameters for sacred place creation")
 	}
-	
+
 	sacredPlace := NewSacredPlaceAggregate(id, name, description, owner)
-	
+
 	// 添加默认挑战
 	defaultChallenges := s.generateDefaultChallenges(sacredPlace.GetLevel().Level)
 	for _, challenge := range defaultChallenges {
 		sacredPlace.AddChallenge(challenge)
 	}
-	
+
 	// 添加默认祝福
 	defaultBlessings := s.generateDefaultBlessings(sacredPlace.GetLevel().Level)
 	for _, blessing := range defaultBlessings {
 		sacredPlace.AddBlessing(blessing)
 	}
-	
+
 	return sacredPlace, nil
 }
 
@@ -64,10 +64,10 @@ func (s *SacredService) GenerateChallenge(challengeType ChallengeType, difficult
 	if !exists {
 		return nil, fmt.Errorf("challenge template not found for type: %s", challengeType.String())
 	}
-	
+
 	// 生成唯一ID
 	id := fmt.Sprintf("challenge_%s_%s_%d", challengeType.String(), difficulty.String(), time.Now().UnixNano())
-	
+
 	// 根据模板创建挑战
 	challenge := NewChallenge(
 		id,
@@ -77,17 +77,17 @@ func (s *SacredService) GenerateChallenge(challengeType ChallengeType, difficult
 		difficulty,
 		difficulty.GetRequiredLevel(),
 	)
-	
+
 	// 设置持续时间和冷却时间
 	challenge.SetDuration(template.GetDuration(difficulty))
 	challenge.SetCooldown(template.GetCooldown(difficulty))
-	
+
 	// 添加条件
 	conditions := template.GenerateConditions(difficulty, sacredLevel)
 	for _, condition := range conditions {
 		challenge.AddCondition(condition)
 	}
-	
+
 	return challenge, nil
 }
 
@@ -97,10 +97,10 @@ func (s *SacredService) GenerateBlessing(blessingType BlessingType, sacredLevel 
 	if !exists {
 		return nil, fmt.Errorf("blessing template not found for type: %s", blessingType.String())
 	}
-	
+
 	// 生成唯一ID
 	id := fmt.Sprintf("blessing_%s_%d", blessingType.String(), time.Now().UnixNano())
-	
+
 	// 根据模板创建祝福
 	blessing := NewBlessing(
 		id,
@@ -109,17 +109,17 @@ func (s *SacredService) GenerateBlessing(blessingType BlessingType, sacredLevel 
 		blessingType,
 		template.GetDuration(sacredLevel),
 	)
-	
+
 	// 设置冷却时间和最大使用次数
 	blessing.SetCooldown(template.GetCooldown(sacredLevel))
 	blessing.SetMaxUsage(template.GetMaxUsage(sacredLevel))
-	
+
 	// 添加效果
 	effects := template.GenerateEffects(sacredLevel)
 	for _, effect := range effects {
 		blessing.AddEffect(effect)
 	}
-	
+
 	return blessing, nil
 }
 
@@ -129,13 +129,13 @@ func (s *SacredService) GenerateRelic(relicType RelicType, rarity RelicRarity) (
 	if !exists || len(templates) == 0 {
 		return nil, fmt.Errorf("relic templates not found for type: %s", relicType.String())
 	}
-	
+
 	// 随机选择模板
 	template := templates[rand.Intn(len(templates))]
-	
+
 	// 生成唯一ID
 	id := fmt.Sprintf("relic_%s_%s_%d", relicType.String(), rarity.String(), time.Now().UnixNano())
-	
+
 	// 根据模板创建圣物
 	relic := NewSacredRelic(
 		id,
@@ -144,25 +144,25 @@ func (s *SacredService) GenerateRelic(relicType RelicType, rarity RelicRarity) (
 		relicType,
 		rarity,
 	)
-	
+
 	// 添加属性
 	attributes := template.GenerateAttributes(rarity)
 	for name, value := range attributes {
 		relic.AddAttribute(name, value)
 	}
-	
+
 	// 添加效果
 	effects := template.GenerateEffects(rarity)
 	for _, effect := range effects {
 		relic.AddEffect(effect)
 	}
-	
+
 	// 添加需求
 	requirements := template.GenerateRequirements(rarity)
 	for name, value := range requirements {
 		relic.AddRequirement(name, value)
 	}
-	
+
 	return relic, nil
 }
 
@@ -179,7 +179,7 @@ func (s *SacredService) CalculateBlessingEffect(blessingType BlessingType, sacre
 		blessingType,
 		time.Hour, // default duration
 	)
-	
+
 	// 根据类型计算效果
 	switch blessingType {
 	case BlessingTypeAttribute:
@@ -205,7 +205,7 @@ func (s *SacredService) CalculateBlessingEffect(blessingType BlessingType, sacre
 		effect.AddAttribute("luck", float64(sacredLevel*3+playerLevel/3))
 		effect.AddModifier("critical_chance", float64(sacredLevel)*0.02)
 	}
-	
+
 	return effect
 }
 
@@ -214,23 +214,23 @@ func (s *SacredService) ValidateChallenge(challenge *Challenge, playerData map[s
 	if challenge == nil {
 		return fmt.Errorf("challenge is nil")
 	}
-	
+
 	// 检查挑战状态
 	if !challenge.CanStart() {
 		return fmt.Errorf("challenge cannot be started")
 	}
-	
+
 	// 检查玩家等级
 	playerLevel, ok := playerData["level"].(int)
 	if !ok || playerLevel < challenge.GetRequiredLevel() {
 		return fmt.Errorf("insufficient player level")
 	}
-	
+
 	// 检查挑战条件
 	if !challenge.CheckConditions(playerData) {
 		return fmt.Errorf("challenge conditions not met")
 	}
-	
+
 	return nil
 }
 
@@ -239,17 +239,17 @@ func (s *SacredService) ValidateBlessing(blessing *Blessing, playerData map[stri
 	if blessing == nil {
 		return fmt.Errorf("blessing is nil")
 	}
-	
+
 	// 检查祝福状态
 	if !blessing.IsAvailable() {
 		return fmt.Errorf("blessing is not available")
 	}
-	
+
 	// 检查平衡规则
 	if !s.balanceRules.CanActivateBlessing(blessing.GetType(), playerData) {
 		return fmt.Errorf("blessing activation violates balance rules")
 	}
-	
+
 	return nil
 }
 
@@ -257,7 +257,7 @@ func (s *SacredService) ValidateBlessing(blessing *Blessing, playerData map[stri
 func (s *SacredService) CalculateOptimalDifficulty(playerLevel int, playerSkill float64) ChallengeDifficulty {
 	// 基于玩家等级和技能计算推荐难度
 	baseScore := float64(playerLevel) + playerSkill*10
-	
+
 	if baseScore < 20 {
 		return ChallengeDifficultyEasy
 	} else if baseScore < 50 {
@@ -275,25 +275,25 @@ func (s *SacredService) CalculateOptimalDifficulty(playerLevel int, playerSkill 
 func (s *SacredService) GetRecommendedChallenges(playerData map[string]interface{}, sacredLevel int) []*Challenge {
 	playerLevel, _ := playerData["level"].(int)
 	playerSkill, _ := playerData["skill"].(float64)
-	
+
 	optimalDifficulty := s.CalculateOptimalDifficulty(playerLevel, playerSkill)
-	
+
 	var recommendations []*Challenge
-	
+
 	// 为每种挑战类型生成推荐
 	for challengeType := ChallengeTypeCombat; challengeType <= ChallengeTypeSpecial; challengeType++ {
 		if challenge, err := s.GenerateChallenge(challengeType, optimalDifficulty, sacredLevel); err == nil {
 			recommendations = append(recommendations, challenge)
 		}
 	}
-	
+
 	return recommendations
 }
 
 // GetAvailableBlessings 获取可用祝福
 func (s *SacredService) GetAvailableBlessings(playerData map[string]interface{}, sacredLevel int) []*Blessing {
 	var available []*Blessing
-	
+
 	// 为每种祝福类型生成可用祝福
 	for blessingType := BlessingTypeAttribute; blessingType <= BlessingTypeLuck; blessingType++ {
 		if blessing, err := s.GenerateBlessing(blessingType, sacredLevel); err == nil {
@@ -302,7 +302,7 @@ func (s *SacredService) GetAvailableBlessings(playerData map[string]interface{},
 			}
 		}
 	}
-	
+
 	return available
 }
 
@@ -311,7 +311,7 @@ func (s *SacredService) GetAvailableBlessings(playerData map[string]interface{},
 // generateDefaultChallenges 生成默认挑战
 func (s *SacredService) generateDefaultChallenges(sacredLevel int) []*Challenge {
 	var challenges []*Challenge
-	
+
 	// 根据圣地等级生成适当的挑战
 	difficulties := []ChallengeDifficulty{ChallengeDifficultyEasy, ChallengeDifficultyNormal}
 	if sacredLevel >= 10 {
@@ -323,21 +323,21 @@ func (s *SacredService) generateDefaultChallenges(sacredLevel int) []*Challenge 
 	if sacredLevel >= 50 {
 		difficulties = append(difficulties, ChallengeDifficultyLegendary)
 	}
-	
+
 	// 为每种难度生成战斗挑战
 	for _, difficulty := range difficulties {
 		if challenge, err := s.GenerateChallenge(ChallengeTypeCombat, difficulty, sacredLevel); err == nil {
 			challenges = append(challenges, challenge)
 		}
 	}
-	
+
 	return challenges
 }
 
 // generateDefaultBlessings 生成默认祝福
 func (s *SacredService) generateDefaultBlessings(sacredLevel int) []*Blessing {
 	var blessings []*Blessing
-	
+
 	// 生成基础祝福
 	basicTypes := []BlessingType{BlessingTypeAttribute, BlessingTypeExperience, BlessingTypeWealth}
 	for _, blessingType := range basicTypes {
@@ -345,7 +345,7 @@ func (s *SacredService) generateDefaultBlessings(sacredLevel int) []*Blessing {
 			blessings = append(blessings, blessing)
 		}
 	}
-	
+
 	// 根据等级解锁高级祝福
 	if sacredLevel >= 10 {
 		advancedTypes := []BlessingType{BlessingTypeProtection, BlessingTypeHealing}
@@ -355,7 +355,7 @@ func (s *SacredService) generateDefaultBlessings(sacredLevel int) []*Blessing {
 			}
 		}
 	}
-	
+
 	if sacredLevel >= 25 {
 		specialTypes := []BlessingType{BlessingTypeSpeed, BlessingTypeLuck}
 		for _, blessingType := range specialTypes {
@@ -364,7 +364,7 @@ func (s *SacredService) generateDefaultBlessings(sacredLevel int) []*Blessing {
 			}
 		}
 	}
-	
+
 	return blessings
 }
 
@@ -377,21 +377,21 @@ func (s *SacredService) initializeDefaultTemplates() {
 		time.Minute*30,
 		time.Hour*6,
 	)
-	
+
 	s.challengeTemplates[ChallengeTypePuzzle] = NewChallengeTemplate(
 		"解谜挑战",
 		"需要智慧解决的谜题",
 		time.Minute*15,
 		time.Hour*4,
 	)
-	
+
 	s.challengeTemplates[ChallengeTypeEndurance] = NewChallengeTemplate(
 		"耐力挑战",
 		"考验持久力的挑战",
 		time.Hour,
 		time.Hour*12,
 	)
-	
+
 	// 初始化祝福模板
 	s.blessingTemplates[BlessingTypeAttribute] = NewBlessingTemplate(
 		"属性祝福",
@@ -400,7 +400,7 @@ func (s *SacredService) initializeDefaultTemplates() {
 		time.Hour*24,
 		3,
 	)
-	
+
 	s.blessingTemplates[BlessingTypeExperience] = NewBlessingTemplate(
 		"经验祝福",
 		"增加经验获取",
@@ -408,7 +408,7 @@ func (s *SacredService) initializeDefaultTemplates() {
 		time.Hour*12,
 		5,
 	)
-	
+
 	// 初始化圣物模板
 	s.initializeRelicTemplates()
 }
@@ -421,14 +421,14 @@ func (s *SacredService) initializeRelicTemplates() {
 		NewRelicTemplate("法杖", "魔法武器", []string{"magic_power", "mana"}, []string{"增加魔法攻击", "提高法力值"}),
 	}
 	s.relicTemplates[RelicTypeWeapon] = weaponTemplates
-	
+
 	// 护甲模板
 	armorTemplates := []*RelicTemplate{
 		NewRelicTemplate("圣甲", "神圣的护甲", []string{"defense", "health"}, []string{"增加防御力", "提高生命值"}),
 		NewRelicTemplate("法袍", "魔法护甲", []string{"magic_defense", "mana_regen"}, []string{"增加魔法防御", "提高法力回复"}),
 	}
 	s.relicTemplates[RelicTypeArmor] = armorTemplates
-	
+
 	// 饰品模板
 	accessoryTemplates := []*RelicTemplate{
 		NewRelicTemplate("圣环", "神圣的戒指", []string{"luck", "experience"}, []string{"增加幸运值", "提高经验获取"}),
@@ -440,43 +440,43 @@ func (s *SacredService) initializeRelicTemplates() {
 // initializeDifficultyCurves 初始化难度曲线
 func (s *SacredService) initializeDifficultyCurves() {
 	s.difficultyCurves[ChallengeDifficultyEasy] = &DifficultyCurve{
-		HealthMultiplier:  0.5,
-		DamageMultiplier:  0.7,
-		SpeedMultiplier:   0.8,
-		RewardMultiplier:  0.5,
-		ExpMultiplier:     0.3,
+		HealthMultiplier: 0.5,
+		DamageMultiplier: 0.7,
+		SpeedMultiplier:  0.8,
+		RewardMultiplier: 0.5,
+		ExpMultiplier:    0.3,
 	}
-	
+
 	s.difficultyCurves[ChallengeDifficultyNormal] = &DifficultyCurve{
-		HealthMultiplier:  1.0,
-		DamageMultiplier:  1.0,
-		SpeedMultiplier:   1.0,
-		RewardMultiplier:  1.0,
-		ExpMultiplier:     1.0,
+		HealthMultiplier: 1.0,
+		DamageMultiplier: 1.0,
+		SpeedMultiplier:  1.0,
+		RewardMultiplier: 1.0,
+		ExpMultiplier:    1.0,
 	}
-	
+
 	s.difficultyCurves[ChallengeDifficultyHard] = &DifficultyCurve{
-		HealthMultiplier:  1.5,
-		DamageMultiplier:  1.3,
-		SpeedMultiplier:   1.2,
-		RewardMultiplier:  1.5,
-		ExpMultiplier:     1.8,
+		HealthMultiplier: 1.5,
+		DamageMultiplier: 1.3,
+		SpeedMultiplier:  1.2,
+		RewardMultiplier: 1.5,
+		ExpMultiplier:    1.8,
 	}
-	
+
 	s.difficultyCurves[ChallengeDifficultyExpert] = &DifficultyCurve{
-		HealthMultiplier:  2.0,
-		DamageMultiplier:  1.8,
-		SpeedMultiplier:   1.5,
-		RewardMultiplier:  2.5,
-		ExpMultiplier:     3.0,
+		HealthMultiplier: 2.0,
+		DamageMultiplier: 1.8,
+		SpeedMultiplier:  1.5,
+		RewardMultiplier: 2.5,
+		ExpMultiplier:    3.0,
 	}
-	
+
 	s.difficultyCurves[ChallengeDifficultyLegendary] = &DifficultyCurve{
-		HealthMultiplier:  3.0,
-		DamageMultiplier:  2.5,
-		SpeedMultiplier:   2.0,
-		RewardMultiplier:  5.0,
-		ExpMultiplier:     8.0,
+		HealthMultiplier: 3.0,
+		DamageMultiplier: 2.5,
+		SpeedMultiplier:  2.0,
+		RewardMultiplier: 5.0,
+		ExpMultiplier:    8.0,
 	}
 }
 
@@ -484,8 +484,8 @@ func (s *SacredService) initializeDifficultyCurves() {
 
 // ChallengeTemplate 挑战模板
 type ChallengeTemplate struct {
-	Name        string
-	Description string
+	Name         string
+	Description  string
 	BaseDuration time.Duration
 	BaseCooldown time.Duration
 }
@@ -527,12 +527,12 @@ func (ct *ChallengeTemplate) GenerateConditions(difficulty ChallengeDifficulty, 
 	conditions := []*ChallengeCondition{
 		NewChallengeCondition("level", "level", "gte", difficulty.GetRequiredLevel(), "等级不足"),
 	}
-	
+
 	// 根据难度添加额外条件
 	if difficulty >= ChallengeDifficultyHard {
 		conditions = append(conditions, NewChallengeCondition("equipment", "power", "gte", 1000, "装备威力不足"))
 	}
-	
+
 	return conditions
 }
 
@@ -621,11 +621,11 @@ func (rt *RelicTemplate) GenerateDescription(rarity RelicRarity) string {
 func (rt *RelicTemplate) GenerateAttributes(rarity RelicRarity) map[string]float64 {
 	attributes := make(map[string]float64)
 	basePower := rarity.GetBasePower()
-	
+
 	for _, attr := range rt.Attributes {
 		attributes[attr] = basePower * (0.5 + rand.Float64())
 	}
-	
+
 	return attributes
 }
 
@@ -636,7 +636,7 @@ func (rt *RelicTemplate) GenerateEffects(rarity RelicRarity) []string {
 	if maxEffects > len(rt.Effects) {
 		maxEffects = len(rt.Effects)
 	}
-	
+
 	return rt.Effects[:maxEffects]
 }
 
@@ -649,11 +649,11 @@ func (rt *RelicTemplate) GenerateRequirements(rarity RelicRarity) map[string]int
 
 // DifficultyCurve 难度曲线
 type DifficultyCurve struct {
-	HealthMultiplier  float64
-	DamageMultiplier  float64
-	SpeedMultiplier   float64
-	RewardMultiplier  float64
-	ExpMultiplier     float64
+	HealthMultiplier float64
+	DamageMultiplier float64
+	SpeedMultiplier  float64
+	RewardMultiplier float64
+	ExpMultiplier    float64
 }
 
 // RewardCalculator 奖励计算器
@@ -674,30 +674,30 @@ func (rc *RewardCalculator) CalculateChallengeReward(challengeType ChallengeType
 			Special:    make(map[string]interface{}),
 		}
 	}
-	
+
 	baseGold := 100
 	baseExp := 50
-	
+
 	// 难度倍数
 	difficultyMultiplier := difficulty.GetMultiplier()
-	
+
 	// 分数倍数
 	scoreMultiplier := math.Max(0.1, math.Min(2.0, float64(score)/100.0))
-	
+
 	// 玩家等级影响
 	levelMultiplier := 1.0 + float64(playerLevel)*0.05
-	
+
 	// 计算最终奖励
 	finalGold := int(float64(baseGold) * difficultyMultiplier * scoreMultiplier * levelMultiplier)
 	finalExp := int(float64(baseExp) * difficultyMultiplier * scoreMultiplier * levelMultiplier)
-	
+
 	reward := &ChallengeReward{
 		Gold:       finalGold,
 		Experience: finalExp,
 		Items:      make(map[string]int),
 		Special:    make(map[string]interface{}),
 	}
-	
+
 	// 根据挑战类型添加特殊奖励
 	switch challengeType {
 	case ChallengeTypeCombat:
@@ -707,7 +707,7 @@ func (rc *RewardCalculator) CalculateChallengeReward(challengeType ChallengeType
 	case ChallengeTypeEndurance:
 		reward.AddItem("endurance_potion", 1)
 	}
-	
+
 	return reward
 }
 
@@ -732,7 +732,7 @@ func (br *BalanceRules) CanActivateBlessing(blessingType BlessingType, playerDat
 	if activeBlessings >= br.maxActiveBlessings {
 		return false
 	}
-	
+
 	// 检查特定类型的冷却时间
 	if cooldown, exists := br.blessingCooldowns[blessingType]; exists {
 		lastUsed, _ := playerData[fmt.Sprintf("last_used_%s", blessingType.String())].(time.Time)
@@ -740,6 +740,6 @@ func (br *BalanceRules) CanActivateBlessing(blessingType BlessingType, playerDat
 			return false
 		}
 	}
-	
+
 	return true
 }

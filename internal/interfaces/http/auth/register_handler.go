@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
-	playerCommands "greatestworks/application/commands/player"
-	"greatestworks/application/handlers"
+	playerCommands "greatestworks/internal/application/commands/player"
+	"greatestworks/internal/application/handlers"
 	"greatestworks/internal/infrastructure/logging"
 )
 

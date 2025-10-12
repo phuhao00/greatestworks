@@ -1,7 +1,7 @@
 package http
 
 import (
-	"greatestworks/application/handlers"
+	"greatestworks/internal/application/handlers"
 	"greatestworks/internal/infrastructure/logging"
 
 	"github.com/gin-gonic/gin"

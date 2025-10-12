@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"greatestworks/application/handlers"
+	"greatestworks/internal/application/handlers"
 	"greatestworks/internal/config"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/infrastructure/monitoring"

@@ -58,19 +58,19 @@ func (m *Message) Validate() error {
 	if m.ChannelID == "" {
 		return ErrInvalidChannelID
 	}
-	
+
 	if m.SenderID == "" {
 		return ErrInvalidSenderID
 	}
-	
+
 	if strings.TrimSpace(m.Content) == "" {
 		return ErrEmptyContent
 	}
-	
+
 	if len(m.Content) > MaxMessageLength {
 		return ErrMessageTooLong
 	}
-	
+
 	return nil
 }
 

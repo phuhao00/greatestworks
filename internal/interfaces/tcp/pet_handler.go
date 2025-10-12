@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"greatestworks/application/services"
+	"greatestworks/internal/application/services"
 	"greatestworks/internal/interfaces/tcp/protocol"
 	"greatestworks/internal/network/session"
 )

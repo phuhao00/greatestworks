@@ -2,8 +2,8 @@
 package player
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 // PlayerID 玩家ID值对象
@@ -38,16 +38,16 @@ const (
 
 // Player 玩家聚合根
 type Player struct {
-	id       PlayerID
-	name     string
-	level    int
-	exp      int64
-	status   PlayerStatus
-	position Position
-	stats    PlayerStats
+	id        PlayerID
+	name      string
+	level     int
+	exp       int64
+	status    PlayerStatus
+	position  Position
+	stats     PlayerStats
 	createdAt time.Time
 	updatedAt time.Time
-	version  int64 // 乐观锁版本号
+	version   int64 // 乐观锁版本号
 }
 
 // Position 位置值对象
@@ -59,29 +59,29 @@ type Position struct {
 
 // PlayerStats 玩家属性值对象
 type PlayerStats struct {
-	HP       int `json:"hp"`
-	MaxHP    int `json:"max_hp"`
-	MP       int `json:"mp"`
-	MaxMP    int `json:"max_mp"`
-	Attack   int `json:"attack"`
-	Defense  int `json:"defense"`
-	Speed    int `json:"speed"`
+	HP      int `json:"hp"`
+	MaxHP   int `json:"max_hp"`
+	MP      int `json:"mp"`
+	MaxMP   int `json:"max_mp"`
+	Attack  int `json:"attack"`
+	Defense int `json:"defense"`
+	Speed   int `json:"speed"`
 }
 
 // NewPlayer 创建新玩家
 func NewPlayer(name string) *Player {
 	now := time.Now()
 	return &Player{
-		id:       NewPlayerID(),
-		name:     name,
-		level:    1,
-		exp:      0,
-		status:   PlayerStatusOffline,
-		position: Position{X: 0, Y: 0, Z: 0},
-		stats:    PlayerStats{HP: 100, MaxHP: 100, MP: 50, MaxMP: 50, Attack: 10, Defense: 5, Speed: 10},
+		id:        NewPlayerID(),
+		name:      name,
+		level:     1,
+		exp:       0,
+		status:    PlayerStatusOffline,
+		position:  Position{X: 0, Y: 0, Z: 0},
+		stats:     PlayerStats{HP: 100, MaxHP: 100, MP: 50, MaxMP: 50, Attack: 10, Defense: 5, Speed: 10},
 		createdAt: now,
 		updatedAt: now,
-		version:  1,
+		version:   1,
 	}
 }
 
@@ -173,20 +173,20 @@ func (p *Player) TakeDamage(damage int) bool {
 	if damage <= 0 {
 		return false
 	}
-	
+
 	actualDamage := damage - p.stats.Defense
 	if actualDamage < 1 {
 		actualDamage = 1
 	}
-	
+
 	p.stats.HP -= actualDamage
 	if p.stats.HP < 0 {
 		p.stats.HP = 0
 	}
-	
+
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return p.stats.HP == 0 // 返回是否死亡
 }
 

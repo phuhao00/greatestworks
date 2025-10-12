@@ -31,12 +31,12 @@ type ConstructionInfo struct {
 type ConstructionStatus int32
 
 const (
-	ConstructionStatusPlanning    ConstructionStatus = iota + 1 // 规划中
-	ConstructionStatusInProgress                                  // 进行中
-	ConstructionStatusPaused                                      // 暂停
-	ConstructionStatusCompleted                                   // 已完成
-	ConstructionStatusCancelled                                   // 已取消
-	ConstructionStatusFailed                                      // 失败
+	ConstructionStatusPlanning   ConstructionStatus = iota + 1 // 规划中
+	ConstructionStatusInProgress                               // 进行中
+	ConstructionStatusPaused                                   // 暂停
+	ConstructionStatusCompleted                                // 已完成
+	ConstructionStatusCancelled                                // 已取消
+	ConstructionStatusFailed                                   // 失败
 )
 
 // String 返回建造状态的字符串表示
@@ -91,14 +91,14 @@ func (ci *ConstructionInfo) AddWorker(assignment *WorkerAssignment) error {
 	if assignment == nil {
 		return fmt.Errorf("worker assignment cannot be nil")
 	}
-	
+
 	// 检查工人是否已分配
 	for _, existing := range ci.Workers {
 		if existing.WorkerID == assignment.WorkerID {
 			return fmt.Errorf("worker %d is already assigned", assignment.WorkerID)
 		}
 	}
-	
+
 	ci.Workers = append(ci.Workers, assignment)
 	ci.UpdatedAt = time.Now()
 	return nil
@@ -121,7 +121,7 @@ func (ci *ConstructionInfo) AddMaterial(material *MaterialUsage) error {
 	if material == nil {
 		return fmt.Errorf("material usage cannot be nil")
 	}
-	
+
 	ci.Materials = append(ci.Materials, material)
 	ci.UpdatedAt = time.Now()
 	return nil
@@ -132,7 +132,7 @@ func (ci *ConstructionInfo) AddPhase(phase *ConstructionPhase) error {
 	if phase == nil {
 		return fmt.Errorf("construction phase cannot be nil")
 	}
-	
+
 	ci.Phases = append(ci.Phases, phase)
 	ci.UpdatedAt = time.Now()
 	return nil
@@ -156,11 +156,11 @@ func (ci *ConstructionInfo) CompleteCurrentPhase() error {
 	if ci.CurrentPhase == nil {
 		return fmt.Errorf("no current phase to complete")
 	}
-	
+
 	ci.CurrentPhase.Complete()
 	ci.CurrentPhase = nil
 	ci.UpdatedAt = time.Now()
-	
+
 	// 检查是否所有阶段都完成
 	allCompleted := true
 	for _, phase := range ci.Phases {
@@ -169,14 +169,14 @@ func (ci *ConstructionInfo) CompleteCurrentPhase() error {
 			break
 		}
 	}
-	
+
 	if allCompleted {
 		ci.Status = ConstructionStatusCompleted
 		now := time.Now()
 		ci.CompletedAt = &now
 		ci.Progress = 100.0
 	}
-	
+
 	return nil
 }
 
@@ -185,16 +185,16 @@ func (ci *ConstructionInfo) UpdateProgress(progress float64) error {
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	ci.Progress = progress
 	ci.UpdatedAt = time.Now()
-	
+
 	if progress >= 100 {
 		ci.Status = ConstructionStatusCompleted
 		now := time.Now()
 		ci.CompletedAt = &now
 	}
-	
+
 	return nil
 }
 
@@ -221,7 +221,7 @@ func (ci *ConstructionInfo) GetEstimatedCompletionTime() time.Time {
 	if ci.Progress <= 0 {
 		return ci.StartedAt.Add(ci.Duration)
 	}
-	
+
 	elapsed := time.Since(ci.StartedAt)
 	estimatedTotal := time.Duration(float64(elapsed) / (ci.Progress / 100.0))
 	return ci.StartedAt.Add(estimatedTotal)
@@ -232,14 +232,14 @@ func (ci *ConstructionInfo) GetEfficiency() float64 {
 	if ci.Progress <= 0 {
 		return 0.0
 	}
-	
+
 	elapsed := time.Since(ci.StartedAt)
 	expectedProgress := float64(elapsed) / float64(ci.Duration) * 100.0
-	
+
 	if expectedProgress <= 0 {
 		return 0.0
 	}
-	
+
 	return ci.Progress / expectedProgress
 }
 
@@ -268,12 +268,12 @@ type UpgradeInfo struct {
 type UpgradeStatus int32
 
 const (
-	UpgradeStatusPlanning    UpgradeStatus = iota + 1 // 规划中
-	UpgradeStatusInProgress                            // 进行中
-	UpgradeStatusPaused                                // 暂停
-	UpgradeStatusCompleted                             // 已完成
-	UpgradeStatusCancelled                             // 已取消
-	UpgradeStatusFailed                                // 失败
+	UpgradeStatusPlanning   UpgradeStatus = iota + 1 // 规划中
+	UpgradeStatusInProgress                          // 进行中
+	UpgradeStatusPaused                              // 暂停
+	UpgradeStatusCompleted                           // 已完成
+	UpgradeStatusCancelled                           // 已取消
+	UpgradeStatusFailed                              // 失败
 )
 
 // String 返回升级状态的字符串表示
@@ -329,7 +329,7 @@ func (ui *UpgradeInfo) AddBenefit(benefit *UpgradeBenefit) error {
 	if benefit == nil {
 		return fmt.Errorf("upgrade benefit cannot be nil")
 	}
-	
+
 	ui.Benefits = append(ui.Benefits, benefit)
 	ui.UpdatedAt = time.Now()
 	return nil
@@ -340,7 +340,7 @@ func (ui *UpgradeInfo) AddRequirement(requirement *Requirement) error {
 	if requirement == nil {
 		return fmt.Errorf("requirement cannot be nil")
 	}
-	
+
 	ui.Requirements = append(ui.Requirements, requirement)
 	ui.UpdatedAt = time.Now()
 	return nil
@@ -361,16 +361,16 @@ func (ui *UpgradeInfo) UpdateProgress(progress float64) error {
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	ui.Progress = progress
 	ui.UpdatedAt = time.Now()
-	
+
 	if progress >= 100 {
 		ui.Status = UpgradeStatusCompleted
 		now := time.Now()
 		ui.CompletedAt = &now
 	}
-	
+
 	return nil
 }
 
@@ -413,10 +413,10 @@ type WorkerAssignmentStatus int32
 
 const (
 	WorkerAssignmentStatusAssigned  WorkerAssignmentStatus = iota + 1 // 已分配
-	WorkerAssignmentStatusWorking                                       // 工作中
-	WorkerAssignmentStatusPaused                                        // 暂停
-	WorkerAssignmentStatusCompleted                                     // 已完成
-	WorkerAssignmentStatusCancelled                                     // 已取消
+	WorkerAssignmentStatusWorking                                     // 工作中
+	WorkerAssignmentStatusPaused                                      // 暂停
+	WorkerAssignmentStatusCompleted                                   // 已完成
+	WorkerAssignmentStatusCancelled                                   // 已取消
 )
 
 // String 返回工人分配状态的字符串表示
@@ -500,14 +500,14 @@ func (wa *WorkerAssignment) UpdateProgress(progress float64) error {
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	wa.Progress = progress
 	wa.UpdatedAt = time.Now()
-	
+
 	if progress >= 100 {
 		wa.Complete()
 	}
-	
+
 	return nil
 }
 
@@ -542,11 +542,11 @@ type MaterialUsageStatus int32
 
 const (
 	MaterialUsageStatusOrdered   MaterialUsageStatus = iota + 1 // 已订购
-	MaterialUsageStatusDelivered                                 // 已交付
-	MaterialUsageStatusInUse                                     // 使用中
-	MaterialUsageStatusUsed                                      // 已使用
-	MaterialUsageStatusWasted                                    // 已浪费
-	MaterialUsageStatusReturned                                  // 已退回
+	MaterialUsageStatusDelivered                                // 已交付
+	MaterialUsageStatusInUse                                    // 使用中
+	MaterialUsageStatusUsed                                     // 已使用
+	MaterialUsageStatusWasted                                   // 已浪费
+	MaterialUsageStatusReturned                                 // 已退回
 )
 
 // String 返回材料使用状态的字符串表示
@@ -599,20 +599,20 @@ func (mu *MaterialUsage) Use(amount int64) error {
 	if amount <= 0 {
 		return fmt.Errorf("use amount must be positive")
 	}
-	
+
 	if mu.Used+amount > mu.Quantity {
 		return fmt.Errorf("insufficient material: have %d, need %d", mu.Quantity-mu.Used, amount)
 	}
-	
+
 	mu.Used += amount
 	mu.Status = MaterialUsageStatusInUse
-	
+
 	if mu.Used >= mu.Quantity {
 		mu.Status = MaterialUsageStatusUsed
 		now := time.Now()
 		mu.UsedAt = &now
 	}
-	
+
 	mu.UpdatedAt = time.Now()
 	return nil
 }
@@ -622,11 +622,11 @@ func (mu *MaterialUsage) Waste(amount int64) error {
 	if amount <= 0 {
 		return fmt.Errorf("waste amount must be positive")
 	}
-	
+
 	if mu.Used+mu.Wasted+amount > mu.Quantity {
 		return fmt.Errorf("waste amount exceeds available material")
 	}
-	
+
 	mu.Wasted += amount
 	mu.UpdatedAt = time.Now()
 	return nil
@@ -678,11 +678,11 @@ type PhaseStatus int32
 
 const (
 	PhaseStatusPending    PhaseStatus = iota + 1 // 等待中
-	PhaseStatusInProgress                         // 进行中
-	PhaseStatusPaused                             // 暂停
-	PhaseStatusCompleted                          // 已完成
-	PhaseStatusCancelled                          // 已取消
-	PhaseStatusFailed                             // 失败
+	PhaseStatusInProgress                        // 进行中
+	PhaseStatusPaused                            // 暂停
+	PhaseStatusCompleted                         // 已完成
+	PhaseStatusCancelled                         // 已取消
+	PhaseStatusFailed                            // 失败
 )
 
 // String 返回阶段状态的字符串表示
@@ -771,14 +771,14 @@ func (cp *ConstructionPhase) UpdateProgress(progress float64) error {
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	cp.Progress = progress
 	cp.UpdatedAt = time.Now()
-	
+
 	if progress >= 100 {
 		cp.Complete()
 	}
-	
+
 	return nil
 }
 
@@ -787,7 +787,7 @@ func (cp *ConstructionPhase) AddTask(task *PhaseTask) error {
 	if task == nil {
 		return fmt.Errorf("phase task cannot be nil")
 	}
-	
+
 	cp.Tasks = append(cp.Tasks, task)
 	cp.UpdatedAt = time.Now()
 	return nil
@@ -816,16 +816,16 @@ type PhaseTask struct {
 type TaskType int32
 
 const (
-	TaskTypeFoundation TaskType = iota + 1 // 地基
-	TaskTypeFramework                      // 框架
-	TaskTypeWalls                          // 墙体
-	TaskTypeRoof                           // 屋顶
-	TaskTypeElectrical                     // 电气
-	TaskTypePlumbing                       // 管道
-	TaskTypeInterior                       // 内装
-	TaskTypeExterior                       // 外装
-	TaskTypeLandscaping                    // 景观
-	TaskTypeCustom                         // 自定义
+	TaskTypeFoundation  TaskType = iota + 1 // 地基
+	TaskTypeFramework                       // 框架
+	TaskTypeWalls                           // 墙体
+	TaskTypeRoof                            // 屋顶
+	TaskTypeElectrical                      // 电气
+	TaskTypePlumbing                        // 管道
+	TaskTypeInterior                        // 内装
+	TaskTypeExterior                        // 外装
+	TaskTypeLandscaping                     // 景观
+	TaskTypeCustom                          // 自定义
 )
 
 // String 返回任务类型的字符串表示
@@ -866,9 +866,9 @@ type TaskPriority int32
 
 const (
 	TaskPriorityLow      TaskPriority = iota + 1 // 低优先级
-	TaskPriorityNormal                            // 普通优先级
-	TaskPriorityHigh                              // 高优先级
-	TaskPriorityCritical                          // 关键优先级
+	TaskPriorityNormal                           // 普通优先级
+	TaskPriorityHigh                             // 高优先级
+	TaskPriorityCritical                         // 关键优先级
 )
 
 // String 返回任务优先级的字符串表示
@@ -897,11 +897,11 @@ type TaskStatus int32
 
 const (
 	TaskStatusPending    TaskStatus = iota + 1 // 等待中
-	TaskStatusInProgress                        // 进行中
-	TaskStatusPaused                            // 暂停
-	TaskStatusCompleted                         // 已完成
-	TaskStatusCancelled                         // 已取消
-	TaskStatusFailed                            // 失败
+	TaskStatusInProgress                       // 进行中
+	TaskStatusPaused                           // 暂停
+	TaskStatusCompleted                        // 已完成
+	TaskStatusCancelled                        // 已取消
+	TaskStatusFailed                           // 失败
 )
 
 // String 返回任务状态的字符串表示
@@ -1005,14 +1005,14 @@ func (pt *PhaseTask) UpdateProgress(progress float64) error {
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	pt.Progress = progress
 	pt.UpdatedAt = time.Now()
-	
+
 	if progress >= 100 {
 		pt.Complete()
 	}
-	
+
 	return nil
 }
 
@@ -1064,7 +1064,7 @@ func (bp *Blueprint) AddLayer(layer *BlueprintLayer) error {
 	if layer == nil {
 		return fmt.Errorf("blueprint layer cannot be nil")
 	}
-	
+
 	bp.Layers = append(bp.Layers, layer)
 	bp.UpdatedAt = time.Now()
 	return nil
@@ -1075,7 +1075,7 @@ func (bp *Blueprint) AddMaterial(material *MaterialRequirement) error {
 	if material == nil {
 		return fmt.Errorf("material requirement cannot be nil")
 	}
-	
+
 	bp.Materials = append(bp.Materials, material)
 	bp.UpdatedAt = time.Now()
 	return nil
@@ -1086,7 +1086,7 @@ func (bp *Blueprint) AddCost(cost *ResourceCost) error {
 	if cost == nil {
 		return fmt.Errorf("resource cost cannot be nil")
 	}
-	
+
 	bp.Costs = append(bp.Costs, cost)
 	bp.UpdatedAt = time.Now()
 	return nil
@@ -1133,16 +1133,16 @@ func NewBlueprintLayer(name string, level int32) *BlueprintLayer {
 
 // BlueprintBlock 蓝图块实体
 type BlueprintBlock struct {
-	ID           string                 `json:"id" bson:"_id"`
-	Type         string                 `json:"type" bson:"type"`
-	Position     *Position              `json:"position" bson:"position"`
-	Size         *Size                  `json:"size" bson:"size"`
-	Orientation  Orientation            `json:"orientation" bson:"orientation"`
-	Material     string                 `json:"material" bson:"material"`
-	Properties   map[string]interface{} `json:"properties" bson:"properties"`
-	Metadata     map[string]interface{} `json:"metadata" bson:"metadata"`
-	CreatedAt    time.Time              `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at" bson:"updated_at"`
+	ID          string                 `json:"id" bson:"_id"`
+	Type        string                 `json:"type" bson:"type"`
+	Position    *Position              `json:"position" bson:"position"`
+	Size        *Size                  `json:"size" bson:"size"`
+	Orientation Orientation            `json:"orientation" bson:"orientation"`
+	Material    string                 `json:"material" bson:"material"`
+	Properties  map[string]interface{} `json:"properties" bson:"properties"`
+	Metadata    map[string]interface{} `json:"metadata" bson:"metadata"`
+	CreatedAt   time.Time              `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at" bson:"updated_at"`
 }
 
 // NewBlueprintBlock 创建新蓝图块
@@ -1191,10 +1191,10 @@ func NewBlueprintConnection(fromBlock, toBlock, connectionType string) *Blueprin
 
 // MaterialRequirement 材料需求实体
 type MaterialRequirement struct {
-	MaterialType string  `json:"material_type" bson:"material_type"`
-	Quantity     int64   `json:"quantity" bson:"quantity"`
-	Quality      float64 `json:"quality" bson:"quality"`
-	Optional     bool    `json:"optional" bson:"optional"`
+	MaterialType string   `json:"material_type" bson:"material_type"`
+	Quantity     int64    `json:"quantity" bson:"quantity"`
+	Quality      float64  `json:"quality" bson:"quality"`
+	Optional     bool     `json:"optional" bson:"optional"`
 	Alternatives []string `json:"alternatives" bson:"alternatives"`
 }
 

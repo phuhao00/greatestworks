@@ -9,16 +9,16 @@ import (
 type LocationType int
 
 const (
-	LocationTypeUnknown LocationType = iota
-	LocationTypeForest                      // 森林
-	LocationTypeMountain                    // 山脉
-	LocationTypeDesert                      // 沙漠
-	LocationTypeOcean                       // 海洋
-	LocationTypeCave                        // 洞穴
-	LocationTypeDungeon                     // 地牢
-	LocationTypeCity                        // 城市
-	LocationTypeVillage                     // 村庄
-	LocationTypeSpecial                     // 特殊地点
+	LocationTypeUnknown  LocationType = iota
+	LocationTypeForest                // 森林
+	LocationTypeMountain              // 山脉
+	LocationTypeDesert                // 沙漠
+	LocationTypeOcean                 // 海洋
+	LocationTypeCave                  // 洞穴
+	LocationTypeDungeon               // 地牢
+	LocationTypeCity                  // 城市
+	LocationTypeVillage               // 村庄
+	LocationTypeSpecial               // 特殊地点
 )
 
 // String 返回地点类型的字符串表示
@@ -166,11 +166,11 @@ func (br *BaseReward) Add(other *BaseReward) *BaseReward {
 		Gold:       br.Gold + other.Gold,
 		Items:      make([]RewardItem, 0),
 	}
-	
+
 	// 合并物品
 	result.Items = append(result.Items, br.Items...)
 	result.Items = append(result.Items, other.Items...)
-	
+
 	return result
 }
 
@@ -206,7 +206,7 @@ func (id ItemDrop) ShouldDrop(hours float64) bool {
 	if totalRate >= 1.0 {
 		return true // 100%掉落
 	}
-	
+
 	// 随机判断
 	return rand.Float64() < totalRate
 }
@@ -216,18 +216,18 @@ func (id ItemDrop) CalculateQuantity(hours float64) int {
 	if id.MinQuantity == id.MaxQuantity {
 		return id.MinQuantity
 	}
-	
+
 	// 基于小时数调整数量
 	baseQuantity := id.MinQuantity + rand.Intn(id.MaxQuantity-id.MinQuantity+1)
-	
+
 	// 长时间挂机可能获得更多物品
 	if hours > 12 {
 		bonusChance := (hours - 12) / 12 // 每12小时增加一次奖励机会
 		if rand.Float64() < bonusChance {
-			baseQuantity += rand.Intn(id.MaxQuantity-id.MinQuantity+1)
+			baseQuantity += rand.Intn(id.MaxQuantity - id.MinQuantity + 1)
 		}
 	}
-	
+
 	return baseQuantity
 }
 
@@ -238,13 +238,13 @@ func (id ItemDrop) IsValid() bool {
 
 // HangupConfig 挂机配置值对象
 type HangupConfig struct {
-	MaxOfflineHours     int     `json:"max_offline_hours"`     // 最大离线小时数
-	BaseExpPerHour      int64   `json:"base_exp_per_hour"`     // 基础每小时经验
-	BaseGoldPerHour     int64   `json:"base_gold_per_hour"`    // 基础每小时金币
-	VipBonusMultiplier  float64 `json:"vip_bonus_multiplier"`  // VIP加成倍率
+	MaxOfflineHours     int     `json:"max_offline_hours"`      // 最大离线小时数
+	BaseExpPerHour      int64   `json:"base_exp_per_hour"`      // 基础每小时经验
+	BaseGoldPerHour     int64   `json:"base_gold_per_hour"`     // 基础每小时金币
+	VipBonusMultiplier  float64 `json:"vip_bonus_multiplier"`   // VIP加成倍率
 	MaxDailyHangupHours int     `json:"max_daily_hangup_hours"` // 每日最大挂机小时数
-	OfflineDecayRate    float64 `json:"offline_decay_rate"`    // 离线衰减率
-	MinimumLevel        int     `json:"minimum_level"`         // 最低等级要求
+	OfflineDecayRate    float64 `json:"offline_decay_rate"`     // 离线衰减率
+	MinimumLevel        int     `json:"minimum_level"`          // 最低等级要求
 }
 
 // NewHangupConfig 创建挂机配置
@@ -308,15 +308,15 @@ func (hc *HangupConfig) IsValid() bool {
 
 // HangupSession 挂机会话值对象
 type HangupSession struct {
-	SessionID   string        `json:"session_id"`
-	PlayerID    string        `json:"player_id"`
-	LocationID  string        `json:"location_id"`
-	StartTime   time.Time     `json:"start_time"`
-	EndTime     time.Time     `json:"end_time"`
-	Duration    time.Duration `json:"duration"`
-	IsOnline    bool          `json:"is_online"`
-	Reward      *BaseReward   `json:"reward,omitempty"`
-	CreatedAt   time.Time     `json:"created_at"`
+	SessionID  string        `json:"session_id"`
+	PlayerID   string        `json:"player_id"`
+	LocationID string        `json:"location_id"`
+	StartTime  time.Time     `json:"start_time"`
+	EndTime    time.Time     `json:"end_time"`
+	Duration   time.Duration `json:"duration"`
+	IsOnline   bool          `json:"is_online"`
+	Reward     *BaseReward   `json:"reward,omitempty"`
+	CreatedAt  time.Time     `json:"created_at"`
 }
 
 // NewHangupSession 创建挂机会话
@@ -459,11 +459,11 @@ func (hr *HangupRank) CalculateEfficiency() float64 {
 	if hr.TotalHangupTime == 0 {
 		return 0
 	}
-	
+
 	hours := hr.TotalHangupTime.Hours()
 	expPerHour := float64(hr.TotalExperience) / hours
 	goldPerHour := float64(hr.TotalGold) / hours
-	
+
 	// 综合效率计算（经验和金币的加权平均）
 	return (expPerHour + goldPerHour*0.5) / 100 // 归一化到合理范围
 }

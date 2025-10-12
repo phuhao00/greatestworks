@@ -79,23 +79,23 @@ func NewSacredNameChangedEvent(sacredID, oldName, newName string) *SacredNameCha
 		OldName:  oldName,
 		NewName:  newName,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["old_name"] = oldName
 	event.Payload["new_name"] = newName
-	
+
 	return event
 }
 
 // SacredLevelUpEvent 圣地升级事件
 type SacredLevelUpEvent struct {
 	*BaseDomainEvent
-	SacredID    string
-	OldLevel    int
-	NewLevel    int
-	Experience  int
-	Rewards     map[string]interface{}
+	SacredID   string
+	OldLevel   int
+	NewLevel   int
+	Experience int
+	Rewards    map[string]interface{}
 }
 
 // NewSacredLevelUpEvent 创建圣地升级事件
@@ -116,24 +116,24 @@ func NewSacredLevelUpEvent(sacredID string, oldLevel, newLevel, experience int) 
 		Experience: experience,
 		Rewards:    make(map[string]interface{}),
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["old_level"] = oldLevel
 	event.Payload["new_level"] = newLevel
 	event.Payload["experience"] = experience
 	event.Payload["level_gain"] = newLevel - oldLevel
-	
+
 	return event
 }
 
 // ChallengeAddedEvent 挑战添加事件
 type ChallengeAddedEvent struct {
 	*BaseDomainEvent
-	SacredID     string
-	ChallengeID  string
+	SacredID      string
+	ChallengeID   string
 	ChallengeType ChallengeType
-	Difficulty   ChallengeDifficulty
+	Difficulty    ChallengeDifficulty
 }
 
 // NewChallengeAddedEvent 创建挑战添加事件
@@ -153,13 +153,13 @@ func NewChallengeAddedEvent(sacredID, challengeID string, challengeType Challeng
 		ChallengeType: challengeType,
 		Difficulty:    difficulty,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["challenge_id"] = challengeID
 	event.Payload["challenge_type"] = challengeType.String()
 	event.Payload["difficulty"] = difficulty.String()
-	
+
 	return event
 }
 
@@ -189,13 +189,13 @@ func NewChallengeRemovedEvent(sacredID, challengeID string, challengeType Challe
 		ChallengeType: challengeType,
 		Reason:        "manual_removal",
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["challenge_id"] = challengeID
 	event.Payload["challenge_type"] = challengeType.String()
 	event.Payload["reason"] = event.Reason
-	
+
 	return event
 }
 
@@ -227,28 +227,28 @@ func NewChallengeStartedEvent(sacredID, challengeID, playerID string, challengeT
 		ChallengeType: challengeType,
 		StartTime:     now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["challenge_id"] = challengeID
 	event.Payload["player_id"] = playerID
 	event.Payload["challenge_type"] = challengeType.String()
 	event.Payload["start_time"] = now
-	
+
 	return event
 }
 
 // ChallengeCompletedEvent 挑战完成事件
 type ChallengeCompletedEvent struct {
 	*BaseDomainEvent
-	SacredID      string
-	ChallengeID   string
-	PlayerID      string
-	Success       bool
-	Score         int
-	Reward        *ChallengeReward
+	SacredID       string
+	ChallengeID    string
+	PlayerID       string
+	Success        bool
+	Score          int
+	Reward         *ChallengeReward
 	CompletionTime time.Time
-	Duration      time.Duration
+	Duration       time.Duration
 }
 
 // NewChallengeCompletedEvent 创建挑战完成事件
@@ -271,7 +271,7 @@ func NewChallengeCompletedEvent(sacredID, challengeID, playerID string, success 
 		Reward:         reward,
 		CompletionTime: now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["challenge_id"] = challengeID
@@ -284,7 +284,7 @@ func NewChallengeCompletedEvent(sacredID, challengeID, playerID string, success 
 		event.Payload["reward_experience"] = reward.Experience
 		event.Payload["reward_items"] = len(reward.Items)
 	}
-	
+
 	return event
 }
 
@@ -314,13 +314,13 @@ func NewBlessingAddedEvent(sacredID, blessingID string, blessingType BlessingTyp
 		BlessingType: blessingType,
 		Duration:     duration,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["blessing_id"] = blessingID
 	event.Payload["blessing_type"] = blessingType.String()
 	event.Payload["duration"] = duration.String()
-	
+
 	return event
 }
 
@@ -350,13 +350,13 @@ func NewBlessingRemovedEvent(sacredID, blessingID string, blessingType BlessingT
 		BlessingType: blessingType,
 		Reason:       "manual_removal",
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["blessing_id"] = blessingID
 	event.Payload["blessing_type"] = blessingType.String()
 	event.Payload["reason"] = event.Reason
-	
+
 	return event
 }
 
@@ -392,7 +392,7 @@ func NewBlessingActivatedEvent(sacredID, blessingID, playerID string, blessingTy
 		ActivatedAt:  now,
 		ExpiresAt:    effect.ExpiresAt,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["blessing_id"] = blessingID
@@ -401,7 +401,7 @@ func NewBlessingActivatedEvent(sacredID, blessingID, playerID string, blessingTy
 	event.Payload["activated_at"] = now
 	event.Payload["expires_at"] = effect.ExpiresAt
 	event.Payload["duration"] = effect.ExpiresAt.Sub(now).String()
-	
+
 	return event
 }
 
@@ -431,13 +431,13 @@ func NewSacredStatusChangedEvent(sacredID string, oldStatus, newStatus SacredSta
 		NewStatus: newStatus,
 		Reason:    "status_update",
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["old_status"] = oldStatus.String()
 	event.Payload["new_status"] = newStatus.String()
 	event.Payload["reason"] = event.Reason
-	
+
 	return event
 }
 
@@ -473,7 +473,7 @@ func NewRelicObtainedEvent(sacredID, playerID, relicID string, relicType RelicTy
 		Source:     source,
 		ObtainedAt: now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["player_id"] = playerID
@@ -482,7 +482,7 @@ func NewRelicObtainedEvent(sacredID, playerID, relicID string, relicType RelicTy
 	event.Payload["rarity"] = rarity.String()
 	event.Payload["source"] = source
 	event.Payload["obtained_at"] = now
-	
+
 	return event
 }
 
@@ -520,7 +520,7 @@ func NewRelicUpgradedEvent(sacredID, playerID, relicID string, oldLevel, newLeve
 		NewPower:   newPower,
 		UpgradedAt: now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["player_id"] = playerID
@@ -532,7 +532,7 @@ func NewRelicUpgradedEvent(sacredID, playerID, relicID string, oldLevel, newLeve
 	event.Payload["new_power"] = newPower
 	event.Payload["power_gain"] = newPower - oldPower
 	event.Payload["upgraded_at"] = now
-	
+
 	return event
 }
 
@@ -562,13 +562,13 @@ func NewPlayerEnteredSacredEvent(sacredID, playerID, source string) *PlayerEnter
 		EnteredAt: now,
 		Source:    source,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["player_id"] = playerID
 	event.Payload["entered_at"] = now
 	event.Payload["source"] = source
-	
+
 	return event
 }
 
@@ -586,7 +586,7 @@ type PlayerLeftSacredEvent struct {
 func NewPlayerLeftSacredEvent(sacredID, playerID string, enteredAt time.Time, activities []string) *PlayerLeftSacredEvent {
 	now := time.Now()
 	duration := now.Sub(enteredAt)
-	
+
 	event := &PlayerLeftSacredEvent{
 		BaseDomainEvent: &BaseDomainEvent{
 			EventID:     fmt.Sprintf("player_left_sacred_%d", now.UnixNano()),
@@ -602,7 +602,7 @@ func NewPlayerLeftSacredEvent(sacredID, playerID string, enteredAt time.Time, ac
 		Duration:   duration,
 		Activities: activities,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["player_id"] = playerID
@@ -610,18 +610,18 @@ func NewPlayerLeftSacredEvent(sacredID, playerID string, enteredAt time.Time, ac
 	event.Payload["duration"] = duration.String()
 	event.Payload["activities"] = activities
 	event.Payload["activity_count"] = len(activities)
-	
+
 	return event
 }
 
 // SacredMaintenanceEvent 圣地维护事件
 type SacredMaintenanceEvent struct {
 	*BaseDomainEvent
-	SacredID        string
-	MaintenanceType string
-	StartTime       time.Time
-	EstimatedEnd    time.Time
-	Reason          string
+	SacredID         string
+	MaintenanceType  string
+	StartTime        time.Time
+	EstimatedEnd     time.Time
+	Reason           string
 	AffectedFeatures []string
 }
 
@@ -644,7 +644,7 @@ func NewSacredMaintenanceEvent(sacredID, maintenanceType, reason string, duratio
 		Reason:           reason,
 		AffectedFeatures: affectedFeatures,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["maintenance_type"] = maintenanceType
@@ -654,20 +654,20 @@ func NewSacredMaintenanceEvent(sacredID, maintenanceType, reason string, duratio
 	event.Payload["reason"] = reason
 	event.Payload["affected_features"] = affectedFeatures
 	event.Payload["affected_count"] = len(affectedFeatures)
-	
+
 	return event
 }
 
 // SacredAchievementUnlockedEvent 圣地成就解锁事件
 type SacredAchievementUnlockedEvent struct {
 	*BaseDomainEvent
-	SacredID      string
-	PlayerID      string
-	AchievementID string
+	SacredID        string
+	PlayerID        string
+	AchievementID   string
 	AchievementName string
-	Description   string
-	Rewards       map[string]interface{}
-	UnlockedAt    time.Time
+	Description     string
+	Rewards         map[string]interface{}
+	UnlockedAt      time.Time
 }
 
 // NewSacredAchievementUnlockedEvent 创建圣地成就解锁事件
@@ -690,7 +690,7 @@ func NewSacredAchievementUnlockedEvent(sacredID, playerID, achievementID, achiev
 		Rewards:         rewards,
 		UnlockedAt:      now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["player_id"] = playerID
@@ -699,7 +699,7 @@ func NewSacredAchievementUnlockedEvent(sacredID, playerID, achievementID, achiev
 	event.Payload["description"] = description
 	event.Payload["rewards"] = rewards
 	event.Payload["unlocked_at"] = now
-	
+
 	return event
 }
 
@@ -731,14 +731,14 @@ func NewSacredSeasonChangedEvent(sacredID, oldSeason, newSeason string, seasonEf
 		SeasonEffects: seasonEffects,
 		ChangedAt:     now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["old_season"] = oldSeason
 	event.Payload["new_season"] = newSeason
 	event.Payload["season_effects"] = seasonEffects
 	event.Payload["changed_at"] = now
-	
+
 	return event
 }
 
@@ -772,7 +772,7 @@ func NewSacredRankingUpdatedEvent(sacredID, rankingType string, oldRank, newRank
 		Score:       score,
 		UpdatedAt:   now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["sacred_id"] = sacredID
 	event.Payload["ranking_type"] = rankingType
@@ -781,7 +781,7 @@ func NewSacredRankingUpdatedEvent(sacredID, rankingType string, oldRank, newRank
 	event.Payload["rank_change"] = newRank - oldRank
 	event.Payload["score"] = score
 	event.Payload["updated_at"] = now
-	
+
 	return event
 }
 
@@ -879,22 +879,22 @@ func (ev *EventValidator) Validate(event DomainEvent) error {
 	if !exists {
 		return nil // 没有规则则通过
 	}
-	
+
 	for _, rule := range rules {
 		if err := rule.Validate(event); err != nil {
 			return fmt.Errorf("validation failed for rule %s: %w", rule.GetRuleName(), err)
 		}
 	}
-	
+
 	return nil
 }
 
 // EventMetrics 事件指标
 type EventMetrics struct {
-	EventType     string
-	Count         int64
-	LastOccurred  time.Time
-	AverageSize   float64
+	EventType      string
+	Count          int64
+	LastOccurred   time.Time
+	AverageSize    float64
 	ProcessingTime time.Duration
 }
 

@@ -23,11 +23,11 @@ type ChatChannel struct {
 type ChannelType int
 
 const (
-	ChannelTypeWorld  ChannelType = iota // 世界频道
-	ChannelTypeGuild                     // 公会频道
-	ChannelTypeTeam                      // 队伍频道
-	ChannelTypePrivate                   // 私聊频道
-	ChannelTypeSystem                    // 系统频道
+	ChannelTypeWorld   ChannelType = iota // 世界频道
+	ChannelTypeGuild                      // 公会频道
+	ChannelTypeTeam                       // 队伍频道
+	ChannelTypePrivate                    // 私聊频道
+	ChannelTypeSystem                     // 系统频道
 )
 
 // NewChatChannel 创建新的聊天频道
@@ -49,15 +49,15 @@ func (c *ChatChannel) AddMember(member *Member) error {
 	if len(c.members) >= c.MaxMembers && c.MaxMembers > 0 {
 		return ErrChannelFull
 	}
-	
+
 	if _, exists := c.members[member.PlayerID]; exists {
 		return ErrMemberAlreadyExists
 	}
-	
+
 	c.members[member.PlayerID] = member
 	c.updatedAt = time.Now()
 	c.version++
-	
+
 	return nil
 }
 
@@ -66,11 +66,11 @@ func (c *ChatChannel) RemoveMember(playerID string) error {
 	if _, exists := c.members[playerID]; !exists {
 		return ErrMemberNotFound
 	}
-	
+
 	delete(c.members, playerID)
 	c.updatedAt = time.Now()
 	c.version++
-	
+
 	return nil
 }
 
@@ -80,22 +80,22 @@ func (c *ChatChannel) SendMessage(ctx context.Context, message *Message) error {
 	if _, exists := c.members[message.SenderID]; !exists && c.Type != ChannelTypeSystem {
 		return ErrSenderNotInChannel
 	}
-	
+
 	// 验证消息内容
 	if err := message.Validate(); err != nil {
 		return err
 	}
-	
+
 	// 添加消息到频道
 	c.messages = append(c.messages, message)
 	c.updatedAt = time.Now()
 	c.version++
-	
+
 	// 限制消息历史数量
 	if len(c.messages) > MaxMessagesPerChannel {
 		c.messages = c.messages[len(c.messages)-MaxMessagesPerChannel:]
 	}
-	
+
 	return nil
 }
 
@@ -113,12 +113,12 @@ func (c *ChatChannel) GetRecentMessages(limit int) []*Message {
 	if limit <= 0 || limit > len(c.messages) {
 		limit = len(c.messages)
 	}
-	
+
 	start := len(c.messages) - limit
 	if start < 0 {
 		start = 0
 	}
-	
+
 	return c.messages[start:]
 }
 

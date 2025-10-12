@@ -80,27 +80,27 @@ func (b *BuildingAggregate) StartConstruction(duration time.Duration, costs []*R
 	if b.Status != BuildingStatusPlanning {
 		return fmt.Errorf("building must be in planning status to start construction")
 	}
-	
+
 	// 检查建造要求
 	if err := b.checkRequirements(); err != nil {
 		return fmt.Errorf("construction requirements not met: %w", err)
 	}
-	
+
 	// 创建建造信息
 	now := time.Now()
 	b.Construction = &ConstructionInfo{
-		StartedAt:    now,
-		Duration:     duration,
-		CompletedAt:  nil,
-		Progress:     0.0,
-		Costs:        costs,
-		Workers:      make([]*WorkerAssignment, 0),
-		Materials:    make([]*MaterialUsage, 0),
-		Status:       ConstructionStatusInProgress,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		StartedAt:   now,
+		Duration:    duration,
+		CompletedAt: nil,
+		Progress:    0.0,
+		Costs:       costs,
+		Workers:     make([]*WorkerAssignment, 0),
+		Materials:   make([]*MaterialUsage, 0),
+		Status:      ConstructionStatusInProgress,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
-	
+
 	b.Status = BuildingStatusUnderConstruction
 	b.UpdatedAt = now
 	return nil
@@ -111,24 +111,24 @@ func (b *BuildingAggregate) UpdateConstructionProgress(progress float64) error {
 	if b.Status != BuildingStatusUnderConstruction {
 		return fmt.Errorf("building is not under construction")
 	}
-	
+
 	if b.Construction == nil {
 		return fmt.Errorf("construction info not found")
 	}
-	
+
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	b.Construction.Progress = progress
 	b.Construction.UpdatedAt = time.Now()
 	b.UpdatedAt = time.Now()
-	
+
 	// 检查是否完成建造
 	if progress >= 100 {
 		return b.CompleteConstruction()
 	}
-	
+
 	return nil
 }
 
@@ -137,17 +137,17 @@ func (b *BuildingAggregate) CompleteConstruction() error {
 	if b.Status != BuildingStatusUnderConstruction {
 		return fmt.Errorf("building is not under construction")
 	}
-	
+
 	if b.Construction == nil {
 		return fmt.Errorf("construction info not found")
 	}
-	
+
 	now := time.Now()
 	b.Construction.CompletedAt = &now
 	b.Construction.Progress = 100.0
 	b.Construction.Status = ConstructionStatusCompleted
 	b.Construction.UpdatedAt = now
-	
+
 	b.Status = BuildingStatusActive
 	b.UpdatedAt = now
 	return nil
@@ -158,16 +158,16 @@ func (b *BuildingAggregate) CancelConstruction(reason string) error {
 	if b.Status != BuildingStatusUnderConstruction {
 		return fmt.Errorf("building is not under construction")
 	}
-	
+
 	if b.Construction == nil {
 		return fmt.Errorf("construction info not found")
 	}
-	
+
 	now := time.Now()
 	b.Construction.Status = ConstructionStatusCancelled
 	b.Construction.UpdatedAt = now
 	b.Construction.SetMetadata("cancel_reason", reason)
-	
+
 	b.Status = BuildingStatusCancelled
 	b.UpdatedAt = now
 	return nil
@@ -178,37 +178,37 @@ func (b *BuildingAggregate) StartUpgrade(targetLevel int32, duration time.Durati
 	if b.Status != BuildingStatusActive {
 		return fmt.Errorf("building must be active to start upgrade")
 	}
-	
+
 	if targetLevel <= b.Level {
 		return fmt.Errorf("target level must be higher than current level")
 	}
-	
+
 	if targetLevel > b.MaxLevel {
 		return fmt.Errorf("target level exceeds maximum level")
 	}
-	
+
 	// 检查升级要求
 	if err := b.checkUpgradeRequirements(targetLevel); err != nil {
 		return fmt.Errorf("upgrade requirements not met: %w", err)
 	}
-	
+
 	// 创建升级信息
 	now := time.Now()
 	b.Upgrade = &UpgradeInfo{
-		FromLevel:    b.Level,
-		ToLevel:      targetLevel,
-		StartedAt:    now,
-		Duration:     duration,
-		CompletedAt:  nil,
-		Progress:     0.0,
-		Costs:        costs,
-		Workers:      make([]*WorkerAssignment, 0),
-		Materials:    make([]*MaterialUsage, 0),
-		Status:       UpgradeStatusInProgress,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		FromLevel:   b.Level,
+		ToLevel:     targetLevel,
+		StartedAt:   now,
+		Duration:    duration,
+		CompletedAt: nil,
+		Progress:    0.0,
+		Costs:       costs,
+		Workers:     make([]*WorkerAssignment, 0),
+		Materials:   make([]*MaterialUsage, 0),
+		Status:      UpgradeStatusInProgress,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
-	
+
 	b.Status = BuildingStatusUpgrading
 	b.UpdatedAt = now
 	return nil
@@ -219,24 +219,24 @@ func (b *BuildingAggregate) UpdateUpgradeProgress(progress float64) error {
 	if b.Status != BuildingStatusUpgrading {
 		return fmt.Errorf("building is not upgrading")
 	}
-	
+
 	if b.Upgrade == nil {
 		return fmt.Errorf("upgrade info not found")
 	}
-	
+
 	if progress < 0 || progress > 100 {
 		return fmt.Errorf("progress must be between 0 and 100")
 	}
-	
+
 	b.Upgrade.Progress = progress
 	b.Upgrade.UpdatedAt = time.Now()
 	b.UpdatedAt = time.Now()
-	
+
 	// 检查是否完成升级
 	if progress >= 100 {
 		return b.CompleteUpgrade()
 	}
-	
+
 	return nil
 }
 
@@ -245,23 +245,23 @@ func (b *BuildingAggregate) CompleteUpgrade() error {
 	if b.Status != BuildingStatusUpgrading {
 		return fmt.Errorf("building is not upgrading")
 	}
-	
+
 	if b.Upgrade == nil {
 		return fmt.Errorf("upgrade info not found")
 	}
-	
+
 	now := time.Now()
 	b.Upgrade.CompletedAt = &now
 	b.Upgrade.Progress = 100.0
 	b.Upgrade.Status = UpgradeStatusCompleted
 	b.Upgrade.UpdatedAt = now
-	
+
 	// 更新建筑等级
 	b.Level = b.Upgrade.ToLevel
-	
+
 	// 应用升级效果
 	b.applyUpgradeEffects()
-	
+
 	b.Status = BuildingStatusActive
 	b.UpdatedAt = now
 	return nil
@@ -272,16 +272,16 @@ func (b *BuildingAggregate) CancelUpgrade(reason string) error {
 	if b.Status != BuildingStatusUpgrading {
 		return fmt.Errorf("building is not upgrading")
 	}
-	
+
 	if b.Upgrade == nil {
 		return fmt.Errorf("upgrade info not found")
 	}
-	
+
 	now := time.Now()
 	b.Upgrade.Status = UpgradeStatusCancelled
 	b.Upgrade.UpdatedAt = now
 	b.Upgrade.SetMetadata("cancel_reason", reason)
-	
+
 	b.Status = BuildingStatusActive
 	b.UpdatedAt = now
 	return nil
@@ -292,22 +292,22 @@ func (b *BuildingAggregate) Repair(amount int32, costs []*ResourceCost) error {
 	if b.Status != BuildingStatusActive && b.Status != BuildingStatusDamaged {
 		return fmt.Errorf("building cannot be repaired in current status")
 	}
-	
+
 	if b.Health >= b.MaxHealth {
 		return fmt.Errorf("building is already at full health")
 	}
-	
+
 	// 修理建筑
 	b.Health += amount
 	if b.Health > b.MaxHealth {
 		b.Health = b.MaxHealth
 	}
-	
+
 	// 如果完全修复，更新状态
 	if b.Health >= b.MaxHealth && b.Status == BuildingStatusDamaged {
 		b.Status = BuildingStatusActive
 	}
-	
+
 	b.UpdatedAt = time.Now()
 	return nil
 }
@@ -317,29 +317,29 @@ func (b *BuildingAggregate) TakeDamage(damage int32, damageType DamageType) erro
 	if b.Status == BuildingStatusDestroyed {
 		return fmt.Errorf("building is already destroyed")
 	}
-	
+
 	// 计算实际伤害（考虑防御）
 	actualDamage := b.calculateActualDamage(damage, damageType)
-	
+
 	// 扣除生命值
 	b.Health -= actualDamage
 	if b.Health < 0 {
 		b.Health = 0
 	}
-	
+
 	// 扣除耐久度
 	b.Durability -= actualDamage / 2
 	if b.Durability < 0 {
 		b.Durability = 0
 	}
-	
+
 	// 更新状态
 	if b.Health <= 0 {
 		b.Status = BuildingStatusDestroyed
 	} else if b.Health < b.MaxHealth/2 {
 		b.Status = BuildingStatusDamaged
 	}
-	
+
 	b.UpdatedAt = time.Now()
 	return nil
 }
@@ -349,20 +349,20 @@ func (b *BuildingAggregate) Demolish(reason string) error {
 	if b.Status == BuildingStatusDestroyed {
 		return fmt.Errorf("building is already destroyed")
 	}
-	
+
 	// 停止所有进行中的操作
 	if b.Construction != nil && b.Construction.Status == ConstructionStatusInProgress {
 		b.Construction.Status = ConstructionStatusCancelled
 	}
-	
+
 	if b.Upgrade != nil && b.Upgrade.Status == UpgradeStatusInProgress {
 		b.Upgrade.Status = UpgradeStatusCancelled
 	}
-	
+
 	// 清空工人和访客
 	b.Workers = make([]*WorkerInfo, 0)
 	b.Visitors = make([]*VisitorInfo, 0)
-	
+
 	b.Status = BuildingStatusDemolished
 	b.SetMetadata("demolish_reason", reason)
 	b.UpdatedAt = time.Now()
@@ -374,11 +374,11 @@ func (b *BuildingAggregate) SetPosition(position *Position) error {
 	if position == nil {
 		return fmt.Errorf("position cannot be nil")
 	}
-	
+
 	if err := position.Validate(); err != nil {
 		return fmt.Errorf("invalid position: %w", err)
 	}
-	
+
 	b.Position = position
 	b.UpdatedAt = time.Now()
 	return nil
@@ -389,7 +389,7 @@ func (b *BuildingAggregate) SetOrientation(orientation Orientation) error {
 	if !orientation.IsValid() {
 		return fmt.Errorf("invalid orientation: %v", orientation)
 	}
-	
+
 	b.Orientation = orientation
 	b.UpdatedAt = time.Now()
 	return nil
@@ -400,20 +400,20 @@ func (b *BuildingAggregate) AddWorker(workerID uint64, role WorkerRole, efficien
 	if b.Status != BuildingStatusActive {
 		return fmt.Errorf("building must be active to add workers")
 	}
-	
+
 	// 检查工人是否已存在
 	for _, worker := range b.Workers {
 		if worker.WorkerID == workerID {
 			return fmt.Errorf("worker %d is already assigned to this building", workerID)
 		}
 	}
-	
+
 	// 检查工人容量
 	maxWorkers := b.getMaxWorkers()
 	if len(b.Workers) >= maxWorkers {
 		return fmt.Errorf("building has reached maximum worker capacity: %d", maxWorkers)
 	}
-	
+
 	// 添加工人
 	now := time.Now()
 	worker := &WorkerInfo{
@@ -425,7 +425,7 @@ func (b *BuildingAggregate) AddWorker(workerID uint64, role WorkerRole, efficien
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
-	
+
 	b.Workers = append(b.Workers, worker)
 	b.UpdatedAt = now
 	return nil
@@ -441,7 +441,7 @@ func (b *BuildingAggregate) RemoveWorker(workerID uint64, reason string) error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("worker %d not found in building", workerID)
 }
 
@@ -450,11 +450,11 @@ func (b *BuildingAggregate) AddEffect(effect *BuildingEffect) error {
 	if effect == nil {
 		return fmt.Errorf("effect cannot be nil")
 	}
-	
+
 	if err := effect.Validate(); err != nil {
 		return fmt.Errorf("invalid effect: %w", err)
 	}
-	
+
 	// 检查是否已存在相同效果
 	for _, existing := range b.Effects {
 		if existing.Type == effect.Type && existing.Target == effect.Target {
@@ -466,7 +466,7 @@ func (b *BuildingAggregate) AddEffect(effect *BuildingEffect) error {
 			return nil
 		}
 	}
-	
+
 	// 添加新效果
 	effect.CreatedAt = time.Now()
 	effect.UpdatedAt = time.Now()
@@ -485,7 +485,7 @@ func (b *BuildingAggregate) RemoveEffect(effectType EffectType, target string) e
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("effect not found: type=%v, target=%s", effectType, target)
 }
 
@@ -494,11 +494,11 @@ func (b *BuildingAggregate) UpdateProduction(production *ProductionInfo) error {
 	if production == nil {
 		return fmt.Errorf("production info cannot be nil")
 	}
-	
+
 	if err := production.Validate(); err != nil {
 		return fmt.Errorf("invalid production info: %w", err)
 	}
-	
+
 	b.Production = production
 	b.UpdatedAt = time.Now()
 	return nil
@@ -509,11 +509,11 @@ func (b *BuildingAggregate) UpdateStorage(storage *StorageInfo) error {
 	if storage == nil {
 		return fmt.Errorf("storage info cannot be nil")
 	}
-	
+
 	if err := storage.Validate(); err != nil {
 		return fmt.Errorf("invalid storage info: %w", err)
 	}
-	
+
 	b.Storage = storage
 	b.UpdatedAt = time.Now()
 	return nil
@@ -524,11 +524,11 @@ func (b *BuildingAggregate) UpdateDefense(defense *DefenseInfo) error {
 	if defense == nil {
 		return fmt.Errorf("defense info cannot be nil")
 	}
-	
+
 	if err := defense.Validate(); err != nil {
 		return fmt.Errorf("invalid defense info: %w", err)
 	}
-	
+
 	b.Defense = defense
 	b.UpdatedAt = time.Now()
 	return nil
@@ -539,7 +539,7 @@ func (b *BuildingAggregate) PerformMaintenance(maintenanceType MaintenanceType, 
 	if b.Status != BuildingStatusActive {
 		return fmt.Errorf("building must be active to perform maintenance")
 	}
-	
+
 	// 创建或更新维护信息
 	if b.Maintenance == nil {
 		now := time.Now()
@@ -553,7 +553,7 @@ func (b *BuildingAggregate) PerformMaintenance(maintenanceType MaintenanceType, 
 			UpdatedAt:         now,
 		}
 	}
-	
+
 	// 执行维护
 	now := time.Now()
 	record := &MaintenanceRecord{
@@ -563,13 +563,13 @@ func (b *BuildingAggregate) PerformMaintenance(maintenanceType MaintenanceType, 
 		Result:      "success",
 		Notes:       fmt.Sprintf("Performed %s maintenance", maintenanceType.String()),
 	}
-	
+
 	b.Maintenance.History = append(b.Maintenance.History, record)
 	b.Maintenance.LastMaintenanceAt = &now
 	b.Maintenance.NextMaintenanceAt = now.Add(24 * time.Hour)
 	b.Maintenance.MaintenanceLevel = 100 // 重置维护等级
 	b.Maintenance.UpdatedAt = now
-	
+
 	// 恢复耐久度
 	if b.Durability < b.MaxDurability {
 		b.Durability += int32(float64(b.MaxDurability) * 0.1) // 恢复10%耐久度
@@ -577,7 +577,7 @@ func (b *BuildingAggregate) PerformMaintenance(maintenanceType MaintenanceType, 
 			b.Durability = b.MaxDurability
 		}
 	}
-	
+
 	b.UpdatedAt = now
 	return nil
 }
@@ -608,7 +608,7 @@ func (b *BuildingAggregate) AddTag(tag string) {
 			return // 已存在，不重复添加
 		}
 	}
-	
+
 	b.Tags = append(b.Tags, tag)
 	b.UpdatedAt = time.Now()
 }
@@ -684,42 +684,42 @@ func (b *BuildingAggregate) GetEfficiency() float64 {
 	if b.Status != BuildingStatusActive {
 		return 0.0
 	}
-	
+
 	// 基础效率
 	baseEfficiency := 1.0
-	
+
 	// 健康度影响
 	healthFactor := float64(b.Health) / float64(b.MaxHealth)
-	
+
 	// 耐久度影响
 	durabilityFactor := float64(b.Durability) / float64(b.MaxDurability)
-	
+
 	// 维护影响
 	maintenanceFactor := 1.0
 	if b.Maintenance != nil {
 		maintenanceFactor = float64(b.Maintenance.MaintenanceLevel) / 100.0
 	}
-	
+
 	// 工人效率影响
 	workerFactor := b.getWorkerEfficiencyFactor()
-	
+
 	// 效果影响
 	effectFactor := b.getEffectFactor(EffectTypeEfficiency)
-	
+
 	return baseEfficiency * healthFactor * durabilityFactor * maintenanceFactor * workerFactor * effectFactor
 }
 
 // GetTotalUpgradeCost 获取升级总成本
 func (b *BuildingAggregate) GetTotalUpgradeCost(targetLevel int32) []*ResourceCost {
 	totalCosts := make(map[string]int64)
-	
+
 	for level := b.Level + 1; level <= targetLevel; level++ {
 		levelCosts := b.getUpgradeCostForLevel(level)
 		for _, cost := range levelCosts {
 			totalCosts[cost.ResourceType] += cost.Amount
 		}
 	}
-	
+
 	result := make([]*ResourceCost, 0, len(totalCosts))
 	for resourceType, amount := range totalCosts {
 		result = append(result, &ResourceCost{
@@ -727,7 +727,7 @@ func (b *BuildingAggregate) GetTotalUpgradeCost(targetLevel int32) []*ResourceCo
 			Amount:       amount,
 		})
 	}
-	
+
 	return result
 }
 
@@ -744,7 +744,7 @@ func (b *BuildingAggregate) GetBoundingBox() *BoundingBox {
 	if b.Position == nil || b.Size == nil {
 		return nil
 	}
-	
+
 	return &BoundingBox{
 		MinX: b.Position.X,
 		MinY: b.Position.Y,
@@ -773,10 +773,10 @@ func (b *BuildingAggregate) checkUpgradeRequirements(targetLevel int32) error {
 	if err := b.checkRequirements(); err != nil {
 		return err
 	}
-	
+
 	// 检查等级特定要求
 	// TODO: 实现等级特定要求检查
-	
+
 	return nil
 }
 
@@ -785,11 +785,11 @@ func (b *BuildingAggregate) applyUpgradeEffects() {
 	// 提升最大生命值
 	b.MaxHealth = int32(float64(b.MaxHealth) * 1.1)
 	b.Health = b.MaxHealth
-	
+
 	// 提升最大耐久度
 	b.MaxDurability = int32(float64(b.MaxDurability) * 1.1)
 	b.Durability = b.MaxDurability
-	
+
 	// 应用等级相关的效果
 	// TODO: 根据建筑类型和等级应用特定效果
 }
@@ -797,7 +797,7 @@ func (b *BuildingAggregate) applyUpgradeEffects() {
 // calculateActualDamage 计算实际伤害
 func (b *BuildingAggregate) calculateActualDamage(damage int32, damageType DamageType) int32 {
 	actualDamage := damage
-	
+
 	// 应用防御
 	if b.Defense != nil {
 		defenseValue := b.Defense.GetDefenseValue(damageType)
@@ -806,11 +806,11 @@ func (b *BuildingAggregate) calculateActualDamage(damage int32, damageType Damag
 			actualDamage = 0
 		}
 	}
-	
+
 	// 应用效果
 	effectFactor := b.getEffectFactor(EffectTypeDefense)
 	actualDamage = int32(float64(actualDamage) * (1.0 - effectFactor))
-	
+
 	return actualDamage
 }
 
@@ -827,14 +827,14 @@ func (b *BuildingAggregate) getWorkerEfficiencyFactor() float64 {
 	if len(b.Workers) == 0 {
 		return 0.5 // 没有工人时效率降低
 	}
-	
+
 	totalEfficiency := 0.0
 	for _, worker := range b.Workers {
 		if worker.Status == WorkerStatusActive {
 			totalEfficiency += worker.Efficiency
 		}
 	}
-	
+
 	averageEfficiency := totalEfficiency / float64(len(b.Workers))
 	return averageEfficiency
 }
@@ -854,7 +854,7 @@ func (b *BuildingAggregate) getEffectFactor(effectType EffectType) float64 {
 func (b *BuildingAggregate) getUpgradeCostForLevel(level int32) []*ResourceCost {
 	// 基础成本随等级增长
 	baseCost := int64(100 * level * level)
-	
+
 	return []*ResourceCost{
 		{ResourceType: "wood", Amount: baseCost},
 		{ResourceType: "stone", Amount: baseCost / 2},
@@ -874,19 +874,19 @@ const (
 	DefaultMaxLevel      = int32(10)  // 默认最大等级
 	DefaultMaxHealth     = int32(100) // 默认最大生命值
 	DefaultMaxDurability = int32(100) // 默认最大耐久度
-	
+
 	// 维护相关常量
 	MaintenanceInterval = 24 * time.Hour // 维护间隔
 	MaintenanceCost     = int64(50)      // 基础维护成本
-	
+
 	// 建造相关常量
-	DefaultConstructionTime = 1 * time.Hour // 默认建造时间
+	DefaultConstructionTime = 1 * time.Hour    // 默认建造时间
 	DefaultUpgradeTime      = 30 * time.Minute // 默认升级时间
-	
+
 	// 效率相关常量
-	MinEfficiency     = 0.1 // 最小效率
-	MaxEfficiency     = 2.0 // 最大效率
-	BaseEfficiency    = 1.0 // 基础效率
+	MinEfficiency      = 0.1 // 最小效率
+	MaxEfficiency      = 2.0 // 最大效率
+	BaseEfficiency     = 1.0 // 基础效率
 	NoWorkerEfficiency = 0.5 // 无工人时的效率
 )
 
@@ -956,106 +956,106 @@ func (b *BuildingAggregate) Validate() error {
 	if b.ID == "" {
 		return fmt.Errorf("building ID cannot be empty")
 	}
-	
+
 	if b.PlayerID == 0 {
 		return fmt.Errorf("player ID cannot be zero")
 	}
-	
+
 	if b.BuildingTypeID == "" {
 		return fmt.Errorf("building type ID cannot be empty")
 	}
-	
+
 	if b.Name == "" {
 		return fmt.Errorf("building name cannot be empty")
 	}
-	
+
 	if !b.Status.IsValid() {
 		return fmt.Errorf("invalid building status: %v", b.Status)
 	}
-	
+
 	if !b.Category.IsValid() {
 		return fmt.Errorf("invalid building category: %v", b.Category)
 	}
-	
+
 	if b.Level < 1 {
 		return fmt.Errorf("building level must be at least 1")
 	}
-	
+
 	if b.Level > b.MaxLevel {
 		return fmt.Errorf("building level cannot exceed max level")
 	}
-	
+
 	if b.Health < 0 || b.Health > b.MaxHealth {
 		return fmt.Errorf("building health must be between 0 and max health")
 	}
-	
+
 	if b.Durability < 0 || b.Durability > b.MaxDurability {
 		return fmt.Errorf("building durability must be between 0 and max durability")
 	}
-	
+
 	if b.Size != nil {
 		if err := b.Size.Validate(); err != nil {
 			return fmt.Errorf("invalid building size: %w", err)
 		}
 	}
-	
+
 	if b.Position != nil {
 		if err := b.Position.Validate(); err != nil {
 			return fmt.Errorf("invalid building position: %w", err)
 		}
 	}
-	
+
 	if !b.Orientation.IsValid() {
 		return fmt.Errorf("invalid building orientation: %v", b.Orientation)
 	}
-	
+
 	// 验证效果
 	for _, effect := range b.Effects {
 		if err := effect.Validate(); err != nil {
 			return fmt.Errorf("invalid building effect: %w", err)
 		}
 	}
-	
+
 	// 验证要求
 	for _, req := range b.Requirements {
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("invalid building requirement: %w", err)
 		}
 	}
-	
+
 	// 验证成本
 	for _, cost := range b.UpgradeCosts {
 		if err := cost.Validate(); err != nil {
 			return fmt.Errorf("invalid upgrade cost: %w", err)
 		}
 	}
-	
+
 	for _, cost := range b.MaintenanceCosts {
 		if err := cost.Validate(); err != nil {
 			return fmt.Errorf("invalid maintenance cost: %w", err)
 		}
 	}
-	
+
 	// 验证生产信息
 	if b.Production != nil {
 		if err := b.Production.Validate(); err != nil {
 			return fmt.Errorf("invalid production info: %w", err)
 		}
 	}
-	
+
 	// 验证存储信息
 	if b.Storage != nil {
 		if err := b.Storage.Validate(); err != nil {
 			return fmt.Errorf("invalid storage info: %w", err)
 		}
 	}
-	
+
 	// 验证防御信息
 	if b.Defense != nil {
 		if err := b.Defense.Validate(); err != nil {
 			return fmt.Errorf("invalid defense info: %w", err)
 		}
 	}
-	
+
 	return nil
 }

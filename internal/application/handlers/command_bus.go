@@ -40,40 +40,40 @@ func (bus *CommandBus) Execute(ctx context.Context, cmd Command) (interface{}, e
 	if err := cmd.Validate(); err != nil {
 		return nil, fmt.Errorf("command validation failed: %w", err)
 	}
-	
+
 	// 获取处理器
 	handler, exists := bus.handlers[cmd.CommandType()]
 	if !exists {
 		return nil, fmt.Errorf("no handler registered for command type: %s", cmd.CommandType())
 	}
-	
+
 	// 使用反射调用处理器
 	handlerValue := reflect.ValueOf(handler)
 	handlerType := reflect.TypeOf(handler)
-	
+
 	// 查找Handle方法
 	handleMethod, exists := handlerType.MethodByName("Handle")
 	if !exists {
 		return nil, fmt.Errorf("handler does not have Handle method")
 	}
-	
+
 	// 调用Handle方法
 	args := []reflect.Value{
 		handlerValue,
 		reflect.ValueOf(ctx),
 		reflect.ValueOf(cmd),
 	}
-	
+
 	results := handleMethod.Func.Call(args)
 	if len(results) != 2 {
 		return nil, fmt.Errorf("handler Handle method should return (result, error)")
 	}
-	
+
 	// 检查错误
 	if !results[1].IsNil() {
 		return nil, results[1].Interface().(error)
 	}
-	
+
 	return results[0].Interface(), nil
 }
 
@@ -84,11 +84,11 @@ func ExecuteTyped[T Command, R any](ctx context.Context, bus *CommandBus, cmd T)
 		var zero R
 		return zero, err
 	}
-	
+
 	if typedResult, ok := result.(R); ok {
 		return typedResult, nil
 	}
-	
+
 	var zero R
 	return zero, fmt.Errorf("unexpected result type")
 }
@@ -128,13 +128,13 @@ func NewLoggingMiddleware(logger Logger) *LoggingMiddleware {
 // Execute 执行日志中间件
 func (m *LoggingMiddleware) Execute(ctx context.Context, cmd Command, next func(context.Context, Command) (interface{}, error)) (interface{}, error) {
 	m.logger.Info("executing command", "type", cmd.CommandType())
-	
+
 	result, err := next(ctx, cmd)
 	if err != nil {
 		m.logger.Error("command execution failed", err, "type", cmd.CommandType())
 		return nil, err
 	}
-	
+
 	m.logger.Info("command executed successfully", "type", cmd.CommandType())
 	return result, nil
 }

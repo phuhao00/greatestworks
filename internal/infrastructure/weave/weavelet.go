@@ -9,14 +9,14 @@ import (
 
 // WeaveletInfo represents weavelet information for Service Weaver
 type WeaveletInfo struct {
-	App          string            `json:"app"`
-	DeploymentId string            `json:"deployment_id"`
-	Group        *ColocationGroup  `json:"group"`
-	GroupId      string            `json:"group_id"`
-	Id           string            `json:"id"`
-	SingleProcess bool             `json:"single_process"`
-	SingleMachine bool             `json:"single_machine"`
-	Labels       map[string]string `json:"labels,omitempty"`
+	App           string            `json:"app"`
+	DeploymentId  string            `json:"deployment_id"`
+	Group         *ColocationGroup  `json:"group"`
+	GroupId       string            `json:"group_id"`
+	Id            string            `json:"id"`
+	SingleProcess bool              `json:"single_process"`
+	SingleMachine bool              `json:"single_machine"`
+	Labels        map[string]string `json:"labels,omitempty"`
 }
 
 // ColocationGroup represents a colocation group in Service Weaver
@@ -63,7 +63,7 @@ func NewWeaveletManager(config *WeaveletConfig) *WeaveletManager {
 		defaultConfig := DefaultWeaveletConfig()
 		config = &defaultConfig
 	}
-	
+
 	return &WeaveletManager{
 		config: config,
 	}
@@ -74,7 +74,7 @@ func (wm *WeaveletManager) Initialize() error {
 	if !wm.config.Enabled {
 		return nil
 	}
-	
+
 	// Create weavelet info
 	wm.info = &WeaveletInfo{
 		App:          wm.config.App,
@@ -83,18 +83,18 @@ func (wm *WeaveletManager) Initialize() error {
 			Name:       wm.config.GroupName,
 			Components: wm.config.Components,
 		},
-		GroupId:      uuid.New().String(),
-		Id:           uuid.New().String(),
+		GroupId:       uuid.New().String(),
+		Id:            uuid.New().String(),
 		SingleProcess: wm.config.SingleProcess,
 		SingleMachine: wm.config.SingleMachine,
-		Labels:       wm.config.Labels,
+		Labels:        wm.config.Labels,
 	}
-	
+
 	// Validate weavelet info
 	if err := CheckWeaveletInfo(wm.info); err != nil {
 		return fmt.Errorf("weavelet validation failed: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -113,7 +113,7 @@ func (wm *WeaveletManager) UpdateConfig(config *WeaveletConfig) error {
 	if config == nil {
 		return fmt.Errorf("config cannot be nil")
 	}
-	
+
 	wm.config = config
 	return wm.Initialize()
 }
@@ -124,7 +124,7 @@ func (wm *WeaveletManager) AddLabel(key, value string) {
 		wm.config.Labels = make(map[string]string)
 	}
 	wm.config.Labels[key] = value
-	
+
 	if wm.info != nil {
 		if wm.info.Labels == nil {
 			wm.info.Labels = make(map[string]string)
@@ -138,7 +138,7 @@ func (wm *WeaveletManager) RemoveLabel(key string) {
 	if wm.config.Labels != nil {
 		delete(wm.config.Labels, key)
 	}
-	
+
 	if wm.info != nil && wm.info.Labels != nil {
 		delete(wm.info.Labels, key)
 	}
@@ -192,7 +192,7 @@ func ValidateColocationGroup(group *ColocationGroup) error {
 	if len(group.Components) == 0 {
 		return fmt.Errorf("colocation group must have at least one component")
 	}
-	
+
 	// Check for duplicate components
 	componentSet := make(map[string]bool)
 	for _, component := range group.Components {
@@ -204,7 +204,7 @@ func ValidateColocationGroup(group *ColocationGroup) error {
 		}
 		componentSet[component] = true
 	}
-	
+
 	return nil
 }
 
@@ -213,7 +213,7 @@ func CreateWeaveletInfo(config *WeaveletConfig) (*WeaveletInfo, error) {
 	if config == nil {
 		return nil, fmt.Errorf("config cannot be nil")
 	}
-	
+
 	info := &WeaveletInfo{
 		App:          config.App,
 		DeploymentId: config.DeploymentId,
@@ -221,22 +221,22 @@ func CreateWeaveletInfo(config *WeaveletConfig) (*WeaveletInfo, error) {
 			Name:       config.GroupName,
 			Components: config.Components,
 		},
-		GroupId:      uuid.New().String(),
-		Id:           uuid.New().String(),
+		GroupId:       uuid.New().String(),
+		Id:            uuid.New().String(),
 		SingleProcess: config.SingleProcess,
 		SingleMachine: config.SingleMachine,
-		Labels:       make(map[string]string),
+		Labels:        make(map[string]string),
 	}
-	
+
 	// Copy labels
 	for k, v := range config.Labels {
 		info.Labels[k] = v
 	}
-	
+
 	// Validate the created info
 	if err := CheckWeaveletInfo(info); err != nil {
 		return nil, err
 	}
-	
+
 	return info, nil
 }

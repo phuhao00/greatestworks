@@ -31,9 +31,9 @@ func (e BaseFriendEvent) GetPlayerID() string {
 // FriendRequestSentEvent 好友请求发送事件
 type FriendRequestSentEvent struct {
 	BaseFriendEvent
-	RequestID    string
-	ToPlayerID   string
-	Message      string
+	RequestID  string
+	ToPlayerID string
+	Message    string
 }
 
 // NewFriendRequestSentEvent 创建好友请求发送事件
@@ -53,9 +53,9 @@ func NewFriendRequestSentEvent(playerID, requestID, toPlayerID, message string) 
 // FriendRequestAcceptedEvent 好友请求接受事件
 type FriendRequestAcceptedEvent struct {
 	BaseFriendEvent
-	RequestID      string
-	FromPlayerID   string
-	FriendshipID   string
+	RequestID    string
+	FromPlayerID string
+	FriendshipID string
 }
 
 // NewFriendRequestAcceptedEvent 创建好友请求接受事件

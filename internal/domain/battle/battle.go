@@ -2,9 +2,9 @@
 package battle
 
 import (
-	"time"
 	"github.com/google/uuid"
 	"greatestworks/internal/domain/player"
+	"time"
 )
 
 // BattleID 战斗ID值对象
@@ -44,50 +44,50 @@ const (
 
 // Battle 战斗聚合根
 type Battle struct {
-	id          BattleID
-	battleType  BattleType
-	status      BattleStatus
+	id           BattleID
+	battleType   BattleType
+	status       BattleStatus
 	participants []*BattleParticipant
-	rounds      []*BattleRound
-	winner      *player.PlayerID
-	startTime   time.Time
-	endTime     *time.Time
-	createdAt   time.Time
-	updatedAt   time.Time
-	version     int64
+	rounds       []*BattleRound
+	winner       *player.PlayerID
+	startTime    time.Time
+	endTime      *time.Time
+	createdAt    time.Time
+	updatedAt    time.Time
+	version      int64
 }
 
 // BattleParticipant 战斗参与者
 type BattleParticipant struct {
-	PlayerID     player.PlayerID `json:"player_id"`
-	Team         int             `json:"team"`
-	CurrentHP    int             `json:"current_hp"`
-	CurrentMP    int             `json:"current_mp"`
-	IsAlive      bool            `json:"is_alive"`
-	DamageDealt  int             `json:"damage_dealt"`
-	DamageTaken  int             `json:"damage_taken"`
-	JoinedAt     time.Time       `json:"joined_at"`
+	PlayerID    player.PlayerID `json:"player_id"`
+	Team        int             `json:"team"`
+	CurrentHP   int             `json:"current_hp"`
+	CurrentMP   int             `json:"current_mp"`
+	IsAlive     bool            `json:"is_alive"`
+	DamageDealt int             `json:"damage_dealt"`
+	DamageTaken int             `json:"damage_taken"`
+	JoinedAt    time.Time       `json:"joined_at"`
 }
 
 // BattleRound 战斗回合
 type BattleRound struct {
-	RoundNumber int                `json:"round_number"`
-	Actions     []*BattleAction    `json:"actions"`
-	StartTime   time.Time          `json:"start_time"`
-	EndTime     *time.Time         `json:"end_time"`
+	RoundNumber int             `json:"round_number"`
+	Actions     []*BattleAction `json:"actions"`
+	StartTime   time.Time       `json:"start_time"`
+	EndTime     *time.Time      `json:"end_time"`
 }
 
 // BattleAction 战斗行动
 type BattleAction struct {
-	ActionID    string           `json:"action_id"`
-	ActorID     player.PlayerID  `json:"actor_id"`
-	TargetID    *player.PlayerID `json:"target_id,omitempty"`
-	ActionType  ActionType       `json:"action_type"`
-	SkillID     *string          `json:"skill_id,omitempty"`
-	Damage      int              `json:"damage"`
-	Healing     int              `json:"healing"`
-	Critical    bool             `json:"critical"`
-	Timestamp   time.Time        `json:"timestamp"`
+	ActionID   string           `json:"action_id"`
+	ActorID    player.PlayerID  `json:"actor_id"`
+	TargetID   *player.PlayerID `json:"target_id,omitempty"`
+	ActionType ActionType       `json:"action_type"`
+	SkillID    *string          `json:"skill_id,omitempty"`
+	Damage     int              `json:"damage"`
+	Healing    int              `json:"healing"`
+	Critical   bool             `json:"critical"`
+	Timestamp  time.Time        `json:"timestamp"`
 }
 
 // ActionType 行动类型枚举
@@ -105,14 +105,14 @@ const (
 func NewBattle(battleType BattleType) *Battle {
 	now := time.Now()
 	return &Battle{
-		id:          NewBattleID(),
-		battleType:  battleType,
-		status:      BattleStatusWaiting,
+		id:           NewBattleID(),
+		battleType:   battleType,
+		status:       BattleStatusWaiting,
 		participants: make([]*BattleParticipant, 0),
-		rounds:      make([]*BattleRound, 0),
-		createdAt:   now,
-		updatedAt:   now,
-		version:     1,
+		rounds:       make([]*BattleRound, 0),
+		createdAt:    now,
+		updatedAt:    now,
+		version:      1,
 	}
 }
 
@@ -141,14 +141,14 @@ func (b *Battle) AddParticipant(playerID player.PlayerID, team int, hp, mp int) 
 	if b.status != BattleStatusWaiting {
 		return ErrBattleAlreadyStarted
 	}
-	
+
 	// 检查玩家是否已经参与
 	for _, p := range b.participants {
 		if p.PlayerID == playerID {
 			return ErrPlayerAlreadyInBattle
 		}
 	}
-	
+
 	participant := &BattleParticipant{
 		PlayerID:    playerID,
 		Team:        team,
@@ -159,11 +159,11 @@ func (b *Battle) AddParticipant(playerID player.PlayerID, team int, hp, mp int) 
 		DamageTaken: 0,
 		JoinedAt:    time.Now(),
 	}
-	
+
 	b.participants = append(b.participants, participant)
 	b.updatedAt = time.Now()
 	b.version++
-	
+
 	return nil
 }
 
@@ -172,16 +172,16 @@ func (b *Battle) Start() error {
 	if b.status != BattleStatusWaiting {
 		return ErrBattleAlreadyStarted
 	}
-	
+
 	if len(b.participants) < 2 {
 		return ErrInsufficientParticipants
 	}
-	
+
 	b.status = BattleStatusInProgress
 	b.startTime = time.Now()
 	b.updatedAt = time.Now()
 	b.version++
-	
+
 	return nil
 }
 
@@ -190,17 +190,17 @@ func (b *Battle) ExecuteAction(actorID player.PlayerID, targetID *player.PlayerI
 	if b.status != BattleStatusInProgress {
 		return nil, ErrBattleNotInProgress
 	}
-	
+
 	// 查找行动者
 	actor := b.findParticipant(actorID)
 	if actor == nil {
 		return nil, ErrPlayerNotInBattle
 	}
-	
+
 	if !actor.IsAlive {
 		return nil, ErrPlayerDead
 	}
-	
+
 	// 创建行动
 	action := &BattleAction{
 		ActionID:   uuid.New().String(),
@@ -210,7 +210,7 @@ func (b *Battle) ExecuteAction(actorID player.PlayerID, targetID *player.PlayerI
 		SkillID:    skillID,
 		Timestamp:  time.Now(),
 	}
-	
+
 	// 执行行动逻辑
 	switch actionType {
 	case ActionTypeAttack:
@@ -220,16 +220,16 @@ func (b *Battle) ExecuteAction(actorID player.PlayerID, targetID *player.PlayerI
 	case ActionTypeHeal:
 		b.executeHeal(action, actor)
 	}
-	
+
 	// 添加到当前回合
 	b.addActionToCurrentRound(action)
-	
+
 	// 检查战斗是否结束
 	b.checkBattleEnd()
-	
+
 	b.updatedAt = time.Now()
 	b.version++
-	
+
 	return action, nil
 }
 
@@ -238,27 +238,27 @@ func (b *Battle) executeAttack(action *BattleAction, actor *BattleParticipant) {
 	if action.TargetID == nil {
 		return
 	}
-	
+
 	target := b.findParticipant(*action.TargetID)
 	if target == nil || !target.IsAlive {
 		return
 	}
-	
+
 	// 计算伤害（简化版本）
 	baseDamage := 20 // 基础攻击力
 	damage := baseDamage
-	
+
 	// 暴击判断
 	if b.rollCritical() {
 		damage *= 2
 		action.Critical = true
 	}
-	
+
 	action.Damage = damage
 	target.CurrentHP -= damage
 	target.DamageTaken += damage
 	actor.DamageDealt += damage
-	
+
 	if target.CurrentHP <= 0 {
 		target.CurrentHP = 0
 		target.IsAlive = false
@@ -304,7 +304,7 @@ func (b *Battle) addActionToCurrentRound(action *BattleAction) {
 		}
 		b.rounds = append(b.rounds, round)
 	}
-	
+
 	currentRound := b.rounds[len(b.rounds)-1]
 	currentRound.Actions = append(currentRound.Actions, action)
 }
@@ -318,7 +318,7 @@ func (b *Battle) checkBattleEnd() {
 			teamAlive[p.Team]++
 		}
 	}
-	
+
 	// 如果只有一个队伍有存活者，战斗结束
 	aliveTeams := 0
 	winnerTeam := -1
@@ -328,7 +328,7 @@ func (b *Battle) checkBattleEnd() {
 			winnerTeam = team
 		}
 	}
-	
+
 	if aliveTeams <= 1 {
 		b.endBattle(winnerTeam)
 	}
@@ -339,7 +339,7 @@ func (b *Battle) endBattle(winnerTeam int) {
 	b.status = BattleStatusFinished
 	now := time.Now()
 	b.endTime = &now
-	
+
 	// 设置获胜者（简化版本：取获胜队伍第一个存活玩家）
 	for _, p := range b.participants {
 		if p.Team == winnerTeam && p.IsAlive {
@@ -347,7 +347,7 @@ func (b *Battle) endBattle(winnerTeam int) {
 			break
 		}
 	}
-	
+
 	// 结束当前回合
 	if len(b.rounds) > 0 {
 		currentRound := b.rounds[len(b.rounds)-1]

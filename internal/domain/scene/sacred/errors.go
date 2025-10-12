@@ -9,55 +9,55 @@ import (
 // 基础错误变量
 var (
 	// 圣地相关错误
-	ErrSacredNotFound        = fmt.Errorf("sacred place not found")
-	ErrSacredAlreadyExists   = fmt.Errorf("sacred place already exists")
-	ErrSacredNotActive       = fmt.Errorf("sacred place is not active")
-	ErrSacredLocked          = fmt.Errorf("sacred place is locked")
-	ErrSacredMaintenance     = fmt.Errorf("sacred place is under maintenance")
-	ErrSacredAccessDenied    = fmt.Errorf("access to sacred place denied")
-	ErrSacredCapacityFull    = fmt.Errorf("sacred place capacity is full")
-	ErrInvalidSacredName     = fmt.Errorf("invalid sacred place name")
-	ErrInvalidSacredStatus   = fmt.Errorf("invalid sacred place status")
-	ErrSacredOwnerMismatch   = fmt.Errorf("sacred place owner mismatch")
+	ErrSacredNotFound      = fmt.Errorf("sacred place not found")
+	ErrSacredAlreadyExists = fmt.Errorf("sacred place already exists")
+	ErrSacredNotActive     = fmt.Errorf("sacred place is not active")
+	ErrSacredLocked        = fmt.Errorf("sacred place is locked")
+	ErrSacredMaintenance   = fmt.Errorf("sacred place is under maintenance")
+	ErrSacredAccessDenied  = fmt.Errorf("access to sacred place denied")
+	ErrSacredCapacityFull  = fmt.Errorf("sacred place capacity is full")
+	ErrInvalidSacredName   = fmt.Errorf("invalid sacred place name")
+	ErrInvalidSacredStatus = fmt.Errorf("invalid sacred place status")
+	ErrSacredOwnerMismatch = fmt.Errorf("sacred place owner mismatch")
 
 	// 挑战相关错误
-	ErrChallengeNotFound      = fmt.Errorf("challenge not found")
-	ErrChallengeAlreadyExists = fmt.Errorf("challenge already exists")
-	ErrChallengeNotAvailable  = fmt.Errorf("challenge is not available")
-	ErrChallengeInProgress    = fmt.Errorf("challenge is in progress")
-	ErrChallengeCompleted     = fmt.Errorf("challenge already completed")
-	ErrChallengeFailed        = fmt.Errorf("challenge failed")
-	ErrChallengeExpired       = fmt.Errorf("challenge has expired")
-	ErrChallengeOnCooldown    = fmt.Errorf("challenge is on cooldown")
-	ErrInvalidChallenge       = fmt.Errorf("invalid challenge")
-	ErrInvalidChallengeType   = fmt.Errorf("invalid challenge type")
-	ErrInvalidDifficulty      = fmt.Errorf("invalid challenge difficulty")
-	ErrInsufficientLevel      = fmt.Errorf("insufficient level for challenge")
+	ErrChallengeNotFound         = fmt.Errorf("challenge not found")
+	ErrChallengeAlreadyExists    = fmt.Errorf("challenge already exists")
+	ErrChallengeNotAvailable     = fmt.Errorf("challenge is not available")
+	ErrChallengeInProgress       = fmt.Errorf("challenge is in progress")
+	ErrChallengeCompleted        = fmt.Errorf("challenge already completed")
+	ErrChallengeFailed           = fmt.Errorf("challenge failed")
+	ErrChallengeExpired          = fmt.Errorf("challenge has expired")
+	ErrChallengeOnCooldown       = fmt.Errorf("challenge is on cooldown")
+	ErrInvalidChallenge          = fmt.Errorf("invalid challenge")
+	ErrInvalidChallengeType      = fmt.Errorf("invalid challenge type")
+	ErrInvalidDifficulty         = fmt.Errorf("invalid challenge difficulty")
+	ErrInsufficientLevel         = fmt.Errorf("insufficient level for challenge")
 	ErrChallengeConditionsNotMet = fmt.Errorf("challenge conditions not met")
 
 	// 祝福相关错误
-	ErrBlessingNotFound       = fmt.Errorf("blessing not found")
-	ErrBlessingAlreadyExists  = fmt.Errorf("blessing already exists")
-	ErrBlessingNotAvailable   = fmt.Errorf("blessing is not available")
-	ErrBlessingExpired        = fmt.Errorf("blessing has expired")
-	ErrBlessingOnCooldown     = fmt.Errorf("blessing is on cooldown")
-	ErrBlessingLimitReached   = fmt.Errorf("blessing usage limit reached")
-	ErrInvalidBlessing        = fmt.Errorf("invalid blessing")
-	ErrInvalidBlessingType    = fmt.Errorf("invalid blessing type")
-	ErrBlessingConflict       = fmt.Errorf("blessing conflicts with existing effects")
-	ErrMaxActiveBlessings     = fmt.Errorf("maximum active blessings reached")
+	ErrBlessingNotFound      = fmt.Errorf("blessing not found")
+	ErrBlessingAlreadyExists = fmt.Errorf("blessing already exists")
+	ErrBlessingNotAvailable  = fmt.Errorf("blessing is not available")
+	ErrBlessingExpired       = fmt.Errorf("blessing has expired")
+	ErrBlessingOnCooldown    = fmt.Errorf("blessing is on cooldown")
+	ErrBlessingLimitReached  = fmt.Errorf("blessing usage limit reached")
+	ErrInvalidBlessing       = fmt.Errorf("invalid blessing")
+	ErrInvalidBlessingType   = fmt.Errorf("invalid blessing type")
+	ErrBlessingConflict      = fmt.Errorf("blessing conflicts with existing effects")
+	ErrMaxActiveBlessings    = fmt.Errorf("maximum active blessings reached")
 
 	// 圣物相关错误
-	ErrRelicNotFound          = fmt.Errorf("relic not found")
-	ErrRelicAlreadyExists     = fmt.Errorf("relic already exists")
-	ErrRelicNotOwned          = fmt.Errorf("relic is not owned by player")
-	ErrRelicCannotUpgrade     = fmt.Errorf("relic cannot be upgraded")
-	ErrRelicMaxLevel          = fmt.Errorf("relic is at maximum level")
+	ErrRelicNotFound           = fmt.Errorf("relic not found")
+	ErrRelicAlreadyExists      = fmt.Errorf("relic already exists")
+	ErrRelicNotOwned           = fmt.Errorf("relic is not owned by player")
+	ErrRelicCannotUpgrade      = fmt.Errorf("relic cannot be upgraded")
+	ErrRelicMaxLevel           = fmt.Errorf("relic is at maximum level")
 	ErrRelicRequirementsNotMet = fmt.Errorf("relic requirements not met")
-	ErrInvalidRelic           = fmt.Errorf("invalid relic")
-	ErrInvalidRelicType       = fmt.Errorf("invalid relic type")
-	ErrInvalidRelicRarity     = fmt.Errorf("invalid relic rarity")
-	ErrRelicInventoryFull     = fmt.Errorf("relic inventory is full")
+	ErrInvalidRelic            = fmt.Errorf("invalid relic")
+	ErrInvalidRelicType        = fmt.Errorf("invalid relic type")
+	ErrInvalidRelicRarity      = fmt.Errorf("invalid relic rarity")
+	ErrRelicInventoryFull      = fmt.Errorf("relic inventory is full")
 
 	// 等级和经验相关错误
 	ErrInvalidLevel           = fmt.Errorf("invalid level")
@@ -74,21 +74,21 @@ var (
 	ErrOwnershipRequired      = fmt.Errorf("ownership required")
 
 	// 资源相关错误
-	ErrInsufficientResources  = fmt.Errorf("insufficient resources")
-	ErrInsufficientGold       = fmt.Errorf("insufficient gold")
-	ErrInsufficientMana       = fmt.Errorf("insufficient mana")
-	ErrInsufficientEnergy     = fmt.Errorf("insufficient energy")
-	ErrResourceNotFound       = fmt.Errorf("resource not found")
-	ErrResourceLocked         = fmt.Errorf("resource is locked")
+	ErrInsufficientResources = fmt.Errorf("insufficient resources")
+	ErrInsufficientGold      = fmt.Errorf("insufficient gold")
+	ErrInsufficientMana      = fmt.Errorf("insufficient mana")
+	ErrInsufficientEnergy    = fmt.Errorf("insufficient energy")
+	ErrResourceNotFound      = fmt.Errorf("resource not found")
+	ErrResourceLocked        = fmt.Errorf("resource is locked")
 
 	// 时间相关错误
-	ErrInvalidTime            = fmt.Errorf("invalid time")
-	ErrTimeExpired            = fmt.Errorf("time has expired")
-	ErrTooEarly               = fmt.Errorf("too early for this operation")
-	ErrTooLate                = fmt.Errorf("too late for this operation")
-	ErrCooldownActive         = fmt.Errorf("cooldown is active")
-	ErrDurationTooShort       = fmt.Errorf("duration is too short")
-	ErrDurationTooLong        = fmt.Errorf("duration is too long")
+	ErrInvalidTime      = fmt.Errorf("invalid time")
+	ErrTimeExpired      = fmt.Errorf("time has expired")
+	ErrTooEarly         = fmt.Errorf("too early for this operation")
+	ErrTooLate          = fmt.Errorf("too late for this operation")
+	ErrCooldownActive   = fmt.Errorf("cooldown is active")
+	ErrDurationTooShort = fmt.Errorf("duration is too short")
+	ErrDurationTooLong  = fmt.Errorf("duration is too long")
 
 	// 配置相关错误
 	ErrInvalidConfiguration   = fmt.Errorf("invalid configuration")
@@ -97,18 +97,18 @@ var (
 	ErrMissingConfiguration   = fmt.Errorf("missing configuration")
 
 	// 数据相关错误
-	ErrDataCorrupted          = fmt.Errorf("data corrupted")
-	ErrDataNotFound           = fmt.Errorf("data not found")
-	ErrDataInconsistent       = fmt.Errorf("data inconsistent")
-	ErrInvalidData            = fmt.Errorf("invalid data")
-	ErrDataConflict           = fmt.Errorf("data conflict")
+	ErrDataCorrupted    = fmt.Errorf("data corrupted")
+	ErrDataNotFound     = fmt.Errorf("data not found")
+	ErrDataInconsistent = fmt.Errorf("data inconsistent")
+	ErrInvalidData      = fmt.Errorf("invalid data")
+	ErrDataConflict     = fmt.Errorf("data conflict")
 
 	// 系统相关错误
-	ErrSystemError            = fmt.Errorf("system error")
-	ErrServiceUnavailable     = fmt.Errorf("service unavailable")
-	ErrTimeout                = fmt.Errorf("operation timeout")
-	ErrInternalError          = fmt.Errorf("internal error")
-	ErrExternalServiceError   = fmt.Errorf("external service error")
+	ErrSystemError          = fmt.Errorf("system error")
+	ErrServiceUnavailable   = fmt.Errorf("service unavailable")
+	ErrTimeout              = fmt.Errorf("operation timeout")
+	ErrInternalError        = fmt.Errorf("internal error")
+	ErrExternalServiceError = fmt.Errorf("external service error")
 
 	// 并发相关错误
 	ErrConcurrentModification = fmt.Errorf("concurrent modification")
@@ -117,12 +117,12 @@ var (
 	ErrRaceCondition          = fmt.Errorf("race condition detected")
 
 	// 验证相关错误
-	ErrValidationFailed       = fmt.Errorf("validation failed")
-	ErrInvalidInput           = fmt.Errorf("invalid input")
-	ErrMissingRequiredField   = fmt.Errorf("missing required field")
-	ErrFieldTooLong           = fmt.Errorf("field is too long")
-	ErrFieldTooShort          = fmt.Errorf("field is too short")
-	ErrInvalidFormat          = fmt.Errorf("invalid format")
+	ErrValidationFailed     = fmt.Errorf("validation failed")
+	ErrInvalidInput         = fmt.Errorf("invalid input")
+	ErrMissingRequiredField = fmt.Errorf("missing required field")
+	ErrFieldTooLong         = fmt.Errorf("field is too long")
+	ErrFieldTooShort        = fmt.Errorf("field is too short")
+	ErrInvalidFormat        = fmt.Errorf("invalid format")
 
 	// 业务规则相关错误
 	ErrBusinessRuleViolation  = fmt.Errorf("business rule violation")
@@ -230,16 +230,16 @@ func (es ErrorSeverity) String() string {
 type ErrorCategory int
 
 const (
-	ErrorCategoryValidation ErrorCategory = iota + 1 // 验证错误
-	ErrorCategoryBusiness                             // 业务错误
-	ErrorCategorySystem                               // 系统错误
-	ErrorCategoryNetwork                              // 网络错误
-	ErrorCategoryDatabase                             // 数据库错误
-	ErrorCategoryPermission                           // 权限错误
-	ErrorCategoryResource                             // 资源错误
-	ErrorCategoryTemporary                            // 临时错误
-	ErrorCategoryConfiguration                        // 配置错误
-	ErrorCategoryConcurrency                          // 并发错误
+	ErrorCategoryValidation    ErrorCategory = iota + 1 // 验证错误
+	ErrorCategoryBusiness                               // 业务错误
+	ErrorCategorySystem                                 // 系统错误
+	ErrorCategoryNetwork                                // 网络错误
+	ErrorCategoryDatabase                               // 数据库错误
+	ErrorCategoryPermission                             // 权限错误
+	ErrorCategoryResource                               // 资源错误
+	ErrorCategoryTemporary                              // 临时错误
+	ErrorCategoryConfiguration                          // 配置错误
+	ErrorCategoryConcurrency                            // 并发错误
 )
 
 // String 返回类别字符串
@@ -301,11 +301,11 @@ func NewValidationError(field, constraint, rule string, value interface{}) *Vali
 // BusinessRuleError 业务规则错误
 type BusinessRuleError struct {
 	*SacredError
-	Rule        string
-	Violation   string
-	Expected    interface{}
-	Actual      interface{}
-	Suggestion  string
+	Rule       string
+	Violation  string
+	Expected   interface{}
+	Actual     interface{}
+	Suggestion string
 }
 
 // NewBusinessRuleError 创建业务规则错误
@@ -336,12 +336,12 @@ func (e *BusinessRuleError) WithSuggestion(suggestion string) *BusinessRuleError
 // ConcurrencyError 并发错误
 type ConcurrencyError struct {
 	*SacredError
-	Resource    string
-	Operation   string
-	ConflictID  string
-	RetryAfter  time.Duration
-	MaxRetries  int
-	CurrentTry  int
+	Resource   string
+	Operation  string
+	ConflictID string
+	RetryAfter time.Duration
+	MaxRetries int
+	CurrentTry int
 }
 
 // NewConcurrencyError 创建并发错误
@@ -471,10 +471,10 @@ func (e *SystemError) WithStackTrace(stackTrace string) *SystemError {
 // PermissionError 权限错误
 type PermissionError struct {
 	*SacredError
-	UserID         string
-	Resource       string
-	RequiredRole   string
-	CurrentRole    string
+	UserID              string
+	Resource            string
+	RequiredRole        string
+	CurrentRole         string
 	RequiredPermissions []string
 	CurrentPermissions  []string
 }
@@ -557,7 +557,7 @@ func NewErrorCollection(context string) *ErrorCollection {
 func (ec *ErrorCollection) Add(err error) {
 	if err != nil {
 		ec.Errors = append(ec.Errors, err)
-		
+
 		// 更新严重程度
 		if sacredErr, ok := err.(*SacredError); ok {
 			if sacredErr.Severity > ec.Severity {
@@ -582,12 +582,12 @@ func (ec *ErrorCollection) Error() string {
 	if len(ec.Errors) == 0 {
 		return "no errors"
 	}
-	
+
 	var messages []string
 	for i, err := range ec.Errors {
 		messages = append(messages, fmt.Sprintf("%d: %v", i+1, err))
 	}
-	
+
 	return fmt.Sprintf("multiple errors in %s: [%s]", ec.Context, strings.Join(messages, "; "))
 }
 
@@ -817,7 +817,7 @@ func FormatError(err error) string {
 	if err == nil {
 		return "no error"
 	}
-	
+
 	if sacredErr, ok := err.(*SacredError); ok {
 		var parts []string
 		parts = append(parts, fmt.Sprintf("Code: %s", sacredErr.Code))
@@ -825,22 +825,22 @@ func FormatError(err error) string {
 		parts = append(parts, fmt.Sprintf("Severity: %s", sacredErr.Severity.String()))
 		parts = append(parts, fmt.Sprintf("Category: %s", sacredErr.Category.String()))
 		parts = append(parts, fmt.Sprintf("Time: %s", sacredErr.Timestamp.Format(time.RFC3339)))
-		
+
 		if len(sacredErr.Details) > 0 {
 			parts = append(parts, fmt.Sprintf("Details: %+v", sacredErr.Details))
 		}
-		
+
 		if len(sacredErr.Context) > 0 {
 			parts = append(parts, fmt.Sprintf("Context: %+v", sacredErr.Context))
 		}
-		
+
 		if sacredErr.Cause != nil {
 			parts = append(parts, fmt.Sprintf("Cause: %v", sacredErr.Cause))
 		}
-		
+
 		return strings.Join(parts, ", ")
 	}
-	
+
 	return err.Error()
 }
 
@@ -851,21 +851,21 @@ func CreateErrorResponse(err error) map[string]interface{} {
 		"message":   err.Error(),
 		"timestamp": time.Now(),
 	}
-	
+
 	if sacredErr, ok := err.(*SacredError); ok {
 		response["code"] = sacredErr.Code
 		response["severity"] = sacredErr.Severity.String()
 		response["category"] = sacredErr.Category.String()
 		response["retryable"] = sacredErr.IsRetryable()
-		
+
 		if len(sacredErr.Details) > 0 {
 			response["details"] = sacredErr.Details
 		}
-		
+
 		if len(sacredErr.Context) > 0 {
 			response["context"] = sacredErr.Context
 		}
 	}
-	
+
 	return response
 }

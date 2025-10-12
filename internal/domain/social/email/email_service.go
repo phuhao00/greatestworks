@@ -23,7 +23,7 @@ func (s *EmailService) SendEmail(ctx context.Context, senderID, receiverID, subj
 	if err := s.validateEmail(subject, content); err != nil {
 		return nil, err
 	}
-	
+
 	// 检查接收者邮箱是否已满
 	count, err := s.emailRepo.GetUnreadEmailCount(ctx, receiverID)
 	if err != nil {
@@ -32,15 +32,15 @@ func (s *EmailService) SendEmail(ctx context.Context, senderID, receiverID, subj
 	if count >= MaxEmailsPerPlayer {
 		return nil, ErrMailboxFull
 	}
-	
+
 	// 创建邮件
 	email := NewEmail(senderID, receiverID, subject, content, emailType)
-	
+
 	// 保存邮件
 	if err := s.emailRepo.SaveEmail(ctx, email); err != nil {
 		return nil, fmt.Errorf("保存邮件失败: %w", err)
 	}
-	
+
 	return email, nil
 }
 
@@ -48,19 +48,19 @@ func (s *EmailService) SendEmail(ctx context.Context, senderID, receiverID, subj
 func (s *EmailService) SendSystemEmail(ctx context.Context, receiverID, subject, content string, attachments []*Attachment) (*Email, error) {
 	// 创建系统邮件
 	email := NewSystemEmail(receiverID, subject, content)
-	
+
 	// 添加附件
 	for _, attachment := range attachments {
 		if err := email.AddAttachment(attachment); err != nil {
 			return nil, fmt.Errorf("添加附件失败: %w", err)
 		}
 	}
-	
+
 	// 保存邮件
 	if err := s.emailRepo.SaveEmail(ctx, email); err != nil {
 		return nil, fmt.Errorf("保存邮件失败: %w", err)
 	}
-	
+
 	return email, nil
 }
 
@@ -74,22 +74,22 @@ func (s *EmailService) ReadEmail(ctx context.Context, emailID, playerID string) 
 	if email == nil {
 		return nil, ErrEmailNotFound
 	}
-	
+
 	// 验证权限
 	if email.ReceiverID != playerID {
 		return nil, ErrInsufficientPermission
 	}
-	
+
 	// 标记为已读
 	if err := email.MarkAsRead(); err != nil {
 		return nil, err
 	}
-	
+
 	// 保存更改
 	if err := s.emailRepo.SaveEmail(ctx, email); err != nil {
 		return nil, fmt.Errorf("保存邮件失败: %w", err)
 	}
-	
+
 	return email, nil
 }
 
@@ -103,12 +103,12 @@ func (s *EmailService) ClaimAttachment(ctx context.Context, emailID, attachmentI
 	if email == nil {
 		return ErrEmailNotFound
 	}
-	
+
 	// 验证权限
 	if email.ReceiverID != playerID {
 		return ErrInsufficientPermission
 	}
-	
+
 	// 查找附件
 	var targetAttachment *Attachment
 	for _, attachment := range email.GetAttachments() {
@@ -117,21 +117,21 @@ func (s *EmailService) ClaimAttachment(ctx context.Context, emailID, attachmentI
 			break
 		}
 	}
-	
+
 	if targetAttachment == nil {
 		return ErrAttachmentNotFound
 	}
-	
+
 	// 领取附件
 	if err := targetAttachment.Claim(); err != nil {
 		return err
 	}
-	
+
 	// 保存更改
 	if err := s.emailRepo.SaveEmail(ctx, email); err != nil {
 		return fmt.Errorf("保存邮件失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -145,22 +145,22 @@ func (s *EmailService) DeleteEmail(ctx context.Context, emailID, playerID string
 	if email == nil {
 		return ErrEmailNotFound
 	}
-	
+
 	// 验证权限
 	if email.ReceiverID != playerID {
 		return ErrInsufficientPermission
 	}
-	
+
 	// 删除邮件
 	if err := email.Delete(); err != nil {
 		return err
 	}
-	
+
 	// 保存更改
 	if err := s.emailRepo.SaveEmail(ctx, email); err != nil {
 		return fmt.Errorf("保存邮件失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -184,7 +184,7 @@ func (s *EmailService) validateEmail(subject, content string) error {
 }
 
 const (
-	MaxEmailsPerPlayer = 100 // 每个玩家最大邮件数
-	MaxSubjectLength   = 100 // 最大主题长度
+	MaxEmailsPerPlayer = 100  // 每个玩家最大邮件数
+	MaxSubjectLength   = 100  // 最大主题长度
 	MaxContentLength   = 1000 // 最大内容长度
 )

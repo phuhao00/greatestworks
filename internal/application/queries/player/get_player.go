@@ -12,23 +12,23 @@ type GetPlayerQuery struct {
 
 // PlayerDTO 玩家数据传输对象
 type PlayerDTO struct {
-	ID           string       `json:"id"`
-	Name         string       `json:"name"`
-	Level        int          `json:"level"`
-	Exp          int64        `json:"exp"`
-	Status       string       `json:"status"`
-	Position     PositionDTO  `json:"position"`
-	Stats        StatsDTO     `json:"stats"`
-	Username     string       `json:"username,omitempty"`
-	Email        string       `json:"email,omitempty"`
-	Avatar       string       `json:"avatar,omitempty"`
-	Gender       int          `json:"gender,omitempty"`
-	BanInfo      *BanInfoDTO  `json:"ban_info,omitempty"`
-	LastLoginAt  *time.Time   `json:"last_login_at,omitempty"`
-	LastLogoutAt *time.Time   `json:"last_logout_at,omitempty"`
-	OnlineTime   int64        `json:"online_time,omitempty"`
-	CreatedAt    time.Time    `json:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	Level        int         `json:"level"`
+	Exp          int64       `json:"exp"`
+	Status       string      `json:"status"`
+	Position     PositionDTO `json:"position"`
+	Stats        StatsDTO    `json:"stats"`
+	Username     string      `json:"username,omitempty"`
+	Email        string      `json:"email,omitempty"`
+	Avatar       string      `json:"avatar,omitempty"`
+	Gender       int         `json:"gender,omitempty"`
+	BanInfo      *BanInfoDTO `json:"ban_info,omitempty"`
+	LastLoginAt  *time.Time  `json:"last_login_at,omitempty"`
+	LastLogoutAt *time.Time  `json:"last_logout_at,omitempty"`
+	OnlineTime   int64       `json:"online_time,omitempty"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // PositionDTO 位置数据传输对象

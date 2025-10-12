@@ -51,11 +51,11 @@ func (e *BaseDomainEvent) GetEventData() interface{} {
 // HangupStartedEvent 开始挂机事件
 type HangupStartedEvent struct {
 	*BaseDomainEvent
-	PlayerID   string `json:"player_id"`
-	LocationID string `json:"location_id"`
-	LocationName string `json:"location_name"`
-	StartTime  time.Time `json:"start_time"`
-	IsOnline   bool   `json:"is_online"`
+	PlayerID     string    `json:"player_id"`
+	LocationID   string    `json:"location_id"`
+	LocationName string    `json:"location_name"`
+	StartTime    time.Time `json:"start_time"`
+	IsOnline     bool      `json:"is_online"`
 }
 
 // NewHangupStartedEvent 创建开始挂机事件
@@ -78,13 +78,13 @@ func NewHangupStartedEvent(playerID, locationID, locationName string, isOnline b
 // HangupStoppedEvent 停止挂机事件
 type HangupStoppedEvent struct {
 	*BaseDomainEvent
-	PlayerID   string        `json:"player_id"`
-	LocationID string        `json:"location_id"`
-	LocationName string      `json:"location_name"`
-	StartTime  time.Time     `json:"start_time"`
-	EndTime    time.Time     `json:"end_time"`
-	Duration   time.Duration `json:"duration"`
-	IsOnline   bool          `json:"is_online"`
+	PlayerID     string        `json:"player_id"`
+	LocationID   string        `json:"location_id"`
+	LocationName string        `json:"location_name"`
+	StartTime    time.Time     `json:"start_time"`
+	EndTime      time.Time     `json:"end_time"`
+	Duration     time.Duration `json:"duration"`
+	IsOnline     bool          `json:"is_online"`
 }
 
 // NewHangupStoppedEvent 创建停止挂机事件
@@ -110,12 +110,12 @@ func NewHangupStoppedEvent(playerID, locationID, locationName string, startTime 
 // HangupLocationChangedEvent 挂机地点变更事件
 type HangupLocationChangedEvent struct {
 	*BaseDomainEvent
-	PlayerID        string `json:"player_id"`
-	PreviousLocationID string `json:"previous_location_id,omitempty"`
+	PlayerID             string `json:"player_id"`
+	PreviousLocationID   string `json:"previous_location_id,omitempty"`
 	PreviousLocationName string `json:"previous_location_name,omitempty"`
-	NewLocationID   string `json:"new_location_id"`
-	NewLocationName string `json:"new_location_name"`
-	Reason          string `json:"reason,omitempty"`
+	NewLocationID        string `json:"new_location_id"`
+	NewLocationName      string `json:"new_location_name"`
+	Reason               string `json:"reason,omitempty"`
 }
 
 // NewHangupLocationChangedEvent 创建挂机地点变更事件
@@ -207,15 +207,15 @@ func NewOfflineRewardClaimedEvent(playerID, locationID, locationName string, rew
 // HangupEfficiencyUpdatedEvent 挂机效率更新事件
 type HangupEfficiencyUpdatedEvent struct {
 	*BaseDomainEvent
-	PlayerID        string  `json:"player_id"`
-	PreviousBonus   float64 `json:"previous_bonus"`
-	NewBonus        float64 `json:"new_bonus"`
-	VipBonus        float64 `json:"vip_bonus"`
-	EquipmentBonus  float64 `json:"equipment_bonus"`
-	SkillBonus      float64 `json:"skill_bonus"`
-	GuildBonus      float64 `json:"guild_bonus"`
-	EventBonus      float64 `json:"event_bonus"`
-	UpdateReason    string  `json:"update_reason"`
+	PlayerID       string  `json:"player_id"`
+	PreviousBonus  float64 `json:"previous_bonus"`
+	NewBonus       float64 `json:"new_bonus"`
+	VipBonus       float64 `json:"vip_bonus"`
+	EquipmentBonus float64 `json:"equipment_bonus"`
+	SkillBonus     float64 `json:"skill_bonus"`
+	GuildBonus     float64 `json:"guild_bonus"`
+	EventBonus     float64 `json:"event_bonus"`
+	UpdateReason   string  `json:"update_reason"`
 }
 
 // NewHangupEfficiencyUpdatedEvent 创建挂机效率更新事件
@@ -242,13 +242,13 @@ func NewHangupEfficiencyUpdatedEvent(playerID string, previousBonus, newBonus fl
 // HangupLocationUnlockedEvent 挂机地点解锁事件
 type HangupLocationUnlockedEvent struct {
 	*BaseDomainEvent
-	PlayerID     string       `json:"player_id"`
-	LocationID   string       `json:"location_id"`
-	LocationName string       `json:"location_name"`
-	LocationType LocationType `json:"location_type"`
-	RequiredLevel int         `json:"required_level"`
-	PlayerLevel  int          `json:"player_level"`
-	UnlockMethod string       `json:"unlock_method"`
+	PlayerID      string       `json:"player_id"`
+	LocationID    string       `json:"location_id"`
+	LocationName  string       `json:"location_name"`
+	LocationType  LocationType `json:"location_type"`
+	RequiredLevel int          `json:"required_level"`
+	PlayerLevel   int          `json:"player_level"`
+	UnlockMethod  string       `json:"unlock_method"`
 }
 
 // NewHangupLocationUnlockedEvent 创建挂机地点解锁事件
@@ -337,11 +337,11 @@ func NewHangupRankingChangedEvent(playerID, playerName, rankType string, prevRan
 // HangupSystemInitializedEvent 挂机系统初始化事件
 type HangupSystemInitializedEvent struct {
 	*BaseDomainEvent
-	PlayerID          string `json:"player_id"`
-	AvailableLocations int   `json:"available_locations"`
-	UnlockedLocations int    `json:"unlocked_locations"`
-	InitialEfficiency float64 `json:"initial_efficiency"`
-	PlayerLevel       int     `json:"player_level"`
+	PlayerID           string  `json:"player_id"`
+	AvailableLocations int     `json:"available_locations"`
+	UnlockedLocations  int     `json:"unlocked_locations"`
+	InitialEfficiency  float64 `json:"initial_efficiency"`
+	PlayerLevel        int     `json:"player_level"`
 }
 
 // NewHangupSystemInitializedEvent 创建挂机系统初始化事件

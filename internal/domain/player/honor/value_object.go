@@ -9,13 +9,13 @@ import (
 type TitleCategory int
 
 const (
-	TitleCategoryUnknown TitleCategory = iota
-	TitleCategoryCombat                 // 战斗类
-	TitleCategoryExploration            // 探索类
-	TitleCategorySocial                 // 社交类
-	TitleCategoryLifestyle              // 生活类
-	TitleCategorySpecial                // 特殊类
-	TitleCategoryEvent                  // 活动类
+	TitleCategoryUnknown     TitleCategory = iota
+	TitleCategoryCombat                    // 战斗类
+	TitleCategoryExploration               // 探索类
+	TitleCategorySocial                    // 社交类
+	TitleCategoryLifestyle                 // 生活类
+	TitleCategorySpecial                   // 特殊类
+	TitleCategoryEvent                     // 活动类
 )
 
 // String 返回称号分类的字符串表示
@@ -74,13 +74,13 @@ func (tr TitleRarity) String() string {
 type AchievementCategory int
 
 const (
-	AchievementCategoryUnknown AchievementCategory = iota
-	AchievementCategoryCombat                      // 战斗成就
-	AchievementCategoryExploration                 // 探索成就
-	AchievementCategorySocial                      // 社交成就
-	AchievementCategoryCollection                  // 收集成就
-	AchievementCategoryProgression                 // 进度成就
-	AchievementCategorySpecial                     // 特殊成就
+	AchievementCategoryUnknown     AchievementCategory = iota
+	AchievementCategoryCombat                          // 战斗成就
+	AchievementCategoryExploration                     // 探索成就
+	AchievementCategorySocial                          // 社交成就
+	AchievementCategoryCollection                      // 收集成就
+	AchievementCategoryProgression                     // 进度成就
+	AchievementCategorySpecial                         // 特殊成就
 )
 
 // String 返回成就分类的字符串表示
@@ -107,12 +107,12 @@ func (ac AchievementCategory) String() string {
 type AchievementType int
 
 const (
-	AchievementTypeNormal AchievementType = iota
-	AchievementTypeHidden                 // 隐藏成就
-	AchievementTypeDaily                  // 日常成就
-	AchievementTypeWeekly                 // 周常成就
-	AchievementTypeMonthly                // 月常成就
-	AchievementTypeEvent                  // 活动成就
+	AchievementTypeNormal  AchievementType = iota
+	AchievementTypeHidden                  // 隐藏成就
+	AchievementTypeDaily                   // 日常成就
+	AchievementTypeWeekly                  // 周常成就
+	AchievementTypeMonthly                 // 月常成就
+	AchievementTypeEvent                   // 活动成就
 )
 
 // String 返回成就类型的字符串表示
@@ -139,22 +139,22 @@ func (at AchievementType) String() string {
 type StatisticType int
 
 const (
-	StatisticTypeUnknown StatisticType = iota
-	StatisticTypeKillCount               // 击杀数量
-	StatisticTypeDeathCount              // 死亡数量
-	StatisticTypeDamageDealt             // 造成伤害
-	StatisticTypeDamageTaken             // 承受伤害
-	StatisticTypeHealingDone             // 治疗量
-	StatisticTypeDistanceTraveled        // 旅行距离
-	StatisticTypeQuestsCompleted         // 完成任务数
-	StatisticTypeItemsCrafted            // 制作物品数
-	StatisticTypeItemsCollected          // 收集物品数
-	StatisticTypeGoldEarned              // 获得金币
-	StatisticTypeGoldSpent               // 花费金币
-	StatisticTypePlayTime                // 游戏时间
-	StatisticTypeLoginDays               // 登录天数
-	StatisticTypeFriendsCount            // 好友数量
-	StatisticTypeGuildContribution       // 公会贡献
+	StatisticTypeUnknown           StatisticType = iota
+	StatisticTypeKillCount                       // 击杀数量
+	StatisticTypeDeathCount                      // 死亡数量
+	StatisticTypeDamageDealt                     // 造成伤害
+	StatisticTypeDamageTaken                     // 承受伤害
+	StatisticTypeHealingDone                     // 治疗量
+	StatisticTypeDistanceTraveled                // 旅行距离
+	StatisticTypeQuestsCompleted                 // 完成任务数
+	StatisticTypeItemsCrafted                    // 制作物品数
+	StatisticTypeItemsCollected                  // 收集物品数
+	StatisticTypeGoldEarned                      // 获得金币
+	StatisticTypeGoldSpent                       // 花费金币
+	StatisticTypePlayTime                        // 游戏时间
+	StatisticTypeLoginDays                       // 登录天数
+	StatisticTypeFriendsCount                    // 好友数量
+	StatisticTypeGuildContribution               // 公会贡献
 )
 
 // String 返回统计数据类型的字符串表示
@@ -199,15 +199,15 @@ func (st StatisticType) String() string {
 type ConditionType int
 
 const (
-	ConditionTypeUnknown ConditionType = iota
-	ConditionTypeLevel                   // 等级条件
-	ConditionTypeStatistic               // 统计数据条件
-	ConditionTypeReputation              // 声望条件
-	ConditionTypeAchievement             // 成就条件
-	ConditionTypeTitle                   // 称号条件
-	ConditionTypeItem                    // 物品条件
-	ConditionTypeQuest                   // 任务条件
-	ConditionTypeTime                    // 时间条件
+	ConditionTypeUnknown     ConditionType = iota
+	ConditionTypeLevel                     // 等级条件
+	ConditionTypeStatistic                 // 统计数据条件
+	ConditionTypeReputation                // 声望条件
+	ConditionTypeAchievement               // 成就条件
+	ConditionTypeTitle                     // 称号条件
+	ConditionTypeItem                      // 物品条件
+	ConditionTypeQuest                     // 任务条件
+	ConditionTypeTime                      // 时间条件
 )
 
 // String 返回条件类型的字符串表示
@@ -236,16 +236,16 @@ func (ct ConditionType) String() string {
 
 // UnlockCondition 解锁条件值对象
 type UnlockCondition struct {
-	conditionType        ConditionType
-	requiredValue        int
-	statisticType        StatisticType
-	faction              string
-	requiredAchievement  string
-	requiredTitle        string
-	requiredItem         string
-	requiredQuest        string
-	timeRequirement      time.Duration
-	description          string
+	conditionType       ConditionType
+	requiredValue       int
+	statisticType       StatisticType
+	faction             string
+	requiredAchievement string
+	requiredTitle       string
+	requiredItem        string
+	requiredQuest       string
+	timeRequirement     time.Duration
+	description         string
 }
 
 // NewUnlockCondition 创建解锁条件
@@ -355,11 +355,11 @@ func (uc *UnlockCondition) GetDescription() string {
 
 // HonorLevel 荣誉等级值对象
 type HonorLevel struct {
-	level        int
-	requiredXP   int
-	title        string
-	description  string
-	rewards      []string
+	level       int
+	requiredXP  int
+	title       string
+	description string
+	rewards     []string
 }
 
 // NewHonorLevel 创建荣誉等级

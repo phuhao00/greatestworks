@@ -441,7 +441,7 @@ func (r *MinigameRepository) fromMinigameDocument(doc *MinigameDocument) *miniga
 		doc.MinigameID,
 		gameType,
 		minigame.GameCategoryNormal, // 使用默认分类
-		0, // 使用默认创建者ID
+		0,                           // 使用默认创建者ID
 	)
 
 	// 转换奖励
@@ -455,21 +455,21 @@ func (r *MinigameRepository) fromMinigameDocument(doc *MinigameDocument) *miniga
 	// Note: 统计信息和激活状态的设置需要根据实际的聚合根方法来调整
 	// 由于这些setter方法可能不存在，我们暂时注释掉
 	/*
-	// 设置统计信息
-	stats := minigame.NewGameStatistics()
-	stats.SetTotalPlays(doc.Statistics.TotalPlays)
-	stats.SetTotalPlayers(doc.Statistics.TotalPlayers)
-	stats.SetAverageScore(doc.Statistics.AverageScore)
-	stats.SetHighestScore(doc.Statistics.HighestScore)
-	stats.SetAverageTime(doc.Statistics.AverageTime)
-	stats.SetCompletionRate(doc.Statistics.CompletionRate)
-	minigameAggregate.SetStatistics(stats)
+		// 设置统计信息
+		stats := minigame.NewGameStatistics()
+		stats.SetTotalPlays(doc.Statistics.TotalPlays)
+		stats.SetTotalPlayers(doc.Statistics.TotalPlayers)
+		stats.SetAverageScore(doc.Statistics.AverageScore)
+		stats.SetHighestScore(doc.Statistics.HighestScore)
+		stats.SetAverageTime(doc.Statistics.AverageTime)
+		stats.SetCompletionRate(doc.Statistics.CompletionRate)
+		minigameAggregate.SetStatistics(stats)
 
-	if doc.IsActive {
-		minigameAggregate.Activate()
-	} else {
-		minigameAggregate.Deactivate()
-	}
+		if doc.IsActive {
+			minigameAggregate.Activate()
+		} else {
+			minigameAggregate.Deactivate()
+		}
 	*/
 
 	return minigameAggregate
@@ -481,11 +481,11 @@ func (r *GameSessionRepository) toGameSessionDocument(session *minigame.GameSess
 	rewards := make([]RewardDocument, 0)
 	for _, reward := range session.GetRewards() {
 		rewards = append(rewards, RewardDocument{
-				Type:     reward.GetType().String(),
-				ItemID:   reward.GetItemID(),
-				Quantity: int32(reward.GetQuantity()),
-				Reason:   reward.GetReason(),
-			})
+			Type:     reward.GetType().String(),
+			ItemID:   reward.GetItemID(),
+			Quantity: int32(reward.GetQuantity()),
+			Reason:   reward.GetReason(),
+		})
 	}
 
 	doc := &GameSessionDocument{

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	appHandlers "greatestworks/application/handlers"
+	appHandlers "greatestworks/internal/application/handlers"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/tcp/connection"
 	tcpHandlers "greatestworks/internal/interfaces/tcp/handlers"

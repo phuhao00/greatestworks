@@ -24,24 +24,24 @@ func (id SkillID) String() string {
 type SkillType int
 
 const (
-	SkillTypeAttack SkillType = iota // 攻击技能
-	SkillTypeDefense                 // 防御技能
-	SkillTypeHeal                    // 治疗技能
-	SkillTypeBuff                    // 增益技能
-	SkillTypeDebuff                  // 减益技能
-	SkillTypeUtility                 // 辅助技能
+	SkillTypeAttack  SkillType = iota // 攻击技能
+	SkillTypeDefense                  // 防御技能
+	SkillTypeHeal                     // 治疗技能
+	SkillTypeBuff                     // 增益技能
+	SkillTypeDebuff                   // 减益技能
+	SkillTypeUtility                  // 辅助技能
 )
 
 // SkillTarget 技能目标类型
 type SkillTarget int
 
 const (
-	SkillTargetSelf SkillTarget = iota // 自己
-	SkillTargetEnemy                   // 敌人
-	SkillTargetAlly                    // 队友
-	SkillTargetAll                     // 所有人
-	SkillTargetEnemyAll                // 所有敌人
-	SkillTargetAllyAll                 // 所有队友
+	SkillTargetSelf     SkillTarget = iota // 自己
+	SkillTargetEnemy                       // 敌人
+	SkillTargetAlly                        // 队友
+	SkillTargetAll                         // 所有人
+	SkillTargetEnemyAll                    // 所有敌人
+	SkillTargetAllyAll                     // 所有队友
 )
 
 // Skill 技能实体
@@ -155,12 +155,12 @@ func (s *Skill) Upgrade() error {
 	if !s.CanUpgrade() {
 		return errors.New("skill already at max level")
 	}
-	
+
 	s.level++
 	// 升级时提升技能属性
 	s.damage = int(float64(s.damage) * 1.1)
 	s.healing = int(float64(s.healing) * 1.1)
-	
+
 	return nil
 }
 
@@ -176,16 +176,16 @@ type SkillEffect struct {
 type EffectType int
 
 const (
-	EffectTypePoison EffectType = iota // 中毒
-	EffectTypeBurn                     // 燃烧
-	EffectTypeFreeze                   // 冰冻
-	EffectTypeStun                     // 眩晕
-	EffectTypeAttackBoost              // 攻击力提升
-	EffectTypeDefenseBoost             // 防御力提升
-	EffectTypeSpeedBoost               // 速度提升
-	EffectTypeAttackReduction          // 攻击力降低
-	EffectTypeDefenseReduction         // 防御力降低
-	EffectTypeSpeedReduction           // 速度降低
+	EffectTypePoison           EffectType = iota // 中毒
+	EffectTypeBurn                               // 燃烧
+	EffectTypeFreeze                             // 冰冻
+	EffectTypeStun                               // 眩晕
+	EffectTypeAttackBoost                        // 攻击力提升
+	EffectTypeDefenseBoost                       // 防御力提升
+	EffectTypeSpeedBoost                         // 速度提升
+	EffectTypeAttackReduction                    // 攻击力降低
+	EffectTypeDefenseReduction                   // 防御力降低
+	EffectTypeSpeedReduction                     // 速度降低
 )
 
 // NewSkillEffect 创建技能效果
@@ -245,12 +245,12 @@ func (ps *PlayerSkill) CanUse(currentMana int) bool {
 	if currentMana < ps.skill.ManaCost() {
 		return false
 	}
-	
+
 	// 检查冷却时间
 	if time.Since(ps.lastUsedTime) < ps.skill.Cooldown() {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -259,10 +259,10 @@ func (ps *PlayerSkill) Use() error {
 	if time.Since(ps.lastUsedTime) < ps.skill.Cooldown() {
 		return errors.New("skill is on cooldown")
 	}
-	
+
 	ps.lastUsedTime = time.Now()
 	ps.uses++
-	
+
 	return nil
 }
 
@@ -323,7 +323,7 @@ func (sr *SkillRegistry) InitializeDefaultSkills() {
 	basicAttack.manaCost = 0
 	basicAttack.cooldown = time.Second * 1
 	sr.RegisterSkill(basicAttack)
-	
+
 	// 火球术
 	fireball := NewSkill("fireball", "火球术", "发射一个火球攻击敌人", SkillTypeAttack, SkillTargetEnemy)
 	fireball.damage = 35
@@ -331,14 +331,14 @@ func (sr *SkillRegistry) InitializeDefaultSkills() {
 	fireball.cooldown = time.Second * 3
 	fireball.effects = append(fireball.effects, NewSkillEffect(EffectTypeBurn, 5, time.Second*3, false))
 	sr.RegisterSkill(fireball)
-	
+
 	// 治疗术
 	heal := NewSkill("heal", "治疗术", "恢复目标的生命值", SkillTypeHeal, SkillTargetAlly)
 	heal.healing = 30
 	heal.manaCost = 20
 	heal.cooldown = time.Second * 2
 	sr.RegisterSkill(heal)
-	
+
 	// 防御姿态
 	defense := NewSkill("defense_stance", "防御姿态", "提高防御力", SkillTypeDefense, SkillTargetSelf)
 	defense.manaCost = 10

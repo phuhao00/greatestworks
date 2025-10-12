@@ -36,7 +36,7 @@ func NewChallenge(id, name, description string, challengeType ChallengeType, dif
 		difficulty:    difficulty,
 		requiredLevel: requiredLevel,
 		status:        ChallengeStatusAvailable,
-		duration:      time.Hour, // 默认1小时
+		duration:      time.Hour,      // 默认1小时
 		cooldown:      time.Hour * 24, // 默认24小时冷却
 		participants:  make(map[string]*ChallengeParticipant),
 		rewards:       NewChallengeReward(challengeType, difficulty),
@@ -101,12 +101,12 @@ func (c *Challenge) CanStart() bool {
 	if c.status != ChallengeStatusAvailable {
 		return false
 	}
-	
+
 	// 检查冷却时间
 	if !c.lastEndTime.IsZero() && time.Since(c.lastEndTime) < c.cooldown {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -115,16 +115,16 @@ func (c *Challenge) Start(playerID string) (*ChallengeResult, error) {
 	if !c.CanStart() {
 		return nil, fmt.Errorf("challenge cannot be started")
 	}
-	
+
 	// 创建参与者
 	participant := NewChallengeParticipant(playerID, c.id)
 	c.participants[playerID] = participant
-	
+
 	// 更新状态
 	c.status = ChallengeStatusInProgress
 	c.lastStartTime = time.Now()
 	c.updatedAt = time.Now()
-	
+
 	// 创建挑战结果
 	result := &ChallengeResult{
 		ChallengeID: c.id,
@@ -132,7 +132,7 @@ func (c *Challenge) Start(playerID string) (*ChallengeResult, error) {
 		StartTime:   c.lastStartTime,
 		Status:      "started",
 	}
-	
+
 	return result, nil
 }
 
@@ -142,18 +142,18 @@ func (c *Challenge) Complete(playerID string, success bool, score int) (*Challen
 	if !exists {
 		return nil, fmt.Errorf("participant not found")
 	}
-	
+
 	// 完成参与者记录
 	participant.Complete(success, score)
-	
+
 	// 更新挑战状态
 	c.status = ChallengeStatusCompleted
 	c.lastEndTime = time.Now()
 	c.updatedAt = time.Now()
-	
+
 	// 计算奖励
 	reward := c.calculateReward(success, score)
-	
+
 	return reward, nil
 }
 
@@ -166,10 +166,10 @@ func (c *Challenge) calculateReward(success bool, score int) *ChallengeReward {
 			Items:      make(map[string]int),
 		}
 	}
-	
+
 	// 基础奖励
 	baseReward := c.rewards
-	
+
 	// 根据分数调整奖励
 	multiplier := float64(score) / 100.0
 	if multiplier > 2.0 {
@@ -178,7 +178,7 @@ func (c *Challenge) calculateReward(success bool, score int) *ChallengeReward {
 	if multiplier < 0.1 {
 		multiplier = 0.1
 	}
-	
+
 	return &ChallengeReward{
 		Gold:       int(float64(baseReward.Gold) * multiplier),
 		Experience: int(float64(baseReward.Experience) * multiplier),
@@ -219,12 +219,12 @@ func (c *Challenge) GetRemainingCooldown() time.Duration {
 	if c.lastEndTime.IsZero() {
 		return 0
 	}
-	
+
 	elapsed := time.Since(c.lastEndTime)
 	if elapsed >= c.cooldown {
 		return 0
 	}
-	
+
 	return c.cooldown - elapsed
 }
 
@@ -287,11 +287,11 @@ func (cp *ChallengeParticipant) GetDuration() time.Duration {
 
 // ChallengeCondition 挑战条件
 type ChallengeCondition struct {
-	Type      string
-	Field     string
-	Operator  string
-	Value     interface{}
-	Message   string
+	Type     string
+	Field    string
+	Operator string
+	Value    interface{}
+	Message  string
 }
 
 // NewChallengeCondition 创建挑战条件
@@ -311,7 +311,7 @@ func (cc *ChallengeCondition) Check(data map[string]interface{}) bool {
 	if !exists {
 		return false
 	}
-	
+
 	switch cc.Operator {
 	case "eq":
 		return value == cc.Value
@@ -342,7 +342,7 @@ func (cc *ChallengeCondition) Check(data map[string]interface{}) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -370,10 +370,10 @@ type ChallengeReward struct {
 func NewChallengeReward(challengeType ChallengeType, difficulty ChallengeDifficulty) *ChallengeReward {
 	baseGold := 100
 	baseExp := 50
-	
+
 	// 根据难度调整基础奖励
 	multiplier := difficulty.GetMultiplier()
-	
+
 	return &ChallengeReward{
 		Gold:       int(float64(baseGold) * multiplier),
 		Experience: int(float64(baseExp) * multiplier),
@@ -464,17 +464,17 @@ func (b *Blessing) IsAvailable() bool {
 	if b.status != BlessingStatusAvailable {
 		return false
 	}
-	
+
 	// 检查使用次数
 	if b.usageCount >= b.maxUsage {
 		return false
 	}
-	
+
 	// 检查冷却时间
 	if !b.lastUsedAt.IsZero() && time.Since(b.lastUsedAt) < b.cooldown {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -488,7 +488,7 @@ func (b *Blessing) Activate(playerID string) (*BlessingEffect, error) {
 	if !b.IsAvailable() {
 		return nil, fmt.Errorf("blessing is not available")
 	}
-	
+
 	// 更新状态
 	b.status = BlessingStatusActive
 	b.activatedAt = time.Now()
@@ -496,7 +496,7 @@ func (b *Blessing) Activate(playerID string) (*BlessingEffect, error) {
 	b.lastUsedAt = b.activatedAt
 	b.usageCount++
 	b.updatedAt = time.Now()
-	
+
 	// 创建祝福效果
 	effect := &BlessingEffect{
 		BlessingID:  b.id,
@@ -506,7 +506,7 @@ func (b *Blessing) Activate(playerID string) (*BlessingEffect, error) {
 		ExpiresAt:   b.expiresAt,
 		Effects:     b.effects,
 	}
-	
+
 	return effect, nil
 }
 
@@ -527,11 +527,11 @@ func (b *Blessing) GetRemainingDuration() time.Duration {
 	if b.status != BlessingStatusActive {
 		return 0
 	}
-	
+
 	if time.Now().After(b.expiresAt) {
 		return 0
 	}
-	
+
 	return b.expiresAt.Sub(time.Now())
 }
 
@@ -540,12 +540,12 @@ func (b *Blessing) GetRemainingCooldown() time.Duration {
 	if b.lastUsedAt.IsZero() {
 		return 0
 	}
-	
+
 	elapsed := time.Since(b.lastUsedAt)
 	if elapsed >= b.cooldown {
 		return 0
 	}
-	
+
 	return b.cooldown - elapsed
 }
 

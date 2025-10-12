@@ -51,9 +51,9 @@ func (e *BaseDomainEvent) GetEventData() interface{} {
 // TitleUnlockedEvent 称号解锁事件
 type TitleUnlockedEvent struct {
 	*BaseDomainEvent
-	PlayerID    string `json:"player_id"`
-	TitleID     string `json:"title_id"`
-	TitleName   string `json:"title_name"`
+	PlayerID    string      `json:"player_id"`
+	TitleID     string      `json:"title_id"`
+	TitleName   string      `json:"title_name"`
 	TitleRarity TitleRarity `json:"title_rarity"`
 }
 
@@ -153,11 +153,11 @@ func NewAchievementUnlockedEvent(playerID, achievementID, achievementName string
 // HonorLevelUpEvent 荣誉等级提升事件
 type HonorLevelUpEvent struct {
 	*BaseDomainEvent
-	PlayerID     string `json:"player_id"`
-	PreviousLevel int   `json:"previous_level"`
-	NewLevel     int    `json:"new_level"`
-	HonorPoints  int    `json:"honor_points"`
-	LevelTitle   string `json:"level_title"`
+	PlayerID      string `json:"player_id"`
+	PreviousLevel int    `json:"previous_level"`
+	NewLevel      int    `json:"new_level"`
+	HonorPoints   int    `json:"honor_points"`
+	LevelTitle    string `json:"level_title"`
 }
 
 // NewHonorLevelUpEvent 创建荣誉等级提升事件
@@ -169,22 +169,22 @@ func NewHonorLevelUpEvent(playerID string, previousLevel, newLevel, honorPoints 
 			AggregateID: playerID,
 			OccurredAt:  time.Now(),
 		},
-		PlayerID:     playerID,
+		PlayerID:      playerID,
 		PreviousLevel: previousLevel,
-		NewLevel:     newLevel,
-		HonorPoints:  honorPoints,
-		LevelTitle:   levelTitle,
+		NewLevel:      newLevel,
+		HonorPoints:   honorPoints,
+		LevelTitle:    levelTitle,
 	}
 }
 
 // HonorPointsEarnedEvent 荣誉点数获得事件
 type HonorPointsEarnedEvent struct {
 	*BaseDomainEvent
-	PlayerID      string `json:"player_id"`
-	PointsEarned  int    `json:"points_earned"`
-	TotalPoints   int    `json:"total_points"`
-	Source        string `json:"source"` // 来源：achievement, quest, event等
-	SourceID      string `json:"source_id,omitempty"`
+	PlayerID     string `json:"player_id"`
+	PointsEarned int    `json:"points_earned"`
+	TotalPoints  int    `json:"total_points"`
+	Source       string `json:"source"` // 来源：achievement, quest, event等
+	SourceID     string `json:"source_id,omitempty"`
 }
 
 // NewHonorPointsEarnedEvent 创建荣誉点数获得事件
@@ -207,12 +207,12 @@ func NewHonorPointsEarnedEvent(playerID string, pointsEarned, totalPoints int, s
 // ReputationChangedEvent 声望变化事件
 type ReputationChangedEvent struct {
 	*BaseDomainEvent
-	PlayerID         string `json:"player_id"`
-	Faction          string `json:"faction"`
-	PreviousReputation int  `json:"previous_reputation"`
-	NewReputation    int    `json:"new_reputation"`
-	Change           int    `json:"change"`
-	Reason           string `json:"reason"`
+	PlayerID           string `json:"player_id"`
+	Faction            string `json:"faction"`
+	PreviousReputation int    `json:"previous_reputation"`
+	NewReputation      int    `json:"new_reputation"`
+	Change             int    `json:"change"`
+	Reason             string `json:"reason"`
 }
 
 // NewReputationChangedEvent 创建声望变化事件
@@ -263,11 +263,11 @@ func NewStatisticUpdatedEvent(playerID string, statType StatisticType, previousV
 // HonorSystemInitializedEvent 荣誉系统初始化事件
 type HonorSystemInitializedEvent struct {
 	*BaseDomainEvent
-	PlayerID         string `json:"player_id"`
-	InitialLevel     int    `json:"initial_level"`
-	InitialPoints    int    `json:"initial_points"`
-	TitlesCount      int    `json:"titles_count"`
-	AchievementsCount int   `json:"achievements_count"`
+	PlayerID          string `json:"player_id"`
+	InitialLevel      int    `json:"initial_level"`
+	InitialPoints     int    `json:"initial_points"`
+	TitlesCount       int    `json:"titles_count"`
+	AchievementsCount int    `json:"achievements_count"`
 }
 
 // NewHonorSystemInitializedEvent 创建荣誉系统初始化事件

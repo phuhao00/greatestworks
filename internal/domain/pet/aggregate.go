@@ -74,7 +74,7 @@ func (p *PetAggregate) SetName(name string) error {
 	if name == "" {
 		return ErrInvalidPetName
 	}
-	
+
 	p.name = name
 	p.updatedAt = time.Now()
 	p.version++
@@ -151,16 +151,16 @@ func (p *PetAggregate) AddExperience(exp uint64) error {
 	if p.state == PetStateDead {
 		return ErrPetIsDead
 	}
-	
+
 	p.experience += exp
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	// 检查是否可以升级
 	if p.canLevelUp() {
 		return p.levelUp()
 	}
-	
+
 	return nil
 }
 
@@ -169,12 +169,12 @@ func (p *PetAggregate) levelUp() error {
 	if p.level >= MaxPetLevel {
 		return ErrMaxLevelReached
 	}
-	
+
 	p.level++
 	p.attributes.UpgradeOnLevelUp(p.level)
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -189,12 +189,12 @@ func (p *PetAggregate) UpgradeStar() error {
 	if p.star >= MaxPetStar {
 		return ErrMaxStarReached
 	}
-	
+
 	p.star++
 	p.attributes.UpgradeOnStarUp(p.star)
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -203,16 +203,16 @@ func (p *PetAggregate) ChangeState(newState PetState) error {
 	if !p.canChangeState(newState) {
 		return ErrInvalidStateTransition
 	}
-	
+
 	p.state = newState
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	// 如果是死亡状态，设置复活时间
 	if newState == PetStateDead {
 		p.reviveTime = time.Now().Add(DefaultReviveTime)
 	}
-	
+
 	return nil
 }
 
@@ -237,16 +237,16 @@ func (p *PetAggregate) Revive() error {
 	if p.state != PetStateDead {
 		return ErrPetNotDead
 	}
-	
+
 	if time.Now().Before(p.reviveTime) {
 		return ErrReviveTimeNotReached
 	}
-	
+
 	p.state = PetStateIdle
 	p.reviveTime = time.Time{}
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -255,12 +255,12 @@ func (p *PetAggregate) InstantRevive() error {
 	if p.state != PetStateDead {
 		return ErrPetNotDead
 	}
-	
+
 	p.state = PetStateIdle
 	p.reviveTime = time.Time{}
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -269,18 +269,18 @@ func (p *PetAggregate) AddSkill(skill *PetSkill) error {
 	if len(p.skills) >= MaxPetSkills {
 		return ErrMaxSkillsReached
 	}
-	
+
 	// 检查是否已存在相同技能
 	for _, existingSkill := range p.skills {
 		if existingSkill.GetSkillID() == skill.GetSkillID() {
 			return ErrSkillAlreadyExists
 		}
 	}
-	
+
 	p.skills = append(p.skills, skill)
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -294,7 +294,7 @@ func (p *PetAggregate) RemoveSkill(skillID string) error {
 			return nil
 		}
 	}
-	
+
 	return ErrSkillNotFound
 }
 
@@ -310,7 +310,7 @@ func (p *PetAggregate) UpgradeSkill(skillID string) error {
 			return nil
 		}
 	}
-	
+
 	return ErrSkillNotFound
 }
 
@@ -322,11 +322,11 @@ func (p *PetAggregate) AddSkin(skin *PetSkin) error {
 			return ErrSkinAlreadyOwned
 		}
 	}
-	
+
 	p.skins = append(p.skins, skin)
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -338,7 +338,7 @@ func (p *PetAggregate) EquipSkin(skinID string) error {
 			skin.Unequip()
 		}
 	}
-	
+
 	// 装备新皮肤
 	for _, skin := range p.skins {
 		if skin.GetSkinID() == skinID {
@@ -350,7 +350,7 @@ func (p *PetAggregate) EquipSkin(skinID string) error {
 			return nil
 		}
 	}
-	
+
 	return ErrSkinNotOwned
 }
 
@@ -359,11 +359,11 @@ func (p *PetAggregate) Feed(foodType FoodType, amount int) error {
 	if p.state == PetStateDead {
 		return ErrPetIsDead
 	}
-	
+
 	if amount <= 0 {
 		return ErrInvalidAmount
 	}
-	
+
 	// 根据食物类型增加不同属性
 	switch foodType {
 	case FoodTypeExperience:
@@ -377,7 +377,7 @@ func (p *PetAggregate) Feed(foodType FoodType, amount int) error {
 	default:
 		return ErrInvalidFoodType
 	}
-	
+
 	p.updatedAt = time.Now()
 	p.version++
 	return nil
@@ -388,11 +388,11 @@ func (p *PetAggregate) Train(trainingType TrainingType, duration time.Duration) 
 	if p.state != PetStateIdle {
 		return ErrPetNotIdle
 	}
-	
+
 	p.state = PetStateTraining
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	// 训练完成后的效果将在训练结束时处理
 	return nil
 }
@@ -402,7 +402,7 @@ func (p *PetAggregate) FinishTraining(trainingType TrainingType) error {
 	if p.state != PetStateTraining {
 		return ErrPetNotTraining
 	}
-	
+
 	// 根据训练类型获得不同收益
 	switch trainingType {
 	case TrainingTypeExperience:
@@ -416,11 +416,11 @@ func (p *PetAggregate) FinishTraining(trainingType TrainingType) error {
 			randomSkill.AddExperience(TrainingSkillExpGain)
 		}
 	}
-	
+
 	p.state = PetStateIdle
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -429,15 +429,15 @@ func (p *PetAggregate) EnterBattle() error {
 	if p.state != PetStateIdle {
 		return ErrPetNotIdle
 	}
-	
+
 	if p.attributes.GetHealth() <= 0 {
 		return ErrPetIsDead
 	}
-	
+
 	p.state = PetStateBattle
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -446,17 +446,17 @@ func (p *PetAggregate) ExitBattle(isDead bool) error {
 	if p.state != PetStateBattle {
 		return ErrPetNotInBattle
 	}
-	
+
 	if isDead {
 		p.state = PetStateDead
 		p.reviveTime = time.Now().Add(DefaultReviveTime)
 	} else {
 		p.state = PetStateIdle
 	}
-	
+
 	p.updatedAt = time.Now()
 	p.version++
-	
+
 	return nil
 }
 
@@ -475,7 +475,7 @@ func (p *PetAggregate) GetTotalPower() int64 {
 	basePower := p.attributes.CalculatePower()
 	bondBonus := p.bonds.GetPowerBonus()
 	skinBonus := p.getEquippedSkinBonus()
-	
+
 	return basePower + bondBonus + skinBonus
 }
 
@@ -509,7 +509,7 @@ func (p *PetAggregate) GetReviveTimeRemaining() time.Duration {
 	if p.state != PetStateDead {
 		return 0
 	}
-	
+
 	remaining := p.reviveTime.Sub(time.Now())
 	if remaining < 0 {
 		return 0
@@ -522,27 +522,27 @@ func (p *PetAggregate) Validate() error {
 	if p.id == "" {
 		return ErrInvalidPetID
 	}
-	
+
 	if p.playerID == "" {
 		return ErrInvalidPlayerID
 	}
-	
+
 	if p.name == "" {
 		return ErrInvalidPetName
 	}
-	
+
 	if p.level < 1 || p.level > MaxPetLevel {
 		return ErrInvalidPetLevel
 	}
-	
+
 	if p.star < 1 || p.star > MaxPetStar {
 		return ErrInvalidPetStar
 	}
-	
+
 	if p.attributes == nil {
 		return ErrInvalidPetAttributes
 	}
-	
+
 	return nil
 }
 
@@ -551,15 +551,15 @@ const (
 	MaxPetLevel  = 100
 	MaxPetStar   = 5
 	MaxPetSkills = 4
-	
+
 	DefaultReviveTime = 30 * time.Minute
-	
+
 	// 食物价值
 	ExperienceFoodValue = 100
 	HealthFoodValue     = 50
 	AttackFoodValue     = 10
 	DefenseFoodValue    = 10
-	
+
 	// 训练收益
 	TrainingExperienceGain = 500
 	TrainingAttributeGain  = 20

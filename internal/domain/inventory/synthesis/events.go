@@ -1,8 +1,8 @@
 package synthesis
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 // DomainEvent 领域事件接口

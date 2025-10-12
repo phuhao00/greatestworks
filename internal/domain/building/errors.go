@@ -211,10 +211,10 @@ func NewBlueprintNotFoundError(blueprintID string) *BlueprintNotFoundError {
 // InvalidBuildingStateError 无效建筑状态错误
 type InvalidBuildingStateError struct {
 	*BaseBuildingError
-	BuildingID    string        `json:"building_id"`
+	BuildingID    string         `json:"building_id"`
 	CurrentState  BuildingStatus `json:"current_state"`
 	ExpectedState BuildingStatus `json:"expected_state"`
-	Operation     string        `json:"operation"`
+	Operation     string         `json:"operation"`
 }
 
 // NewInvalidBuildingStateError 创建无效建筑状态错误
@@ -269,8 +269,8 @@ func NewInsufficientResourcesError(resourceType string, required, available int6
 // PositionOccupiedError 位置被占用错误
 type PositionOccupiedError struct {
 	*BaseBuildingError
-	Position         *Position `json:"position"`
-	OccupyingBuilding string   `json:"occupying_building"`
+	Position          *Position `json:"position"`
+	OccupyingBuilding string    `json:"occupying_building"`
 }
 
 // NewPositionOccupiedError 创建位置被占用错误
@@ -281,7 +281,7 @@ func NewPositionOccupiedError(position *Position, occupyingBuilding string) *Pos
 			fmt.Sprintf("position (%d,%d,%d) is occupied by building %s", position.X, position.Y, position.Z, occupyingBuilding),
 			ErrorSeverityHigh,
 		),
-		Position:         position,
+		Position:          position,
 		OccupyingBuilding: occupyingBuilding,
 	}
 	err.SetContext("position", fmt.Sprintf("%d,%d,%d", position.X, position.Y, position.Z))
@@ -489,43 +489,43 @@ func NewConcurrencyError(resourceID, operation string) *ConcurrencyError {
 
 const (
 	// 通用错误
-	ErrCodeInvalidInput      = "BUILDING_INVALID_INPUT"
-	ErrCodeRepositoryError   = "BUILDING_REPOSITORY_ERROR"
-	ErrCodeConcurrencyError  = "BUILDING_CONCURRENCY_ERROR"
-	ErrCodeInvalidOperation  = "BUILDING_INVALID_OPERATION"
-	
+	ErrCodeInvalidInput     = "BUILDING_INVALID_INPUT"
+	ErrCodeRepositoryError  = "BUILDING_REPOSITORY_ERROR"
+	ErrCodeConcurrencyError = "BUILDING_CONCURRENCY_ERROR"
+	ErrCodeInvalidOperation = "BUILDING_INVALID_OPERATION"
+
 	// 建筑相关错误
 	ErrCodeBuildingNotFound      = "BUILDING_NOT_FOUND"
 	ErrCodeInvalidBuildingState  = "BUILDING_INVALID_STATE"
 	ErrCodePositionOccupied      = "BUILDING_POSITION_OCCUPIED"
 	ErrCodeInsufficientResources = "BUILDING_INSUFFICIENT_RESOURCES"
-	
+
 	// 建造相关错误
 	ErrCodeConstructionNotFound = "CONSTRUCTION_NOT_FOUND"
 	ErrCodeConstructionFailed   = "CONSTRUCTION_FAILED"
-	
+
 	// 升级相关错误
 	ErrCodeUpgradeNotFound = "UPGRADE_NOT_FOUND"
 	ErrCodeUpgradeFailed   = "UPGRADE_FAILED"
 	ErrCodeInvalidUpgrade  = "UPGRADE_INVALID"
-	
+
 	// 维护相关错误
 	ErrCodeRepairFailed  = "REPAIR_FAILED"
 	ErrCodeDestroyFailed = "DESTROY_FAILED"
-	
+
 	// 工人相关错误
 	ErrCodeWorkerNotFound     = "WORKER_NOT_FOUND"
 	ErrCodeWorkerNotAvailable = "WORKER_NOT_AVAILABLE"
-	
+
 	// 蓝图相关错误
 	ErrCodeBlueprintNotFound = "BLUEPRINT_NOT_FOUND"
 	ErrCodeBlueprintInvalid  = "BLUEPRINT_INVALID"
-	
+
 	// 系统错误
-	ErrCodeSystemError    = "BUILDING_SYSTEM_ERROR"
-	ErrCodeConfigError    = "BUILDING_CONFIG_ERROR"
-	ErrCodeNetworkError   = "BUILDING_NETWORK_ERROR"
-	ErrCodeTimeoutError   = "BUILDING_TIMEOUT_ERROR"
+	ErrCodeSystemError  = "BUILDING_SYSTEM_ERROR"
+	ErrCodeConfigError  = "BUILDING_CONFIG_ERROR"
+	ErrCodeNetworkError = "BUILDING_NETWORK_ERROR"
+	ErrCodeTimeoutError = "BUILDING_TIMEOUT_ERROR"
 )
 
 // 工具函数
@@ -621,11 +621,11 @@ func IsOperationError(err error) bool {
 type ErrorRecoveryStrategy int32
 
 const (
-	RecoveryStrategyNone        ErrorRecoveryStrategy = iota + 1 // 无恢复策略
-	RecoveryStrategyRetry                                         // 重试
-	RecoveryStrategyFallback                                      // 回退
-	RecoveryStrategyCircuitBreaker                                // 熔断器
-	RecoveryStrategyGracefulDegradation                           // 优雅降级
+	RecoveryStrategyNone                ErrorRecoveryStrategy = iota + 1 // 无恢复策略
+	RecoveryStrategyRetry                                                // 重试
+	RecoveryStrategyFallback                                             // 回退
+	RecoveryStrategyCircuitBreaker                                       // 熔断器
+	RecoveryStrategyGracefulDegradation                                  // 优雅降级
 )
 
 // String 返回恢复策略的字符串表示
@@ -650,7 +650,7 @@ func (ers ErrorRecoveryStrategy) String() string {
 func GetRecoveryStrategy(err error) ErrorRecoveryStrategy {
 	code := GetErrorCode(err)
 	severity := GetErrorSeverity(err)
-	
+
 	// 根据错误代码和严重程度确定恢复策略
 	switch {
 	case IsSystemError(err) && severity == ErrorSeverityCritical:
@@ -674,14 +674,14 @@ func GetRecoveryStrategy(err error) ErrorRecoveryStrategy {
 
 // ErrorStatistics 错误统计
 type ErrorStatistics struct {
-	TotalErrors      int64                    `json:"total_errors"`
-	ErrorsByCode     map[string]int64         `json:"errors_by_code"`
-	ErrorsBySeverity map[ErrorSeverity]int64  `json:"errors_by_severity"`
-	ErrorsByHour     map[string]int64         `json:"errors_by_hour"`
-	ErrorsByDay      map[string]int64         `json:"errors_by_day"`
-	RetryableErrors  int64                    `json:"retryable_errors"`
-	LastErrorTime    time.Time                `json:"last_error_time"`
-	UpdatedAt        time.Time                `json:"updated_at"`
+	TotalErrors      int64                   `json:"total_errors"`
+	ErrorsByCode     map[string]int64        `json:"errors_by_code"`
+	ErrorsBySeverity map[ErrorSeverity]int64 `json:"errors_by_severity"`
+	ErrorsByHour     map[string]int64        `json:"errors_by_hour"`
+	ErrorsByDay      map[string]int64        `json:"errors_by_day"`
+	RetryableErrors  int64                   `json:"retryable_errors"`
+	LastErrorTime    time.Time               `json:"last_error_time"`
+	UpdatedAt        time.Time               `json:"updated_at"`
 }
 
 // NewErrorStatistics 创建新错误统计
@@ -700,24 +700,24 @@ func NewErrorStatistics() *ErrorStatistics {
 // AddError 添加错误到统计
 func (es *ErrorStatistics) AddError(err error) {
 	es.TotalErrors++
-	
+
 	if buildingErr, ok := GetBuildingError(err); ok {
 		code := buildingErr.GetCode()
 		severity := buildingErr.GetSeverity()
 		timestamp := buildingErr.GetTimestamp()
-		
+
 		es.ErrorsByCode[code]++
 		es.ErrorsBySeverity[severity]++
-		
+
 		hourKey := timestamp.Format("2006-01-02-15")
 		dayKey := timestamp.Format("2006-01-02")
 		es.ErrorsByHour[hourKey]++
 		es.ErrorsByDay[dayKey]++
-		
+
 		if buildingErr.IsRetryable() {
 			es.RetryableErrors++
 		}
-		
+
 		if timestamp.After(es.LastErrorTime) {
 			es.LastErrorTime = timestamp
 		}
@@ -725,18 +725,18 @@ func (es *ErrorStatistics) AddError(err error) {
 		// 非建筑错误
 		es.ErrorsByCode["UNKNOWN_ERROR"]++
 		es.ErrorsBySeverity[ErrorSeverityLow]++
-		
+
 		now := time.Now()
 		hourKey := now.Format("2006-01-02-15")
 		dayKey := now.Format("2006-01-02")
 		es.ErrorsByHour[hourKey]++
 		es.ErrorsByDay[dayKey]++
-		
+
 		if now.After(es.LastErrorTime) {
 			es.LastErrorTime = now
 		}
 	}
-	
+
 	es.UpdatedAt = time.Now()
 }
 
@@ -744,14 +744,14 @@ func (es *ErrorStatistics) AddError(err error) {
 func (es *ErrorStatistics) GetMostFrequentError() string {
 	maxCount := int64(0)
 	mostFrequent := ""
-	
+
 	for code, count := range es.ErrorsByCode {
 		if count > maxCount {
 			maxCount = count
 			mostFrequent = code
 		}
 	}
-	
+
 	return mostFrequent
 }
 
@@ -760,7 +760,7 @@ func (es *ErrorStatistics) GetErrorRate() float64 {
 	if es.TotalErrors == 0 {
 		return 0.0
 	}
-	
+
 	// 计算最近24小时的错误数
 	recentErrors := int64(0)
 	now := time.Now()
@@ -768,7 +768,7 @@ func (es *ErrorStatistics) GetErrorRate() float64 {
 		hourKey := now.Add(-time.Duration(i) * time.Hour).Format("2006-01-02-15")
 		recentErrors += es.ErrorsByHour[hourKey]
 	}
-	
+
 	return float64(recentErrors) / 24.0
 }
 
@@ -794,30 +794,30 @@ func ChainErrors(errors []error) BuildingError {
 	if len(errors) == 0 {
 		return nil
 	}
-	
+
 	if len(errors) == 1 {
 		if buildingErr, ok := GetBuildingError(errors[0]); ok {
 			return buildingErr
 		}
 		return WrapError(errors[0], "CHAINED_ERROR", errors[0].Error(), ErrorSeverityMedium)
 	}
-	
+
 	// 创建链式错误
 	messages := make([]string, len(errors))
 	for i, err := range errors {
 		messages[i] = err.Error()
 	}
-	
+
 	chainedErr := NewBuildingError(
 		"CHAINED_ERROR",
 		fmt.Sprintf("multiple errors occurred: %v", messages),
 		ErrorSeverityHigh,
 	)
-	
+
 	for i, err := range errors {
 		chainedErr.SetContext(fmt.Sprintf("error_%d", i), err.Error())
 	}
-	
+
 	return chainedErr
 }
 
@@ -848,7 +848,7 @@ func ValidateErrorCode(code string) bool {
 		ErrCodeNetworkError,
 		ErrCodeTimeoutError,
 	}
-	
+
 	for _, validCode := range validCodes {
 		if code == validCode {
 			return true
@@ -873,7 +873,7 @@ func FormatError(err error) string {
 // GetErrorDetails 获取错误详情
 func GetErrorDetails(err error) map[string]interface{} {
 	details := make(map[string]interface{})
-	
+
 	if buildingErr, ok := GetBuildingError(err); ok {
 		details["code"] = buildingErr.GetCode()
 		details["message"] = buildingErr.GetMessage()
@@ -893,6 +893,6 @@ func GetErrorDetails(err error) map[string]interface{} {
 		details["context"] = make(map[string]interface{})
 		details["recovery_strategy"] = RecoveryStrategyNone.String()
 	}
-	
+
 	return details
 }

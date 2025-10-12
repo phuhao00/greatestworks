@@ -481,17 +481,17 @@ func (st SoilType) GetBaseProductivity() float64 {
 
 // Soil 土壤值对象
 type Soil struct {
-	Type        SoilType
-	Fertility   float64 // 肥力 0-100
-	PH          float64 // 酸碱度 0-14
-	Moisture    float64 // 湿度 0-100
-	Organic     float64 // 有机物含量 0-100
-	Nitrogen    float64 // 氮含量 0-100
-	Phosphorus  float64 // 磷含量 0-100
-	Potassium   float64 // 钾含量 0-100
-	LastTested  time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Type       SoilType
+	Fertility  float64 // 肥力 0-100
+	PH         float64 // 酸碱度 0-14
+	Moisture   float64 // 湿度 0-100
+	Organic    float64 // 有机物含量 0-100
+	Nitrogen   float64 // 氮含量 0-100
+	Phosphorus float64 // 磷含量 0-100
+	Potassium  float64 // 钾含量 0-100
+	LastTested time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 // NewSoil 创建土壤
@@ -535,17 +535,17 @@ func (s *Soil) GetMoisture() float64 {
 // IsSuitableFor 检查是否适合种植指定作物
 func (s *Soil) IsSuitableFor(seedType SeedType) bool {
 	preferredSoil := seedType.GetPreferredSoilType()
-	
+
 	// 完全匹配最好
 	if s.Type == preferredSoil {
 		return true
 	}
-	
+
 	// 壤土适合大多数作物
 	if s.Type == SoilTypeLoam {
 		return true
 	}
-	
+
 	// 检查土壤条件是否满足最低要求
 	return s.Fertility >= 30.0 && s.PH >= 5.5 && s.PH <= 8.5
 }
@@ -553,10 +553,10 @@ func (s *Soil) IsSuitableFor(seedType SeedType) bool {
 // GetProductivityMultiplier 获取生产力倍率
 func (s *Soil) GetProductivityMultiplier() float64 {
 	baseProductivity := s.Type.GetBaseProductivity()
-	
+
 	// 肥力影响
-	fertilityMultiplier := 0.5 + (s.Fertility / 100.0) * 0.8 // 0.5-1.3倍率
-	
+	fertilityMultiplier := 0.5 + (s.Fertility/100.0)*0.8 // 0.5-1.3倍率
+
 	// pH影响（6.0-7.5为最佳范围）
 	phMultiplier := 1.0
 	if s.PH < 5.0 || s.PH > 9.0 {
@@ -566,17 +566,17 @@ func (s *Soil) GetProductivityMultiplier() float64 {
 	} else {
 		phMultiplier = 1.2 // 最佳pH范围
 	}
-	
+
 	// 有机物影响
-	organicMultiplier := 0.8 + (s.Organic / 100.0) * 0.4 // 0.8-1.2倍率
-	
+	organicMultiplier := 0.8 + (s.Organic/100.0)*0.4 // 0.8-1.2倍率
+
 	return baseProductivity * fertilityMultiplier * phMultiplier * organicMultiplier
 }
 
 // GetGrowthMultiplier 获取生长倍率
 func (s *Soil) GetGrowthMultiplier(seedType SeedType) float64 {
 	baseMultiplier := s.GetProductivityMultiplier()
-	
+
 	// 土壤类型匹配度
 	preferredSoil := seedType.GetPreferredSoilType()
 	typeMultiplier := 1.0
@@ -587,7 +587,7 @@ func (s *Soil) GetGrowthMultiplier(seedType SeedType) float64 {
 	} else {
 		typeMultiplier = 0.9 // 不匹配
 	}
-	
+
 	return baseMultiplier * typeMultiplier
 }
 
@@ -595,24 +595,24 @@ func (s *Soil) GetGrowthMultiplier(seedType SeedType) float64 {
 func (s *Soil) GetYieldMultiplier(seedType SeedType) float64 {
 	// 基础倍率
 	baseMultiplier := s.GetProductivityMultiplier()
-	
+
 	// 营养元素影响
 	nutrientMultiplier := (s.Nitrogen + s.Phosphorus + s.Potassium) / 300.0 // 平均值
 	if nutrientMultiplier > 1.0 {
 		nutrientMultiplier = 1.0
 	}
 	nutrientMultiplier = 0.7 + nutrientMultiplier*0.6 // 0.7-1.3倍率
-	
+
 	return baseMultiplier * nutrientMultiplier
 }
 
 // GetQualityScore 获取质量分数
 func (s *Soil) GetQualityScore() float64 {
 	score := 0.0
-	
+
 	// 肥力贡献（30%）
 	score += s.Fertility * 0.3
-	
+
 	// pH贡献（20%）
 	if s.PH >= 6.0 && s.PH <= 7.5 {
 		score += 20.0 // 最佳pH
@@ -621,14 +621,14 @@ func (s *Soil) GetQualityScore() float64 {
 	} else {
 		score += 10.0 // 一般pH
 	}
-	
+
 	// 有机物贡献（25%）
 	score += s.Organic * 0.25
-	
+
 	// 营养元素贡献（25%）
 	averageNutrient := (s.Nitrogen + s.Phosphorus + s.Potassium) / 3.0
 	score += averageNutrient * 0.25
-	
+
 	return score
 }
 
@@ -636,7 +636,7 @@ func (s *Soil) GetQualityScore() float64 {
 func (s *Soil) GetValue() float64 {
 	baseValue := s.Type.GetBaseProductivity() * 100.0
 	qualityMultiplier := s.GetQualityScore() / 100.0
-	
+
 	return baseValue * qualityMultiplier
 }
 
@@ -647,7 +647,7 @@ func (s *Soil) ApplyFertilizer(fertilizer *Fertilizer) {
 	s.Phosphorus += fertilizer.GetPhosphorusContent()
 	s.Potassium += fertilizer.GetPotassiumContent()
 	s.Organic += fertilizer.GetOrganicContent()
-	
+
 	// 限制数值范围
 	s.limitValues()
 	s.UpdatedAt = time.Now()
@@ -670,7 +670,7 @@ func (s *Soil) ApplyToCrop(crop *Crop) {
 	} else if s.GetQualityScore() < 40.0 {
 		crop.NutrientLevel -= 0.5 // 低质量土壤降低营养
 	}
-	
+
 	// 限制营养水平范围
 	if crop.NutrientLevel > 100.0 {
 		crop.NutrientLevel = 100.0
@@ -707,15 +707,15 @@ func (s *Soil) limitValues() {
 
 // Fertilizer 肥料值对象
 type Fertilizer struct {
-	Type             FertilizerType
-	Amount           float64
-	NutrientValue    float64
-	FertilityBoost   float64
-	NitrogenContent  float64
+	Type              FertilizerType
+	Amount            float64
+	NutrientValue     float64
+	FertilityBoost    float64
+	NitrogenContent   float64
 	PhosphorusContent float64
-	PotassiumContent float64
-	OrganicContent   float64
-	GrowthBonus      *GrowthBonus
+	PotassiumContent  float64
+	OrganicContent    float64
+	GrowthBonus       *GrowthBonus
 }
 
 // NewFertilizer 创建肥料
@@ -1039,7 +1039,7 @@ func (fs FarmSize) GetExpansionCost(currentSize FarmSize) *ExpansionCost {
 	if fs <= currentSize {
 		return nil
 	}
-	
+
 	baseCost := fs.GetBaseValue() - currentSize.GetBaseValue()
 	return &ExpansionCost{
 		Gold:      baseCost,
@@ -1160,7 +1160,7 @@ func (tt ToolType) GetBaseValue() float64 {
 // GetEffect 获取效果
 func (tt ToolType) GetEffect(level int, efficiency float64) *ToolEffect {
 	baseValue := float64(level) * efficiency
-	
+
 	switch tt {
 	case ToolTypeHoe:
 		return &ToolEffect{Type: "soil_improvement", Value: baseValue * 2.0}
@@ -1404,12 +1404,12 @@ func (fr *FarmResources) CanAfford(cost *ExpansionCost) bool {
 // GetTotalValue 获取总价值
 func (fr *FarmResources) GetTotalValue() float64 {
 	totalValue := fr.Gold
-	
+
 	// 种子价值
 	for seedType, quantity := range fr.Seeds {
 		totalValue += seedType.GetBaseValue() * float64(quantity) * 0.5 // 种子价值为作物价值的一半
 	}
-	
+
 	// 收获物价值
 	for seedType, qualityMap := range fr.Harvest {
 		for quality, quantity := range qualityMap {
@@ -1418,23 +1418,23 @@ func (fr *FarmResources) GetTotalValue() float64 {
 			totalValue += baseValue * qualityMultiplier * float64(quantity)
 		}
 	}
-	
+
 	return totalValue
 }
 
 // FarmStatistics 农场统计
 type FarmStatistics struct {
-	TotalPlantings    int
-	TotalHarvests     int
-	TotalYield        int
-	TotalExperience   int
-	PlantingsByType   map[SeedType]int
-	HarvestsByType    map[SeedType]int
-	FertilizerUsage   map[FertilizerType]float64
-	WateringCount     int
-	ToolUsage         map[ToolType]int
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	TotalPlantings  int
+	TotalHarvests   int
+	TotalYield      int
+	TotalExperience int
+	PlantingsByType map[SeedType]int
+	HarvestsByType  map[SeedType]int
+	FertilizerUsage map[FertilizerType]float64
+	WateringCount   int
+	ToolUsage       map[ToolType]int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 // NewFarmStatistics 创建农场统计
@@ -1485,22 +1485,22 @@ func (fs *FarmStatistics) AddToolUsage(toolType ToolType) {
 
 // SeasonModifier 季节修正
 type SeasonModifier struct {
-	CurrentSeason      Season
-	GrowthMultiplier   float64
-	YieldMultiplier    float64
-	QualityMultiplier  float64
-	WaterConsumption   float64
+	CurrentSeason       Season
+	GrowthMultiplier    float64
+	YieldMultiplier     float64
+	QualityMultiplier   float64
+	WaterConsumption    float64
 	NutrientConsumption float64
-	SeasonEffects      map[SeedType]float64
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	SeasonEffects       map[SeedType]float64
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }
 
 // NewSeasonModifier 创建季节修正
 func NewSeasonModifier() *SeasonModifier {
 	now := time.Now()
 	currentSeason := getCurrentSeason(now)
-	
+
 	return &SeasonModifier{
 		CurrentSeason:       currentSeason,
 		GrowthMultiplier:    currentSeason.GetGrowthMultiplier(),
@@ -1651,15 +1651,15 @@ func (s Season) GetNutrientConsumptionMultiplier() float64 {
 
 // AutomationSettings 自动化设置
 type AutomationSettings struct {
-	AutoWatering     bool
-	AutoFertilizing  bool
-	AutoHarvesting   bool
-	AutoPestControl  bool
-	WaterThreshold   float64
+	AutoWatering      bool
+	AutoFertilizing   bool
+	AutoHarvesting    bool
+	AutoPestControl   bool
+	WaterThreshold    float64
 	NutrientThreshold float64
-	HarvestDelay     time.Duration
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	HarvestDelay      time.Duration
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 // NewAutomationSettings 创建自动化设置

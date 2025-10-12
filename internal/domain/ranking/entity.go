@@ -12,49 +12,49 @@ type RankEntry struct {
 	ID       string `json:"id" bson:"_id"`
 	PlayerID uint64 `json:"player_id" bson:"player_id"`
 	RankID   uint32 `json:"rank_id" bson:"rank_id"`
-	
+
 	// 分数信息
 	Score     int64 `json:"score" bson:"score"`           // 真实分数
 	TimeScore int64 `json:"time_score" bson:"time_score"` // 带时间因子的分数
 	Rank      int64 `json:"rank" bson:"rank"`             // 当前排名
-	
+
 	// 玩家信息
 	PlayerName   string `json:"player_name" bson:"player_name"`
 	PlayerLevel  uint32 `json:"player_level" bson:"player_level"`
 	PlayerAvatar string `json:"player_avatar" bson:"player_avatar"`
 	PlayerTitle  string `json:"player_title" bson:"player_title"`
-	
+
 	// 状态信息
-	IsActive     bool      `json:"is_active" bson:"is_active"`
-	LastActive   time.Time `json:"last_active" bson:"last_active"`
+	IsActive     bool                 `json:"is_active" bson:"is_active"`
+	LastActive   time.Time            `json:"last_active" bson:"last_active"`
 	ScoreHistory []*ScoreHistoryEntry `json:"score_history" bson:"score_history"`
-	
+
 	// 排名变化
-	PreviousRank *int64    `json:"previous_rank,omitempty" bson:"previous_rank,omitempty"`
-	RankChange   int64     `json:"rank_change" bson:"rank_change"`
-	BestRank     int64     `json:"best_rank" bson:"best_rank"`
-	WorstRank    int64     `json:"worst_rank" bson:"worst_rank"`
-	
+	PreviousRank *int64 `json:"previous_rank,omitempty" bson:"previous_rank,omitempty"`
+	RankChange   int64  `json:"rank_change" bson:"rank_change"`
+	BestRank     int64  `json:"best_rank" bson:"best_rank"`
+	WorstRank    int64  `json:"worst_rank" bson:"worst_rank"`
+
 	// 统计信息
 	TotalUpdates    int64     `json:"total_updates" bson:"total_updates"`
 	ConsecutiveDays int32     `json:"consecutive_days" bson:"consecutive_days"`
 	FirstEntryTime  time.Time `json:"first_entry_time" bson:"first_entry_time"`
 	LastUpdateTime  time.Time `json:"last_update_time" bson:"last_update_time"`
-	
+
 	// 奖励信息
-	RewardsEarned   []*RankRewardEarned `json:"rewards_earned" bson:"rewards_earned"`
-	LastRewardTime  *time.Time          `json:"last_reward_time,omitempty" bson:"last_reward_time,omitempty"`
-	TotalRewardValue int64              `json:"total_reward_value" bson:"total_reward_value"`
-	
+	RewardsEarned    []*RankRewardEarned `json:"rewards_earned" bson:"rewards_earned"`
+	LastRewardTime   *time.Time          `json:"last_reward_time,omitempty" bson:"last_reward_time,omitempty"`
+	TotalRewardValue int64               `json:"total_reward_value" bson:"total_reward_value"`
+
 	// 元数据
-	Metadata    map[string]interface{} `json:"metadata" bson:"metadata"`
-	Tags        []string               `json:"tags" bson:"tags"`
-	CustomData  map[string]interface{} `json:"custom_data" bson:"custom_data"`
-	
+	Metadata   map[string]interface{} `json:"metadata" bson:"metadata"`
+	Tags       []string               `json:"tags" bson:"tags"`
+	CustomData map[string]interface{} `json:"custom_data" bson:"custom_data"`
+
 	// 时间戳
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
-	
+
 	// 内部状态
 	mutex sync.RWMutex `json:"-" bson:"-"`
 }
@@ -162,28 +162,28 @@ func (re *RankEntry) SetMetadata(metadata map[string]interface{}) {
 func NewRankEntry(playerID uint64, timeScore, realScore int64, metadata map[string]interface{}) *RankEntry {
 	now := time.Now()
 	return &RankEntry{
-		ID:              generateRankEntryID(playerID, now),
-		PlayerID:        playerID,
-		Score:           realScore,
-		TimeScore:       timeScore,
-		Rank:            0, // 将在排序后设置
-		IsActive:        true,
-		LastActive:      now,
-		ScoreHistory:    make([]*ScoreHistoryEntry, 0),
-		RankChange:      0,
-		BestRank:        0,
-		WorstRank:       0,
-		TotalUpdates:    1,
-		ConsecutiveDays: 1,
-		FirstEntryTime:  now,
-		LastUpdateTime:  now,
-		RewardsEarned:   make([]*RankRewardEarned, 0),
+		ID:               generateRankEntryID(playerID, now),
+		PlayerID:         playerID,
+		Score:            realScore,
+		TimeScore:        timeScore,
+		Rank:             0, // 将在排序后设置
+		IsActive:         true,
+		LastActive:       now,
+		ScoreHistory:     make([]*ScoreHistoryEntry, 0),
+		RankChange:       0,
+		BestRank:         0,
+		WorstRank:        0,
+		TotalUpdates:     1,
+		ConsecutiveDays:  1,
+		FirstEntryTime:   now,
+		LastUpdateTime:   now,
+		RewardsEarned:    make([]*RankRewardEarned, 0),
 		TotalRewardValue: 0,
-		Metadata:        metadata,
-		Tags:            make([]string, 0),
-		CustomData:      make(map[string]interface{}),
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		Metadata:         metadata,
+		Tags:             make([]string, 0),
+		CustomData:       make(map[string]interface{}),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 }
 
@@ -191,29 +191,29 @@ func NewRankEntry(playerID uint64, timeScore, realScore int64, metadata map[stri
 func NewRankEntryFromRepository(entryID string, rankingID uint32, playerID uint64, score int64) *RankEntry {
 	now := time.Now()
 	return &RankEntry{
-		ID:              entryID,
-		PlayerID:        playerID,
-		RankID:          rankingID,
-		Score:           score,
-		TimeScore:       score,
-		Rank:            0,
-		IsActive:        true,
-		LastActive:      now,
-		ScoreHistory:    make([]*ScoreHistoryEntry, 0),
-		RankChange:      0,
-		BestRank:        0,
-		WorstRank:       0,
-		TotalUpdates:    1,
-		ConsecutiveDays: 1,
-		FirstEntryTime:  now,
-		LastUpdateTime:  now,
-		RewardsEarned:   make([]*RankRewardEarned, 0),
+		ID:               entryID,
+		PlayerID:         playerID,
+		RankID:           rankingID,
+		Score:            score,
+		TimeScore:        score,
+		Rank:             0,
+		IsActive:         true,
+		LastActive:       now,
+		ScoreHistory:     make([]*ScoreHistoryEntry, 0),
+		RankChange:       0,
+		BestRank:         0,
+		WorstRank:        0,
+		TotalUpdates:     1,
+		ConsecutiveDays:  1,
+		FirstEntryTime:   now,
+		LastUpdateTime:   now,
+		RewardsEarned:    make([]*RankRewardEarned, 0),
 		TotalRewardValue: 0,
-		Metadata:        make(map[string]interface{}),
-		Tags:            make([]string, 0),
-		CustomData:      make(map[string]interface{}),
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		Metadata:         make(map[string]interface{}),
+		Tags:             make([]string, 0),
+		CustomData:       make(map[string]interface{}),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 }
 
@@ -221,10 +221,10 @@ func NewRankEntryFromRepository(entryID string, rankingID uint32, playerID uint6
 func (re *RankEntry) UpdateScore(timeScore, realScore int64, metadata map[string]interface{}) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	// 记录历史分数
 	re.addScoreHistory(re.Score, re.TimeScore)
-	
+
 	// 更新分数
 	re.Score = realScore
 	re.TimeScore = timeScore
@@ -232,14 +232,14 @@ func (re *RankEntry) UpdateScore(timeScore, realScore int64, metadata map[string
 	re.LastUpdateTime = time.Now()
 	re.UpdatedAt = time.Now()
 	re.LastActive = time.Now()
-	
+
 	// 更新元数据
 	if metadata != nil {
 		for k, v := range metadata {
 			re.Metadata[k] = v
 		}
 	}
-	
+
 	// 更新连续天数
 	re.updateConsecutiveDays()
 }
@@ -248,16 +248,16 @@ func (re *RankEntry) UpdateScore(timeScore, realScore int64, metadata map[string
 func (re *RankEntry) UpdateRank(newRank int64) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	// 记录排名变化
 	if re.Rank != 0 {
 		re.PreviousRank = &re.Rank
 		re.RankChange = re.Rank - newRank
 	}
-	
+
 	// 更新排名
 	re.Rank = newRank
-	
+
 	// 更新最佳和最差排名
 	if re.BestRank == 0 || newRank < re.BestRank {
 		re.BestRank = newRank
@@ -265,7 +265,7 @@ func (re *RankEntry) UpdateRank(newRank int64) {
 	if re.WorstRank == 0 || newRank > re.WorstRank {
 		re.WorstRank = newRank
 	}
-	
+
 	re.UpdatedAt = time.Now()
 }
 
@@ -273,7 +273,7 @@ func (re *RankEntry) UpdateRank(newRank int64) {
 func (re *RankEntry) UpdatePlayerInfo(name string, level uint32, avatar, title string) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	re.PlayerName = name
 	re.PlayerLevel = level
 	re.PlayerAvatar = avatar
@@ -285,7 +285,7 @@ func (re *RankEntry) UpdatePlayerInfo(name string, level uint32, avatar, title s
 func (re *RankEntry) AddReward(reward *RankRewardEarned) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	re.RewardsEarned = append(re.RewardsEarned, reward)
 	re.TotalRewardValue += reward.Value
 	now := time.Now()
@@ -297,7 +297,7 @@ func (re *RankEntry) AddReward(reward *RankRewardEarned) {
 func (re *RankEntry) SetActive(active bool) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	re.IsActive = active
 	if active {
 		re.LastActive = time.Now()
@@ -309,14 +309,14 @@ func (re *RankEntry) SetActive(active bool) {
 func (re *RankEntry) AddTag(tag string) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	// 检查是否已存在
 	for _, existingTag := range re.Tags {
 		if existingTag == tag {
 			return
 		}
 	}
-	
+
 	re.Tags = append(re.Tags, tag)
 	re.UpdatedAt = time.Now()
 }
@@ -325,7 +325,7 @@ func (re *RankEntry) AddTag(tag string) {
 func (re *RankEntry) RemoveTag(tag string) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	for i, existingTag := range re.Tags {
 		if existingTag == tag {
 			re.Tags = append(re.Tags[:i], re.Tags[i+1:]...)
@@ -339,7 +339,7 @@ func (re *RankEntry) RemoveTag(tag string) {
 func (re *RankEntry) SetCustomData(key string, value interface{}) {
 	re.mutex.Lock()
 	defer re.mutex.Unlock()
-	
+
 	if re.CustomData == nil {
 		re.CustomData = make(map[string]interface{})
 	}
@@ -351,7 +351,7 @@ func (re *RankEntry) SetCustomData(key string, value interface{}) {
 func (re *RankEntry) GetCustomData(key string) (interface{}, bool) {
 	re.mutex.RLock()
 	defer re.mutex.RUnlock()
-	
+
 	value, exists := re.CustomData[key]
 	return value, exists
 }
@@ -360,11 +360,11 @@ func (re *RankEntry) GetCustomData(key string) (interface{}, bool) {
 func (re *RankEntry) GetScoreHistory(limit int) []*ScoreHistoryEntry {
 	re.mutex.RLock()
 	defer re.mutex.RUnlock()
-	
+
 	if limit <= 0 || limit > len(re.ScoreHistory) {
 		limit = len(re.ScoreHistory)
 	}
-	
+
 	// 返回最近的记录
 	start := len(re.ScoreHistory) - limit
 	history := make([]*ScoreHistoryEntry, limit)
@@ -376,11 +376,11 @@ func (re *RankEntry) GetScoreHistory(limit int) []*ScoreHistoryEntry {
 func (re *RankEntry) GetRecentRewards(limit int) []*RankRewardEarned {
 	re.mutex.RLock()
 	defer re.mutex.RUnlock()
-	
+
 	if limit <= 0 || limit > len(re.RewardsEarned) {
 		limit = len(re.RewardsEarned)
 	}
-	
+
 	// 返回最近的奖励
 	start := len(re.RewardsEarned) - limit
 	rewards := make([]*RankRewardEarned, limit)
@@ -392,7 +392,7 @@ func (re *RankEntry) GetRecentRewards(limit int) []*RankRewardEarned {
 func (re *RankEntry) IsRankImproved() bool {
 	re.mutex.RLock()
 	defer re.mutex.RUnlock()
-	
+
 	return re.RankChange > 0
 }
 
@@ -400,7 +400,7 @@ func (re *RankEntry) IsRankImproved() bool {
 func (re *RankEntry) GetRankChangeDirection() string {
 	re.mutex.RLock()
 	defer re.mutex.RUnlock()
-	
+
 	if re.RankChange > 0 {
 		return "up"
 	} else if re.RankChange < 0 {
@@ -418,9 +418,9 @@ func (re *RankEntry) addScoreHistory(score, timeScore int64) {
 		TimeScore: timeScore,
 		Timestamp: time.Now(),
 	}
-	
+
 	re.ScoreHistory = append(re.ScoreHistory, history)
-	
+
 	// 限制历史记录数量
 	if len(re.ScoreHistory) > MaxScoreHistorySize {
 		re.ScoreHistory = re.ScoreHistory[1:]
@@ -431,7 +431,7 @@ func (re *RankEntry) addScoreHistory(score, timeScore int64) {
 func (re *RankEntry) updateConsecutiveDays() {
 	now := time.Now()
 	lastUpdate := re.LastUpdateTime
-	
+
 	// 检查是否是连续的天
 	if now.Sub(lastUpdate) <= 24*time.Hour {
 		// 同一天或连续天
@@ -446,25 +446,25 @@ func (re *RankEntry) updateConsecutiveDays() {
 
 // ScoreHistoryEntry 分数历史条目
 type ScoreHistoryEntry struct {
-	Score     int64     `json:"score" bson:"score"`
-	TimeScore int64     `json:"time_score" bson:"time_score"`
-	Timestamp time.Time `json:"timestamp" bson:"timestamp"`
-	Reason    string    `json:"reason,omitempty" bson:"reason,omitempty"`
+	Score     int64                  `json:"score" bson:"score"`
+	TimeScore int64                  `json:"time_score" bson:"time_score"`
+	Timestamp time.Time              `json:"timestamp" bson:"timestamp"`
+	Reason    string                 `json:"reason,omitempty" bson:"reason,omitempty"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty" bson:"metadata,omitempty"`
 }
 
 // RankRewardEarned 已获得的排行榜奖励
 type RankRewardEarned struct {
-	RewardID    string    `json:"reward_id" bson:"reward_id"`
-	RewardType  string    `json:"reward_type" bson:"reward_type"`
-	Quantity    int64     `json:"quantity" bson:"quantity"`
-	Value       int64     `json:"value" bson:"value"`
-	Rank        int64     `json:"rank" bson:"rank"`
-	RankTier    string    `json:"rank_tier" bson:"rank_tier"`
-	EarnedAt    time.Time `json:"earned_at" bson:"earned_at"`
-	ClaimedAt   *time.Time `json:"claimed_at,omitempty" bson:"claimed_at,omitempty"`
-	IsClaimed   bool      `json:"is_claimed" bson:"is_claimed"`
-	Description string    `json:"description" bson:"description"`
+	RewardID    string                 `json:"reward_id" bson:"reward_id"`
+	RewardType  string                 `json:"reward_type" bson:"reward_type"`
+	Quantity    int64                  `json:"quantity" bson:"quantity"`
+	Value       int64                  `json:"value" bson:"value"`
+	Rank        int64                  `json:"rank" bson:"rank"`
+	RankTier    string                 `json:"rank_tier" bson:"rank_tier"`
+	EarnedAt    time.Time              `json:"earned_at" bson:"earned_at"`
+	ClaimedAt   *time.Time             `json:"claimed_at,omitempty" bson:"claimed_at,omitempty"`
+	IsClaimed   bool                   `json:"is_claimed" bson:"is_claimed"`
+	Description string                 `json:"description" bson:"description"`
 	Metadata    map[string]interface{} `json:"metadata" bson:"metadata"`
 }
 
@@ -498,18 +498,18 @@ type Blacklist struct {
 	// 基础信息
 	ID     string `json:"id" bson:"_id"`
 	RankID uint32 `json:"rank_id" bson:"rank_id"`
-	
+
 	// 黑名单玩家
 	Players map[uint64]*BlacklistEntry `json:"players" bson:"players"`
-	
+
 	// 统计信息
 	TotalBlacklisted int64     `json:"total_blacklisted" bson:"total_blacklisted"`
 	LastUpdated      time.Time `json:"last_updated" bson:"last_updated"`
-	
+
 	// 时间戳
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
-	
+
 	// 内部状态
 	mutex sync.RWMutex `json:"-" bson:"-"`
 }
@@ -532,19 +532,19 @@ func NewBlacklist(rankID uint32) *Blacklist {
 func (bl *Blacklist) AddPlayer(playerID uint64, reason string) error {
 	bl.mutex.Lock()
 	defer bl.mutex.Unlock()
-	
+
 	// 检查是否已在黑名单中
 	if _, exists := bl.Players[playerID]; exists {
 		return NewPlayerAlreadyBlacklistedError(playerID, bl.RankID)
 	}
-	
+
 	// 添加到黑名单
 	entry := NewBlacklistEntry(playerID, reason)
 	bl.Players[playerID] = entry
 	bl.TotalBlacklisted++
 	bl.LastUpdated = time.Now()
 	bl.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 
@@ -552,18 +552,18 @@ func (bl *Blacklist) AddPlayer(playerID uint64, reason string) error {
 func (bl *Blacklist) RemovePlayer(playerID uint64) error {
 	bl.mutex.Lock()
 	defer bl.mutex.Unlock()
-	
+
 	// 检查是否在黑名单中
 	if _, exists := bl.Players[playerID]; !exists {
 		return NewPlayerNotBlacklistedError(playerID, bl.RankID)
 	}
-	
+
 	// 从黑名单移除
 	delete(bl.Players, playerID)
 	bl.TotalBlacklisted--
 	bl.LastUpdated = time.Now()
 	bl.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 
@@ -571,7 +571,7 @@ func (bl *Blacklist) RemovePlayer(playerID uint64) error {
 func (bl *Blacklist) IsBlacklisted(playerID uint64) bool {
 	bl.mutex.RLock()
 	defer bl.mutex.RUnlock()
-	
+
 	_, exists := bl.Players[playerID]
 	return exists
 }
@@ -580,7 +580,7 @@ func (bl *Blacklist) IsBlacklisted(playerID uint64) bool {
 func (bl *Blacklist) GetBlacklistEntry(playerID uint64) (*BlacklistEntry, bool) {
 	bl.mutex.RLock()
 	defer bl.mutex.RUnlock()
-	
+
 	entry, exists := bl.Players[playerID]
 	return entry, exists
 }
@@ -589,7 +589,7 @@ func (bl *Blacklist) GetBlacklistEntry(playerID uint64) (*BlacklistEntry, bool) 
 func (bl *Blacklist) GetAllPlayers() []*BlacklistEntry {
 	bl.mutex.RLock()
 	defer bl.mutex.RUnlock()
-	
+
 	entries := make([]*BlacklistEntry, 0, len(bl.Players))
 	for _, entry := range bl.Players {
 		entries = append(entries, entry)
@@ -601,7 +601,7 @@ func (bl *Blacklist) GetAllPlayers() []*BlacklistEntry {
 func (bl *Blacklist) GetPlayersByReason(reason string) []*BlacklistEntry {
 	bl.mutex.RLock()
 	defer bl.mutex.RUnlock()
-	
+
 	entries := make([]*BlacklistEntry, 0)
 	for _, entry := range bl.Players {
 		if entry.Reason == reason {
@@ -615,7 +615,7 @@ func (bl *Blacklist) GetPlayersByReason(reason string) []*BlacklistEntry {
 func (bl *Blacklist) GetPlayerIDs() []uint64 {
 	bl.mutex.RLock()
 	defer bl.mutex.RUnlock()
-	
+
 	ids := make([]uint64, 0, len(bl.Players))
 	for playerID := range bl.Players {
 		ids = append(ids, playerID)
@@ -627,7 +627,7 @@ func (bl *Blacklist) GetPlayerIDs() []uint64 {
 func (bl *Blacklist) Clear() {
 	bl.mutex.Lock()
 	defer bl.mutex.Unlock()
-	
+
 	bl.Players = make(map[uint64]*BlacklistEntry)
 	bl.TotalBlacklisted = 0
 	bl.LastUpdated = time.Now()
@@ -638,7 +638,7 @@ func (bl *Blacklist) Clear() {
 func (bl *Blacklist) Clone() *Blacklist {
 	bl.mutex.RLock()
 	defer bl.mutex.RUnlock()
-	
+
 	clone := &Blacklist{
 		ID:               bl.ID,
 		RankID:           bl.RankID,
@@ -648,24 +648,24 @@ func (bl *Blacklist) Clone() *Blacklist {
 		CreatedAt:        bl.CreatedAt,
 		UpdatedAt:        bl.UpdatedAt,
 	}
-	
+
 	// 深拷贝玩家条目
 	for playerID, entry := range bl.Players {
 		entryCopy := *entry
 		clone.Players[playerID] = &entryCopy
 	}
-	
+
 	return clone
 }
 
 // BlacklistEntry 黑名单条目
 type BlacklistEntry struct {
-	PlayerID    uint64    `json:"player_id" bson:"player_id"`
-	Reason      string    `json:"reason" bson:"reason"`
-	AddedAt     time.Time `json:"added_at" bson:"added_at"`
-	AddedBy     string    `json:"added_by" bson:"added_by"`
-	ExpiresAt   *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
-	IsPermanent bool      `json:"is_permanent" bson:"is_permanent"`
+	PlayerID    uint64                 `json:"player_id" bson:"player_id"`
+	Reason      string                 `json:"reason" bson:"reason"`
+	AddedAt     time.Time              `json:"added_at" bson:"added_at"`
+	AddedBy     string                 `json:"added_by" bson:"added_by"`
+	ExpiresAt   *time.Time             `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
+	IsPermanent bool                   `json:"is_permanent" bson:"is_permanent"`
 	Metadata    map[string]interface{} `json:"metadata" bson:"metadata"`
 }
 
@@ -706,7 +706,7 @@ func (ble *BlacklistEntry) GetRemainingTime() time.Duration {
 	if ble.IsPermanent || ble.ExpiresAt == nil {
 		return 0
 	}
-	
+
 	remaining := ble.ExpiresAt.Sub(time.Now())
 	if remaining < 0 {
 		return 0
@@ -744,16 +744,16 @@ func (ble *BlacklistEntry) GetMetadata(key string) (interface{}, bool) {
 
 const (
 	// 历史记录限制
-	MaxScoreHistorySize = 100
+	MaxScoreHistorySize  = 100
 	MaxRewardHistorySize = 50
-	
+
 	// 黑名单限制
 	MaxBlacklistSize = 10000
-	
+
 	// 标签限制
 	MaxTagsPerEntry = 10
 	MaxTagLength    = 50
-	
+
 	// 元数据限制
 	MaxMetadataSize = 1024 * 1024 // 1MB
 )
@@ -777,33 +777,33 @@ func ValidateRankEntry(entry *RankEntry) error {
 	if entry == nil {
 		return fmt.Errorf("rank entry cannot be nil")
 	}
-	
+
 	if entry.PlayerID == 0 {
 		return fmt.Errorf("player ID cannot be zero")
 	}
-	
+
 	if entry.RankID == 0 {
 		return fmt.Errorf("rank ID cannot be zero")
 	}
-	
+
 	if entry.Score < 0 {
 		return fmt.Errorf("score cannot be negative")
 	}
-	
+
 	if entry.Rank < 0 {
 		return fmt.Errorf("rank cannot be negative")
 	}
-	
+
 	if len(entry.Tags) > MaxTagsPerEntry {
 		return fmt.Errorf("too many tags: max %d, got %d", MaxTagsPerEntry, len(entry.Tags))
 	}
-	
+
 	for _, tag := range entry.Tags {
 		if len(tag) > MaxTagLength {
 			return fmt.Errorf("tag too long: max %d, got %d", MaxTagLength, len(tag))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -812,26 +812,26 @@ func ValidateBlacklistEntry(entry *BlacklistEntry) error {
 	if entry == nil {
 		return fmt.Errorf("blacklist entry cannot be nil")
 	}
-	
+
 	if entry.PlayerID == 0 {
 		return fmt.Errorf("player ID cannot be zero")
 	}
-	
+
 	if entry.Reason == "" {
 		return fmt.Errorf("reason cannot be empty")
 	}
-	
+
 	if len(entry.Reason) > 500 {
 		return fmt.Errorf("reason too long: max 500, got %d", len(entry.Reason))
 	}
-	
+
 	if !entry.IsPermanent && entry.ExpiresAt == nil {
 		return fmt.Errorf("temporary blacklist entry must have expiration time")
 	}
-	
+
 	if entry.ExpiresAt != nil && entry.ExpiresAt.Before(entry.AddedAt) {
 		return fmt.Errorf("expiration time cannot be before added time")
 	}
-	
+
 	return nil
 }

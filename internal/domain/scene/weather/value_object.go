@@ -350,32 +350,32 @@ func (s Season) IsValid() bool {
 
 // SeasonalPattern 季节模式
 type SeasonalPattern struct {
-	CurrentSeason       Season
-	SeasonStartTime     time.Time
-	SeasonDuration      time.Duration
+	CurrentSeason        Season
+	SeasonStartTime      time.Time
+	SeasonDuration       time.Duration
 	WeatherProbabilities map[Season]map[WeatherType]float64
-	TemperatureRanges   map[Season]TemperatureRange
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
+	TemperatureRanges    map[Season]TemperatureRange
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
 }
 
 // NewSeasonalPattern 创建季节模式
 func NewSeasonalPattern() *SeasonalPattern {
 	now := time.Now()
 	pattern := &SeasonalPattern{
-		CurrentSeason:       getCurrentSeason(now),
-		SeasonStartTime:     getSeasonStartTime(now),
-		SeasonDuration:      90 * 24 * time.Hour, // 90天
+		CurrentSeason:        getCurrentSeason(now),
+		SeasonStartTime:      getSeasonStartTime(now),
+		SeasonDuration:       90 * 24 * time.Hour, // 90天
 		WeatherProbabilities: make(map[Season]map[WeatherType]float64),
-		TemperatureRanges:   make(map[Season]TemperatureRange),
-		CreatedAt:           now,
-		UpdatedAt:           now,
+		TemperatureRanges:    make(map[Season]TemperatureRange),
+		CreatedAt:            now,
+		UpdatedAt:            now,
 	}
-	
+
 	// 初始化默认概率和温度范围
 	pattern.initializeDefaultProbabilities()
 	pattern.initializeTemperatureRanges()
-	
+
 	return pattern
 }
 
@@ -418,7 +418,7 @@ func (sp *SeasonalPattern) initializeDefaultProbabilities() {
 		WeatherTypeRainy:  0.2,
 		WeatherTypeWindy:  0.1,
 	}
-	
+
 	// 夏季
 	sp.WeatherProbabilities[SeasonSummer] = map[WeatherType]float64{
 		WeatherTypeSunny:  0.6,
@@ -426,7 +426,7 @@ func (sp *SeasonalPattern) initializeDefaultProbabilities() {
 		WeatherTypeRainy:  0.1,
 		WeatherTypeStormy: 0.1,
 	}
-	
+
 	// 秋季
 	sp.WeatherProbabilities[SeasonAutumn] = map[WeatherType]float64{
 		WeatherTypeSunny:  0.3,
@@ -434,7 +434,7 @@ func (sp *SeasonalPattern) initializeDefaultProbabilities() {
 		WeatherTypeRainy:  0.2,
 		WeatherTypeWindy:  0.1,
 	}
-	
+
 	// 冬季
 	sp.WeatherProbabilities[SeasonWinter] = map[WeatherType]float64{
 		WeatherTypeCloudy: 0.4,
@@ -727,7 +727,7 @@ func getCurrentSeason(currentTime time.Time) Season {
 func getSeasonStartTime(currentTime time.Time) time.Time {
 	year := currentTime.Year()
 	month := currentTime.Month()
-	
+
 	switch {
 	case month >= 3 && month <= 5:
 		return time.Date(year, 3, 1, 0, 0, 0, 0, currentTime.Location())

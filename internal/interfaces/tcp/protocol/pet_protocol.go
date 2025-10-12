@@ -11,7 +11,7 @@ const (
 	MsgTypeEvolvePet     = "evolve_pet"
 	MsgTypeEquipPetSkin  = "equip_pet_skin"
 	MsgTypeSynthesizePet = "synthesize_pet"
-	
+
 	// 响应消息类型
 	MsgTypeCreatePetResponse     = "create_pet_response"
 	MsgTypeFeedPetResponse       = "feed_pet_response"
@@ -21,7 +21,7 @@ const (
 	MsgTypeEvolvePetResponse     = "evolve_pet_response"
 	MsgTypeEquipPetSkinResponse  = "equip_pet_skin_response"
 	MsgTypeSynthesizePetResponse = "synthesize_pet_response"
-	
+
 	// 通知消息类型
 	MsgTypePetLevelUp      = "pet_level_up"
 	MsgTypePetMoodChanged  = "pet_mood_changed"
@@ -81,14 +81,14 @@ type TrainPetRequest struct {
 
 // TrainPetResponse 训练宠物响应
 type TrainPetResponse struct {
-	PetID            string            `json:"pet_id"`
-	TrainingType     string            `json:"training_type"`
-	ExpGained        int64             `json:"exp_gained"`
-	AttributeChanges map[string]int64  `json:"attribute_changes"`
-	EnergyConsumed   int32             `json:"energy_consumed"`
-	LevelUp          bool              `json:"level_up"`
-	SkillsLearned    []string          `json:"skills_learned,omitempty"`
-	TrainedAt        int64             `json:"trained_at"`
+	PetID            string           `json:"pet_id"`
+	TrainingType     string           `json:"training_type"`
+	ExpGained        int64            `json:"exp_gained"`
+	AttributeChanges map[string]int64 `json:"attribute_changes"`
+	EnergyConsumed   int32            `json:"energy_consumed"`
+	LevelUp          bool             `json:"level_up"`
+	SkillsLearned    []string         `json:"skills_learned,omitempty"`
+	TrainedAt        int64            `json:"trained_at"`
 }
 
 // GetPetRequest 获取宠物请求
@@ -125,22 +125,22 @@ type GetPlayerPetsResponse struct {
 
 // EvolvePetRequest 宠物进化请求
 type EvolvePetRequest struct {
-	PetID         string            `json:"pet_id"`
-	TargetSpecies string            `json:"target_species"`
-	Materials     map[string]int32  `json:"materials,omitempty"`
+	PetID         string           `json:"pet_id"`
+	TargetSpecies string           `json:"target_species"`
+	Materials     map[string]int32 `json:"materials,omitempty"`
 }
 
 // EvolvePetResponse 宠物进化响应
 type EvolvePetResponse struct {
-	PetID          string            `json:"pet_id"`
-	OldSpecies     string            `json:"old_species"`
-	NewSpecies     string            `json:"new_species"`
-	OldRarity      string            `json:"old_rarity"`
-	NewRarity      string            `json:"new_rarity"`
-	AttributeBonus map[string]int64  `json:"attribute_bonus"`
-	NewSkills      []string          `json:"new_skills,omitempty"`
-	MaterialsUsed  map[string]int32  `json:"materials_used"`
-	EvolvedAt      int64             `json:"evolved_at"`
+	PetID          string           `json:"pet_id"`
+	OldSpecies     string           `json:"old_species"`
+	NewSpecies     string           `json:"new_species"`
+	OldRarity      string           `json:"old_rarity"`
+	NewRarity      string           `json:"new_rarity"`
+	AttributeBonus map[string]int64 `json:"attribute_bonus"`
+	NewSkills      []string         `json:"new_skills,omitempty"`
+	MaterialsUsed  map[string]int32 `json:"materials_used"`
+	EvolvedAt      int64            `json:"evolved_at"`
 }
 
 // EquipPetSkinRequest 装备宠物皮肤请求
@@ -179,42 +179,42 @@ type SynthesizePetResponse struct {
 
 // PetInfo 宠物信息
 type PetInfo struct {
-	PetID        string            `json:"pet_id"`
-	PlayerID     uint64            `json:"player_id"`
-	SpeciesID    string            `json:"species_id"`
-	Name         string            `json:"name"`
-	Level        int32             `json:"level"`
-	Exp          int64             `json:"exp"`
-	MaxExp       int64             `json:"max_exp"`
-	Rarity       string            `json:"rarity"`
-	Quality      string            `json:"quality"`
-	Attributes   map[string]int64  `json:"attributes"`
-	Skills       []string          `json:"skills"`
-	EquippedSkin string            `json:"equipped_skin,omitempty"`
-	Mood         string            `json:"mood"`
-	Hunger       int32             `json:"hunger"`
-	Energy       int32             `json:"energy"`
-	Health       int32             `json:"health"`
-	Happiness    int32             `json:"happiness"`
-	IsActive     bool              `json:"is_active"`
-	LastFedAt    int64             `json:"last_fed_at"`
-	LastPlayedAt int64             `json:"last_played_at"`
-	CreatedAt    int64             `json:"created_at"`
-	UpdatedAt    int64             `json:"updated_at"`
+	PetID        string           `json:"pet_id"`
+	PlayerID     uint64           `json:"player_id"`
+	SpeciesID    string           `json:"species_id"`
+	Name         string           `json:"name"`
+	Level        int32            `json:"level"`
+	Exp          int64            `json:"exp"`
+	MaxExp       int64            `json:"max_exp"`
+	Rarity       string           `json:"rarity"`
+	Quality      string           `json:"quality"`
+	Attributes   map[string]int64 `json:"attributes"`
+	Skills       []string         `json:"skills"`
+	EquippedSkin string           `json:"equipped_skin,omitempty"`
+	Mood         string           `json:"mood"`
+	Hunger       int32            `json:"hunger"`
+	Energy       int32            `json:"energy"`
+	Health       int32            `json:"health"`
+	Happiness    int32            `json:"happiness"`
+	IsActive     bool             `json:"is_active"`
+	LastFedAt    int64            `json:"last_fed_at"`
+	LastPlayedAt int64            `json:"last_played_at"`
+	CreatedAt    int64            `json:"created_at"`
+	UpdatedAt    int64            `json:"updated_at"`
 }
 
 // 通知消息结构
 
 // PetLevelUpNotification 宠物升级通知
 type PetLevelUpNotification struct {
-	PetID        string            `json:"pet_id"`
-	PlayerID     uint64            `json:"player_id"`
-	OldLevel     int32             `json:"old_level"`
-	NewLevel     int32             `json:"new_level"`
-	NewMaxExp    int64             `json:"new_max_exp"`
+	PetID         string           `json:"pet_id"`
+	PlayerID      uint64           `json:"player_id"`
+	OldLevel      int32            `json:"old_level"`
+	NewLevel      int32            `json:"new_level"`
+	NewMaxExp     int64            `json:"new_max_exp"`
 	AttributeGain map[string]int64 `json:"attribute_gain,omitempty"`
 	SkillsLearned []string         `json:"skills_learned,omitempty"`
-	LevelUpAt    int64             `json:"level_up_at"`
+	LevelUpAt     int64            `json:"level_up_at"`
 }
 
 // PetMoodChangedNotification 宠物心情变化通知
@@ -229,15 +229,15 @@ type PetMoodChangedNotification struct {
 
 // PetEvolvedNotification 宠物进化通知
 type PetEvolvedNotification struct {
-	PetID         string            `json:"pet_id"`
-	PlayerID      uint64            `json:"player_id"`
-	OldSpecies    string            `json:"old_species"`
-	NewSpecies    string            `json:"new_species"`
-	OldRarity     string            `json:"old_rarity"`
-	NewRarity     string            `json:"new_rarity"`
-	AttributeGain map[string]int64  `json:"attribute_gain"`
-	NewSkills     []string          `json:"new_skills,omitempty"`
-	EvolvedAt     int64             `json:"evolved_at"`
+	PetID         string           `json:"pet_id"`
+	PlayerID      uint64           `json:"player_id"`
+	OldSpecies    string           `json:"old_species"`
+	NewSpecies    string           `json:"new_species"`
+	OldRarity     string           `json:"old_rarity"`
+	NewRarity     string           `json:"new_rarity"`
+	AttributeGain map[string]int64 `json:"attribute_gain"`
+	NewSkills     []string         `json:"new_skills,omitempty"`
+	EvolvedAt     int64            `json:"evolved_at"`
 }
 
 // PetSkinEquippedNotification 宠物皮肤装备通知
@@ -278,18 +278,18 @@ type PetSkinInfo struct {
 
 // PetBondInfo 宠物羁绊信息
 type PetBondInfo struct {
-	BondID      string            `json:"bond_id"`
-	PlayerID    uint64            `json:"player_id"`
-	PetIDs      []string          `json:"pet_ids"`
-	BondType    string            `json:"bond_type"`
-	Level       int32             `json:"level"`
-	Exp         int64             `json:"exp"`
-	MaxExp      int64             `json:"max_exp"`
+	BondID      string             `json:"bond_id"`
+	PlayerID    uint64             `json:"player_id"`
+	PetIDs      []string           `json:"pet_ids"`
+	BondType    string             `json:"bond_type"`
+	Level       int32              `json:"level"`
+	Exp         int64              `json:"exp"`
+	MaxExp      int64              `json:"max_exp"`
 	Effects     map[string]float64 `json:"effects"`
-	IsActive    bool              `json:"is_active"`
-	ActivatedAt int64             `json:"activated_at,omitempty"`
-	CreatedAt   int64             `json:"created_at"`
-	UpdatedAt   int64             `json:"updated_at"`
+	IsActive    bool               `json:"is_active"`
+	ActivatedAt int64              `json:"activated_at,omitempty"`
+	CreatedAt   int64              `json:"created_at"`
+	UpdatedAt   int64              `json:"updated_at"`
 }
 
 // PetPictorialInfo 宠物图鉴信息

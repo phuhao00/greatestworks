@@ -23,7 +23,7 @@ func (s *FamilyService) CreateFamily(ctx context.Context, name, description, lea
 	if err := s.validateFamilyName(name); err != nil {
 		return nil, err
 	}
-	
+
 	// 检查名称是否已存在
 	exists, err := s.familyRepo.FamilyExistsByName(ctx, name)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *FamilyService) CreateFamily(ctx context.Context, name, description, lea
 	if exists {
 		return nil, ErrFamilyNameExists
 	}
-	
+
 	// 检查玩家是否已有家族
 	hasFamily, err := s.familyRepo.PlayerHasFamily(ctx, leaderID)
 	if err != nil {
@@ -41,23 +41,23 @@ func (s *FamilyService) CreateFamily(ctx context.Context, name, description, lea
 	if hasFamily {
 		return nil, ErrPlayerAlreadyInFamily
 	}
-	
+
 	// 创建家族
 	familyID := generateFamilyID()
 	family := NewFamily(familyID, name, description, leaderID)
-	
+
 	// 添加族长为成员
 	leader := NewFamilyMember(leaderID, "")
 	leader.Role = FamilyRoleLeader
 	if err := family.AddMember(leader); err != nil {
 		return nil, fmt.Errorf("添加族长失败: %w", err)
 	}
-	
+
 	// 保存家族
 	if err := s.familyRepo.SaveFamily(ctx, family); err != nil {
 		return nil, fmt.Errorf("保存家族失败: %w", err)
 	}
-	
+
 	return family, nil
 }
 
@@ -71,12 +71,12 @@ func (s *FamilyService) JoinFamily(ctx context.Context, familyID, playerID, nick
 	if family == nil {
 		return ErrFamilyNotFound
 	}
-	
+
 	// 检查家族是否已满
 	if family.IsFull() {
 		return ErrFamilyFull
 	}
-	
+
 	// 检查玩家是否已有家族
 	hasFamily, err := s.familyRepo.PlayerHasFamily(ctx, playerID)
 	if err != nil {
@@ -85,20 +85,20 @@ func (s *FamilyService) JoinFamily(ctx context.Context, familyID, playerID, nick
 	if hasFamily {
 		return ErrPlayerAlreadyInFamily
 	}
-	
+
 	// 创建新成员
 	member := NewFamilyMember(playerID, nickname)
-	
+
 	// 添加成员到家族
 	if err := family.AddMember(member); err != nil {
 		return err
 	}
-	
+
 	// 保存家族
 	if err := s.familyRepo.SaveFamily(ctx, family); err != nil {
 		return fmt.Errorf("保存家族失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -112,22 +112,22 @@ func (s *FamilyService) LeaveFamily(ctx context.Context, familyID, playerID stri
 	if family == nil {
 		return ErrFamilyNotFound
 	}
-	
+
 	// 族长不能直接离开，需要先转让族长
 	if family.LeaderID == playerID {
 		return ErrLeaderCannotLeave
 	}
-	
+
 	// 移除成员
 	if err := family.RemoveMember(playerID); err != nil {
 		return err
 	}
-	
+
 	// 保存家族
 	if err := s.familyRepo.SaveFamily(ctx, family); err != nil {
 		return fmt.Errorf("保存家族失败: %w", err)
 	}
-	
+
 	return nil
 }
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -75,7 +75,7 @@ func SuccessResponse(c *gin.Context, data interface{}, message ...string) {
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
-	
+
 	response := APIResponse{
 		Success:   true,
 		Message:   msg,
@@ -83,7 +83,7 @@ func SuccessResponse(c *gin.Context, data interface{}, message ...string) {
 		Timestamp: time.Now(),
 		RequestID: getRequestID(c),
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -93,7 +93,7 @@ func SuccessResponseWithMeta(c *gin.Context, data interface{}, meta *Meta, messa
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
-	
+
 	response := APIResponse{
 		Success:   true,
 		Message:   msg,
@@ -102,7 +102,7 @@ func SuccessResponseWithMeta(c *gin.Context, data interface{}, meta *Meta, messa
 		Timestamp: time.Now(),
 		RequestID: getRequestID(c),
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -112,7 +112,7 @@ func CreatedResponse(c *gin.Context, data interface{}, message ...string) {
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
-	
+
 	response := APIResponse{
 		Success:   true,
 		Message:   msg,
@@ -120,7 +120,7 @@ func CreatedResponse(c *gin.Context, data interface{}, message ...string) {
 		Timestamp: time.Now(),
 		RequestID: getRequestID(c),
 	}
-	
+
 	c.JSON(http.StatusCreated, response)
 }
 
@@ -130,14 +130,14 @@ func NoContentResponse(c *gin.Context, message ...string) {
 	if len(message) > 0 && message[0] != "" {
 		msg = message[0]
 	}
-	
+
 	response := APIResponse{
 		Success:   true,
 		Message:   msg,
 		Timestamp: time.Now(),
 		RequestID: getRequestID(c),
 	}
-	
+
 	c.JSON(http.StatusNoContent, response)
 }
 
@@ -147,18 +147,18 @@ func ErrorResponse(c *gin.Context, statusCode int, code, message string, details
 		Code:    code,
 		Message: message,
 	}
-	
+
 	if len(details) > 0 {
 		apiError.Details = details[0]
 	}
-	
+
 	response := APIResponse{
 		Success:   false,
 		Error:     apiError,
 		Timestamp: time.Now(),
 		RequestID: getRequestID(c),
 	}
-	
+
 	c.JSON(statusCode, response)
 }
 
@@ -206,18 +206,18 @@ func ValidationErrorResponse(c *gin.Context, field, message string, details ...i
 		Message: message,
 		Field:   field,
 	}
-	
+
 	if len(details) > 0 {
 		apiError.Details = details[0]
 	}
-	
+
 	response := APIResponse{
 		Success:   false,
 		Error:     apiError,
 		Timestamp: time.Now(),
 		RequestID: getRequestID(c),
 	}
-	
+
 	c.JSON(http.StatusUnprocessableEntity, response)
 }
 
@@ -309,7 +309,7 @@ func HandleError(c *gin.Context, err error) {
 	if err == nil {
 		return
 	}
-	
+
 	// 根据错误类型返回不同的响应
 	switch {
 	case isNotFoundError(err):

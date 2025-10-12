@@ -14,16 +14,16 @@ type GetPlayerStatsQuery struct {
 
 // GetPlayerStatsResult 获取玩家统计信息结果
 type GetPlayerStatsResult struct {
-	Found         bool                `json:"found"`
-	PlayerID      player.PlayerID     `json:"player_id"`
-	TotalBattles  int                 `json:"total_battles"`
-	Wins          int                 `json:"wins"`
-	Losses        int                 `json:"losses"`
-	WinRate       float64             `json:"win_rate"`
-	TotalExp      int64               `json:"total_exp"`
-	PlayTime      time.Duration       `json:"play_time"`
-	LastLogin     *time.Time          `json:"last_login"`
-	Achievements  []string            `json:"achievements"`
+	Found        bool            `json:"found"`
+	PlayerID     player.PlayerID `json:"player_id"`
+	TotalBattles int             `json:"total_battles"`
+	Wins         int             `json:"wins"`
+	Losses       int             `json:"losses"`
+	WinRate      float64         `json:"win_rate"`
+	TotalExp     int64           `json:"total_exp"`
+	PlayTime     time.Duration   `json:"play_time"`
+	LastLogin    *time.Time      `json:"last_login"`
+	Achievements []string        `json:"achievements"`
 }
 
 // GetPlayerStatsHandler 获取玩家统计信息处理器

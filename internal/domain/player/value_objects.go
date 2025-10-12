@@ -42,13 +42,13 @@ func validatePlayerName(name string) error {
 	if len(name) > 20 {
 		return errors.New("player name cannot exceed 20 characters")
 	}
-	
+
 	// 只允许字母、数字和下划线
 	matched, _ := regexp.MatchString("^[a-zA-Z0-9_]+$", name)
 	if !matched {
 		return errors.New("player name can only contain letters, numbers and underscores")
 	}
-	
+
 	return nil
 }
 

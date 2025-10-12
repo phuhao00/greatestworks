@@ -1,7 +1,7 @@
 package tcp
 
 import (
-	"greatestworks/application/services"
+	"greatestworks/internal/application/services"
 	"greatestworks/internal/infrastructure/logging"
 )
 

@@ -2,7 +2,7 @@
 package rpc
 
 import (
-	"greatestworks/application/handlers"
+	"greatestworks/internal/application/handlers"
 	"greatestworks/internal/infrastructure/logging"
 )
 

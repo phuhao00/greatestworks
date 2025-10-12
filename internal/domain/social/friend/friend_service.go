@@ -23,7 +23,7 @@ func (s *FriendService) SendFriendRequest(ctx context.Context, fromPlayerID, toP
 	if fromPlayerID == toPlayerID {
 		return nil, ErrCannotAddSelf
 	}
-	
+
 	// 检查是否已经是好友
 	friendship, err := s.friendRepo.GetFriendship(ctx, fromPlayerID, toPlayerID)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *FriendService) SendFriendRequest(ctx context.Context, fromPlayerID, toP
 	if friendship != nil && friendship.IsActive() {
 		return nil, ErrAlreadyFriends
 	}
-	
+
 	// 检查是否已有待处理的请求
 	existingRequest, err := s.friendRepo.GetPendingRequest(ctx, fromPlayerID, toPlayerID)
 	if err != nil {
@@ -41,7 +41,7 @@ func (s *FriendService) SendFriendRequest(ctx context.Context, fromPlayerID, toP
 	if existingRequest != nil {
 		return nil, ErrRequestAlreadyExists
 	}
-	
+
 	// 检查好友数量限制
 	friendCount, err := s.friendRepo.GetFriendCount(ctx, fromPlayerID)
 	if err != nil {
@@ -50,15 +50,15 @@ func (s *FriendService) SendFriendRequest(ctx context.Context, fromPlayerID, toP
 	if friendCount >= MaxFriendsPerPlayer {
 		return nil, ErrTooManyFriends
 	}
-	
+
 	// 创建好友请求
 	request := NewFriendRequest(fromPlayerID, toPlayerID, message)
-	
+
 	// 保存请求
 	if err := s.friendRepo.SaveFriendRequest(ctx, request); err != nil {
 		return nil, fmt.Errorf("保存好友请求失败: %w", err)
 	}
-	
+
 	return request, nil
 }
 
@@ -72,33 +72,33 @@ func (s *FriendService) AcceptFriendRequest(ctx context.Context, requestID, play
 	if request == nil {
 		return nil, ErrRequestNotFound
 	}
-	
+
 	// 验证权限（只有接收者可以接受请求）
 	if request.ToPlayerID != playerID {
 		return nil, ErrInsufficientPermission
 	}
-	
+
 	// 接受请求
 	if err := request.Accept(); err != nil {
 		return nil, err
 	}
-	
+
 	// 创建好友关系
 	friendship := NewFriendship(request.FromPlayerID, request.ToPlayerID, request.FromPlayerID)
 	if err := friendship.Accept(); err != nil {
 		return nil, fmt.Errorf("创建好友关系失败: %w", err)
 	}
-	
+
 	// 保存好友关系
 	if err := s.friendRepo.SaveFriendship(ctx, friendship); err != nil {
 		return nil, fmt.Errorf("保存好友关系失败: %w", err)
 	}
-	
+
 	// 更新请求状态
 	if err := s.friendRepo.SaveFriendRequest(ctx, request); err != nil {
 		return nil, fmt.Errorf("更新请求状态失败: %w", err)
 	}
-	
+
 	return friendship, nil
 }
 
@@ -112,22 +112,22 @@ func (s *FriendService) RejectFriendRequest(ctx context.Context, requestID, play
 	if request == nil {
 		return ErrRequestNotFound
 	}
-	
+
 	// 验证权限
 	if request.ToPlayerID != playerID {
 		return ErrInsufficientPermission
 	}
-	
+
 	// 拒绝请求
 	if err := request.Reject(); err != nil {
 		return err
 	}
-	
+
 	// 保存请求
 	if err := s.friendRepo.SaveFriendRequest(ctx, request); err != nil {
 		return fmt.Errorf("保存请求失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -141,17 +141,17 @@ func (s *FriendService) RemoveFriend(ctx context.Context, playerID, friendID str
 	if friendship == nil {
 		return ErrFriendshipNotFound
 	}
-	
+
 	// 删除好友关系
 	if err := friendship.Delete(); err != nil {
 		return err
 	}
-	
+
 	// 保存更改
 	if err := s.friendRepo.SaveFriendship(ctx, friendship); err != nil {
 		return fmt.Errorf("保存好友关系失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -165,17 +165,17 @@ func (s *FriendService) BlockFriend(ctx context.Context, playerID, friendID stri
 	if friendship == nil {
 		return ErrFriendshipNotFound
 	}
-	
+
 	// 屏蔽好友
 	if err := friendship.Block(); err != nil {
 		return err
 	}
-	
+
 	// 保存更改
 	if err := s.friendRepo.SaveFriendship(ctx, friendship); err != nil {
 		return fmt.Errorf("保存好友关系失败: %w", err)
 	}
-	
+
 	return nil
 }
 

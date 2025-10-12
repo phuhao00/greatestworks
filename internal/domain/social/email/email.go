@@ -34,7 +34,7 @@ const (
 type EmailStatus int
 
 const (
-	EmailStatusUnread EmailStatus = iota // 未读
+	EmailStatusUnread  EmailStatus = iota // 未读
 	EmailStatusRead                       // 已读
 	EmailStatusDeleted                    // 已删除
 	EmailStatusExpired                    // 已过期
@@ -70,10 +70,10 @@ func (e *Email) AddAttachment(attachment *Attachment) error {
 	if len(e.attachments) >= MaxAttachmentsPerEmail {
 		return ErrTooManyAttachments
 	}
-	
+
 	e.attachments = append(e.attachments, attachment)
 	e.Version++
-	
+
 	return nil
 }
 
@@ -82,18 +82,18 @@ func (e *Email) MarkAsRead() error {
 	if e.Status == EmailStatusDeleted {
 		return ErrEmailDeleted
 	}
-	
+
 	if e.IsExpired() {
 		return ErrEmailExpired
 	}
-	
+
 	if e.Status == EmailStatusUnread {
 		e.Status = EmailStatusRead
 		readAt := time.Now()
 		e.ReadAt = &readAt
 		e.Version++
 	}
-	
+
 	return nil
 }
 
@@ -102,10 +102,10 @@ func (e *Email) Delete() error {
 	if e.Status == EmailStatusDeleted {
 		return ErrEmailAlreadyDeleted
 	}
-	
+
 	e.Status = EmailStatusDeleted
 	e.Version++
-	
+
 	return nil
 }
 
@@ -114,13 +114,13 @@ func (e *Email) IsExpired() bool {
 	if e.Status == EmailStatusExpired {
 		return true
 	}
-	
+
 	if e.ExpiresAt != nil && time.Now().After(*e.ExpiresAt) {
 		e.Status = EmailStatusExpired
 		e.Version++
 		return true
 	}
-	
+
 	return false
 }
 

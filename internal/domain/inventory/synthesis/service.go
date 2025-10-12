@@ -26,81 +26,81 @@ func (ss *SynthesisService) ValidateRecipe(recipe *Recipe) error {
 	if recipe == nil {
 		return ErrInvalidRecipe
 	}
-	
+
 	if len(recipe.GetRequirements()) == 0 {
 		return ErrInvalidRecipe
 	}
-	
+
 	if len(recipe.GetOutputs()) == 0 {
 		return ErrInvalidRecipe
 	}
-	
+
 	if recipe.GetSuccessRate() < 0 || recipe.GetSuccessRate() > 1 {
 		return ErrInvalidRecipe
 	}
-	
+
 	return nil
 }
 
 // CalculateEnhancedSuccessRate 计算增强成功率
 func (ss *SynthesisService) CalculateEnhancedSuccessRate(baseRate float64, bonuses []*SynthesisBonus, playerLevel int) float64 {
 	enhancedRate := baseRate
-	
+
 	// 应用加成
 	for _, bonus := range bonuses {
 		if bonus.GetBonusType() == BonusTypeSuccessRate {
 			enhancedRate += bonus.GetBonusValue()
 		}
 	}
-	
+
 	// 玩家等级加成
 	levelBonus := float64(playerLevel) * 0.001 // 每级0.1%加成
 	enhancedRate += levelBonus
-	
+
 	// 确保在合理范围内
 	if enhancedRate > 1.0 {
 		enhancedRate = 1.0
 	} else if enhancedRate < 0.0 {
 		enhancedRate = 0.0
 	}
-	
+
 	return enhancedRate
 }
 
 // CalculateCraftTime 计算制作时间
 func (ss *SynthesisService) CalculateCraftTime(baseCraftTime time.Duration, bonuses []*SynthesisBonus) time.Duration {
 	speedMultiplier := 1.0
-	
+
 	// 应用速度加成
 	for _, bonus := range bonuses {
 		if bonus.GetBonusType() == BonusTypeCraftSpeed {
 			speedMultiplier += bonus.GetBonusValue()
 		}
 	}
-	
+
 	// 计算最终时间
 	finalTime := time.Duration(float64(baseCraftTime) / speedMultiplier)
-	
+
 	// 最小时间限制
 	minTime := time.Second * 1
 	if finalTime < minTime {
 		finalTime = minTime
 	}
-	
+
 	return finalTime
 }
 
 // CalculateMaterialConsumption 计算材料消耗
 func (ss *SynthesisService) CalculateMaterialConsumption(requirements []*MaterialRequirement, bonuses []*SynthesisBonus) []*MaterialRequirement {
 	materialSaveRate := 0.0
-	
+
 	// 计算材料节省率
 	for _, bonus := range bonuses {
 		if bonus.GetBonusType() == BonusTypeMaterialSave {
 			materialSaveRate += bonus.GetBonusValue()
 		}
 	}
-	
+
 	// 应用材料节省
 	adjustedRequirements := make([]*MaterialRequirement, len(requirements))
 	for i, req := range requirements {
@@ -110,7 +110,7 @@ func (ss *SynthesisService) CalculateMaterialConsumption(requirements []*Materia
 		}
 		adjustedRequirements[i] = NewMaterialRequirement(req.GetMaterialID(), adjustedQuantity)
 	}
-	
+
 	return adjustedRequirements
 }
 
@@ -145,7 +145,7 @@ func (rf *RecipeFactory) CreateFromTemplate(templateID string, playerLevel int) 
 	recipe.AddRequirement("coal", 2)
 	recipe.AddOutput("iron_sword", 1, 1.0)
 	recipe.SetRequireLevel(playerLevel)
-	
+
 	return recipe
 }
 
@@ -153,7 +153,7 @@ func (rf *RecipeFactory) CreateFromTemplate(templateID string, playerLevel int) 
 func (rf *RecipeFactory) CreateRandomRecipe(category RecipeCategory, playerLevel int) *Recipe {
 	successRate := 0.5 + rf.random.Float64()*0.4 // 50%-90%成功率
 	recipe := NewRecipe(rf.generateRecipeName(category), category, successRate)
-	
+
 	// 添加随机材料需求
 	materialCount := rf.random.Intn(3) + 2 // 2-4种材料
 	for i := 0; i < materialCount; i++ {
@@ -161,11 +161,11 @@ func (rf *RecipeFactory) CreateRandomRecipe(category RecipeCategory, playerLevel
 		quantity := rf.random.Intn(5) + 1
 		recipe.AddRequirement(materialID, quantity)
 	}
-	
+
 	// 添加产出
 	outputID := rf.generateOutputID(category)
 	recipe.AddOutput(outputID, 1, 1.0)
-	
+
 	recipe.SetRequireLevel(playerLevel)
 	return recipe
 }
@@ -178,12 +178,12 @@ func (rf *RecipeFactory) generateRecipeName(category RecipeCategory) string {
 		RecipeCategoryAccessory:  {"戒指打造", "项链制作", "护符合成"},
 		RecipeCategoryConsumable: {"生命药水", "魔法药水", "解毒剂"},
 	}
-	
+
 	nameList := names[category]
 	if len(nameList) == 0 {
 		return "未知配方"
 	}
-	
+
 	return nameList[rf.random.Intn(len(nameList))]
 }
 
@@ -195,12 +195,12 @@ func (rf *RecipeFactory) generateMaterialID(category RecipeCategory) string {
 		RecipeCategoryAccessory:  {"gem", "gold", "silver"},
 		RecipeCategoryConsumable: {"herb", "water", "magic_essence"},
 	}
-	
+
 	materialList := materials[category]
 	if len(materialList) == 0 {
 		return "unknown_material"
 	}
-	
+
 	return materialList[rf.random.Intn(len(materialList))]
 }
 
@@ -212,12 +212,12 @@ func (rf *RecipeFactory) generateOutputID(category RecipeCategory) string {
 		RecipeCategoryAccessory:  {"power_ring", "magic_necklace", "protection_amulet"},
 		RecipeCategoryConsumable: {"health_potion", "mana_potion", "antidote"},
 	}
-	
+
 	outputList := outputs[category]
 	if len(outputList) == 0 {
 		return "unknown_item"
 	}
-	
+
 	return outputList[rf.random.Intn(len(outputList))]
 }
 
@@ -237,10 +237,10 @@ func NewMaterialFactory() *MaterialFactory {
 func (mf *MaterialFactory) CreateRandomMaterial(materialType MaterialType, playerLevel int) *Material {
 	quality := mf.determineQuality(playerLevel)
 	quantity := mf.random.Intn(10) + 1
-	
+
 	materialID := mf.generateMaterialID(materialType)
 	materialName := mf.generateMaterialName(materialType, quality)
-	
+
 	return NewMaterial(materialID, materialName, materialType, quality, quantity)
 }
 
@@ -248,7 +248,7 @@ func (mf *MaterialFactory) CreateRandomMaterial(materialType MaterialType, playe
 func (mf *MaterialFactory) determineQuality(playerLevel int) Quality {
 	roll := mf.random.Float64()
 	levelBonus := float64(playerLevel) / 100.0
-	
+
 	switch {
 	case roll < 0.5-levelBonus*0.1:
 		return QualityCommon
@@ -274,12 +274,12 @@ func (mf *MaterialFactory) generateMaterialID(materialType MaterialType) string 
 		MaterialTypeCloth:   {"cotton_cloth", "silk_cloth", "magic_cloth"},
 		MaterialTypeWood:    {"oak_wood", "pine_wood", "magic_wood"},
 	}
-	
+
 	idList := ids[materialType]
 	if len(idList) == 0 {
 		return "unknown_material"
 	}
-	
+
 	return idList[mf.random.Intn(len(idList))]
 }
 
@@ -293,7 +293,7 @@ func (mf *MaterialFactory) generateMaterialName(materialType MaterialType, quali
 		QualityLegendary: "传说的",
 		QualityMythic:    "神话的",
 	}
-	
+
 	typeNames := map[MaterialType]string{
 		MaterialTypeOre:     "矿石",
 		MaterialTypeHerb:    "草药",
@@ -301,10 +301,10 @@ func (mf *MaterialFactory) generateMaterialName(materialType MaterialType, quali
 		MaterialTypeCloth:   "布料",
 		MaterialTypeWood:    "木材",
 	}
-	
+
 	prefix := qualityPrefix[quality]
 	typeName := typeNames[materialType]
-	
+
 	return prefix + typeName
 }
 

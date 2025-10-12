@@ -47,7 +47,7 @@ func (r *Redis) Connect(ctx context.Context) error {
 		Password: r.config.Password,
 		DB:       r.config.DB,
 	}
-	
+
 	if r.config.PoolSize > 0 {
 		opts.PoolSize = r.config.PoolSize
 	}
@@ -69,15 +69,15 @@ func (r *Redis) Connect(ctx context.Context) error {
 	if r.config.WriteTimeout > 0 {
 		opts.WriteTimeout = time.Duration(r.config.WriteTimeout) * time.Second
 	}
-	
+
 	// 创建客户端
 	r.client = redis.NewClient(opts)
-	
+
 	// 测试连接
 	if err := r.client.Ping(ctx).Err(); err != nil {
 		return fmt.Errorf("failed to connect to Redis: %w", err)
 	}
-	
+
 	return nil
 }
 

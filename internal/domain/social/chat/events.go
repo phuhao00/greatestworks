@@ -115,10 +115,10 @@ func NewMessageSentEvent(channelID, messageID, senderID, content string, msgType
 // MemberMutedEvent 成员被禁言事件
 type MemberMutedEvent struct {
 	BaseEvent
-	PlayerID   string
-	MutedBy    string
-	Duration   time.Duration
-	Reason     string
+	PlayerID string
+	MutedBy  string
+	Duration time.Duration
+	Reason   string
 }
 
 // NewMemberMutedEvent 创建成员禁言事件

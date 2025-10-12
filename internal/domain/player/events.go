@@ -164,8 +164,8 @@ func NewPlayerMovedEvent(playerID PlayerID, oldPos, newPos Position) *PlayerMove
 // PlayerDiedEvent 玩家死亡事件
 type PlayerDiedEvent struct {
 	BaseEvent
-	PlayerID PlayerID `json:"player_id"`
-	Position Position `json:"position"`
+	PlayerID PlayerID  `json:"player_id"`
+	Position Position  `json:"position"`
 	KillerID *PlayerID `json:"killer_id,omitempty"`
 }
 

@@ -1,8 +1,8 @@
 package beginner
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 // DomainEvent 领域事件接口
@@ -74,10 +74,10 @@ func (e *BeginnerGuideStartedEvent) GetEventData() interface{} {
 // GuideStepCompletedEvent 引导步骤完成事件
 type GuideStepCompletedEvent struct {
 	BaseDomainEvent
-	PlayerID string     `json:"player_id"`
-	GuideID  string     `json:"guide_id"`
-	StepID   int        `json:"step_id"`
-	Step     *GuideStep `json:"step"`
+	PlayerID string          `json:"player_id"`
+	GuideID  string          `json:"guide_id"`
+	StepID   int             `json:"step_id"`
+	Step     *GuideStep      `json:"step"`
 	Reward   *BeginnerReward `json:"reward"`
 }
 
@@ -147,8 +147,8 @@ func (e *BeginnerGuideCompletedEvent) GetEventData() interface{} {
 // TutorialStartedEvent 教程开始事件
 type TutorialStartedEvent struct {
 	BaseDomainEvent
-	PlayerID   string   `json:"player_id"`
-	TutorialID string   `json:"tutorial_id"`
+	PlayerID   string    `json:"player_id"`
+	TutorialID string    `json:"tutorial_id"`
 	Tutorial   *Tutorial `json:"tutorial"`
 }
 
@@ -284,11 +284,11 @@ func (e *AllBeginnerGuidesCompletedEvent) GetEventData() interface{} {
 // BeginnerProgressUpdatedEvent 新手进度更新事件
 type BeginnerProgressUpdatedEvent struct {
 	BaseDomainEvent
-	PlayerID      string         `json:"player_id"`
-	GuideID       string         `json:"guide_id"`
-	CurrentStep   int            `json:"current_step"`
-	Progress      *GuideProgress `json:"progress"`
-	NextStepHint  string         `json:"next_step_hint"`
+	PlayerID     string         `json:"player_id"`
+	GuideID      string         `json:"guide_id"`
+	CurrentStep  int            `json:"current_step"`
+	Progress     *GuideProgress `json:"progress"`
+	NextStepHint string         `json:"next_step_hint"`
 }
 
 // NewBeginnerProgressUpdatedEvent 创建新手进度更新事件

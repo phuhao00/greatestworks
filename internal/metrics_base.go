@@ -13,35 +13,35 @@ import (
 type MetricType int
 
 const (
-	MetricTypeCounter MetricType = iota // 计数器
-	MetricTypeGauge                     // 仪表盘
-	MetricTypeHistogram                 // 直方图
-	MetricTypeSummary                   // 摘要
+	MetricTypeCounter   MetricType = iota // 计数器
+	MetricTypeGauge                       // 仪表盘
+	MetricTypeHistogram                   // 直方图
+	MetricTypeSummary                     // 摘要
 )
 
 // MetricValue 指标值
 type MetricValue struct {
-	Value     float64   `json:"value"`
-	Timestamp time.Time `json:"timestamp"`
+	Value     float64           `json:"value"`
+	Timestamp time.Time         `json:"timestamp"`
 	Labels    map[string]string `json:"labels,omitempty"`
 }
 
 // MetricsConfig 指标配置
 type MetricsConfig struct {
-	Enabled        bool          `json:"enabled"`
+	Enabled         bool          `json:"enabled"`
 	CollectInterval time.Duration `json:"collect_interval"`
 	RetentionTime   time.Duration `json:"retention_time"`
-	MaxSamples     int           `json:"max_samples"`
+	MaxSamples      int           `json:"max_samples"`
 }
 
 // MetricsBase 指标基类
 type MetricsBase struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Type        MetricType             `json:"type"`
-	Labels      map[string]string      `json:"labels"`
-	Values      []MetricValue          `json:"values"`
-	Config      *MetricsConfig         `json:"config"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Type        MetricType        `json:"type"`
+	Labels      map[string]string `json:"labels"`
+	Values      []MetricValue     `json:"values"`
+	Config      *MetricsConfig    `json:"config"`
 	mu          sync.RWMutex
 	counter     int64
 	gauge       int64

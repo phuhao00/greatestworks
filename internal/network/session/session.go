@@ -72,17 +72,17 @@ func (s *TCPSession) Conn() net.Conn {
 func (s *TCPSession) Send(data []byte) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	
+
 	if !s.active {
 		return ErrSessionClosed
 	}
-	
+
 	_, err := s.conn.Write(data)
 	if err != nil {
 		s.active = false
 		return err
 	}
-	
+
 	s.lastActivity = time.Now()
 	return nil
 }
@@ -91,11 +91,11 @@ func (s *TCPSession) Send(data []byte) error {
 func (s *TCPSession) Close() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	
+
 	if !s.active {
 		return nil
 	}
-	
+
 	s.active = false
 	return s.conn.Close()
 }

@@ -9,13 +9,13 @@ type TeamRepository interface {
 	GetTeamByID(ctx context.Context, teamID string) (*Team, error)
 	DeleteTeam(ctx context.Context, teamID string) error
 	GetPublicTeams(ctx context.Context, limit int) ([]*Team, error)
-	
+
 	// 成员相关
 	GetTeamByPlayerID(ctx context.Context, playerID string) (*Team, error)
 	PlayerHasTeam(ctx context.Context, playerID string) (bool, error)
 	GetTeamMembers(ctx context.Context, teamID string) ([]*TeamMember, error)
 	UpdateMember(ctx context.Context, teamID string, member *TeamMember) error
-	
+
 	// 查询相关
 	SearchTeamsByName(ctx context.Context, keyword string, limit int) ([]*Team, error)
 	GetTeamsByLevelRange(ctx context.Context, minLevel, maxLevel int, limit int) ([]*Team, error)

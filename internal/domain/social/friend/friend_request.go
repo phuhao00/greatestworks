@@ -6,7 +6,7 @@ import (
 
 // FriendRequest 好友请求实体
 type FriendRequest struct {
-	ID          string
+	ID           string
 	FromPlayerID string
 	ToPlayerID   string
 	Message      string
@@ -21,10 +21,10 @@ type RequestStatus int
 
 const (
 	RequestStatusPending  RequestStatus = iota // 待处理
-	RequestStatusAccepted                       // 已接受
-	RequestStatusRejected                       // 已拒绝
-	RequestStatusExpired                        // 已过期
-	RequestStatusCanceled                       // 已取消
+	RequestStatusAccepted                      // 已接受
+	RequestStatusRejected                      // 已拒绝
+	RequestStatusExpired                       // 已过期
+	RequestStatusCanceled                      // 已取消
 )
 
 // NewFriendRequest 创建新的好友请求
@@ -46,14 +46,14 @@ func (r *FriendRequest) Accept() error {
 	if r.Status != RequestStatusPending {
 		return ErrInvalidRequestStatus
 	}
-	
+
 	if r.IsExpired() {
 		return ErrRequestExpired
 	}
-	
+
 	r.Status = RequestStatusAccepted
 	r.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 
@@ -62,14 +62,14 @@ func (r *FriendRequest) Reject() error {
 	if r.Status != RequestStatusPending {
 		return ErrInvalidRequestStatus
 	}
-	
+
 	if r.IsExpired() {
 		return ErrRequestExpired
 	}
-	
+
 	r.Status = RequestStatusRejected
 	r.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 
@@ -78,10 +78,10 @@ func (r *FriendRequest) Cancel() error {
 	if r.Status != RequestStatusPending {
 		return ErrInvalidRequestStatus
 	}
-	
+
 	r.Status = RequestStatusCanceled
 	r.UpdatedAt = time.Now()
-	
+
 	return nil
 }
 
@@ -90,13 +90,13 @@ func (r *FriendRequest) IsExpired() bool {
 	if r.Status == RequestStatusExpired {
 		return true
 	}
-	
+
 	if time.Now().After(r.ExpiresAt) {
 		r.Status = RequestStatusExpired
 		r.UpdatedAt = time.Now()
 		return true
 	}
-	
+
 	return false
 }
 

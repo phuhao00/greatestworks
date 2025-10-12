@@ -1,8 +1,8 @@
 package dressup
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 // DomainEvent 领域事件接口
@@ -144,12 +144,12 @@ func (e *OutfitObtainedEvent) GetEventData() interface{} {
 // OutfitUpgradedEvent 服装升级事件
 type OutfitUpgradedEvent struct {
 	BaseDomainEvent
-	PlayerID    string         `json:"player_id"`
-	OutfitID    string         `json:"outfit_id"`
-	OldLevel    int            `json:"old_level"`
-	NewLevel    int            `json:"new_level"`
-	OldAttrs    map[string]int `json:"old_attrs"`
-	NewAttrs    map[string]int `json:"new_attrs"`
+	PlayerID string         `json:"player_id"`
+	OutfitID string         `json:"outfit_id"`
+	OldLevel int            `json:"old_level"`
+	NewLevel int            `json:"new_level"`
+	OldAttrs map[string]int `json:"old_attrs"`
+	NewAttrs map[string]int `json:"new_attrs"`
 }
 
 // NewOutfitUpgradedEvent 创建服装升级事件
@@ -173,20 +173,20 @@ func NewOutfitUpgradedEvent(playerID, outfitID string, oldLevel, newLevel int, o
 // GetEventData 获取事件数据
 func (e *OutfitUpgradedEvent) GetEventData() interface{} {
 	return map[string]interface{}{
-		"player_id":  e.PlayerID,
-		"outfit_id":  e.OutfitID,
-		"old_level":  e.OldLevel,
-		"new_level":  e.NewLevel,
-		"old_attrs":  e.OldAttrs,
-		"new_attrs":  e.NewAttrs,
+		"player_id": e.PlayerID,
+		"outfit_id": e.OutfitID,
+		"old_level": e.OldLevel,
+		"new_level": e.NewLevel,
+		"old_attrs": e.OldAttrs,
+		"new_attrs": e.NewAttrs,
 	}
 }
 
 // StyleAppliedEvent 风格应用事件
 type StyleAppliedEvent struct {
 	BaseDomainEvent
-	PlayerID string `json:"player_id"`
-	StyleID  string `json:"style_id"`
+	PlayerID string        `json:"player_id"`
+	StyleID  string        `json:"style_id"`
 	Style    *DressupStyle `json:"style"`
 }
 

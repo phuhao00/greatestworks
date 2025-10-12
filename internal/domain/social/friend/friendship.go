@@ -22,9 +22,9 @@ type FriendshipStatus int
 
 const (
 	FriendshipStatusPending  FriendshipStatus = iota // 待确认
-	FriendshipStatusAccepted                          // 已接受
-	FriendshipStatusBlocked                           // 已屏蔽
-	FriendshipStatusDeleted                           // 已删除
+	FriendshipStatusAccepted                         // 已接受
+	FriendshipStatusBlocked                          // 已屏蔽
+	FriendshipStatusDeleted                          // 已删除
 )
 
 // NewFriendship 创建新的好友关系
@@ -46,11 +46,11 @@ func (f *Friendship) Accept() error {
 	if f.Status != FriendshipStatusPending {
 		return ErrInvalidFriendshipStatus
 	}
-	
+
 	f.Status = FriendshipStatusAccepted
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -59,11 +59,11 @@ func (f *Friendship) Block() error {
 	if f.Status == FriendshipStatusDeleted {
 		return ErrFriendshipDeleted
 	}
-	
+
 	f.Status = FriendshipStatusBlocked
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -72,11 +72,11 @@ func (f *Friendship) Unblock() error {
 	if f.Status != FriendshipStatusBlocked {
 		return ErrNotBlocked
 	}
-	
+
 	f.Status = FriendshipStatusAccepted
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 
@@ -85,11 +85,11 @@ func (f *Friendship) Delete() error {
 	if f.Status == FriendshipStatusDeleted {
 		return ErrFriendshipAlreadyDeleted
 	}
-	
+
 	f.Status = FriendshipStatusDeleted
 	f.UpdatedAt = time.Now()
 	f.Version++
-	
+
 	return nil
 }
 

@@ -239,8 +239,8 @@ func NewBuildingLevelChangedEvent(buildingID string, oldLevel, newLevel int32, r
 // ConstructionStartedEvent 建造开始事件
 type ConstructionStartedEvent struct {
 	*BaseBuildingEvent
-	ConstructionID string        `json:"construction_id"`
-	Duration       time.Duration `json:"duration"`
+	ConstructionID string          `json:"construction_id"`
+	Duration       time.Duration   `json:"duration"`
 	Costs          []*ResourceCost `json:"costs,omitempty"`
 }
 
@@ -287,8 +287,8 @@ func NewConstructionProgressUpdatedEvent(buildingID, constructionID string, prog
 // ConstructionCompletedEvent 建造完成事件
 type ConstructionCompletedEvent struct {
 	*BaseBuildingEvent
-	ConstructionID string        `json:"construction_id"`
-	Duration       time.Duration `json:"duration"`
+	ConstructionID string          `json:"construction_id"`
+	Duration       time.Duration   `json:"duration"`
 	ActualCosts    []*ResourceCost `json:"actual_costs,omitempty"`
 }
 
@@ -335,10 +335,10 @@ func NewConstructionCancelledEvent(buildingID, constructionID, reason string) *C
 // UpgradeStartedEvent 升级开始事件
 type UpgradeStartedEvent struct {
 	*BaseBuildingEvent
-	UpgradeID string        `json:"upgrade_id"`
-	FromLevel int32         `json:"from_level"`
-	ToLevel   int32         `json:"to_level"`
-	Duration  time.Duration `json:"duration"`
+	UpgradeID string          `json:"upgrade_id"`
+	FromLevel int32           `json:"from_level"`
+	ToLevel   int32           `json:"to_level"`
+	Duration  time.Duration   `json:"duration"`
 	Costs     []*ResourceCost `json:"costs,omitempty"`
 }
 
@@ -386,11 +386,11 @@ func NewUpgradeProgressUpdatedEvent(buildingID, upgradeID string, progress float
 // UpgradeCompletedEvent 升级完成事件
 type UpgradeCompletedEvent struct {
 	*BaseBuildingEvent
-	UpgradeID   string          `json:"upgrade_id"`
-	FromLevel   int32           `json:"from_level"`
-	ToLevel     int32           `json:"to_level"`
-	Duration    time.Duration   `json:"duration"`
-	ActualCosts []*ResourceCost `json:"actual_costs,omitempty"`
+	UpgradeID   string            `json:"upgrade_id"`
+	FromLevel   int32             `json:"from_level"`
+	ToLevel     int32             `json:"to_level"`
+	Duration    time.Duration     `json:"duration"`
+	ActualCosts []*ResourceCost   `json:"actual_costs,omitempty"`
 	Benefits    []*UpgradeBenefit `json:"benefits,omitempty"`
 }
 
@@ -649,10 +649,10 @@ func NewBuildingSystemErrorEvent(buildingID, errorCode, errorMessage, severity s
 // BuildingMaintenanceScheduledEvent 建筑维护计划事件
 type BuildingMaintenanceScheduledEvent struct {
 	*BaseBuildingEvent
-	MaintenanceType string    `json:"maintenance_type"`
-	ScheduledAt     time.Time `json:"scheduled_at"`
+	MaintenanceType string        `json:"maintenance_type"`
+	ScheduledAt     time.Time     `json:"scheduled_at"`
 	Duration        time.Duration `json:"duration"`
-	Description     string    `json:"description"`
+	Description     string        `json:"description"`
 }
 
 // NewBuildingMaintenanceScheduledEvent 创建建筑维护计划事件
@@ -679,40 +679,40 @@ const (
 	EventTypeBuildingCreated = "building.created"
 	EventTypeBuildingUpdated = "building.updated"
 	EventTypeBuildingDeleted = "building.deleted"
-	
+
 	// 建筑状态事件
 	EventTypeBuildingStatusChanged = "building.status_changed"
 	EventTypeBuildingHealthChanged = "building.health_changed"
 	EventTypeBuildingLevelChanged  = "building.level_changed"
-	
+
 	// 建造相关事件
-	EventTypeConstructionStarted          = "construction.started"
-	EventTypeConstructionProgressUpdated  = "construction.progress_updated"
-	EventTypeConstructionCompleted        = "construction.completed"
-	EventTypeConstructionCancelled        = "construction.cancelled"
-	
+	EventTypeConstructionStarted         = "construction.started"
+	EventTypeConstructionProgressUpdated = "construction.progress_updated"
+	EventTypeConstructionCompleted       = "construction.completed"
+	EventTypeConstructionCancelled       = "construction.cancelled"
+
 	// 升级相关事件
 	EventTypeUpgradeStarted         = "upgrade.started"
 	EventTypeUpgradeProgressUpdated = "upgrade.progress_updated"
 	EventTypeUpgradeCompleted       = "upgrade.completed"
 	EventTypeUpgradeCancelled       = "upgrade.cancelled"
-	
+
 	// 维护相关事件
-	EventTypeBuildingRepaired   = "building.repaired"
-	EventTypeBuildingDamaged    = "building.damaged"
-	EventTypeBuildingDestroyed  = "building.destroyed"
-	
+	EventTypeBuildingRepaired  = "building.repaired"
+	EventTypeBuildingDamaged   = "building.damaged"
+	EventTypeBuildingDestroyed = "building.destroyed"
+
 	// 工人相关事件
 	EventTypeWorkerAssigned   = "worker.assigned"
 	EventTypeWorkerUnassigned = "worker.unassigned"
-	
+
 	// 蓝图相关事件
 	EventTypeBlueprintCreated = "blueprint.created"
 	EventTypeBlueprintUsed    = "blueprint.used"
-	
+
 	// 系统事件
-	EventTypeBuildingSystemError           = "building.system_error"
-	EventTypeBuildingMaintenanceScheduled  = "building.maintenance_scheduled"
+	EventTypeBuildingSystemError          = "building.system_error"
+	EventTypeBuildingMaintenanceScheduled = "building.maintenance_scheduled"
 )
 
 // 事件处理器接口
@@ -837,13 +837,13 @@ func (ea *BuildingEventAggregator) GetUpdatedAt() time.Time {
 
 // BuildingEventStatistics 建筑事件统计
 type BuildingEventStatistics struct {
-	BuildingID    string                 `json:"building_id"`
-	TotalEvents   int64                  `json:"total_events"`
-	EventsByType  map[string]int64       `json:"events_by_type"`
-	EventsByHour  map[string]int64       `json:"events_by_hour"`
-	EventsByDay   map[string]int64       `json:"events_by_day"`
-	LastEventTime time.Time              `json:"last_event_time"`
-	UpdatedAt     time.Time              `json:"updated_at"`
+	BuildingID    string           `json:"building_id"`
+	TotalEvents   int64            `json:"total_events"`
+	EventsByType  map[string]int64 `json:"events_by_type"`
+	EventsByHour  map[string]int64 `json:"events_by_hour"`
+	EventsByDay   map[string]int64 `json:"events_by_day"`
+	LastEventTime time.Time        `json:"last_event_time"`
+	UpdatedAt     time.Time        `json:"updated_at"`
 }
 
 // NewBuildingEventStatistics 创建新建筑事件统计
@@ -862,18 +862,18 @@ func NewBuildingEventStatistics(buildingID string) *BuildingEventStatistics {
 func (es *BuildingEventStatistics) AddEvent(event BuildingEvent) {
 	es.TotalEvents++
 	es.EventsByType[event.GetEventType()]++
-	
+
 	timestamp := event.GetTimestamp()
 	hourKey := timestamp.Format("2006-01-02-15")
 	dayKey := timestamp.Format("2006-01-02")
-	
+
 	es.EventsByHour[hourKey]++
 	es.EventsByDay[dayKey]++
-	
+
 	if timestamp.After(es.LastEventTime) {
 		es.LastEventTime = timestamp
 	}
-	
+
 	es.UpdatedAt = time.Now()
 }
 
@@ -881,14 +881,14 @@ func (es *BuildingEventStatistics) AddEvent(event BuildingEvent) {
 func (es *BuildingEventStatistics) GetMostFrequentEventType() string {
 	maxCount := int64(0)
 	mostFrequent := ""
-	
+
 	for eventType, count := range es.EventsByType {
 		if count > maxCount {
 			maxCount = count
 			mostFrequent = eventType
 		}
 	}
-	
+
 	return mostFrequent
 }
 
@@ -938,7 +938,7 @@ func ValidateEventType(eventType string) bool {
 		EventTypeBuildingSystemError,
 		EventTypeBuildingMaintenanceScheduled,
 	}
-	
+
 	for _, validType := range validTypes {
 		if eventType == validType {
 			return true

@@ -9,7 +9,7 @@ import (
 	"net/rpc"
 	"time"
 
-	"greatestworks/application/handlers"
+	"greatestworks/internal/application/handlers"
 	"greatestworks/internal/infrastructure/logging"
 )
 

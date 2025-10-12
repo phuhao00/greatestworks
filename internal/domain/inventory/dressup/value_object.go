@@ -184,11 +184,11 @@ func (ds *DressupStyle) GetBonuses() map[string]int {
 type OutfitQuality int
 
 const (
-	QualityNormal OutfitQuality = iota + 1 // 普通
-	QualityGood                            // 良好
-	QualityExcellent                       // 优秀
-	QualityPerfect                         // 完美
-	QualityMasterwork                      // 大师级
+	QualityNormal     OutfitQuality = iota + 1 // 普通
+	QualityGood                                // 良好
+	QualityExcellent                           // 优秀
+	QualityPerfect                             // 完美
+	QualityMasterwork                          // 大师级
 )
 
 // String 返回品质字符串
@@ -231,14 +231,14 @@ func (oq OutfitQuality) GetQualityMultiplier() float64 {
 type OutfitSource int
 
 const (
-	SourceShop     OutfitSource = iota + 1 // 商店购买
-	SourceCraft                            // 制作
-	SourceDrop                             // 掉落
-	SourceEvent                            // 活动
-	SourceGift                             // 礼品
-	SourceAchievement                      // 成就
-	SourceVIP                              // VIP
-	SourceLimitedTime                      // 限时
+	SourceShop        OutfitSource = iota + 1 // 商店购买
+	SourceCraft                               // 制作
+	SourceDrop                                // 掉落
+	SourceEvent                               // 活动
+	SourceGift                                // 礼品
+	SourceAchievement                         // 成就
+	SourceVIP                                 // VIP
+	SourceLimitedTime                         // 限时
 )
 
 // String 返回来源字符串
@@ -270,7 +270,7 @@ type FashionSet struct {
 	setID       string
 	setName     string
 	description string
-	pieces      []string // 套装部件ID列表
+	pieces      []string               // 套装部件ID列表
 	setBonuses  map[int]map[string]int // 件数 -> 属性加成
 	theme       string
 	season      string
@@ -518,20 +518,20 @@ func (ab *AttributeBonus) CalculateFinalValue() int {
 
 // DyeColor 染色颜色
 type DyeColor struct {
-	colorID   string
-	colorName string
-	hexValue  string
-	rarity    Rarity
+	colorID    string
+	colorName  string
+	hexValue   string
+	rarity     Rarity
 	isUnlocked bool
 }
 
 // NewDyeColor 创建染色颜色
 func NewDyeColor(colorID, colorName, hexValue string, rarity Rarity) *DyeColor {
 	return &DyeColor{
-		colorID:   colorID,
-		colorName: colorName,
-		hexValue:  hexValue,
-		rarity:    rarity,
+		colorID:    colorID,
+		colorName:  colorName,
+		hexValue:   hexValue,
+		rarity:     rarity,
 		isUnlocked: false,
 	}
 }
@@ -568,17 +568,17 @@ func (dc *DyeColor) IsUnlocked() bool {
 
 // OutfitFilter 服装筛选器
 type OutfitFilter struct {
-	outfitType   *OutfitType
-	rarity       *Rarity
-	quality      *OutfitQuality
-	source       *OutfitSource
-	slot         *OutfitSlot
-	isLocked     *bool
-	hasSetBonus  *bool
-	minLevel     *int
-	maxLevel     *int
-	searchText   string
-	tags         []string
+	outfitType  *OutfitType
+	rarity      *Rarity
+	quality     *OutfitQuality
+	source      *OutfitSource
+	slot        *OutfitSlot
+	isLocked    *bool
+	hasSetBonus *bool
+	minLevel    *int
+	maxLevel    *int
+	searchText  string
+	tags        []string
 }
 
 // NewOutfitFilter 创建服装筛选器

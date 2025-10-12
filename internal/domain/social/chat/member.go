@@ -20,20 +20,20 @@ type Member struct {
 type MemberRole int
 
 const (
-	MemberRoleNormal MemberRole = iota // 普通成员
-	MemberRoleModerator               // 管理员
-	MemberRoleOwner                   // 频道所有者
+	MemberRoleNormal    MemberRole = iota // 普通成员
+	MemberRoleModerator                   // 管理员
+	MemberRoleOwner                       // 频道所有者
 )
 
 // Permission 权限
 type Permission int
 
 const (
-	PermissionSendMessage Permission = iota // 发送消息
-	PermissionDeleteMessage                  // 删除消息
-	PermissionMuteMembers                    // 禁言成员
-	PermissionKickMembers                    // 踢出成员
-	PermissionManageChannel                  // 管理频道
+	PermissionSendMessage   Permission = iota // 发送消息
+	PermissionDeleteMessage                   // 删除消息
+	PermissionMuteMembers                     // 禁言成员
+	PermissionKickMembers                     // 踢出成员
+	PermissionManageChannel                   // 管理频道
 )
 
 // NewMember 创建新成员
@@ -83,12 +83,12 @@ func (m *Member) IsCurrentlyMuted() bool {
 	if !m.IsMuted {
 		return false
 	}
-	
+
 	if m.MutedUntil != nil && time.Now().After(*m.MutedUntil) {
 		m.Unmute()
 		return false
 	}
-	
+
 	return true
 }
 

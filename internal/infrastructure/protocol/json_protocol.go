@@ -165,7 +165,7 @@ func (jgm *JSONGenericMessage) String() string {
 // JSONHeartbeatMessage JSON心跳消息
 type JSONHeartbeatMessage struct {
 	BaseMessage
-	Timestamp int64 `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 	ClientID  string `json:"client_id,omitempty"`
 }
 
@@ -558,11 +558,11 @@ func (jpmm *JSONPlayerMoveMessage) String() string {
 // JSONPlayerChatMessage JSON玩家聊天消息
 type JSONPlayerChatMessage struct {
 	BaseMessage
-	PlayerID  string `json:"player_id"`
+	PlayerID   string `json:"player_id"`
 	PlayerName string `json:"player_name"`
-	Channel   string `json:"channel"`
-	Message   string `json:"message"`
-	Timestamp int64  `json:"timestamp"`
+	Channel    string `json:"channel"`
+	Message    string `json:"message"`
+	Timestamp  int64  `json:"timestamp"`
 }
 
 // NewJSONPlayerChatMessage 创建JSON玩家聊天消息

@@ -23,7 +23,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, name, leaderID string, max
 	if err := s.validateTeamName(name); err != nil {
 		return nil, err
 	}
-	
+
 	// 检查玩家是否已有队伍
 	hasTeam, err := s.teamRepo.PlayerHasTeam(ctx, leaderID)
 	if err != nil {
@@ -32,26 +32,26 @@ func (s *TeamService) CreateTeam(ctx context.Context, name, leaderID string, max
 	if hasTeam {
 		return nil, ErrPlayerAlreadyInTeam
 	}
-	
+
 	// 创建队伍
 	teamID := generateTeamID()
 	team := NewTeam(teamID, name, leaderID, maxMembers, isPublic)
 	if password != "" {
 		team.SetPassword(password)
 	}
-	
+
 	// 添加队长为成员
 	leader := NewTeamMember(leaderID, "", 1)
 	leader.Role = TeamRoleLeader
 	if err := team.AddMember(leader); err != nil {
 		return nil, fmt.Errorf("添加队长失败: %w", err)
 	}
-	
+
 	// 保存队伍
 	if err := s.teamRepo.SaveTeam(ctx, team); err != nil {
 		return nil, fmt.Errorf("保存队伍失败: %w", err)
 	}
-	
+
 	return team, nil
 }
 
@@ -65,17 +65,17 @@ func (s *TeamService) JoinTeam(ctx context.Context, teamID, playerID, nickname s
 	if team == nil {
 		return ErrTeamNotFound
 	}
-	
+
 	// 检查密码
 	if !team.IsPublic && team.Password != password {
 		return ErrInvalidPassword
 	}
-	
+
 	// 检查队伍是否已满
 	if team.IsFull() {
 		return ErrTeamFull
 	}
-	
+
 	// 检查玩家是否已有队伍
 	hasTeam, err := s.teamRepo.PlayerHasTeam(ctx, playerID)
 	if err != nil {
@@ -84,20 +84,20 @@ func (s *TeamService) JoinTeam(ctx context.Context, teamID, playerID, nickname s
 	if hasTeam {
 		return ErrPlayerAlreadyInTeam
 	}
-	
+
 	// 创建新成员
 	member := NewTeamMember(playerID, nickname, level)
-	
+
 	// 添加成员到队伍
 	if err := team.AddMember(member); err != nil {
 		return err
 	}
-	
+
 	// 保存队伍
 	if err := s.teamRepo.SaveTeam(ctx, team); err != nil {
 		return fmt.Errorf("保存队伍失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -111,17 +111,17 @@ func (s *TeamService) LeaveTeam(ctx context.Context, teamID, playerID string) er
 	if team == nil {
 		return ErrTeamNotFound
 	}
-	
+
 	// 如果是队长离开且队伍还有其他成员，需要先转让队长
 	if team.LeaderID == playerID && team.GetMemberCount() > 1 {
 		return ErrLeaderMustTransfer
 	}
-	
+
 	// 移除成员
 	if err := team.RemoveMember(playerID); err != nil {
 		return err
 	}
-	
+
 	// 如果队伍为空，删除队伍
 	if team.GetMemberCount() == 0 {
 		if err := s.teamRepo.DeleteTeam(ctx, teamID); err != nil {
@@ -133,7 +133,7 @@ func (s *TeamService) LeaveTeam(ctx context.Context, teamID, playerID string) er
 			return fmt.Errorf("保存队伍失败: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 

@@ -83,7 +83,7 @@ func NewWeatherChangedEvent(sceneID string, previous, current *WeatherState, rea
 		ChangeReason:    reason,
 		Effects:         effects,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["change_reason"] = reason
@@ -98,7 +98,7 @@ func NewWeatherChangedEvent(sceneID string, previous, current *WeatherState, rea
 		event.Payload["current_humidity"] = current.Humidity
 	}
 	event.Payload["effects_count"] = len(effects)
-	
+
 	return event
 }
 
@@ -130,25 +130,25 @@ func NewWeatherIntensityChangedEvent(sceneID string, weatherType WeatherType, pr
 		CurrentIntensity:  current,
 		ChangeReason:      reason,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["weather_type"] = weatherType.String()
 	event.Payload["previous_intensity"] = previous.String()
 	event.Payload["current_intensity"] = current.String()
 	event.Payload["change_reason"] = reason
-	
+
 	return event
 }
 
 // WeatherEffectActivatedEvent 天气效果激活事件
 type WeatherEffectActivatedEvent struct {
 	*BaseDomainEvent
-	SceneID    string
-	Effect     *WeatherEffect
+	SceneID     string
+	Effect      *WeatherEffect
 	WeatherType WeatherType
-	Intensity  WeatherIntensity
-	Duration   time.Duration
+	Intensity   WeatherIntensity
+	Duration    time.Duration
 }
 
 // NewWeatherEffectActivatedEvent 创建天气效果激活事件
@@ -169,7 +169,7 @@ func NewWeatherEffectActivatedEvent(sceneID string, effect *WeatherEffect, weath
 		Intensity:   intensity,
 		Duration:    effect.Duration,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["effect_id"] = effect.ID
@@ -178,17 +178,17 @@ func NewWeatherEffectActivatedEvent(sceneID string, effect *WeatherEffect, weath
 	event.Payload["duration"] = effect.Duration
 	event.Payload["weather_type"] = weatherType.String()
 	event.Payload["intensity"] = intensity.String()
-	
+
 	return event
 }
 
 // WeatherEffectDeactivatedEvent 天气效果停用事件
 type WeatherEffectDeactivatedEvent struct {
 	*BaseDomainEvent
-	SceneID    string
-	Effect     *WeatherEffect
-	Reason     string
-	Duration   time.Duration
+	SceneID  string
+	Effect   *WeatherEffect
+	Reason   string
+	Duration time.Duration
 }
 
 // NewWeatherEffectDeactivatedEvent 创建天气效果停用事件
@@ -208,24 +208,24 @@ func NewWeatherEffectDeactivatedEvent(sceneID string, effect *WeatherEffect, rea
 		Reason:   reason,
 		Duration: now.Sub(effect.StartTime),
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["effect_id"] = effect.ID
 	event.Payload["effect_type"] = effect.EffectType
 	event.Payload["reason"] = reason
 	event.Payload["total_duration"] = now.Sub(effect.StartTime)
-	
+
 	return event
 }
 
 // WeatherEventTriggeredEvent 天气事件触发事件
 type WeatherEventTriggeredEvent struct {
 	*BaseDomainEvent
-	SceneID      string
-	WeatherEvent *WeatherEvent
+	SceneID        string
+	WeatherEvent   *WeatherEvent
 	TriggerWeather *WeatherState
-	Severity     WeatherEventSeverity
+	Severity       WeatherEventSeverity
 }
 
 // NewWeatherEventTriggeredEvent 创建天气事件触发事件
@@ -245,7 +245,7 @@ func NewWeatherEventTriggeredEvent(sceneID string, weatherEvent *WeatherEvent, t
 		TriggerWeather: triggerWeather,
 		Severity:       weatherEvent.Severity,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["event_id"] = weatherEvent.ID
@@ -257,16 +257,16 @@ func NewWeatherEventTriggeredEvent(sceneID string, weatherEvent *WeatherEvent, t
 		event.Payload["trigger_weather_type"] = triggerWeather.WeatherType.String()
 		event.Payload["trigger_intensity"] = triggerWeather.Intensity.String()
 	}
-	
+
 	return event
 }
 
 // WeatherEventEndedEvent 天气事件结束事件
 type WeatherEventEndedEvent struct {
 	*BaseDomainEvent
-	SceneID      string
-	WeatherEvent *WeatherEvent
-	EndReason    string
+	SceneID       string
+	WeatherEvent  *WeatherEvent
+	EndReason     string
 	TotalDuration time.Duration
 }
 
@@ -287,7 +287,7 @@ func NewWeatherEventEndedEvent(sceneID string, weatherEvent *WeatherEvent, endRe
 		EndReason:     endReason,
 		TotalDuration: now.Sub(weatherEvent.StartTime),
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["event_id"] = weatherEvent.ID
@@ -295,30 +295,30 @@ func NewWeatherEventEndedEvent(sceneID string, weatherEvent *WeatherEvent, endRe
 	event.Payload["end_reason"] = endReason
 	event.Payload["total_duration"] = now.Sub(weatherEvent.StartTime)
 	event.Payload["planned_duration"] = weatherEvent.Duration
-	
+
 	return event
 }
 
 // WeatherForecastGeneratedEvent 天气预报生成事件
 type WeatherForecastGeneratedEvent struct {
 	*BaseDomainEvent
-	SceneID   string
-	Forecasts []*WeatherForecast
-	Hours     int
+	SceneID    string
+	Forecasts  []*WeatherForecast
+	Hours      int
 	Confidence float64
 }
 
 // NewWeatherForecastGeneratedEvent 创建天气预报生成事件
 func NewWeatherForecastGeneratedEvent(sceneID string, forecasts []*WeatherForecast, hours int) *WeatherForecastGeneratedEvent {
 	now := time.Now()
-	
+
 	// 计算平均置信度
 	totalConfidence := 0.0
 	for _, forecast := range forecasts {
 		totalConfidence += forecast.Confidence
 	}
 	averageConfidence := totalConfidence / float64(len(forecasts))
-	
+
 	event := &WeatherForecastGeneratedEvent{
 		BaseDomainEvent: &BaseDomainEvent{
 			EventID:     fmt.Sprintf("weather_forecast_generated_%d", now.UnixNano()),
@@ -333,7 +333,7 @@ func NewWeatherForecastGeneratedEvent(sceneID string, forecasts []*WeatherForeca
 		Hours:      hours,
 		Confidence: averageConfidence,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["forecast_count"] = len(forecasts)
@@ -343,7 +343,7 @@ func NewWeatherForecastGeneratedEvent(sceneID string, forecasts []*WeatherForeca
 		event.Payload["first_forecast_time"] = forecasts[0].Time
 		event.Payload["last_forecast_time"] = forecasts[len(forecasts)-1].Time
 	}
-	
+
 	return event
 }
 
@@ -375,22 +375,22 @@ func NewSeasonChangedEvent(zoneID string, previous, current Season, pattern *Sea
 		ChangeTime:     now,
 		Pattern:        pattern,
 	}
-	
+
 	// 设置载荷
 	event.Payload["zone_id"] = zoneID
 	event.Payload["previous_season"] = previous.String()
 	event.Payload["current_season"] = current.String()
 	event.Payload["change_time"] = now
-	
+
 	return event
 }
 
 // WeatherSystemInitializedEvent 天气系统初始化事件
 type WeatherSystemInitializedEvent struct {
 	*BaseDomainEvent
-	SceneID        string
-	InitialWeather *WeatherState
-	ClimateZone    string
+	SceneID         string
+	InitialWeather  *WeatherState
+	ClimateZone     string
 	SeasonalPattern *SeasonalPattern
 }
 
@@ -411,7 +411,7 @@ func NewWeatherSystemInitializedEvent(sceneID string, initialWeather *WeatherSta
 		ClimateZone:     climateZone,
 		SeasonalPattern: pattern,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["climate_zone"] = climateZone
@@ -423,7 +423,7 @@ func NewWeatherSystemInitializedEvent(sceneID string, initialWeather *WeatherSta
 	if pattern != nil {
 		event.Payload["current_season"] = pattern.CurrentSeason.String()
 	}
-	
+
 	return event
 }
 
@@ -455,13 +455,13 @@ func NewWeatherUpdateFailedEvent(sceneID string, err error, retryCount int) *Wea
 		RetryCount:   retryCount,
 		LastAttempt:  now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["error_message"] = err.Error()
 	event.Payload["retry_count"] = retryCount
 	event.Payload["last_attempt"] = now
-	
+
 	return event
 }
 
@@ -491,13 +491,13 @@ func NewWeatherDataCorruptedEvent(sceneID, corruptedData, corruptionType, recove
 		CorruptionType: corruptionType,
 		RecoveryAction: recoveryAction,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["corrupted_data"] = corruptedData
 	event.Payload["corruption_type"] = corruptionType
 	event.Payload["recovery_action"] = recoveryAction
-	
+
 	return event
 }
 
@@ -529,7 +529,7 @@ func NewWeatherAnomalyDetectedEvent(sceneID, anomalyType string, anomalyData map
 		SeverityLevel: severityLevel,
 		DetectionTime: now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["anomaly_type"] = anomalyType
@@ -538,7 +538,7 @@ func NewWeatherAnomalyDetectedEvent(sceneID, anomalyType string, anomalyData map
 	for k, v := range anomalyData {
 		event.Payload[k] = v
 	}
-	
+
 	return event
 }
 
@@ -570,14 +570,14 @@ func NewWeatherConfigurationChangedEvent(sceneID, configurationType string, oldC
 		NewConfiguration:  newConfig,
 		ChangedBy:         changedBy,
 	}
-	
+
 	// 设置载荷
 	event.Payload["scene_id"] = sceneID
 	event.Payload["configuration_type"] = configurationType
 	event.Payload["changed_by"] = changedBy
 	event.Payload["old_configuration"] = oldConfig
 	event.Payload["new_configuration"] = newConfig
-	
+
 	return event
 }
 

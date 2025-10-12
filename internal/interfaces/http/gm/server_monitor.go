@@ -1,4 +1,4 @@
-﻿package gm
+package gm
 
 import (
 	"runtime"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"greatestworks/application/handlers"
-	// "greatestworks/application/queries" // TODO: 实现查询系统
+	"greatestworks/internal/application/handlers"
+	// "greatestworks/internal/application/queries" // TODO: 实现查询系统
 	"greatestworks/internal/infrastructure/logging"
 )
 

@@ -87,7 +87,7 @@ func NewCropPlantedEvent(farmID, plotID, cropID string, seedType SeedType, quant
 		Soil:     soil,
 		Season:   season,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["plot_id"] = plotID
@@ -99,7 +99,7 @@ func NewCropPlantedEvent(farmID, plotID, cropID string, seedType SeedType, quant
 		event.Payload["soil_type"] = soil.Type.String()
 		event.Payload["soil_fertility"] = soil.Fertility
 	}
-	
+
 	return event
 }
 
@@ -135,7 +135,7 @@ func NewCropHarvestedEvent(farmID, cropID string, harvestResult *HarvestResult) 
 		Experience:    harvestResult.Experience,
 		HarvestResult: harvestResult,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["crop_id"] = cropID
@@ -144,7 +144,7 @@ func NewCropHarvestedEvent(farmID, cropID string, harvestResult *HarvestResult) 
 	event.Payload["quality"] = harvestResult.Quality.String()
 	event.Payload["experience"] = harvestResult.Experience
 	event.Payload["harvest_time"] = harvestResult.HarvestTime
-	
+
 	return event
 }
 
@@ -174,14 +174,14 @@ func NewCropWateredEvent(farmID string, plotIDs []string, waterAmount float64, t
 		WaterAmount: waterAmount,
 		TotalCrops:  totalCrops,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["plot_ids"] = plotIDs
 	event.Payload["water_amount"] = waterAmount
 	event.Payload["total_crops"] = totalCrops
 	event.Payload["plots_count"] = len(plotIDs)
-	
+
 	return event
 }
 
@@ -199,7 +199,7 @@ type SoilFertilizedEvent struct {
 func NewSoilFertilizedEvent(farmID string, fertilizer *Fertilizer, previousSoil, updatedSoil *Soil) *SoilFertilizedEvent {
 	now := time.Now()
 	fertilityChange := updatedSoil.Fertility - previousSoil.Fertility
-	
+
 	event := &SoilFertilizedEvent{
 		BaseDomainEvent: &BaseDomainEvent{
 			EventID:     fmt.Sprintf("soil_fertilized_%d", now.UnixNano()),
@@ -215,7 +215,7 @@ func NewSoilFertilizedEvent(farmID string, fertilizer *Fertilizer, previousSoil,
 		UpdatedSoil:     updatedSoil,
 		FertilityChange: fertilityChange,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["fertilizer_type"] = fertilizer.Type.String()
@@ -223,18 +223,18 @@ func NewSoilFertilizedEvent(farmID string, fertilizer *Fertilizer, previousSoil,
 	event.Payload["previous_fertility"] = previousSoil.Fertility
 	event.Payload["updated_fertility"] = updatedSoil.Fertility
 	event.Payload["fertility_change"] = fertilityChange
-	
+
 	return event
 }
 
 // CropGrowthStageChangedEvent 作物生长阶段变化事件
 type CropGrowthStageChangedEvent struct {
 	*BaseDomainEvent
-	FarmID        string
-	CropID        string
-	SeedType      SeedType
-	PreviousStage GrowthStage
-	CurrentStage  GrowthStage
+	FarmID         string
+	CropID         string
+	SeedType       SeedType
+	PreviousStage  GrowthStage
+	CurrentStage   GrowthStage
 	GrowthProgress float64
 }
 
@@ -257,7 +257,7 @@ func NewCropGrowthStageChangedEvent(farmID, cropID string, seedType SeedType, pr
 		CurrentStage:   currentStage,
 		GrowthProgress: progress,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["crop_id"] = cropID
@@ -265,7 +265,7 @@ func NewCropGrowthStageChangedEvent(farmID, cropID string, seedType SeedType, pr
 	event.Payload["previous_stage"] = previousStage.String()
 	event.Payload["current_stage"] = currentStage.String()
 	event.Payload["growth_progress"] = progress
-	
+
 	return event
 }
 
@@ -301,7 +301,7 @@ func NewToolUsedEvent(farmID, toolID string, toolType ToolType, operation, targe
 		Efficiency:     efficiency,
 		DurabilityLoss: durabilityLoss,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["tool_id"] = toolID
@@ -310,18 +310,18 @@ func NewToolUsedEvent(farmID, toolID string, toolType ToolType, operation, targe
 	event.Payload["target_id"] = targetID
 	event.Payload["efficiency"] = efficiency
 	event.Payload["durability_loss"] = durabilityLoss
-	
+
 	return event
 }
 
 // FarmExpandedEvent 农场扩展事件
 type FarmExpandedEvent struct {
 	*BaseDomainEvent
-	FarmID      string
-	PreviousSize FarmSize
-	NewSize     FarmSize
+	FarmID        string
+	PreviousSize  FarmSize
+	NewSize       FarmSize
 	ExpansionCost *ExpansionCost
-	NewPlots    []*Plot
+	NewPlots      []*Plot
 }
 
 // NewFarmExpandedEvent 创建农场扩展事件
@@ -342,7 +342,7 @@ func NewFarmExpandedEvent(farmID string, previousSize, newSize FarmSize, cost *E
 		ExpansionCost: cost,
 		NewPlots:      newPlots,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["previous_size"] = previousSize.String()
@@ -353,18 +353,18 @@ func NewFarmExpandedEvent(farmID string, previousSize, newSize FarmSize, cost *E
 		event.Payload["expansion_cost_materials"] = cost.Materials
 		event.Payload["expansion_time"] = cost.Time
 	}
-	
+
 	return event
 }
 
 // PestDiseaseDetectedEvent 病虫害检测事件
 type PestDiseaseDetectedEvent struct {
 	*BaseDomainEvent
-	FarmID      string
-	CropID      string
-	SeedType    SeedType
-	PestDisease *PestDiseaseEvent
-	Severity    string
+	FarmID       string
+	CropID       string
+	SeedType     SeedType
+	PestDisease  *PestDiseaseEvent
+	Severity     string
 	AffectedArea float64
 }
 
@@ -387,7 +387,7 @@ func NewPestDiseaseDetectedEvent(farmID, cropID string, seedType SeedType, pestD
 		Severity:     pestDisease.Severity,
 		AffectedArea: affectedArea,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["crop_id"] = cropID
@@ -396,7 +396,7 @@ func NewPestDiseaseDetectedEvent(farmID, cropID string, seedType SeedType, pestD
 	event.Payload["severity"] = pestDisease.Severity
 	event.Payload["affected_area"] = affectedArea
 	event.Payload["occurred_at"] = pestDisease.OccurredAt
-	
+
 	return event
 }
 
@@ -428,7 +428,7 @@ func NewSeasonChangedEvent(farmID string, previousSeason, currentSeason Season, 
 		SeasonModifier: modifier,
 		AffectedCrops:  affectedCrops,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["previous_season"] = previousSeason.String()
@@ -439,7 +439,7 @@ func NewSeasonChangedEvent(farmID string, previousSeason, currentSeason Season, 
 		event.Payload["yield_multiplier"] = modifier.YieldMultiplier
 		event.Payload["quality_multiplier"] = modifier.QualityMultiplier
 	}
-	
+
 	return event
 }
 
@@ -460,7 +460,7 @@ type CropHealthChangedEvent struct {
 func NewCropHealthChangedEvent(farmID, cropID string, seedType SeedType, previousHealth, currentHealth float64, cause string, problems []string) *CropHealthChangedEvent {
 	now := time.Now()
 	healthChange := currentHealth - previousHealth
-	
+
 	event := &CropHealthChangedEvent{
 		BaseDomainEvent: &BaseDomainEvent{
 			EventID:     fmt.Sprintf("crop_health_changed_%d", now.UnixNano()),
@@ -479,7 +479,7 @@ func NewCropHealthChangedEvent(farmID, cropID string, seedType SeedType, previou
 		Cause:          cause,
 		Problems:       problems,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["crop_id"] = cropID
@@ -490,7 +490,7 @@ func NewCropHealthChangedEvent(farmID, cropID string, seedType SeedType, previou
 	event.Payload["cause"] = cause
 	event.Payload["problems"] = problems
 	event.Payload["problems_count"] = len(problems)
-	
+
 	return event
 }
 
@@ -524,7 +524,7 @@ func NewAutomationTriggeredEvent(farmID, automationType, triggerReason string, t
 		ActionTaken:    actionTaken,
 		ResourcesUsed:  resourcesUsed,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["automation_type"] = automationType
@@ -533,7 +533,7 @@ func NewAutomationTriggeredEvent(farmID, automationType, triggerReason string, t
 	event.Payload["target_crops_count"] = len(targetCrops)
 	event.Payload["action_taken"] = actionTaken
 	event.Payload["resources_used"] = resourcesUsed
-	
+
 	return event
 }
 
@@ -552,7 +552,7 @@ type FarmValueChangedEvent struct {
 func NewFarmValueChangedEvent(farmID string, previousValue, currentValue float64, changeReason string, contributors map[string]float64) *FarmValueChangedEvent {
 	now := time.Now()
 	valueChange := currentValue - previousValue
-	
+
 	event := &FarmValueChangedEvent{
 		BaseDomainEvent: &BaseDomainEvent{
 			EventID:     fmt.Sprintf("farm_value_changed_%d", now.UnixNano()),
@@ -569,7 +569,7 @@ func NewFarmValueChangedEvent(farmID string, previousValue, currentValue float64
 		ChangeReason:  changeReason,
 		Contributors:  contributors,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["previous_value"] = previousValue
@@ -577,7 +577,7 @@ func NewFarmValueChangedEvent(farmID string, previousValue, currentValue float64
 	event.Payload["value_change"] = valueChange
 	event.Payload["change_reason"] = changeReason
 	event.Payload["contributors"] = contributors
-	
+
 	return event
 }
 
@@ -611,7 +611,7 @@ func NewPlotStatusChangedEvent(farmID, plotID, previousStatus, currentStatus, cr
 		CropID:           cropID,
 		StatusChangeTime: now,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["plot_id"] = plotID
@@ -619,19 +619,19 @@ func NewPlotStatusChangedEvent(farmID, plotID, previousStatus, currentStatus, cr
 	event.Payload["current_status"] = currentStatus
 	event.Payload["crop_id"] = cropID
 	event.Payload["status_change_time"] = now
-	
+
 	return event
 }
 
 // ResourcesConsumedEvent 资源消耗事件
 type ResourcesConsumedEvent struct {
 	*BaseDomainEvent
-	FarmID           string
-	ResourceType     string
-	AmountConsumed   float64
-	RemainingAmount  float64
+	FarmID            string
+	ResourceType      string
+	AmountConsumed    float64
+	RemainingAmount   float64
 	ConsumptionReason string
-	RelatedCropID    string
+	RelatedCropID     string
 }
 
 // NewResourcesConsumedEvent 创建资源消耗事件
@@ -653,7 +653,7 @@ func NewResourcesConsumedEvent(farmID, resourceType string, amountConsumed, rema
 		ConsumptionReason: reason,
 		RelatedCropID:     relatedCropID,
 	}
-	
+
 	// 设置载荷
 	event.Payload["farm_id"] = farmID
 	event.Payload["resource_type"] = resourceType
@@ -661,7 +661,7 @@ func NewResourcesConsumedEvent(farmID, resourceType string, amountConsumed, rema
 	event.Payload["remaining_amount"] = remainingAmount
 	event.Payload["consumption_reason"] = reason
 	event.Payload["related_crop_id"] = relatedCropID
-	
+
 	return event
 }
 

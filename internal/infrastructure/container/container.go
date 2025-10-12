@@ -142,7 +142,7 @@ func (c *Container) ResolveWithScope(name string, scope *Scope) (interface{}, er
 	c.mu.RLock()
 	descriptor, exists := c.services[name]
 	c.mu.RUnlock()
-	
+
 	if !exists {
 		// Try parent container
 		if c.parent != nil {
@@ -150,7 +150,7 @@ func (c *Container) ResolveWithScope(name string, scope *Scope) (interface{}, er
 		}
 		return nil, fmt.Errorf("service '%s' not registered", name)
 	}
-	
+
 	return c.createInstance(descriptor, scope)
 }
 
@@ -175,20 +175,20 @@ func (c *Container) createInstance(descriptor *ServiceDescriptor, scope *Scope) 
 func (c *Container) getSingletonInstance(descriptor *ServiceDescriptor) (interface{}, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if descriptor.Instance != nil {
 		return descriptor.Instance, nil
 	}
-	
+
 	if instance, exists := c.instances[descriptor.Name]; exists {
 		return instance, nil
 	}
-	
+
 	instance, err := c.createInstanceInternal(descriptor, nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	c.instances[descriptor.Name] = instance
 	return instance, nil
 }
@@ -197,20 +197,20 @@ func (c *Container) getSingletonInstance(descriptor *ServiceDescriptor) (interfa
 func (c *Container) getScopedInstance(descriptor *ServiceDescriptor, scope *Scope) (interface{}, error) {
 	scope.mu.Lock()
 	defer scope.mu.Unlock()
-	
+
 	if scope.closed {
 		return nil, fmt.Errorf("scope is closed")
 	}
-	
+
 	if instance, exists := scope.instances[descriptor.Name]; exists {
 		return instance, nil
 	}
-	
+
 	instance, err := c.createInstanceInternal(descriptor, scope)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	scope.instances[descriptor.Name] = instance
 	return instance, nil
 }
@@ -225,7 +225,7 @@ func (c *Container) createInstanceInternal(descriptor *ServiceDescriptor, scope 
 	if descriptor.Factory == nil {
 		return nil, fmt.Errorf("no factory function for service '%s'", descriptor.Name)
 	}
-	
+
 	// Resolve dependencies first
 	for _, dep := range descriptor.Dependencies {
 		_, err := c.ResolveWithScope(dep, scope)
@@ -233,7 +233,7 @@ func (c *Container) createInstanceInternal(descriptor *ServiceDescriptor, scope 
 			return nil, fmt.Errorf("failed to resolve dependency '%s' for service '%s': %w", dep, descriptor.Name, err)
 		}
 	}
-	
+
 	return descriptor.Factory(c)
 }
 
@@ -250,11 +250,11 @@ func (c *Container) CreateScope() *Scope {
 func (s *Scope) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if s.closed {
 		return nil
 	}
-	
+
 	// Dispose services that implement Lifecycle
 	for _, instance := range s.instances {
 		if lifecycle, ok := instance.(Lifecycle); ok {
@@ -264,7 +264,7 @@ func (s *Scope) Close() error {
 			}
 		}
 	}
-	
+
 	s.instances = nil
 	s.closed = true
 	return nil
@@ -274,7 +274,7 @@ func (s *Scope) Close() error {
 func (c *Container) IsRegistered(name string) bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	_, exists := c.services[name]
 	if !exists && c.parent != nil {
 		return c.parent.IsRegistered(name)
@@ -286,7 +286,7 @@ func (c *Container) IsRegistered(name string) bool {
 func (c *Container) GetServiceNames() []string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	names := make([]string, 0, len(c.services))
 	for name := range c.services {
 		names = append(names, name)
@@ -302,20 +302,20 @@ func (c *Container) StartServices(ctx context.Context) error {
 		services = append(services, service)
 	}
 	c.mu.RUnlock()
-	
+
 	for _, service := range services {
 		instance, err := c.Resolve(service.Name)
 		if err != nil {
 			return fmt.Errorf("failed to resolve service '%s': %w", service.Name, err)
 		}
-		
+
 		if lifecycle, ok := instance.(Lifecycle); ok {
 			if err := lifecycle.Start(ctx); err != nil {
 				return fmt.Errorf("failed to start service '%s': %w", service.Name, err)
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -327,7 +327,7 @@ func (c *Container) StopServices(ctx context.Context) error {
 		instances = append(instances, instance)
 	}
 	c.mu.RUnlock()
-	
+
 	// Stop services in reverse order
 	for i := len(instances) - 1; i >= 0; i-- {
 		if lifecycle, ok := instances[i].(Lifecycle); ok {
@@ -337,7 +337,7 @@ func (c *Container) StopServices(ctx context.Context) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	playerCmd "greatestworks/application/commands/player"
-	"greatestworks/application/handlers"
-	playerQuery "greatestworks/application/queries/player"
+	playerCmd "greatestworks/internal/application/commands/player"
+	"greatestworks/internal/application/handlers"
+	playerQuery "greatestworks/internal/application/queries/player"
 	"greatestworks/internal/infrastructure/logging"
 )
 

@@ -23,10 +23,10 @@ type CreateBattleCommand struct {
 
 // CreateBattleResult 创建战斗结果
 type CreateBattleResult struct {
-	BattleID   string      `json:"battle_id"`
-	BattleType BattleType  `json:"battle_type"`
-	Status     string      `json:"status"`
-	CreatedAt  time.Time   `json:"created_at"`
+	BattleID   string     `json:"battle_id"`
+	BattleType BattleType `json:"battle_type"`
+	Status     string     `json:"status"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 // CreateBattleHandler 创建战斗命令处理器
@@ -61,10 +61,10 @@ func (cmd *CreateBattleCommand) Validate() error {
 	if cmd.CreatorID == "" {
 		return ErrInvalidCreatorID
 	}
-	
+
 	if cmd.BattleType < BattleTypePvP || cmd.BattleType > BattleTypeRaid {
 		return ErrInvalidBattleType
 	}
-	
+
 	return nil
 }

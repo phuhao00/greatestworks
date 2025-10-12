@@ -23,7 +23,7 @@ func (s *ChatService) CreateChannel(ctx context.Context, name string, channelTyp
 	if err := s.validateChannelName(name); err != nil {
 		return nil, err
 	}
-	
+
 	// 检查频道是否已存在
 	exists, err := s.chatRepo.ChannelExistsByName(ctx, name)
 	if err != nil {
@@ -32,23 +32,23 @@ func (s *ChatService) CreateChannel(ctx context.Context, name string, channelTyp
 	if exists {
 		return nil, ErrChannelAlreadyExists
 	}
-	
+
 	// 创建频道
 	channelID := generateChannelID()
 	channel := NewChatChannel(channelID, name, channelType)
-	
+
 	// 添加创建者为所有者
 	creator := NewMember(creatorID, "")
 	creator.SetRole(MemberRoleOwner)
 	if err := channel.AddMember(creator); err != nil {
 		return nil, fmt.Errorf("添加创建者失败: %w", err)
 	}
-	
+
 	// 保存频道
 	if err := s.chatRepo.SaveChannel(ctx, channel); err != nil {
 		return nil, fmt.Errorf("保存频道失败: %w", err)
 	}
-	
+
 	return channel, nil
 }
 
@@ -62,25 +62,25 @@ func (s *ChatService) JoinChannel(ctx context.Context, channelID, playerID, nick
 	if channel == nil {
 		return ErrChannelNotFound
 	}
-	
+
 	// 检查是否已经是成员
 	if channel.IsMember(playerID) {
 		return ErrMemberAlreadyExists
 	}
-	
+
 	// 创建新成员
 	member := NewMember(playerID, nickname)
-	
+
 	// 添加成员到频道
 	if err := channel.AddMember(member); err != nil {
 		return err
 	}
-	
+
 	// 保存频道
 	if err := s.chatRepo.SaveChannel(ctx, channel); err != nil {
 		return fmt.Errorf("保存频道失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -94,17 +94,17 @@ func (s *ChatService) LeaveChannel(ctx context.Context, channelID, playerID stri
 	if channel == nil {
 		return ErrChannelNotFound
 	}
-	
+
 	// 移除成员
 	if err := channel.RemoveMember(playerID); err != nil {
 		return err
 	}
-	
+
 	// 保存频道
 	if err := s.chatRepo.SaveChannel(ctx, channel); err != nil {
 		return fmt.Errorf("保存频道失败: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -118,25 +118,25 @@ func (s *ChatService) SendMessage(ctx context.Context, channelID, senderID, cont
 	if channel == nil {
 		return nil, ErrChannelNotFound
 	}
-	
+
 	// 创建消息
 	message := NewMessage(channelID, senderID, content, msgType)
-	
+
 	// 发送消息到频道
 	if err := channel.SendMessage(ctx, message); err != nil {
 		return nil, err
 	}
-	
+
 	// 保存消息
 	if err := s.chatRepo.SaveMessage(ctx, message); err != nil {
 		return nil, fmt.Errorf("保存消息失败: %w", err)
 	}
-	
+
 	// 保存频道（更新版本）
 	if err := s.chatRepo.SaveChannel(ctx, channel); err != nil {
 		return nil, fmt.Errorf("保存频道失败: %w", err)
 	}
-	
+
 	return message, nil
 }
 

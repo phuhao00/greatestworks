@@ -146,8 +146,8 @@ func (r *RankingRepository) FindActive(ctx context.Context) ([]*ranking.RankingA
 			return nil, fmt.Errorf("failed to decode ranking document: %w", err)
 		}
 		if ranking, err := r.fromRankingDocument(&doc); err == nil {
-				rankings = append(rankings, ranking)
-			}
+			rankings = append(rankings, ranking)
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
@@ -401,11 +401,11 @@ func (r *RankingRepository) fromRankingDocument(doc *RankingDocument) (*ranking.
 	// 从RankingID解析出rankID
 	rankID := uint32(0) // 这里需要从doc.RankingID解析出实际的rankID
 	rankingAggregate := ranking.NewRankingAggregate(
-			rankID,
-			doc.Name,
-			rankType,
-			ranking.RankCategoryPlayer, // 默认分类
-		)
+		rankID,
+		doc.Name,
+		rankType,
+		ranking.RankCategoryPlayer, // 默认分类
+	)
 
 	// 设置其他属性
 	rankingAggregate.SetID(doc.RankingID)
@@ -431,21 +431,21 @@ func (r *RankingRepository) fromRankingDocument(doc *RankingDocument) (*ranking.
 // toRankEntryDocument 转换为排名条目文档
 func (r *RankEntryRepository) toRankEntryDocument(entry *ranking.RankEntry) *RankEntryDocument {
 	doc := &RankEntryDocument{
-		EntryID:    entry.GetID(),
-		RankingID:  fmt.Sprintf("%d", entry.GetRankingID()),
-		PlayerID:   entry.GetPlayerID(),
-		Rank:       int32(entry.GetRank()),
-		Score:      entry.GetScore(),
-		PrevRank:   func() int32 {
+		EntryID:   entry.GetID(),
+		RankingID: fmt.Sprintf("%d", entry.GetRankingID()),
+		PlayerID:  entry.GetPlayerID(),
+		Rank:      int32(entry.GetRank()),
+		Score:     entry.GetScore(),
+		PrevRank: func() int32 {
 			if prevRank := entry.GetPrevRank(); prevRank != nil {
 				return int32(*prevRank)
 			}
 			return 0
 		}(),
-		PrevScore:  entry.GetPrevScore(),
-		Metadata:   entry.GetMetadata(),
-		CreatedAt:  entry.GetCreatedAt(),
-		UpdatedAt:  entry.GetUpdatedAt(),
+		PrevScore: entry.GetPrevScore(),
+		Metadata:  entry.GetMetadata(),
+		CreatedAt: entry.GetCreatedAt(),
+		UpdatedAt: entry.GetUpdatedAt(),
 	}
 	return doc
 }
@@ -468,7 +468,7 @@ func (r *RankEntryRepository) fromRankEntryDocument(doc *RankEntryDocument) *ran
 
 	// 类型转换：int32 -> int64
 	entry.SetRank(int64(doc.Rank))
-	
+
 	// 类型转换：int32 -> *int64
 	prevRank := int64(doc.PrevRank)
 	entry.SetPrevious(&prevRank, doc.PrevScore)
