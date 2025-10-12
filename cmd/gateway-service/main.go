@@ -13,6 +13,7 @@ import (
 
 	"greatestworks/internal/config"
 	"greatestworks/internal/infrastructure/logging"
+	"greatestworks/internal/infrastructure/monitoring"
 	"greatestworks/internal/interfaces/tcp"
 )
 
@@ -21,11 +22,12 @@ type GatewayServiceConfig = config.Config
 
 // GatewayService 网关服务
 type GatewayService struct {
-	config atomic.Pointer[GatewayServiceConfig]
-	logger logging.Logger
-	server *tcp.TCPServer
-	ctx    context.Context
-	cancel context.CancelFunc
+	config   atomic.Pointer[GatewayServiceConfig]
+	logger   logging.Logger
+	server   *tcp.TCPServer
+	profiler *monitoring.Profiler
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 // NewGatewayService 创建网关服务
@@ -33,9 +35,10 @@ func NewGatewayService(cfg *GatewayServiceConfig, logger logging.Logger) *Gatewa
 	ctx, cancel := context.WithCancel(context.Background())
 
 	service := &GatewayService{
-		logger: logger,
-		ctx:    ctx,
-		cancel: cancel,
+		logger:   logger,
+		ctx:      ctx,
+		cancel:   cancel,
+		profiler: monitoring.NewProfiler(logger),
 	}
 
 	if cfg != nil {
@@ -84,6 +87,22 @@ func (s *GatewayService) Start() error {
 		}
 	}()
 
+	if cfg.Monitoring.Profiling.Enabled {
+		host := cfg.Monitoring.Profiling.Host
+		if host == "" {
+			host = cfg.Server.TCP.Host
+		}
+
+		if cfg.Monitoring.Profiling.Port == 0 {
+			s.logger.Warn("pprof未启动: 未配置端口")
+		} else if err := s.profiler.Start(host, cfg.Monitoring.Profiling.Port); err != nil {
+			s.logger.Error("Failed to start pprof server", err, logging.Fields{
+				"host": host,
+				"port": cfg.Monitoring.Profiling.Port,
+			})
+		}
+	}
+
 	s.logger.Info("Gateway service started successfully", logging.Fields{
 		"tcp_addr": fmt.Sprintf("%s:%d", cfg.Server.TCP.Host, cfg.Server.TCP.Port),
 	})
@@ -100,6 +119,13 @@ func (s *GatewayService) Stop() error {
 	if s.server != nil {
 		if err := s.server.Stop(); err != nil {
 			s.logger.Error("Failed to stop TCP server", err)
+			return err
+		}
+	}
+
+	if s.profiler != nil {
+		if err := s.profiler.Stop(context.Background()); err != nil {
+			s.logger.Error("Failed to stop pprof server", err)
 			return err
 		}
 	}

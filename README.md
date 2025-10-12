@@ -206,9 +206,83 @@ greatestworks/
 
 ### 监控与运维
 - **日志**: 结构化日志 + 分级输出
-- **监控**: 自定义指标收集
+- **监控**: 自定义指标收集（Prometheus 已移除，保留配置项仅为兼容）
+- **性能剖析**: 内置 `pprof` HTTP 端点，可按服务独立开启/关闭
 - **健康检查**: HTTP健康检查接口
 - **配置管理**: YAML配置 + 环境变量
+
+#### 🔍 性能剖析 (pprof)
+- 通过 `monitoring.profiling` 配置块启用，默认 `host=0.0.0.0`，启用时若未指定端口则为 `6060`。
+- 示例配置：
+
+  ```yaml
+  monitoring:
+    profiling:
+      enabled: true
+      host: "0.0.0.0"
+      port: 6061
+  ```
+
+- 默认示例端口：游戏服务 `6060`、认证服务 `6061`、网关服务 `6062`（可按需调整）。
+- 访问方式：`http://<host>:<port>/debug/pprof/`（支持 `profile`, `heap`, `goroutine` 等子路径）。
+- 安全建议：仅在受信任网络内开放或通过防火墙/反向代理限制访问；生产环境建议结合 mTLS 或内网隧道。
+- Go 原生工具链支持直接采样，例如：
+
+  ```bash
+  go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
+  ```
+
+- 常用子路径一览：
+
+  | 路径 | 数据类型 | 典型用途 |
+  | --- | --- | --- |
+  | `/debug/pprof/profile` | CPU 采样 (默认 30s) | 分析热点函数、CPU 使用率 |
+  | `/debug/pprof/heap` | 堆内存快照 | 排查内存占用与泄漏 |
+  | `/debug/pprof/goroutine` | Goroutine 堆栈 | 定位死锁、阻塞、协程泄漏 |
+  | `/debug/pprof/block` | 阻塞 / 互斥等待 | 查看锁竞争、IO 阻塞（含网络等待） |
+  | `/debug/pprof/mutex` | 互斥锁争用 | 识别锁热点 |
+  | `/debug/pprof/threadcreate` | 线程创建 | 观察系统线程增量 |
+  | `/debug/pprof/trace` | 全局执行轨迹 | 捕获调度、GC、网络事件，生成 `.trace` 文件 |
+
+- 采集跟踪 (含网络事件) 示例：
+
+  ```bash
+  go tool trace -http=:0 http://localhost:6060/debug/pprof/trace?seconds=5
+  ```
+
+  打开浏览器后可查看网络/系统调用阻塞、协程调度等细节。
+
+#### 🧪 Profiling 快速入门
+
+1. **启用配置**：在目标服务的配置文件中确保 `monitoring.profiling.enabled: true`，并确认端口未被占用。
+2. **启动服务**：通过 `make run-<service>`、`docker-compose up` 或自定义脚本启动对应进程。
+3. **采集快照**：使用以下命令保存原始数据以便离线分析：
+
+  ```bash
+  # CPU 采样 60 秒后保存为 cpu.prof
+  curl -o cpu.prof "http://localhost:6060/debug/pprof/profile?seconds=60"
+
+  # 堆内存快照
+  curl -o heap.prof "http://localhost:6060/debug/pprof/heap"
+
+  # Goroutine 栈信息
+  curl -o goroutine.txt "http://localhost:6060/debug/pprof/goroutine?debug=1"
+  ```
+
+4. **可视化分析**：
+
+  ```bash
+  # CLI 分析热点函数
+  go tool pprof cpu.prof
+
+  # 启动 Web UI（会自动打开浏览器）
+  go tool pprof -http=:0 heap.prof
+  ```
+
+5. **高级跟踪**：通过 `go tool trace` 加载第 3 步生成的 `.trace` 文件，可在浏览器中查看网络/系统调用、协程调度和 GC 时间线。
+
+> 端口速查：游戏服务 `6060`、认证服务 `6061`、网关服务 `6062`，可根据部署环境在配置文件中调整。
+
 
 ## 🎉 最新更新 (v1.1.0)
 

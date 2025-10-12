@@ -115,14 +115,16 @@ monitoring:
   health:
     enabled: true
     
-  metrics:
-    enabled: true
-    
+  metrics: # deprecated legacy settings
+    enabled: false
+
   tracing:
     enabled: false
     
   profiling:
-    enabled: false
+    enabled: true
+    host: "0.0.0.0"
+    port: 6060
 
 # 开发工具配置（Docker 环境禁用）
 development:

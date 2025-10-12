@@ -342,7 +342,9 @@ type HealthConfig struct {
 	Path    string `yaml:"path"`
 }
 
-// MetricsConfig Prometheus metrics.
+// MetricsConfig represents legacy Prometheus settings. Deprecated: Prometheus
+// metrics have been removed; keep for backward compatibility in configuration
+// files only.
 type MetricsConfig struct {
 	Enabled   bool   `yaml:"enabled"`
 	Namespace string `yaml:"namespace"`
@@ -908,6 +910,12 @@ func (c *Config) ApplyDefaults() {
 	}
 	if c.Monitoring.Metrics.Namespace == "" {
 		c.Monitoring.Metrics.Namespace = "greatestworks"
+	}
+	if c.Monitoring.Profiling.Host == "" {
+		c.Monitoring.Profiling.Host = "0.0.0.0"
+	}
+	if c.Monitoring.Profiling.Enabled && c.Monitoring.Profiling.Port == 0 {
+		c.Monitoring.Profiling.Port = 6060
 	}
 
 	if c.Messaging.NATS.MaxReconnect == 0 {

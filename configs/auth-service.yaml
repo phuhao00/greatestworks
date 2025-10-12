@@ -114,13 +114,13 @@ monitoring:
   health:
     enabled: true
     path: "/health"
-  metrics:
-    enabled: true
+  metrics: # deprecated legacy settings
+    enabled: false
     namespace: "auth_service"
   profiling:
-    enabled: false
-    host: ""
-    port: 0
+    enabled: true
+    host: "0.0.0.0"
+    port: 6061 # 访问 http://<host>:6061/debug/pprof/{profile,heap,goroutine,block,trace,...}
 
 third_party:
   email:

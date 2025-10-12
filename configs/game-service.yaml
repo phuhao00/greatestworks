@@ -149,3 +149,16 @@ performance:
     enabled: true
     requests_per_minute: 1000
     burst: 100
+
+# 监控配置
+monitoring:
+  health:
+    enabled: true
+    path: "/health"
+  metrics: # deprecated legacy settings
+    enabled: false
+    namespace: "game_service"
+  profiling:
+    enabled: true
+    host: "0.0.0.0"
+    port: 6060 # 访问 http://<host>:6060/debug/pprof/{profile,heap,goroutine,block,trace,...}

@@ -14,6 +14,7 @@ import (
 	"greatestworks/application/handlers"
 	"greatestworks/internal/config"
 	"greatestworks/internal/infrastructure/logging"
+	"greatestworks/internal/infrastructure/monitoring"
 	"greatestworks/internal/interfaces/http"
 	"greatestworks/internal/interfaces/rpc"
 )
@@ -27,6 +28,7 @@ type GameService struct {
 	logger     logging.Logger
 	httpServer *http.Server
 	rpcServer  *rpc.RPCServer
+	profiler   *monitoring.Profiler
 	commandBus *handlers.CommandBus
 	queryBus   *handlers.QueryBus
 	ctx        context.Context
@@ -47,6 +49,7 @@ func NewGameService(config *GameServiceConfig, logger logging.Logger) *GameServi
 		queryBus:   queryBus,
 		ctx:        ctx,
 		cancel:     cancel,
+		profiler:   monitoring.NewProfiler(logger),
 	}
 
 	if config != nil {
@@ -116,6 +119,27 @@ func (s *GameService) Start() error {
 		}
 	}()
 
+	if cfg.Monitoring.Profiling.Enabled {
+		host := cfg.Monitoring.Profiling.Host
+		if host == "" {
+			host = cfg.Server.HTTP.Host
+		}
+
+		if cfg.Monitoring.Profiling.Port == 0 {
+			s.logger.Warn("pprof未启动: 未配置端口")
+		} else if host == cfg.Server.HTTP.Host && cfg.Monitoring.Profiling.Port == cfg.Server.HTTP.Port {
+			s.logger.Info("pprof routes enabled on primary HTTP server", logging.Fields{
+				"addr": fmt.Sprintf("%s:%d", cfg.Server.HTTP.Host, cfg.Server.HTTP.Port),
+				"path": "/debug/pprof/",
+			})
+		} else if err := s.profiler.Start(host, cfg.Monitoring.Profiling.Port); err != nil {
+			s.logger.Error("Failed to start pprof server", err, logging.Fields{
+				"host": host,
+				"port": cfg.Monitoring.Profiling.Port,
+			})
+		}
+	}
+
 	s.logger.Info("Game service started successfully", logging.Fields{
 		"http_addr": fmt.Sprintf("%s:%d", cfg.Server.HTTP.Host, cfg.Server.HTTP.Port),
 		"rpc_addr":  fmt.Sprintf("%s:%d", cfg.Server.RPC.Host, cfg.Server.RPC.Port),
@@ -143,6 +167,13 @@ func (s *GameService) Stop() error {
 	if s.rpcServer != nil {
 		if err := s.rpcServer.Stop(); err != nil {
 			s.logger.Error("Failed to stop RPC server", err)
+			return err
+		}
+	}
+
+	if s.profiler != nil {
+		if err := s.profiler.Stop(context.Background()); err != nil {
+			s.logger.Error("Failed to stop pprof server", err)
 			return err
 		}
 	}
@@ -203,6 +234,12 @@ func (s *GameService) initializeHTTPServer(cfg *GameServiceConfig) error {
 
 	// 创建HTTP服务器
 	s.httpServer = http.NewServer(httpConfig, s.logger)
+
+	if cfg.Monitoring.Profiling.Enabled &&
+		cfg.Monitoring.Profiling.Host == cfg.Server.HTTP.Host &&
+		cfg.Monitoring.Profiling.Port == cfg.Server.HTTP.Port {
+		s.httpServer.EnableProfiling()
+	}
 
 	s.logger.Info("HTTP服务器初始化完成")
 	return nil

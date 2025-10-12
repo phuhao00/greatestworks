@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"greatestworks/internal/infrastructure/logging"
+	"greatestworks/internal/infrastructure/monitoring"
 )
 
 // ServerConfig HTTP服务器配置
@@ -21,11 +22,12 @@ type ServerConfig struct {
 
 // Server HTTP服务器
 type Server struct {
-	config *ServerConfig
-	logger logging.Logger
-	server *http.Server
-	ctx    context.Context
-	cancel context.CancelFunc
+	config           *ServerConfig
+	logger           logging.Logger
+	server           *http.Server
+	ctx              context.Context
+	cancel           context.CancelFunc
+	profilingEnabled bool
 }
 
 // NewServer 创建HTTP服务器
@@ -40,6 +42,11 @@ func NewServer(config *ServerConfig, logger logging.Logger) *Server {
 	}
 }
 
+// EnableProfiling 注册标准pprof处理器。
+func (s *Server) EnableProfiling() {
+	s.profilingEnabled = true
+}
+
 // Start 启动HTTP服务器
 func (s *Server) Start() error {
 	// 创建路由
@@ -48,7 +55,10 @@ func (s *Server) Start() error {
 	// 健康检查端点
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/ready", s.readyHandler)
-	mux.HandleFunc("/metrics", s.metricsHandler)
+
+	if s.profilingEnabled {
+		monitoring.RegisterHandlers(mux)
+	}
 
 	// 创建HTTP服务器
 	s.server = &http.Server{
@@ -108,11 +118,4 @@ func (s *Server) readyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"ready","timestamp":"` + time.Now().Format(time.RFC3339) + `"}`))
-}
-
-// metricsHandler 指标处理器
-func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("# HELP mmo_server_info Server information\n# TYPE mmo_server_info gauge\nmmo_server_info{version=\"1.0.0\"} 1\n"))
 }

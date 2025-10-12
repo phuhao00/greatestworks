@@ -211,8 +211,8 @@ monitoring:
     path: "/health"
     
   # 指标收集
-  metrics:
-    enabled: true
+  metrics: # deprecated, reserved for legacy Prometheus setups
+    enabled: false
     namespace: "mmo_server"
     
   # 链路追踪
@@ -223,8 +223,8 @@ monitoring:
     
   # 性能分析
   profiling:
-    enabled: false
-    host: "localhost"
+    enabled: true
+    host: "0.0.0.0"
     port: 6060
 
 # 第三方服务配置
