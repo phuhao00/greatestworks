@@ -757,6 +757,7 @@ export LOG_FORMAT=json
 
 ## 📞 联系我们
 
+- **qq**: 366905799
 - **项目主页**: [https://github.com/phuhao00/greatestworks](https://github.com/phuhao00/greatestworks)
 - **问题反馈**: [GitHub Issues](https://github.com/phuhao00/greatestworks/issues)
 - **讨论交流**: [GitHub Discussions](https://github.com/phuhao00/greatestworks/discussions)
