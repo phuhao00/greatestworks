@@ -432,8 +432,8 @@ func (s *NPCService) buildNPCDTO(npcAggregate *npc.NPCAggregate) *NPCDTO {
 		ID:          npcAggregate.GetID(),
 		Name:        npcAggregate.GetName(),
 		Description: npcAggregate.GetDescription(),
-		Type:        string(npcAggregate.GetType()),
-		Status:      string(npcAggregate.GetStatus()),
+		Type:        npcAggregate.GetType().String(),
+		Status:      npcAggregate.GetStatus().String(),
 		Location:    s.buildLocationDTO(npcAggregate.GetLocation()),
 		Attributes:  s.buildAttributesDTO(npcAggregate.GetAttributes()),
 		Behavior:    s.buildBehaviorDTO(npcAggregate.GetBehavior()),
@@ -481,8 +481,8 @@ func (s *NPCService) buildAttributesDTO(attributes *npc.NPCAttributes) *NPCAttri
 // buildBehaviorDTO 构建行为DTO
 func (s *NPCService) buildBehaviorDTO(behavior *npc.NPCBehavior) *NPCBehaviorDTO {
 	return &NPCBehaviorDTO{
-		CurrentAction: string(behavior.GetCurrentAction()),
-		NextAction:    string(behavior.GetNextAction()),
+		CurrentAction: behavior.GetCurrentAction().String(),
+		NextAction:    behavior.GetNextAction().String(),
 		Cooldown:      behavior.GetCooldown(),
 		IsActive:      behavior.IsActive(),
 	}
@@ -536,7 +536,7 @@ func (s *NPCService) buildQuestDTOs(quests []*npc.Quest) []*QuestDTO {
 			ID:            quest.GetID(),
 			Name:          quest.GetName(),
 			Description:   quest.GetDescription(),
-			Type:          string(quest.GetType()),
+			Type:          quest.GetType().String(),
 			RequiredLevel: 0,          // TODO: quest.GetRequiredLevel(),
 			Rewards:       nil,        // TODO: quest.GetRewards(),
 			Objectives:    []string{}, // TODO: quest.GetObjectives(),
@@ -553,7 +553,7 @@ func (s *NPCService) buildQuestInstanceDTO(instance *npc.QuestInstance) *QuestIn
 		ID:          "", // TODO: instance.GetID(),
 		QuestID:     instance.GetQuestID(),
 		PlayerID:    instance.GetPlayerID(),
-		Status:      string(instance.GetStatus()),
+		Status:      instance.GetStatus().String(),
 		Progress:    map[string]int{}, // TODO: instance.GetProgress(),
 		StartTime:   time.Now(),       // TODO: instance.GetStartTime(),
 		EndTime:     time.Now(),       // TODO: instance.GetEndTime(),
@@ -629,7 +629,7 @@ func (s *NPCService) buildRelationshipDTO(relationship *npc.Relationship) *Relat
 		PlayerID:    "", // TODO: relationship.GetPlayerID(),
 		NPCID:       "", // TODO: relationship.GetNPCID(),
 		Value:       relationship.GetValue(),
-		Level:       string(relationship.GetLevel()),
+		Level:       relationship.GetLevel().String(),
 		LastChanged: time.Now(), // TODO: relationship.GetLastChanged(),
 		IsLocked:    false,      // TODO: relationship.IsLocked(),
 	}

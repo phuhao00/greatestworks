@@ -271,7 +271,7 @@ func (s *WeatherService) updateStatistics(ctx context.Context, regionID string, 
 func (s *WeatherService) buildWeatherDTO(weatherAggregate *weather.WeatherAggregate) *WeatherDTO {
 	return &WeatherDTO{
 		RegionID:    weatherAggregate.GetRegionID(),
-		WeatherType: string(weatherAggregate.GetWeatherType()),
+		WeatherType: weatherAggregate.GetWeatherType().String(),
 		Intensity:   float64(weatherAggregate.GetIntensity()),
 		Temperature: weatherAggregate.GetTemperature(),
 		Humidity:    weatherAggregate.GetHumidity(),
@@ -326,7 +326,7 @@ func (s *WeatherService) buildHistoryDTOs(history []*weather.WeatherAggregate) [
 	for i, record := range history {
 		dtos[i] = &WeatherHistoryDTO{
 			RegionID:    record.GetRegionID(),
-			WeatherType: string(record.GetWeatherType()),
+			WeatherType: record.GetWeatherType().String(),
 			Intensity:   float64(record.GetIntensity()),
 			Temperature: record.GetTemperature(),
 			StartTime:   record.GetStartTime(),
@@ -362,7 +362,7 @@ func (s *WeatherService) buildGlobalWeatherDTO(allWeather []*weather.WeatherAggr
 
 	for _, w := range allWeather {
 		regionWeather[w.GetRegionID()] = s.buildWeatherDTO(w)
-		weatherType := string(w.GetWeatherType())
+		weatherType := w.GetWeatherType().String()
 		weatherTypeCount[weatherType]++
 		if w.IsSpecialWeather() {
 			specialWeatherCount++
