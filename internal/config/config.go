@@ -1,6 +1,5 @@
-// Package config 配置管理和热重载
-// Author: MMO Server Team
-// Created: 2024
+//go:build ignore
+// +build ignore
 
 package config
 
@@ -12,8 +11,10 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-	// "github.com/phuhao00/netcore-go/core" // 暂时注释掉缺失的包
 )
+
+// Deprecated: this file intentionally left blank. The new configuration loader,
+// manager and typed schema live in loader.go, manager.go and types.go.
 
 // Logger 简单的日志接口
 type Logger interface {

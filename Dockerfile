@@ -3,7 +3,7 @@
 # =============================================================================
 
 # 构建阶段 - 使用官方 Go 镜像
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # 设置构建参数
 ARG BUILD_VERSION=dev
@@ -36,7 +36,7 @@ RUN CGO_ENABLED=0 \
     -installsuffix cgo \
     -ldflags="-s -w -X main.version=${BUILD_VERSION} -X main.buildTime=${BUILD_TIME} -X main.gitCommit=${GIT_COMMIT}" \
     -o server \
-    ./cmd/server
+    ./cmd/game-service
 
 # 使用 UPX 压缩二进制文件（可选）
 RUN upx --best --lzma server

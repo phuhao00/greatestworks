@@ -1,110 +1,103 @@
-# GreatestWorks Makefile
-# 支持Proto文件生成和项目构建
+# GreatestWorks MMO 游戏服务器 Makefile
 
-.PHONY: help proto-go proto-csharp proto-all clean build test
+.PHONY: help build run stop clean test lint format docker-build docker-run docker-stop health-check
 
 # 默认目标
 help:
-	@echo "GreatestWorks 构建系统"
-	@echo ""
+	@echo "GreatestWorks MMO 游戏服务器"
 	@echo "可用命令:"
-	@echo "  proto-go     生成Go的Proto文件"
-	@echo "  proto-csharp 生成C#的Proto文件"
-	@echo "  proto-all    生成所有Proto文件"
-	@echo "  build        构建项目"
-	@echo "  test         运行测试"
-	@echo "  clean        清理生成的文件"
-	@echo "  install-deps 安装依赖"
-
-# 检查protoc是否安装
-check-protoc:
-	@which protoc > /dev/null || (echo "错误: protoc未安装" && exit 1)
-
-# 检查Go插件
-check-go-plugins:
-	@which protoc-gen-go > /dev/null || (echo "安装Go插件..." && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest)
-
-# 生成Go Proto文件
-proto-go: check-protoc check-go-plugins
-	@echo "生成Go Proto文件..."
-	@mkdir -p internal/proto/player
-	@mkdir -p internal/proto/battle
-	@mkdir -p internal/proto/pet
-	@mkdir -p internal/proto/common
-	@protoc --go_out=. --go_opt=paths=source_relative proto/common.proto
-	@protoc --go_out=. --go_opt=paths=source_relative proto/player.proto
-	@protoc --go_out=. --go_opt=paths=source_relative proto/battle.proto
-	@protoc --go_out=. --go_opt=paths=source_relative proto/pet.proto
-	@echo "移动生成的文件到正确位置..."
-	@mv proto/common.pb.go internal/proto/common/ 2>/dev/null || true
-	@mv proto/player.pb.go internal/proto/player/ 2>/dev/null || true
-	@mv proto/battle.pb.go internal/proto/battle/ 2>/dev/null || true
-	@mv proto/pet.pb.go internal/proto/pet/ 2>/dev/null || true
-
-	@echo "Go Proto文件生成完成"
-
-# 生成C# Proto文件
-proto-csharp: check-protoc
-	@echo "生成C# Proto文件..."
-	@mkdir -p csharp/GreatestWorks/Player
-	@mkdir -p csharp/GreatestWorks/Battle
-	@mkdir -p csharp/GreatestWorks/Pet
-	@mkdir -p csharp/GreatestWorks/Common
-	@protoc --csharp_out=csharp --csharp_opt=file_extension=.g.cs proto/common.proto
-	@protoc --csharp_out=csharp --csharp_opt=file_extension=.g.cs proto/player.proto
-	@protoc --csharp_out=csharp --csharp_opt=file_extension=.g.cs proto/battle.proto
-	@protoc --csharp_out=csharp --csharp_opt=file_extension=.g.cs proto/pet.proto
-	@echo "C# Proto文件生成完成"
-
-# 生成所有Proto文件
-proto-all: proto-go proto-csharp
-	@echo "所有Proto文件生成完成"
+	@echo "  build          - 构建项目"
+	@echo "  run            - 运行服务"
+	@echo "  stop           - 停止服务"
+	@echo "  clean          - 清理构建文件"
+	@echo "  test           - 运行测试"
+	@echo "  lint           - 代码检查"
+	@echo "  format         - 格式化代码"
+	@echo "  docker-build   - 构建Docker镜像"
+	@echo "  docker-run     - 运行Docker服务"
+	@echo "  docker-stop    - 停止Docker服务"
+	@echo "  health-check   - 健康检查"
 
 # 构建项目
-build: proto-go
+build:
 	@echo "构建项目..."
-	@go mod tidy
-	@go build -o bin/server cmd/server/main.go
-	@echo "构建完成: bin/server"
+	go build -o bin/game-service ./cmd/game-service
+	go build -o bin/auth-service ./cmd/auth-service
+	go build -o bin/gateway-service ./cmd/gateway-service
+
+# 运行服务
+run: build
+	@echo "启动游戏服务..."
+	./bin/game-service
+
+# 停止服务
+stop:
+	@echo "停止服务..."
+	pkill -f game-service || true
+
+# 清理构建文件
+clean:
+	@echo "清理构建文件..."
+	rm -rf bin/
+	rm -rf logs/
+	docker system prune -f
 
 # 运行测试
 test:
 	@echo "运行测试..."
-	@go test ./...
+	go test -v ./...
 
-# 清理生成的文件
-clean:
-	@echo "清理生成的文件..."
-	@rm -rf internal/proto/*/
-	@rm -rf csharp/
-	@rm -rf bin/
-	@go clean
-	@echo "清理完成"
-
-# 安装依赖
-install-deps:
-	@echo "安装Go依赖..."
-	@go mod download
-	@go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	@echo "依赖安装完成"
-
-# 开发环境设置
-dev-setup: install-deps proto-all
-	@echo "开发环境设置完成"
-
-# 运行服务器
-run: build
-	@echo "启动服务器..."
-	@./bin/server
+# 代码检查
+lint:
+	@echo "代码检查..."
+	golangci-lint run
 
 # 格式化代码
-fmt:
+format:
 	@echo "格式化代码..."
-	@go fmt ./...
-	@echo "代码格式化完成"
+	go fmt ./...
+	goimports -w .
 
-# 检查代码
-lint:
-	@echo "检查代码..."
-	@go vet ./...
-	@echo "代码检查完成"
+# 构建Docker镜像
+docker-build:
+	@echo "构建Docker镜像..."
+	docker build -t greatestworks/mmo-server:latest .
+
+# 运行Docker服务
+docker-run:
+	@echo "启动Docker服务..."
+	chmod +x scripts/*.sh
+	docker-compose up -d
+
+# 停止Docker服务
+docker-stop:
+	@echo "停止Docker服务..."
+	docker-compose down
+
+# 健康检查
+health-check:
+	@echo "健康检查..."
+	chmod +x scripts/health-check.sh
+	./scripts/health-check.sh
+
+# 开发环境快速启动
+dev: docker-run
+	@echo "开发环境已启动"
+	@echo "HTTP服务器: http://localhost:8080"
+	@echo "健康检查: http://localhost:8080/health"
+	@echo "指标监控: http://localhost:8080/metrics"
+
+# 生产环境部署
+deploy: docker-build
+	@echo "部署到生产环境..."
+	docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# 查看日志
+logs:
+	@echo "查看服务日志..."
+	docker-compose logs -f
+
+# 进入容器
+shell:
+	@echo "进入游戏服务容器..."
+	docker exec -it mmo-server /bin/sh

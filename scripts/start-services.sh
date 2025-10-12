@@ -1,50 +1,99 @@
 #!/bin/bash
-# 启动分布式游戏服务脚本
-# 基于DDD架构的分布式多节点服务
+# 启动服务脚本
 
-echo "启动分布式游戏服务..."
+set -e
 
-# 检查Go环境
-if ! command -v go &> /dev/null; then
-    echo "错误: 未找到Go环境，请先安装Go"
+echo "启动GreatestWorks MMO游戏服务器..."
+
+# 检查Docker是否运行
+if ! docker info > /dev/null 2>&1; then
+    echo "错误: Docker未运行，请先启动Docker"
     exit 1
 fi
 
-# 创建日志目录
+# 检查Docker Compose是否可用
+if ! command -v docker-compose > /dev/null 2>&1; then
+    echo "错误: Docker Compose未安装"
+    exit 1
+fi
+
+# 创建必要的目录
 mkdir -p logs
+mkdir -p configs
+mkdir -p data/mongodb
+mkdir -p data/redis
+mkdir -p data/nats
 
-# 启动认证服务
-echo "启动认证服务..."
-gnome-terminal --title="Auth Service" -- bash -c "cd $(dirname $0)/.. && go run cmd/auth-service/main.go; exec bash" &
+# 设置权限
+chmod +x scripts/*.sh
 
-# 等待认证服务启动
-sleep 3
+# 复制环境变量文件（如果不存在）
+if [ ! -f .env ]; then
+    echo "创建环境变量文件..."
+    cat > .env << EOF
+# 构建配置
+BUILD_TARGET=final
+BUILD_VERSION=1.0.0
+BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+GIT_COMMIT=dev
+IMAGE_TAG=latest
 
-# 启动游戏服务
-echo "启动游戏服务..."
-gnome-terminal --title="Game Service" -- bash -c "cd $(dirname $0)/.. && go run cmd/game-service/main.go; exec bash" &
+# 应用配置
+APP_ENV=development
+GIN_MODE=debug
+LOG_LEVEL=info
+LOG_FORMAT=json
 
-# 等待游戏服务启动
-sleep 3
+# 服务器端口配置
+SERVER_HTTP_PORT=8080
+SERVER_WS_PORT=8081
+SERVER_METRICS_PORT=9090
 
-# 启动网关服务
-echo "启动网关服务..."
-gnome-terminal --title="Gateway Service" -- bash -c "cd $(dirname $0)/.. && go run cmd/gateway-service/main.go; exec bash" &
+# 数据库配置
+MONGODB_USER=admin
+MONGODB_PASSWORD=admin123
+MONGODB_DATABASE=mmo_game
+REDIS_PASSWORD=redis123
 
-echo ""
-echo "所有服务已启动！"
-echo ""
-echo "服务地址："
-echo "- 认证服务: http://localhost:8080"
-echo "- 游戏服务: rpc://localhost:8081"
-echo "- 网关服务: tcp://localhost:9090"
-echo ""
-echo "按Ctrl+C关闭所有服务..."
+# 消息队列配置
+NATS_CLUSTER_ID=mmo-cluster
 
-# 等待用户中断
-trap 'echo "正在关闭所有服务..."; pkill -f "go run"; exit 0' INT
+# 安全配置
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+ENCRYPTION_KEY=32-character-encryption-key-here
 
-# 保持脚本运行
-while true; do
-    sleep 1
-done
+# 性能配置
+MAX_CONNECTIONS=10000
+WORKER_POOL_SIZE=100
+CACHE_TTL=3600
+
+# 资源限制
+SERVER_CPU_LIMIT=2.0
+SERVER_MEMORY_LIMIT=2G
+SERVER_CPU_RESERVATION=0.5
+SERVER_MEMORY_RESERVATION=512M
+EOF
+fi
+
+# 启动服务
+echo "启动Docker Compose服务..."
+docker-compose up -d
+
+# 等待服务启动
+echo "等待服务启动..."
+sleep 10
+
+# 检查服务状态
+echo "检查服务状态..."
+docker-compose ps
+
+# 显示日志
+echo "显示服务日志..."
+docker-compose logs --tail=50
+
+echo "服务启动完成！"
+echo "HTTP服务器: http://localhost:8080"
+echo "健康检查: http://localhost:8080/health"
+echo "指标监控: http://localhost:8080/metrics"
+echo "MongoDB管理: http://localhost:8081"
+echo "Redis管理: http://localhost:8082"

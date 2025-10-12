@@ -8,148 +8,20 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync/atomic"
 	"syscall"
-	"time"
 
+	"greatestworks/internal/config"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/tcp"
 )
 
-// GatewayServiceConfig 网关服务配置
-type GatewayServiceConfig struct {
-	Service struct {
-		Name        string `yaml:"name"`
-		Version     string `yaml:"version"`
-		Environment string `yaml:"environment"`
-		NodeID      string `yaml:"node_id"`
-	} `yaml:"service"`
-
-	Server struct {
-		TCP struct {
-			Host              string        `yaml:"host"`
-			Port              int           `yaml:"port"`
-			MaxConnections    int           `yaml:"max_connections"`
-			ReadTimeout       time.Duration `yaml:"read_timeout"`
-			WriteTimeout      time.Duration `yaml:"write_timeout"`
-			BufferSize        int           `yaml:"buffer_size"`
-			EnableCompression bool          `yaml:"enable_compression"`
-			Heartbeat         struct {
-				Enabled   bool          `yaml:"enabled"`
-				Interval  time.Duration `yaml:"interval"`
-				Timeout   time.Duration `yaml:"timeout"`
-				MaxMissed int           `yaml:"max_missed"`
-			} `yaml:"heartbeat"`
-			Connection struct {
-				KeepAlive       bool          `yaml:"keep_alive"`
-				KeepAlivePeriod time.Duration `yaml:"keep_alive_period"`
-				NoDelay         bool          `yaml:"no_delay"`
-			} `yaml:"connection"`
-		} `yaml:"tcp"`
-	} `yaml:"server"`
-
-	GameServices struct {
-		Discovery struct {
-			Type   string `yaml:"type"`
-			Consul struct {
-				Address     string `yaml:"address"`
-				Datacenter  string `yaml:"datacenter"`
-				ServiceName string `yaml:"service_name"`
-			} `yaml:"consul"`
-			Etcd struct {
-				Endpoints []string `yaml:"endpoints"`
-			} `yaml:"etcd"`
-			Static struct {
-				Endpoints []string `yaml:"endpoints"`
-			} `yaml:"static"`
-		} `yaml:"discovery"`
-
-		RPC struct {
-			Protocol       string        `yaml:"protocol"`
-			Timeout        time.Duration `yaml:"timeout"`
-			RetryAttempts  int           `yaml:"retry_attempts"`
-			RetryDelay     time.Duration `yaml:"retry_delay"`
-			CircuitBreaker struct {
-				Enabled          bool          `yaml:"enabled"`
-				FailureThreshold int           `yaml:"failure_threshold"`
-				Timeout          time.Duration `yaml:"timeout"`
-				MaxRequests      int           `yaml:"max_requests"`
-			} `yaml:"circuit_breaker"`
-		} `yaml:"rpc"`
-
-		LoadBalancer struct {
-			Strategy    string `yaml:"strategy"`
-			HealthCheck struct {
-				Enabled  bool          `yaml:"enabled"`
-				Interval time.Duration `yaml:"interval"`
-				Timeout  time.Duration `yaml:"timeout"`
-				Path     string        `yaml:"path"`
-			} `yaml:"health_check"`
-		} `yaml:"load_balancer"`
-	} `yaml:"game_services"`
-
-	AuthService struct {
-		BaseURL        string        `yaml:"base_url"`
-		Timeout        time.Duration `yaml:"timeout"`
-		RetryAttempts  int           `yaml:"retry_attempts"`
-		RetryDelay     time.Duration `yaml:"retry_delay"`
-		CircuitBreaker struct {
-			Enabled          bool          `yaml:"enabled"`
-			FailureThreshold int           `yaml:"failure_threshold"`
-			Timeout          time.Duration `yaml:"timeout"`
-		} `yaml:"circuit_breaker"`
-	} `yaml:"auth_service"`
-
-	Database struct {
-		Redis struct {
-			Addr         string        `yaml:"addr"`
-			Password     string        `yaml:"password"`
-			DB           int           `yaml:"db"`
-			PoolSize     int           `yaml:"pool_size"`
-			MinIdleConns int           `yaml:"min_idle_conns"`
-			MaxRetries   int           `yaml:"max_retries"`
-			DialTimeout  time.Duration `yaml:"dial_timeout"`
-			ReadTimeout  time.Duration `yaml:"read_timeout"`
-			WriteTimeout time.Duration `yaml:"write_timeout"`
-			PoolTimeout  time.Duration `yaml:"pool_timeout"`
-			IdleTimeout  time.Duration `yaml:"idle_timeout"`
-		} `yaml:"redis"`
-	} `yaml:"database"`
-
-	Connection struct {
-		MaxConnections    int           `yaml:"max_connections"`
-		ConnectionTimeout time.Duration `yaml:"connection_timeout"`
-		IdleTimeout       time.Duration `yaml:"idle_timeout"`
-		CleanupInterval   time.Duration `yaml:"cleanup_interval"`
-		Session           struct {
-			Timeout         time.Duration `yaml:"timeout"`
-			CleanupInterval time.Duration `yaml:"cleanup_interval"`
-			StoreType       string        `yaml:"store_type"`
-		} `yaml:"session"`
-		MessageQueue struct {
-			Enabled  bool   `yaml:"enabled"`
-			Provider string `yaml:"provider"`
-			Topics   struct {
-				PlayerEvents string `yaml:"player_events"`
-				GameEvents   string `yaml:"game_events"`
-				SystemEvents string `yaml:"system_events"`
-			} `yaml:"topics"`
-		} `yaml:"message_queue"`
-	} `yaml:"connection"`
-
-	Logging struct {
-		Level  string `yaml:"level"`
-		Format string `yaml:"format"`
-		Output string `yaml:"output"`
-		Fields struct {
-			Service string `yaml:"service"`
-			Version string `yaml:"version"`
-		} `yaml:"fields"`
-	} `yaml:"logging"`
-}
+// GatewayServiceConfig aliases the shared configuration schema for readability.
+type GatewayServiceConfig = config.Config
 
 // GatewayService 网关服务
 type GatewayService struct {
-	config *GatewayServiceConfig
+	config atomic.Pointer[GatewayServiceConfig]
 	logger logging.Logger
 	server *tcp.TCPServer
 	ctx    context.Context
@@ -157,41 +29,55 @@ type GatewayService struct {
 }
 
 // NewGatewayService 创建网关服务
-func NewGatewayService(config *GatewayServiceConfig, logger logging.Logger) *GatewayService {
+func NewGatewayService(cfg *GatewayServiceConfig, logger logging.Logger) *GatewayService {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &GatewayService{
-		config: config,
+	service := &GatewayService{
 		logger: logger,
 		ctx:    ctx,
 		cancel: cancel,
 	}
+
+	if cfg != nil {
+		service.config.Store(cfg)
+	}
+
+	return service
+}
+
+// UpdateConfig replaces the in-memory configuration snapshot.
+func (s *GatewayService) UpdateConfig(cfg *GatewayServiceConfig) {
+	if cfg == nil {
+		return
+	}
+	s.config.Store(cfg)
 }
 
 // Start 启动网关服务
 func (s *GatewayService) Start() error {
+	cfg := s.config.Load()
+	if cfg == nil {
+		return fmt.Errorf("gateway service configuration not loaded")
+	}
+
 	s.logger.Info("Starting gateway service", logging.Fields{
-		"service": s.config.Service.Name,
-		"version": s.config.Service.Version,
-		"node_id": s.config.Service.NodeID,
+		"service": cfg.Service.Name,
+		"version": cfg.Service.Version,
+		"node_id": cfg.Service.NodeID,
 	})
 
-	// 初始化数据库连接
-	if err := s.initializeDatabase(); err != nil {
+	if err := s.initializeDatabase(cfg); err != nil {
 		return fmt.Errorf("初始化数据库失败: %w", err)
 	}
 
-	// 初始化游戏服务连接
-	if err := s.initializeGameServices(); err != nil {
+	if err := s.initializeGameServices(cfg); err != nil {
 		return fmt.Errorf("初始化游戏服务连接失败: %w", err)
 	}
 
-	// 初始化TCP服务器
-	if err := s.initializeTCPServer(); err != nil {
+	if err := s.initializeTCPServer(cfg); err != nil {
 		return fmt.Errorf("初始化TCP服务器失败: %w", err)
 	}
 
-	// 启动TCP服务器
 	go func() {
 		if err := s.server.Start(); err != nil {
 			s.logger.Error("TCP server start failed", err)
@@ -199,7 +85,7 @@ func (s *GatewayService) Start() error {
 	}()
 
 	s.logger.Info("Gateway service started successfully", logging.Fields{
-		"tcp_addr": fmt.Sprintf("%s:%d", s.config.Server.TCP.Host, s.config.Server.TCP.Port),
+		"tcp_addr": fmt.Sprintf("%s:%d", cfg.Server.TCP.Host, cfg.Server.TCP.Port),
 	})
 
 	return nil
@@ -209,10 +95,8 @@ func (s *GatewayService) Start() error {
 func (s *GatewayService) Stop() error {
 	s.logger.Info("停止网关服务")
 
-	// 取消上下文
 	s.cancel()
 
-	// 停止TCP服务器
 	if s.server != nil {
 		if err := s.server.Stop(); err != nil {
 			s.logger.Error("Failed to stop TCP server", err)
@@ -225,21 +109,21 @@ func (s *GatewayService) Stop() error {
 }
 
 // initializeDatabase 初始化数据库连接
-func (s *GatewayService) initializeDatabase() error {
+func (s *GatewayService) initializeDatabase(cfg *GatewayServiceConfig) error {
 	s.logger.Info("初始化数据库连接")
 
-	// TODO: 实现Redis连接
+	// TODO: 实现Redis连接，使用 cfg.Database.Redis
 
 	s.logger.Info("数据库连接初始化完成")
 	return nil
 }
 
 // initializeGameServices 初始化游戏服务连接
-func (s *GatewayService) initializeGameServices() error {
+func (s *GatewayService) initializeGameServices(cfg *GatewayServiceConfig) error {
 	s.logger.Info("初始化游戏服务连接")
 
-	// TODO: 实现服务发现
-	// TODO: 实现负载均衡
+	// TODO: 实现服务发现（cfg.Gateway.GameServices.Discovery）
+	// TODO: 实现负载均衡（cfg.Gateway.GameServices.LoadBalancer）
 	// TODO: 实现健康检查
 
 	s.logger.Info("游戏服务连接初始化完成")
@@ -247,59 +131,80 @@ func (s *GatewayService) initializeGameServices() error {
 }
 
 // initializeTCPServer 初始化TCP服务器
-func (s *GatewayService) initializeTCPServer() error {
+func (s *GatewayService) initializeTCPServer(cfg *GatewayServiceConfig) error {
 	s.logger.Info("初始化TCP服务器")
 
-	// TODO: 实现TCP服务器初始化
-	// 包括协议处理、消息路由等
+	// TODO: 使用 cfg.Server.TCP 初始化真正的 TCP 服务
 
 	s.logger.Info("TCP服务器初始化完成")
 	return nil
 }
 
-// loadConfig 加载配置
-func loadConfig() (*GatewayServiceConfig, error) {
-	// TODO: 从配置文件加载配置
-	// 这里先返回默认配置
-	config := &GatewayServiceConfig{
-		Service: struct {
-			Name        string `yaml:"name"`
-			Version     string `yaml:"version"`
-			Environment string `yaml:"environment"`
-			NodeID      string `yaml:"node_id"`
-		}{
-			Name:        "gateway-service",
-			Version:     "1.0.0",
-			Environment: "development",
-			NodeID:      "gateway-node-1",
-		},
+// loadInitialConfig 加载配置并返回配置与文件来源
+func loadInitialConfig() (*GatewayServiceConfig, []string, *config.Loader, error) {
+	loader := config.NewLoader(
+		config.WithService("gateway-service"),
+	)
+
+	cfg, sources, err := loader.Load()
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
-	return config, nil
+	return cfg, sources, loader, nil
 }
 
 // main 主函数
 func main() {
-	// 创建日志器
 	logger := logging.NewBaseLogger(logging.InfoLevel)
-
 	logger.Info("启动网关服务")
 
-	// 加载配置
-	config, err := loadConfig()
+	cfg, sources, loader, err := loadInitialConfig()
 	if err != nil {
 		log.Fatalf("加载配置失败: %v", err)
 	}
 
-	// 创建网关服务
-	service := NewGatewayService(config, logger)
+	logger.Info("配置加载成功", logging.Fields{
+		"environment": cfg.App.Environment,
+		"sources":     sources,
+	})
 
-	// 启动服务
+	manager, err := config.NewManager(loader)
+	if err != nil {
+		log.Fatalf("创建配置管理器失败: %v", err)
+	}
+	defer func() {
+		_ = manager.Close()
+	}()
+
+	runtimeCfg := manager.Config()
+	service := NewGatewayService(runtimeCfg, logger)
+
+	manager.OnChange(func(next *config.Config) {
+		if next == nil {
+			return
+		}
+		service.UpdateConfig(next)
+		logger.Info("网关服务配置已刷新", logging.Fields{
+			"service_version": next.Service.Version,
+		})
+	})
+
+	watchCtx, watchCancel := context.WithCancel(context.Background())
+	defer watchCancel()
+
+	if runtimeCfg != nil && runtimeCfg.Environment.HotReload {
+		if err := manager.StartWatching(watchCtx); err != nil {
+			logger.Error("启动配置热更新监听失败", err, logging.Fields{})
+		} else {
+			logger.Info("已启用配置热更新", logging.Fields{})
+		}
+	}
+
 	if err := service.Start(); err != nil {
 		log.Fatalf("启动网关服务失败: %v", err)
 	}
 
-	// 等待关闭信号
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
@@ -312,8 +217,8 @@ func main() {
 		logger.Info("上下文已取消")
 	}
 
-	// 优雅关闭
 	logger.Info("正在关闭网关服务...")
+	watchCancel()
 	if err := service.Stop(); err != nil {
 		logger.Error("关闭网关服务失败", err, logging.Fields{})
 		os.Exit(1)

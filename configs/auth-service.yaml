@@ -1,16 +1,15 @@
-# =============================================================================
-# 认证服务配置 - 基于DDD的分布式架构
-# 负责用户认证、授权、会话管理
-# =============================================================================
+app:
+  name: "GreatestWorks Auth"
+  version: "1.0.0"
+  environment: "development"
+  debug: false
 
-# 服务基础配置
 service:
   name: "auth-service"
   version: "1.0.0"
   environment: "development"
   node_id: "auth-node-1"
-  
-# HTTP服务器配置 (客户端连接)
+
 server:
   http:
     host: "0.0.0.0"
@@ -22,18 +21,10 @@ server:
     enable_cors: true
     enable_metrics: true
     enable_swagger: true
-    rate_limit:
-      requests_per_second: 100
-      burst: 200
-    cors:
-      allowed_origins:
-        - "http://localhost:3000"
-        - "https://greatestworks.com"
-      allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-      allowed_headers: ["Content-Type", "Authorization", "X-Requested-With"]
-      allow_credentials: true
+    rate_limit_enabled: true
+    rate_limit_requests: 100
+    rate_limit_window: "1s"
 
-# 数据库配置
 database:
   mongodb:
     uri: "mongodb://localhost:27017"
@@ -46,7 +37,6 @@ database:
     max_idle_time: "10m"
     connect_timeout: "10s"
     socket_timeout: "30s"
-    
   redis:
     addr: "localhost:6379"
     password: "redis123"
@@ -60,20 +50,18 @@ database:
     pool_timeout: "4s"
     idle_timeout: "5m"
 
-# 认证配置
-auth:
+security:
   jwt:
     secret: "your-super-secret-jwt-key-change-in-production"
     issuer: "greatestworks-auth"
     audience: "mmo-players"
     access_token_ttl: "1h"
     refresh_token_ttl: "24h"
-    
   encryption:
+    enabled: true
     key: "32-character-encryption-key-here"
     algorithm: "AES-256-GCM"
-    
-  password:
+  password_policy:
     min_length: 8
     require_uppercase: true
     require_lowercase: true
@@ -81,30 +69,39 @@ auth:
     require_symbols: false
     max_attempts: 5
     lockout_duration: "15m"
-
-# 会话管理
-session:
-  max_sessions_per_user: 3
-  session_timeout: "24h"
-  cleanup_interval: "1h"
-  store_type: "redis"  # redis, memory
-
-# 安全配置
-security:
-  rate_limiting:
+  rate_limit:
     enabled: true
-    global_limit: 1000  # requests per minute
-    per_ip_limit: 100   # requests per minute
+    requests_per_minute: 1000
+    burst: 200
+    interval: "1m"
+    global_limit: 1000
+    per_ip_limit: 100
   ddos_protection:
     enabled: true
     threshold: 1000
     ban_duration: "1h"
-  encryption:
-    enabled: true
-    algorithm: "AES-256-GCM"
-    key: ""
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "https://greatestworks.com"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "DELETE"
+      - "OPTIONS"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+      - "X-Requested-With"
+    allow_credentials: true
 
-# 日志配置
+session:
+  max_sessions_per_user: 3
+  session_timeout: "24h"
+  cleanup_interval: "1h"
+  store_type: "redis"
+
 logging:
   level: "info"
   format: "json"
@@ -113,7 +110,6 @@ logging:
     service: "auth-service"
     version: "1.0.0"
 
-# 监控配置
 monitoring:
   health:
     enabled: true
@@ -123,18 +119,16 @@ monitoring:
     namespace: "auth_service"
   profiling:
     enabled: false
-    path: "/debug/pprof"
+    host: ""
+    port: 0
 
-# 第三方服务配置
 third_party:
   email:
-    provider: "smtp"
     smtp:
       host: "smtp.gmail.com"
       port: 587
       username: "your-email@gmail.com"
       password: "your-app-password"
-      
   oauth:
     providers:
       google:
@@ -144,9 +138,7 @@ third_party:
         client_id: ""
         client_secret: ""
 
-# 开发配置
-development:
-  debug: false
+environment:
   hot_reload: false
   mock_data: false
   test_mode: false

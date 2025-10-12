@@ -1,425 +1,294 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
-// AppConfig 应用程序完整配置
-type AppConfig struct {
-	Server      ServerConfig      `yaml:"server"`
-	MongoDB     MongoDBConfig     `yaml:"mongodb"`
-	NATS        NATSConfig        `yaml:"nats"`
-	Redis       RedisConfig       `yaml:"redis"`
-	Game        GameConfig        `yaml:"game"`
-	Logging     LoggingConfig     `yaml:"logging"`
-	Monitoring  MonitoringConfig  `yaml:"monitoring"`
-	Security    SecurityConfig    `yaml:"security"`
-	ThirdParty  ThirdPartyConfig  `yaml:"third_party"`
-	Development EnvironmentConfig `yaml:"development"`
-	Production  EnvironmentConfig `yaml:"production"`
-	Performance PerformanceConfig `yaml:"performance"`
+// Loader merges configuration files for a service.
+type Loader struct {
+	baseDir       string
+	env           string
+	service       string
+	explicitFiles []string
 }
 
-// MongoDBConfig MongoDB配置
-type MongoDBConfig struct {
-	URI      string `yaml:"uri"`
-	Database string `yaml:"database"`
-	Timeout  int    `yaml:"timeout"`
+// Option customises a Loader instance.
+type Option func(*Loader)
+
+// NewLoader constructs a Loader with optional overrides.
+func NewLoader(opts ...Option) *Loader {
+	loader := &Loader{
+		baseDir: "configs",
+		env:     normalizeEnv(os.Getenv("APP_ENV")),
+	}
+
+	if loader.env == "" {
+		loader.env = "development"
+	}
+
+	for _, opt := range opts {
+		opt(loader)
+	}
+
+	if loader.service == "" {
+		loader.service = strings.TrimSpace(os.Getenv("SERVICE_NAME"))
+	}
+
+	if path := strings.TrimSpace(os.Getenv("CONFIG_PATH")); path != "" {
+		loader.explicitFiles = []string{path}
+	} else if path := strings.TrimSpace(os.Getenv("CONFIG_FILE")); path != "" {
+		loader.explicitFiles = []string{path}
+	}
+
+	if loader.baseDir == "" {
+		loader.baseDir = "."
+	}
+
+	return loader
 }
 
-// 使用config.go中定义的类型
-
-// GameConfig 游戏配置
-type GameConfig struct {
-	Player PlayerConfig `yaml:"player"`
-	Bag    BagConfig    `yaml:"bag"`
-	Pet    PetConfig    `yaml:"pet"`
-	VIP    VIPConfig    `yaml:"vip"`
-	Chat   ChatConfig   `yaml:"chat"`
-	Shop   ShopConfig   `yaml:"shop"`
-}
-
-// PlayerConfig 玩家配置
-type PlayerConfig struct {
-	MaxLevel        int    `yaml:"max_level"`
-	InitialGold     uint32 `yaml:"initial_gold"`
-	InitialDiamonds uint32 `yaml:"initial_diamonds"`
-	MaxFriends      int    `yaml:"max_friends"`
-}
-
-// BagConfig 背包配置
-type BagConfig struct {
-	DefaultCapacity int    `yaml:"default_capacity"`
-	MaxCapacity     int    `yaml:"max_capacity"`
-	ExpandCostBase  uint32 `yaml:"expand_cost_base"`
-}
-
-// PetConfig 宠物配置
-type PetConfig struct {
-	MaxPetsPerPlayer          int `yaml:"max_pets_per_player"`
-	MaxActivePets             int `yaml:"max_active_pets"`
-	EvolutionLevelRequirement int `yaml:"evolution_level_requirement"`
-}
-
-// VIPConfig VIP配置
-type VIPConfig struct {
-	MaxLevel      int     `yaml:"max_level"`
-	ExpMultiplier float64 `yaml:"exp_multiplier"`
-}
-
-// ChatConfig 聊天配置
-type ChatConfig struct {
-	MessageHistoryDays int  `yaml:"message_history_days"`
-	MaxMessageLength   int  `yaml:"max_message_length"`
-	SpamProtection     bool `yaml:"spam_protection"`
-}
-
-// ShopConfig 商店配置
-type ShopConfig struct {
-	RefreshInterval   time.Duration `yaml:"refresh_interval"`
-	MaxPurchasePerDay int           `yaml:"max_purchase_per_day"`
-}
-
-// LoggingConfig 日志配置
-type LoggingConfig struct {
-	Level      string `yaml:"level"`
-	Format     string `yaml:"format"`
-	Output     string `yaml:"output"`
-	FilePath   string `yaml:"file_path"`
-	MaxSize    int    `yaml:"max_size"`
-	MaxBackups int    `yaml:"max_backups"`
-	MaxAge     int    `yaml:"max_age"`
-	Compress   bool   `yaml:"compress"`
-}
-
-// MonitoringConfig 监控配置
-type MonitoringConfig struct {
-	Enabled             bool          `yaml:"enabled"`
-	MetricsPort         int           `yaml:"metrics_port"`
-	HealthCheckInterval time.Duration `yaml:"health_check_interval"`
-}
-
-// SecurityConfig 安全配置
-type SecurityConfig struct {
-	JWTSecret  string          `yaml:"jwt_secret"`
-	JWTExpiry  time.Duration   `yaml:"jwt_expiry"`
-	BcryptCost int             `yaml:"bcrypt_cost"`
-	RateLimit  RateLimitConfig `yaml:"rate_limit"`
-}
-
-// RateLimitConfig 限流配置
-type RateLimitConfig struct {
-	RequestsPerMinute int `yaml:"requests_per_minute"`
-	Burst             int `yaml:"burst"`
-}
-
-// ThirdPartyConfig 第三方服务配置
-type ThirdPartyConfig struct {
-	Payment          PaymentConfig          `yaml:"payment"`
-	PushNotification PushNotificationConfig `yaml:"push_notification"`
-	Email            EmailConfig            `yaml:"email"`
-}
-
-// PaymentConfig 支付配置
-type PaymentConfig struct {
-	Stripe StripeConfig `yaml:"stripe"`
-}
-
-// StripeConfig Stripe配置
-type StripeConfig struct {
-	PublicKey     string `yaml:"public_key"`
-	SecretKey     string `yaml:"secret_key"`
-	WebhookSecret string `yaml:"webhook_secret"`
-}
-
-// PushNotificationConfig 推送通知配置
-type PushNotificationConfig struct {
-	Firebase FirebaseConfig `yaml:"firebase"`
-}
-
-// FirebaseConfig Firebase配置
-type FirebaseConfig struct {
-	ServerKey string `yaml:"server_key"`
-}
-
-// EmailConfig 邮件配置
-type EmailConfig struct {
-	SMTP SMTPConfig `yaml:"smtp"`
-}
-
-// SMTPConfig SMTP配置
-type SMTPConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-}
-
-// EnvironmentConfig 环境配置
-type EnvironmentConfig struct {
-	Debug     bool `yaml:"debug"`
-	HotReload bool `yaml:"hot_reload"`
-	MockData  bool `yaml:"mock_data"`
-	TestMode  bool `yaml:"test_mode"`
-}
-
-// PerformanceConfig 性能配置
-type PerformanceConfig struct {
-	DBPool      DBPoolConfig      `yaml:"db_pool"`
-	Cache       CacheConfig       `yaml:"cache"`
-	Concurrency ConcurrencyConfig `yaml:"concurrency"`
-}
-
-// DBPoolConfig 数据库连接池配置
-type DBPoolConfig struct {
-	MaxOpenConns    int           `yaml:"max_open_conns"`
-	MaxIdleConns    int           `yaml:"max_idle_conns"`
-	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime"`
-}
-
-// CacheConfig 缓存配置
-type CacheConfig struct {
-	DefaultTTL      time.Duration `yaml:"default_ttl"`
-	CleanupInterval time.Duration `yaml:"cleanup_interval"`
-	MaxSize         int           `yaml:"max_size"`
-}
-
-// ConcurrencyConfig 并发配置
-type ConcurrencyConfig struct {
-	MaxGoroutines   int `yaml:"max_goroutines"`
-	WorkerPoolSize  int `yaml:"worker_pool_size"`
-	QueueBufferSize int `yaml:"queue_buffer_size"`
-}
-
-// ConfigLoader 配置加载器
-type ConfigLoader struct {
-	configPath string
-	config     *AppConfig
-}
-
-// NewConfigLoader 创建配置加载器
-func NewConfigLoader(configPath string) *ConfigLoader {
-	return &ConfigLoader{
-		configPath: configPath,
+// WithBaseDir sets the base search directory for configuration files.
+func WithBaseDir(dir string) Option {
+	return func(l *Loader) {
+		if dir == "" {
+			return
+		}
+		l.baseDir = filepath.Clean(dir)
 	}
 }
 
-// Load 加载配置文件
-func (cl *ConfigLoader) Load() (*AppConfig, error) {
-	// 检查配置文件是否存在
-	if _, err := os.Stat(cl.configPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("config file not found: %s", cl.configPath)
+// WithEnvironment sets the active environment (e.g. development, production).
+func WithEnvironment(env string) Option {
+	return func(l *Loader) {
+		l.env = normalizeEnv(env)
+	}
+}
+
+// WithService sets the logical service name whose configuration should be loaded.
+func WithService(service string) Option {
+	return func(l *Loader) {
+		l.service = strings.TrimSpace(service)
+	}
+}
+
+// WithExplicitFiles supplies explicit configuration files and bypasses discovery.
+func WithExplicitFiles(files ...string) Option {
+	return func(l *Loader) {
+		cleaned := make([]string, 0, len(files))
+		for _, file := range files {
+			file = strings.TrimSpace(file)
+			if file != "" {
+				cleaned = append(cleaned, file)
+			}
+		}
+		if len(cleaned) > 0 {
+			l.explicitFiles = cleaned
+		}
+	}
+}
+
+// Load gathers and merges configuration files into a Config instance.
+func (l *Loader) Load() (*Config, []string, error) {
+	candidates := l.resolveCandidates()
+	if len(candidates) == 0 {
+		return nil, nil, fmt.Errorf("config: no configuration candidates resolved")
 	}
 
-	// 读取配置文件
-	data, err := os.ReadFile(cl.configPath)
+	var (
+		cfg  Config
+		used []string
+		errs []error
+	)
+
+	for _, path := range candidates {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			errs = append(errs, fmt.Errorf("config: read %s: %w", path, err))
+			continue
+		}
+
+		if err := yaml.Unmarshal(data, &cfg); err != nil {
+			errs = append(errs, fmt.Errorf("config: parse %s: %w", path, err))
+			continue
+		}
+
+		used = append(used, path)
+	}
+
+	if len(used) == 0 {
+		if len(errs) > 0 {
+			return nil, nil, errors.Join(errs...)
+		}
+		return nil, nil, fmt.Errorf(
+			"config: no configuration files found for service %q (env=%s) under %s",
+			l.service,
+			l.env,
+			l.baseDir,
+		)
+	}
+
+	cfg.ApplyDefaults()
+	l.applyEnvOverrides(&cfg)
+
+	if l.service != "" && cfg.Service.Name == "" {
+		cfg.Service.Name = l.service
+	}
+	if cfg.App.Environment == "" {
+		cfg.App.Environment = l.env
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, nil, err
+	}
+
+	return &cfg, used, nil
+}
+
+// LoadInto hydrates the supplied target structure with the merged configuration.
+func (l *Loader) LoadInto(target any) ([]string, error) {
+	cfg, files, err := l.Load()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		return nil, err
 	}
 
-	// 解析YAML
-	var config AppConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse config file: %w", err)
+	// Marshal then unmarshal to allow the caller to provide a tailored struct shape.
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("config: marshal combined config: %w", err)
 	}
 
-	// 应用环境变量覆盖
-	if err := cl.applyEnvironmentOverrides(&config); err != nil {
-		return nil, fmt.Errorf("failed to apply environment overrides: %w", err)
+	if err := yaml.Unmarshal(data, target); err != nil {
+		return nil, fmt.Errorf("config: hydrate target: %w", err)
 	}
 
-	// 验证配置
-	if err := cl.validateConfig(&config); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-
-	cl.config = &config
-	return &config, nil
+	return files, nil
 }
 
-// GetConfig 获取当前配置
-func (cl *ConfigLoader) GetConfig() *AppConfig {
-	return cl.config
+// Environment exposes the current loader environment value.
+func (l *Loader) Environment() string {
+	return l.env
 }
 
-// Reload 重新加载配置
-func (cl *ConfigLoader) Reload() error {
-	_, err := cl.Load()
-	return err
+// Service exposes the service name for the loader.
+func (l *Loader) Service() string {
+	return l.service
 }
 
-// applyEnvironmentOverrides 应用环境变量覆盖
-func (cl *ConfigLoader) applyEnvironmentOverrides(config *AppConfig) error {
-	// MongoDB配置覆盖
-	if uri := os.Getenv("MONGODB_URI"); uri != "" {
-		config.MongoDB.URI = uri
-	}
-	if db := os.Getenv("MONGODB_DATABASE"); db != "" {
-		config.MongoDB.Database = db
-	}
-
-	// NATS配置覆盖
-	if url := os.Getenv("NATS_URL"); url != "" {
-		config.NATS.URL = url
-	}
-	if clusterID := os.Getenv("NATS_CLUSTER_ID"); clusterID != "" {
-		config.NATS.ClusterID = clusterID
-	}
-	if clientID := os.Getenv("NATS_CLIENT_ID"); clientID != "" {
-		config.NATS.ClientID = clientID
-	}
-
-	// Redis配置覆盖
-	if addr := os.Getenv("REDIS_ADDR"); addr != "" {
-		// TODO: 解析Redis地址到Host和Port
-		config.Redis.Host = addr
-	}
-	if password := os.Getenv("REDIS_PASSWORD"); password != "" {
-		config.Redis.Password = password
-	}
-
-	// 服务器配置覆盖
-	if host := os.Getenv("SERVER_HOST"); host != "" {
-		config.Server.Host = host
-	}
-	if port := os.Getenv("SERVER_PORT"); port != "" {
-		// 这里可以添加端口解析逻辑
-	}
-
-	// 安全配置覆盖
-	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
-		config.Security.JWTSecret = jwtSecret
-	}
-
-	// 第三方服务配置覆盖
-	if stripeSecret := os.Getenv("STRIPE_SECRET_KEY"); stripeSecret != "" {
-		config.ThirdParty.Payment.Stripe.SecretKey = stripeSecret
-	}
-	if stripePublic := os.Getenv("STRIPE_PUBLIC_KEY"); stripePublic != "" {
-		config.ThirdParty.Payment.Stripe.PublicKey = stripePublic
-	}
-
-	return nil
+// BaseDir exposes the root search directory.
+func (l *Loader) BaseDir() string {
+	return l.baseDir
 }
 
-// validateConfig 验证配置
-func (cl *ConfigLoader) validateConfig(config *AppConfig) error {
-	// 验证必需的配置项
-	if config.MongoDB.URI == "" {
-		return fmt.Errorf("MongoDB URI is required")
-	}
-	if config.MongoDB.Database == "" {
-		return fmt.Errorf("MongoDB database name is required")
-	}
-	if config.NATS.URL == "" {
-		return fmt.Errorf("NATS URL is required")
-	}
-	if config.Security.JWTSecret == "" {
-		return fmt.Errorf("JWT secret is required")
+func (l *Loader) resolveCandidates() []string {
+	if len(l.explicitFiles) > 0 {
+		return normalizePaths(l.explicitFiles)
 	}
 
-	// 验证端口范围
-	if config.Server.Port < 1 || config.Server.Port > 65535 {
-		return fmt.Errorf("invalid server port: %d", config.Server.Port)
-	}
-	if config.Monitoring.MetricsPort < 1 || config.Monitoring.MetricsPort > 65535 {
-		return fmt.Errorf("invalid metrics port: %d", config.Monitoring.MetricsPort)
+	names := []string{
+		"config.base.yaml",
+		"config.yaml",
 	}
 
-	// 验证游戏配置
-	if config.Game.Player.MaxLevel < 1 {
-		return fmt.Errorf("player max level must be greater than 0")
-	}
-	if config.Game.Bag.DefaultCapacity < 1 {
-		return fmt.Errorf("bag default capacity must be greater than 0")
-	}
-	if config.Game.Pet.MaxPetsPerPlayer < 1 {
-		return fmt.Errorf("max pets per player must be greater than 0")
+	if l.env != "" {
+		names = append(names, fmt.Sprintf("config.%s.yaml", l.env))
 	}
 
-	return nil
-}
-
-// ToServiceConfig 转换为服务配置
-// TODO: 修复services.Config类型
-func (config *AppConfig) ToServiceConfig() interface{} {
-	// return services.Config{
-	// 	MongoDB: database.MongoConfig{
-	// 		URI:      config.MongoDB.URI,
-	// 		Database: config.MongoDB.Database,
-	// 		Timeout:  config.MongoDB.Timeout,
-	// 	},
-	// 	NATS: messaging.NATSConfig{
-	// 		URL:            config.NATS.URL,
-	// 		ClusterID:      config.NATS.ClusterID,
-	// 		ClientID:       config.NATS.ClientID,
-	// 		ReconnectWait:  config.NATS.ReconnectWait,
-	// 		MaxReconnects:  config.NATS.MaxReconnects,
-	// 		ConnectionName: config.NATS.ConnectionName,
-	// 		DrainTimeout:   config.NATS.DrainTimeout,
-	// 	},
-	// 	Server: config.Server,
-	// }
-	return nil // TODO: 实现ToServiceConfig方法
-}
-
-// GetEnvironment 获取当前环境
-func GetEnvironment() string {
-	env := os.Getenv("ENVIRONMENT")
-	if env == "" {
-		env = "development"
-	}
-	return strings.ToLower(env)
-}
-
-// IsProduction 是否为生产环境
-func IsProduction() bool {
-	return GetEnvironment() == "production"
-}
-
-// IsDevelopment 是否为开发环境
-func IsDevelopment() bool {
-	return GetEnvironment() == "development"
-}
-
-// GetConfigPath 获取配置文件路径
-func GetConfigPath() string {
-	if path := os.Getenv("CONFIG_PATH"); path != "" {
-		return path
-	}
-
-	// 默认配置文件路径
-	env := GetEnvironment()
-	configFile := fmt.Sprintf("config.%s.yaml", env)
-
-	// 查找配置文件
-	searchPaths := []string{
-		".",
-		"./config",
-		"../config",
-		"/etc/mmo-game",
-	}
-
-	for _, searchPath := range searchPaths {
-		fullPath := filepath.Join(searchPath, configFile)
-		if _, err := os.Stat(fullPath); err == nil {
-			return fullPath
+	if l.service != "" {
+		names = append(names, fmt.Sprintf("%s.yaml", l.service))
+		if l.env != "" {
+			names = append(names, fmt.Sprintf("%s.%s.yaml", l.service, l.env))
 		}
 	}
 
-	// 如果找不到环境特定的配置文件，使用默认配置文件
-	for _, searchPath := range searchPaths {
-		fullPath := filepath.Join(searchPath, "config.yaml")
-		if _, err := os.Stat(fullPath); err == nil {
-			return fullPath
+	paths := make([]string, 0, len(names))
+	for _, name := range names {
+		if name == "" {
+			continue
+		}
+		paths = append(paths, filepath.Join(l.baseDir, name))
+	}
+
+	return normalizePaths(paths)
+}
+
+func (l *Loader) applyEnvOverrides(cfg *Config) {
+	overrideString := func(target *string, keys ...string) {
+		for _, key := range keys {
+			if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+				*target = value
+				return
+			}
 		}
 	}
 
-	return "config/config.yaml"
+	overrideInt := func(target *int, keys ...string) {
+		for _, key := range keys {
+			if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+				if v, err := strconv.Atoi(value); err == nil {
+					*target = v
+					return
+				}
+			}
+		}
+	}
+
+	overrideString(&cfg.Server.HTTP.Host, "SERVER_HTTP_HOST", "SERVER_HOST")
+	overrideInt(&cfg.Server.HTTP.Port, "SERVER_HTTP_PORT", "SERVER_PORT")
+
+	overrideString(&cfg.Database.MongoDB.URI, "MONGODB_URI")
+	overrideString(&cfg.Database.MongoDB.Database, "MONGODB_DATABASE")
+
+	overrideString(&cfg.Database.Redis.Addr, "REDIS_ADDR")
+	overrideString(&cfg.Database.Redis.Password, "REDIS_PASSWORD")
+
+	overrideString(&cfg.Security.JWT.Secret, "JWT_SECRET")
+
+	overrideString(&cfg.Logging.Level, "LOG_LEVEL")
+
+	overrideString(&cfg.Messaging.NATS.URL, "NATS_URL")
+	overrideString(&cfg.Messaging.NATS.ClusterID, "NATS_CLUSTER_ID")
+	overrideString(&cfg.Messaging.NATS.ClientID, "NATS_CLIENT_ID")
+
+	overrideString(&cfg.Service.NodeID, "SERVICE_NODE_ID", "POD_NAME")
+}
+
+func normalizePaths(paths []string) []string {
+	seen := make(map[string]struct{}, len(paths))
+	normalized := make([]string, 0, len(paths))
+
+	for _, path := range paths {
+		if path == "" {
+			continue
+		}
+		cleaned := filepath.Clean(path)
+		if !filepath.IsAbs(cleaned) {
+			abs, err := filepath.Abs(cleaned)
+			if err == nil {
+				cleaned = abs
+			}
+		}
+		if _, exists := seen[cleaned]; exists {
+			continue
+		}
+		seen[cleaned] = struct{}{}
+		normalized = append(normalized, cleaned)
+	}
+
+	sort.Strings(normalized)
+	return normalized
+}
+
+func normalizeEnv(env string) string {
+	return strings.ToLower(strings.TrimSpace(env))
 }

@@ -3,7 +3,8 @@ package container
 
 import (
 	"fmt"
-	"greatestworks/internal/infrastructure/config"
+
+	"greatestworks/internal/config"
 )
 
 // ConfigProvider provides configuration services
@@ -22,20 +23,27 @@ func NewConfigProvider(configPath string) *ConfigProvider {
 func (cp *ConfigProvider) RegisterServices(container *Container) error {
 	// Register config loader
 	container.RegisterSingleton("config.loader", func(c *Container) (interface{}, error) {
-		// 使用简单的配置加载器
-		loader := config.NewConfigLoader("config.yaml")
+		options := []config.Option{}
+		if cp.configPath != "" {
+			options = append(options, config.WithExplicitFiles(cp.configPath))
+		}
+		loader := config.NewLoader(options...)
 		return loader, nil
 	})
 
 	// Register main configuration
 	container.RegisterSingleton("config", func(c *Container) (interface{}, error) {
-		loader, err := c.Resolve("config.loader")
+		resolved, err := c.Resolve("config.loader")
 		if err != nil {
 			return nil, err
 		}
 
-		configLoader := loader.(*config.ConfigLoader)
-		return configLoader.Load()
+		loader := resolved.(*config.Loader)
+		cfg, _, err := loader.Load()
+		if err != nil {
+			return nil, err
+		}
+		return cfg, nil
 	}, "config.loader")
 
 	return nil
