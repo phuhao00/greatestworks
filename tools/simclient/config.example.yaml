@@ -1,6 +1,6 @@
 auth:
   enabled: true
-  base_url: "http://localhost:8080"
+  base_url: "http://localhost:9080"
   login_path: "/api/v1/auth/login"
   username: "tester"
   password: "tester123"

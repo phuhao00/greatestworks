@@ -456,7 +456,7 @@ func setDefaults(config *Config) {
 		config.Server.HTTP.Host = "0.0.0.0"
 	}
 	if config.Server.HTTP.Port == 0 {
-		config.Server.HTTP.Port = 8080
+		config.Server.HTTP.Port = 9080
 	}
 	if config.Server.HTTP.ReadTimeout == 0 {
 		config.Server.HTTP.ReadTimeout = 30 * time.Second

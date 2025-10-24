@@ -2,7 +2,7 @@
   "environment": "production",
   "server": {
     "host": "0.0.0.0",
-    "port": 8080,
+    "port": 9080,
     "read_timeout": "60s",
     "write_timeout": "60s",
     "max_conns": 50000,

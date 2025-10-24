@@ -372,7 +372,7 @@ setup_project() {
 # Greatest Works 开发环境变量
 
 # 服务器配置
-SERVER_PORT=8080
+SERVER_PORT=9080
 SERVER_HOST=localhost
 
 # 数据库配置

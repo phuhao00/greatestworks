@@ -37,8 +37,8 @@ echo.
 echo 所有服务已启动！
 echo.
 echo 服务地址：
-echo - 认证服务: http://localhost:8080
-echo - 游戏服务: rpc://localhost:8081
+echo - 认证服务: http://localhost:9080
+echo - 游戏服务: rpc://localhost:9081
 echo - 网关服务: tcp://localhost:9090
 echo.
 echo 按任意键关闭所有服务...

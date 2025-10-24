@@ -7,7 +7,7 @@ echo "检查服务健康状态..."
 
 # 检查HTTP服务器
 echo "检查HTTP服务器..."
-if curl -f http://localhost:8080/health > /dev/null 2>&1; then
+if curl -f http://localhost:9080/health > /dev/null 2>&1; then
     echo "✓ HTTP服务器正常"
 else
     echo "✗ HTTP服务器异常"

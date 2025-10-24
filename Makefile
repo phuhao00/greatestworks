@@ -83,9 +83,9 @@ health-check:
 # 开发环境快速启动
 dev: docker-run
 	@echo "开发环境已启动"
-	@echo "HTTP服务器: http://localhost:8080"
-	@echo "健康检查: http://localhost:8080/health"
-	@echo "指标监控: http://localhost:8080/metrics"
+	@echo "HTTP服务器: http://localhost:9080"
+	@echo "健康检查: http://localhost:9080/health"
+	@echo "指标监控: http://localhost:9080/metrics"
 
 # 生产环境部署
 deploy: docker-build

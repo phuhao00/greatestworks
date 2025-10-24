@@ -127,7 +127,7 @@ func DefaultConfig() Config {
 	return Config{
 		Auth: AuthConfig{
 			Enabled:   false,
-			BaseURL:   "http://localhost:8080",
+			BaseURL:   "http://localhost:9080",
 			LoginPath: "/api/v1/auth/login",
 			Username:  "tester",
 			Password:  "tester123",

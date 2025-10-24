@@ -329,7 +329,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Protocol:          "tcp",
 		Host:              "0.0.0.0",
-		Port:              8080,
+		Port:              9080,
 		BufferSize:        4096,
 		MaxPacketSize:     65536,
 		ReadTimeout:       30 * time.Second,

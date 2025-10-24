@@ -20,7 +20,7 @@ logging:
   http:
     port: 9090
   rpc:
-    port: 18080
+    port: 19080
 `
 
 	if err := os.WriteFile(filepath.Join(dir, "config.base.yaml"), []byte(base), 0o644); err != nil {
@@ -53,8 +53,8 @@ logging:
 		t.Fatalf("expected HTTP port override to be 9090, got %d", cfg.Server.HTTP.Port)
 	}
 
-	if cfg.Server.RPC.Port != 18080 {
-		t.Fatalf("expected RPC port override to be 18080, got %d", cfg.Server.RPC.Port)
+	if cfg.Server.RPC.Port != 19080 {
+		t.Fatalf("expected RPC port override to be 19080, got %d", cfg.Server.RPC.Port)
 	}
 
 	if cfg.Logging.Format != "json" {

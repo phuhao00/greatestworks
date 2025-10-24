@@ -14,14 +14,14 @@ app:
 server:
   http:
     host: "0.0.0.0"
-    port: 8080
+    port: 9080
     read_timeout: "30s"
     write_timeout: "30s"
     idle_timeout: "60s"
   
   websocket:
     host: "0.0.0.0"
-    port: 8081
+    port: 9081
     check_origin: false
     
   tcp:
@@ -68,7 +68,7 @@ security:
   cors:
     allowed_origins:
       - "http://localhost:3000"
-      - "http://localhost:8080"
+      - "http://localhost:9080"
     allow_credentials: true
 
 # 日志配置

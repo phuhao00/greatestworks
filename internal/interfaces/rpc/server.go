@@ -137,7 +137,7 @@ func (s *RPCServer) GetStats() map[string]interface{} {
 func DefaultRPCServerConfig() *RPCServerConfig {
 	return &RPCServerConfig{
 		Host:            "0.0.0.0",
-		Port:            8081,
+		Port:            9081,
 		MaxConnections:  1000,
 		Timeout:         30 * time.Second,
 		KeepAlive:       true,
