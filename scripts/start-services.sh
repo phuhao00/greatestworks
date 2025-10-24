@@ -45,8 +45,8 @@ LOG_LEVEL=info
 LOG_FORMAT=json
 
 # 服务器端口配置
-SERVER_HTTP_PORT=8080
-SERVER_WS_PORT=8081
+SERVER_HTTP_PORT=9080
+SERVER_WS_PORT=9081
 SERVER_METRICS_PORT=9090
 
 # 数据库配置
@@ -92,8 +92,8 @@ echo "显示服务日志..."
 docker-compose logs --tail=50
 
 echo "服务启动完成！"
-echo "HTTP服务器: http://localhost:8080"
-echo "健康检查: http://localhost:8080/health"
-echo "指标监控: http://localhost:8080/metrics"
-echo "MongoDB管理: http://localhost:8081"
-echo "Redis管理: http://localhost:8082"
+echo "HTTP服务器: http://localhost:9080"
+echo "健康检查: http://localhost:9080/health"
+echo "指标监控: http://localhost:9080/metrics"
+echo "MongoDB管理: http://localhost:9081"
+echo "Redis管理: http://localhost:9082"
