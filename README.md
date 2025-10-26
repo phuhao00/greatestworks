@@ -237,7 +237,7 @@ greatestworks/
 ## 🛠️ 技术栈
 
 ### 核心技术
-- **语言**: Go 1.21+
+- **语言**: Go 1.24+
 - **架构模式**: 领域驱动设计 (DDD) + 分布式架构
 - **网络协议**: HTTP + TCP + Go原生RPC
 - **数据库**: MongoDB (主数据库) + Redis (缓存)
@@ -340,7 +340,7 @@ greatestworks/
 - **接口适配**: 同步更新 HTTP/TCP/RPC 适配层的依赖路径，保持命令与查询总线的运行一致性。
 - **构建可靠性**: 全量执行 `go fmt ./...` 与 `go test ./...`，确保代码风格统一且测试通过。
 
-### � 技术债务清理
+### 🧹 技术债务清理
 
 - 归档旧有的应用层入口说明，将文档与现有目录结构保持一致。
 - 补充最新的启动脚本说明，方便在 Windows / Linux 环境快速拉起服务。
@@ -350,7 +350,7 @@ greatestworks/
 
 ### 📋 环境要求
 
-- **Go**: 1.21 或更高版本
+- **Go**: 1.24 或更高版本
 - **MongoDB**: 4.4+ (推荐 5.0+)
 - **Redis**: 6.0+ (推荐 7.0+)
 - **Docker**: 20.10+ (可选，用于容器化部署)
@@ -765,7 +765,7 @@ export LOG_FORMAT=json
 ## 📈 项目状态
 
 ![Build Status](https://github.com/phuhao00/greatestworks/workflows/CI/badge.svg)
-![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)
+![Go Version](https://img.shields.io/badge/Go-1.24+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Docker Pulls](https://img.shields.io/docker/pulls/greatestworks/server.svg)
 
