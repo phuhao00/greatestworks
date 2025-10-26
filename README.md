@@ -55,10 +55,40 @@
 
 ### 通信协议
 
-```
-客户端 ──HTTP──> 认证服务
-  │
-  └──TCP──> 网关服务 ──RPC──> 游戏服务
+```mermaid
+flowchart LR
+    subgraph Client[客户端]
+      C1[游戏客户端]
+    end
+
+    subgraph Auth[认证服务\nHTTP:8080]
+      A1[REST API]
+    end
+
+    subgraph Gateway[网关服务\nTCP:9090]
+      G1[连接管理]
+      G2[消息路由]
+    end
+
+    subgraph Game[游戏服务\nGo RPC:8081]
+      S1[玩法逻辑]
+      S2[领域模型]
+    end
+
+    subgraph Data[数据与消息]
+      M[(MongoDB)]
+      R[(Redis)]
+      N[(NATS)]
+    end
+
+    C1 -- HTTP --> A1
+    C1 -- TCP --> G1
+    G1 -- RPC --> S1
+    S1 <-- RPC --> G2
+    S1 --> M
+    S1 --> R
+    S1 -.事件发布.-> N
+    G1 --> R
 ```
 
 - **客户端 ↔ 认证服务**: HTTP (RESTful API) - 用户认证、注册、登录
@@ -102,6 +132,44 @@ go run ./tools/simclient/cmd/simclient -mode integration -config tools/simclient
 ```
 
 说明与高级用法请参阅 `tools/simclient/README_E2E.md`，包含：报文头+JSON载荷封装、动作时序、错误排查、指标输出等。
+
+#### E2E 交互时序（概览）
+
+```mermaid
+sequenceDiagram
+  participant SC as SimClient
+  participant AUTH as 认证服务
+  participant GW as 网关服务
+  participant GS as 游戏服务
+
+  Note over SC: 可选：认证
+  SC->>AUTH: POST /api/v1/auth/login
+  AUTH-->>SC: 200 OK (token)
+
+  SC->>GW: TCP Connect
+  GW-->>SC: Conn Ack
+  SC->>GW: MsgPlayerLogin(token|player)
+  GW->>GS: RPC Login
+  GS-->>GW: LoginOK(pos,map)
+  GW-->>SC: LoginOK(pos,map)
+
+  SC->>GW: MsgPlayerMove(x,y,z)
+  GW->>GS: RPC Move
+  GS-->>GW: MoveOK
+  GW-->>SC: MoveOK
+  GW-->>Clients: AOI 广播
+
+  SC->>GW: MsgBattleSkill(skill_id,target)
+  GW->>GS: RPC CastSkill
+  GS-->>GW: Result{damage,crit}
+  GW-->>SC: SkillResult
+  GW-->>Clients: AOI 广播
+
+  SC->>GW: MsgPlayerLogout
+  GW->>GS: RPC Logout + 持久化位置
+  GS-->>GW: LogoutOK
+  GW-->>SC: LogoutOK
+```
 
 ### 压测模式
 
@@ -467,57 +535,48 @@ docker-compose ps
 ## 🏛️ 技术架构图
 
 ### 🎯 整体架构
-```
-┌─────────────────┐    ┌─────────────────┐
-│   客户端 Client   │    │   客户端 Client   │
-└─────────┬───────┘    └─────────┬───────┘
-          │                      │
-          │ HTTP                 │ TCP
-          │                      │
-┌─────────▼───────┐    ┌─────────▼───────┐
-│  认证服务 Auth   │    │  网关服务 Gateway │
-│  (HTTP:8080)    │    │  (TCP:9090)     │
-└─────────────────┘    └─────────┬───────┘
-                                 │
-                                 │ Go RPC
-                                 │
-                    ┌─────────────▼───────┐
-                    │  游戏服务 Game       │
-                    │  (RPC:8081)         │
-                    └─────────┬───────────┘
-                              │
-                    ┌─────────▼───────┐    ┌─────────────────┐    ┌─────────────────┐
-                    │   MongoDB       │    │     Redis       │    │     NATS        │
-                    │   (主数据库)      │    │    (缓存)       │    │   (消息队列)     │
-                    └─────────────────┘    └─────────────────┘    └─────────────────┘
+```mermaid
+flowchart TB
+    C[客户端] -->|HTTP| AUTH[认证服务\nHTTP:8080]
+    C -->|TCP| GW[网关服务\nTCP:9090]
+    GW -->|Go RPC| GAME[游戏服务\nRPC:8081]
+
+    GAME --> M[(MongoDB)]
+    GAME --> R[(Redis)]
+    GAME -.事件.-> N[(NATS)]
 ```
 
 ### 🏗️ DDD分层架构
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    接口层 (Interface Layer)                  │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│   HTTP接口      │   TCP接口       │      RPC接口            │
-│   (REST API)    │   (Game Protocol)│   (Internal Comm)       │
-└─────────────────┴─────────────────┴─────────────────────────┘
-┌─────────────────────────────────────────────────────────────┐
-│                    应用层 (Application Layer)               │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│   命令处理器     │   查询处理器     │      应用服务           │
-│   (Commands)    │   (Queries)     │   (Application Services)│
-└─────────────────┴─────────────────┴─────────────────────────┘
-┌─────────────────────────────────────────────────────────────┐
-│                    领域层 (Domain Layer)                    │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│   聚合根         │   领域服务       │      领域事件           │
-│   (Aggregates)   │   (Domain Svc)  │   (Domain Events)      │
-└─────────────────┴─────────────────┴─────────────────────────┘
-┌─────────────────────────────────────────────────────────────┐
-│                 基础设施层 (Infrastructure Layer)           │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│   数据持久化     │   消息服务       │      网络服务           │
-│   (Persistence) │   (Messaging)   │   (Network)            │
-└─────────────────┴─────────────────┴─────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Interface[接口层]
+      HTTP[HTTP(REST)]
+      TCP[TCP(Game Protocol)]
+      RPC[RPC(Internal)]
+    end
+
+    subgraph Application[应用层]
+      CMD[命令处理器]
+      QRY[查询处理器]
+      APP[应用服务/编排]
+    end
+
+    subgraph Domain[领域层]
+      AGG[聚合根/实体/值对象]
+      DSVC[领域服务]
+      DEVT[领域事件]
+    end
+
+    subgraph Infra[基础设施层]
+      PERS[持久化]
+      MSG[消息]
+      NET[网络]
+      CFG[配置]
+      LOG[日志]
+    end
+
+    Interface --> Application --> Domain
+    Domain --> Infra
 ```
 
 ## 🏛️ DDD领域架构
