@@ -550,9 +550,9 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph Interface[接口层]
-      HTTP[HTTP(REST)]
-      TCP[TCP(Game Protocol)]
-      RPC[RPC(Internal)]
+      HTTP[HTTP\nREST]
+      TCP[TCP\nGame Protocol]
+      RPC[RPC\nInternal]
     end
 
     subgraph Application[应用层]
