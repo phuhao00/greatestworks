@@ -3,6 +3,9 @@
 .trae/
 .cursor/
 
+# 协作说明（如需本地自定义可忽略）
+.github/instructions/
+
 # 构建产物
 dist/
 build/
