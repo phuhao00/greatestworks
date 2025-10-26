@@ -83,6 +83,26 @@ go run ./tools/simclient/cmd/simclient -mode integration
 go run ./tools/simclient/cmd/simclient -mode integration -config tools/simclient/config.example.yaml
 ```
 
+### E2E 场景（端到端流程）
+
+已内置完整的 E2E 场景与示例配置，覆盖“认证→连接→登录→移动→施法→登出”的完整链路：
+
+```powershell
+# 运行单次端到端场景（集成验证）
+go run ./tools/simclient/cmd/simclient -mode integration -config tools/simclient/e2e.yaml
+
+# 运行端到端压测（并发多用户）
+go run ./tools/simclient/cmd/simclient -mode load -config tools/simclient/e2e_load.yaml
+
+# 可选：快速开关认证流程
+# 强制启用认证
+go run ./tools/simclient/cmd/simclient -mode integration -config tools/simclient/e2e.yaml -auth
+# 强制跳过认证
+go run ./tools/simclient/cmd/simclient -mode integration -config tools/simclient/e2e.yaml -no-auth
+```
+
+说明与高级用法请参阅 `tools/simclient/README_E2E.md`，包含：报文头+JSON载荷封装、动作时序、错误排查、指标输出等。
+
 ### 压测模式
 
 ```powershell
@@ -340,6 +360,13 @@ greatestworks/
 - **接口适配**: 同步更新 HTTP/TCP/RPC 适配层的依赖路径，保持命令与查询总线的运行一致性。
 - **构建可靠性**: 全量执行 `go fmt ./...` 与 `go test ./...`，确保代码风格统一且测试通过。
 
+### ✨ 新增功能
+
+- 角色位置持久化：登录自动恢复上次地图与坐标，登出/断线即时保存。
+- 战斗伤害计算与结果广播：实现基础伤害与暴击（10% 概率，1.5x 倍率），通过 AOI 将结果广播给可见实体。
+- 模拟客户端 E2E 场景：新增 `tools/simclient/e2e.yaml` 与 `tools/simclient/e2e_load.yaml`，支持端到端验证与并发压测。
+- 依赖提醒：网关服务现需连接 MongoDB 才能完成位置持久化（本地可通过 `docker-compose up -d` 一键拉起依赖）。
+
 ### 🧹 技术债务清理
 
 - 归档旧有的应用层入口说明，将文档与现有目录结构保持一致。
@@ -410,6 +437,8 @@ go run cmd/game-service/main.go
 # 启动网关服务（新终端）
 go run cmd/gateway-service/main.go
 ```
+
+> 提示：网关服务需要可用的 MongoDB 实例用于玩家位置持久化。若未手动部署数据库，建议先执行 `docker-compose up -d` 启动依赖环境。
 
 #### 方式三：Docker启动
 
