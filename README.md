@@ -1,5 +1,7 @@
 # Greatest Works - 分布式MMO游戏服务器
 
+> English version: see [README.en.md](README.en.md)
+
 基于Go语言和领域驱动设计(DDD)架构开发的分布式大型多人在线游戏服务器，采用现代化微服务设计，支持高并发和分布式部署。
 
 ## 🎯 项目概述
