@@ -159,7 +159,7 @@ func (r *NPCRepository) DeleteNPC(ctx context.Context, id string) error {
 func (r *NPCRepository) GetNPCsByType(ctx context.Context, npcType string, limit, offset int) ([]*NPCRecord, error) {
 	filter := bson.M{"type": npcType}
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}).
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 

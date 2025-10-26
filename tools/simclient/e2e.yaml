@@ -1,0 +1,33 @@
+# E2E 端到端验证场景配置
+# 用法: go run ./tools/simclient/cmd/simclient -config=tools/simclient/e2e.yaml -mode=integration
+
+scenario:
+  type: e2e
+  name: e2e-login-move-skill
+  player_prefix: test_player
+  action_interval: 500ms
+  duration: 0s  # E2E 场景自动完成
+  stop_on_error: true
+
+auth:
+  enabled: false  # 如需测试认证，改为 true 并配置 base_url
+  base_url: http://localhost:8080
+  login_path: /api/v1/auth/login
+  username: testuser
+  password: testpass123
+  timeout: 5s
+
+gateway:
+  host: localhost
+  port: 9090
+  connect_timeout: 5s
+  read_timeout: 2s
+  write_timeout: 2s
+
+load:
+  enabled: false
+  virtual_users: 1
+  concurrency: 1
+  iterations: 1
+  ramp_up: 0s
+  stop_on_error: false

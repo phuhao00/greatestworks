@@ -1,0 +1,94 @@
+[
+  {
+    "id": 1,
+    "name": "Newbie Village",
+    "width": 1000,
+    "height": 1000,
+    "spawn_points": [
+      {
+        "id": 1,
+        "x": 100.0,
+        "y": 0.0,
+        "z": 100.0,
+        "type": 1
+      },
+      {
+        "id": 2,
+        "x": 500.0,
+        "y": 0.0,
+        "z": 500.0,
+        "type": 2
+      }
+    ],
+    "npcs": [
+      {
+        "id": 3001,
+        "x": 200.0,
+        "y": 0.0,
+        "z": 200.0
+      },
+      {
+        "id": 3002,
+        "x": 250.0,
+        "y": 0.0,
+        "z": 200.0
+      }
+    ],
+    "monsters": [
+      {
+        "id": 2001,
+        "spawn_count": 10,
+        "respawn_time": 30
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Dark Forest",
+    "width": 2000,
+    "height": 2000,
+    "spawn_points": [
+      {
+        "id": 1,
+        "x": 100.0,
+        "y": 0.0,
+        "z": 100.0,
+        "type": 1
+      }
+    ],
+    "monsters": [
+      {
+        "id": 2002,
+        "spawn_count": 20,
+        "respawn_time": 60
+      },
+      {
+        "id": 2003,
+        "spawn_count": 5,
+        "respawn_time": 120
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Boss Arena",
+    "width": 500,
+    "height": 500,
+    "spawn_points": [
+      {
+        "id": 1,
+        "x": 250.0,
+        "y": 0.0,
+        "z": 50.0,
+        "type": 1
+      }
+    ],
+    "monsters": [
+      {
+        "id": 2003,
+        "spawn_count": 1,
+        "respawn_time": 300
+      }
+    ]
+  }
+]

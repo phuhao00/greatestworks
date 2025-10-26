@@ -11,15 +11,21 @@ import (
 // Manager 连接管理器
 type Manager struct {
 	connections map[string]*Session
-	mutex       sync.RWMutex
-	logger      logging.Logger
+	// Mapping from player entity ID to session
+	playerSessions map[int32]*Session
+	// Reverse mapping from session ID to player entity ID
+	sessionToPlayer map[string]int32
+	mutex           sync.RWMutex
+	logger          logging.Logger
 }
 
 // NewManager 创建连接管理器
 func NewManager(logger logging.Logger) *Manager {
 	return &Manager{
-		connections: make(map[string]*Session),
-		logger:      logger,
+		connections:     make(map[string]*Session),
+		playerSessions:  make(map[int32]*Session),
+		sessionToPlayer: make(map[string]int32),
+		logger:          logger,
 	}
 }
 
@@ -42,6 +48,13 @@ func (m *Manager) RemoveConnection(sessionID string) {
 
 	if session, exists := m.connections[sessionID]; exists {
 		delete(m.connections, sessionID)
+		// Also remove any player-session bindings pointing to this session
+		for pid, s := range m.playerSessions {
+			if s == session {
+				delete(m.playerSessions, pid)
+			}
+		}
+		delete(m.sessionToPlayer, sessionID)
 		m.logger.Info("Connection removed", logging.Fields{
 			"session_id": sessionID,
 			"address":    session.RemoteAddr,
@@ -77,6 +90,49 @@ func (m *Manager) GetConnectionCount() int {
 	defer m.mutex.RUnlock()
 
 	return len(m.connections)
+}
+
+// BindPlayer binds a player entity ID to a session for targeted sends.
+func (m *Manager) BindPlayer(entityID int32, session *Session) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.playerSessions[entityID] = session
+	m.sessionToPlayer[session.ID] = entityID
+	m.logger.Info("Player bound to session", logging.Fields{
+		"entity_id":  entityID,
+		"session_id": session.ID,
+	})
+}
+
+// UnbindPlayer removes the binding between a player entity ID and any session.
+func (m *Manager) UnbindPlayer(entityID int32) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if s, ok := m.playerSessions[entityID]; ok {
+		delete(m.sessionToPlayer, s.ID)
+		delete(m.playerSessions, entityID)
+	} else {
+		delete(m.playerSessions, entityID)
+	}
+	m.logger.Info("Player unbound from session", logging.Fields{
+		"entity_id": entityID,
+	})
+}
+
+// GetSessionByPlayer retrieves the session bound to the given player entity ID.
+func (m *Manager) GetSessionByPlayer(entityID int32) (*Session, bool) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	s, ok := m.playerSessions[entityID]
+	return s, ok
+}
+
+// GetPlayerBySession retrieves the bound player entity ID from a session ID.
+func (m *Manager) GetPlayerBySession(sessionID string) (int32, bool) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	pid, ok := m.sessionToPlayer[sessionID]
+	return pid, ok
 }
 
 // Broadcast 广播消息

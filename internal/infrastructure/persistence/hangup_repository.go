@@ -146,7 +146,7 @@ func (r *HangupRepository) DeleteHangup(ctx context.Context, id string) error {
 func (r *HangupRepository) GetPlayerHangups(ctx context.Context, playerID string, limit, offset int) ([]*HangupRecord, error) {
 	filter := bson.M{"player_id": playerID}
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}).
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 

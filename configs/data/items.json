@@ -1,0 +1,112 @@
+[
+  {
+    "id": 10001,
+    "name": "Health Potion",
+    "type": 1,
+    "quality": 1,
+    "max_stack": 99,
+    "price": 50,
+    "sell_price": 10,
+    "effect_type": 1,
+    "effect_value": 300,
+    "description": "Restores 300 HP"
+  },
+  {
+    "id": 10002,
+    "name": "Mana Potion",
+    "type": 1,
+    "quality": 1,
+    "max_stack": 99,
+    "price": 50,
+    "sell_price": 10,
+    "effect_type": 2,
+    "effect_value": 200,
+    "description": "Restores 200 MP"
+  },
+  {
+    "id": 20001,
+    "name": "Iron Sword",
+    "type": 2,
+    "quality": 2,
+    "max_stack": 1,
+    "price": 500,
+    "sell_price": 100,
+    "equip_slot": 1,
+    "required_level": 5,
+    "str_bonus": 10,
+    "ad_bonus": 50,
+    "description": "A sturdy iron sword"
+  },
+  {
+    "id": 20002,
+    "name": "Magic Staff",
+    "type": 2,
+    "quality": 2,
+    "max_stack": 1,
+    "price": 600,
+    "sell_price": 120,
+    "equip_slot": 1,
+    "required_level": 5,
+    "int_bonus": 15,
+    "ap_bonus": 80,
+    "description": "A mystical staff imbued with magic"
+  },
+  {
+    "id": 20003,
+    "name": "Leather Armor",
+    "type": 2,
+    "quality": 2,
+    "max_stack": 1,
+    "price": 400,
+    "sell_price": 80,
+    "equip_slot": 2,
+    "required_level": 3,
+    "vit_bonus": 8,
+    "def_bonus": 30,
+    "description": "Light leather armor"
+  },
+  {
+    "id": 20004,
+    "name": "Steel Helmet",
+    "type": 2,
+    "quality": 2,
+    "max_stack": 1,
+    "price": 300,
+    "sell_price": 60,
+    "equip_slot": 3,
+    "required_level": 5,
+    "vit_bonus": 5,
+    "def_bonus": 20,
+    "description": "A protective steel helmet"
+  },
+  {
+    "id": 30001,
+    "name": "Gold Coin",
+    "type": 3,
+    "quality": 1,
+    "max_stack": 9999,
+    "price": 1,
+    "sell_price": 1,
+    "description": "Currency used for trading"
+  },
+  {
+    "id": 30002,
+    "name": "Goblin Ear",
+    "type": 3,
+    "quality": 1,
+    "max_stack": 99,
+    "price": 5,
+    "sell_price": 1,
+    "description": "Proof of slaying a goblin"
+  },
+  {
+    "id": 30003,
+    "name": "Magic Crystal",
+    "type": 3,
+    "quality": 3,
+    "max_stack": 99,
+    "price": 100,
+    "sell_price": 20,
+    "description": "A crystal containing magical energy"
+  }
+]

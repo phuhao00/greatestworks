@@ -155,6 +155,12 @@ func buildScenario(cfg *ScenarioConfig, logger logging.Logger) (Scenario, error)
 	scenarioType := strings.TrimSpace(strings.ToLower(cfg.Type))
 	hasCustomActions := len(cfg.Actions) > 0 || len(cfg.Features) > 0
 
+	// E2E 场景优先
+	if scenarioType == "e2e" {
+		cfg.Type = "e2e"
+		return NewE2EScenario(*cfg, logger), nil
+	}
+
 	if (scenarioType == "" || scenarioType == "basic") && !hasCustomActions {
 		cfg.Type = "basic"
 		return NewBasicScenario(*cfg, logger), nil

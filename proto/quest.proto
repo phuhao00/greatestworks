@@ -1,0 +1,185 @@
+syntax = "proto3";
+
+package greatestworks.quest;
+
+import "proto/common.proto";
+import "proto/auth.proto";
+
+option go_package = "greatestworks/internal/proto/quest";
+option csharp_namespace = "GreatestWorks.Quest";
+
+// 任务服务
+service QuestService {
+  // 获取任务列表
+  rpc GetQuestList(GetQuestListRequest) returns (GetQuestListResponse);
+  
+  // 接受任务
+  rpc AcceptQuest(AcceptQuestRequest) returns (AcceptQuestResponse);
+  
+  // 提交任务
+  rpc SubmitQuest(SubmitQuestRequest) returns (SubmitQuestResponse);
+  
+  // 放弃任务
+  rpc AbandonQuest(AbandonQuestRequest) returns (AbandonQuestResponse);
+  
+  // 获取任务详情
+  rpc GetQuestInfo(GetQuestInfoRequest) returns (GetQuestInfoResponse);
+}
+
+// ========== 获取任务列表 ==========
+
+// 获取任务列表请求
+message GetQuestListRequest {
+  int64 character_id = 1;       // 角色ID
+  common.QuestStatus status = 2; // 任务状态（可选筛选）
+}
+
+// 获取任务列表响应
+message GetQuestListResponse {
+  auth.ErrorCode error = 1;       // 错误码
+  string message = 2;             // 错误消息
+  repeated TaskRecord tasks = 3;  // 任务列表
+}
+
+// ========== 接受任务 ==========
+
+// 接受任务请求
+message AcceptQuestRequest {
+  int64 character_id = 1;       // 角色ID
+  int32 task_id = 2;            // 任务ID
+  int32 npc_id = 3;             // NPC ID（如果从NPC接取）
+}
+
+// 接受任务响应
+message AcceptQuestResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  TaskRecord task = 3;          // 任务记录
+}
+
+// ========== 提交任务 ==========
+
+// 提交任务请求
+message SubmitQuestRequest {
+  int64 character_id = 1;       // 角色ID
+  int32 task_id = 2;            // 任务ID
+  int32 npc_id = 3;             // NPC ID（如果向NPC提交）
+}
+
+// 提交任务响应
+message SubmitQuestResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  QuestReward reward = 3;       // 任务奖励
+}
+
+// ========== 放弃任务 ==========
+
+// 放弃任务请求
+message AbandonQuestRequest {
+  int64 character_id = 1;       // 角色ID
+  int32 task_id = 2;            // 任务ID
+}
+
+// 放弃任务响应
+message AbandonQuestResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+}
+
+// ========== 获取任务详情 ==========
+
+// 获取任务详情请求
+message GetQuestInfoRequest {
+  int64 character_id = 1;       // 角色ID
+  int32 task_id = 2;            // 任务ID
+}
+
+// 获取任务详情响应
+message GetQuestInfoResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  QuestDetail quest_detail = 3; // 任务详情
+}
+
+// ========== 任务进度更新通知 ==========
+
+// 任务进度更新通知（服务器推送）
+message QuestProgressUpdateNotify {
+  int32 task_id = 1;            // 任务ID
+  repeated QuestProgress progress = 2; // 进度列表
+}
+
+// ========== 数据结构 ==========
+
+// 任务记录
+message TaskRecord {
+  int32 task_id = 1;            // 任务ID
+  common.QuestStatus status = 2; // 任务状态
+  int64 accept_time = 3;        // 接受时间
+  int64 complete_time = 4;      // 完成时间
+  repeated QuestProgress progress = 5; // 任务进度
+}
+
+// 任务信息（用于序列化存储）
+message TaskInfo {
+  repeated TaskRecord task_arr = 1; // 任务数组
+}
+
+// 任务详情
+message QuestDetail {
+  int32 task_id = 1;            // 任务ID
+  string name = 2;              // 任务名称
+  string description = 3;       // 任务描述
+  common.QuestType quest_type = 4; // 任务类型
+  common.QuestStatus status = 5;   // 任务状态
+  int32 required_level = 6;     // 需求等级
+  int32 time_limit = 7;         // 时间限制（秒，0表示无限制）
+  repeated QuestObjective objectives = 8; // 任务目标
+  QuestReward reward = 9;       // 任务奖励
+  repeated int32 prerequisite_quests = 10; // 前置任务ID列表
+}
+
+// 任务目标
+message QuestObjective {
+  ObjectiveType type = 1;       // 目标类型
+  int32 target_id = 2;          // 目标ID
+  int32 required_count = 3;     // 需求数量
+  int32 current_count = 4;      // 当前数量
+  string description = 5;       // 描述
+}
+
+// 任务进度
+message QuestProgress {
+  int32 objective_index = 1;    // 目标索引
+  int32 current_count = 2;      // 当前进度
+  bool is_completed = 3;        // 是否完成
+}
+
+// 任务奖励
+message QuestReward {
+  int32 exp = 1;                // 经验奖励
+  int32 gold = 2;               // 金币奖励
+  repeated RewardItem items = 3; // 物品奖励
+  repeated int32 optional_items = 4; // 可选物品ID列表
+}
+
+// 奖励物品
+message RewardItem {
+  int32 item_id = 1;            // 物品ID
+  int32 count = 2;              // 数量
+}
+
+// ========== 枚举定义 ==========
+
+// 任务目标类型
+enum ObjectiveType {
+  OBJECTIVE_COLLECT = 0;        // 收集物品
+  OBJECTIVE_KILL = 1;           // 击杀怪物
+  OBJECTIVE_TALK = 2;           // 对话NPC
+  OBJECTIVE_REACH = 3;          // 到达地点
+  OBJECTIVE_ESCORT = 4;         // 护送NPC
+  OBJECTIVE_USE_ITEM = 5;       // 使用物品
+  OBJECTIVE_LEVEL = 6;          // 达到等级
+  OBJECTIVE_CRAFT = 7;          // 制作物品
+}

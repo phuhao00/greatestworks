@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package greatestworks.map;
+
+import "proto/common.proto";
+import "proto/entity.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "greatestworks/internal/proto/map";
+option csharp_namespace = "GreatestWorks.Map";
+
+// 地图服务
+service MapService {
+  // 进入地图
+  rpc EnterMap(EnterMapRequest) returns (EnterMapResponse);
+  
+  // 离开地图
+  rpc LeaveMap(LeaveMapRequest) returns (LeaveMapResponse);
+  
+  // 获取地图信息
+  rpc GetMapInfo(GetMapInfoRequest) returns (GetMapInfoResponse);
+  
+  // 提交聊天消息
+  rpc SubmitChatMessage(SubmitChatMessageRequest) returns (SubmitChatMessageResponse);
+}
+
+// ========== 进入/离开地图 ==========
+
+// 进入地图请求
+message EnterMapRequest {
+  int64 character_id = 1;   // 角色ID
+  int32 map_id = 2;         // 地图ID
+  entity.NetVector3 spawn_point = 3; // 出生点（可选）
+}
+
+// 进入地图响应
+message EnterMapResponse {
+  bool success = 1;
+  string message = 2;
+  MapInfo map_info = 3;     // 地图信息
+  entity.NetVector3 position = 4; // 实际出生位置
+  repeated entity.EntityEnterData entities = 5; // 地图中已有的实体
+}
+
+// 离开地图请求
+message LeaveMapRequest {
+  int64 character_id = 1;   // 角色ID
+  int32 map_id = 2;         // 地图ID
+}
+
+// 离开地图响应
+message LeaveMapResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ========== 地图信息 ==========
+
+// 获取地图信息请求
+message GetMapInfoRequest {
+  int32 map_id = 1;         // 地图ID
+}
+
+// 获取地图信息响应
+message GetMapInfoResponse {
+  bool success = 1;
+  string message = 2;
+  MapInfo map_info = 3;
+}
+
+// 地图信息
+message MapInfo {
+  int32 map_id = 1;         // 地图ID
+  string name = 2;          // 地图名称
+  string description = 3;   // 地图描述
+  MapType map_type = 4;     // 地图类型
+  int32 width = 5;          // 地图宽度
+  int32 height = 6;         // 地图高度
+  int32 player_count = 7;   // 当前玩家数量
+  int32 max_players = 8;    // 最大玩家数量
+  repeated SpawnPoint spawn_points = 9; // 出生点列表
+}
+
+// 出生点
+message SpawnPoint {
+  int32 spawn_id = 1;       // 出生点ID
+  entity.NetVector3 position = 2; // 位置
+  entity.NetVector3 direction = 3; // 朝向
+  SpawnPointType spawn_type = 4;   // 出生点类型
+}
+
+// ========== 聊天系统 ==========
+
+// 提交聊天消息请求
+message SubmitChatMessageRequest {
+  int64 character_id = 1;       // 发送者角色ID
+  ChatMessageType message_type = 2; // 消息类型
+  string message = 3;           // 消息内容
+  int64 target_id = 4;          // 目标ID（私聊时使用）
+}
+
+// 提交聊天消息响应
+message SubmitChatMessageResponse {
+  bool success = 1;
+  string error_message = 2;
+  google.protobuf.Timestamp timestamp = 3; // 消息时间戳
+}
+
+// 接收聊天消息通知（服务器广播）
+message ReceiveChatMessageResponse {
+  int64 character_id = 1;       // 发送者角色ID
+  string character_name = 2;    // 发送者角色名
+  ChatMessageType message_type = 3; // 消息类型
+  string message = 4;           // 消息内容
+  google.protobuf.Timestamp timestamp = 5; // 消息时间戳
+}
+
+// ========== 枚举定义 ==========
+
+// 地图类型
+enum MapType {
+  MAP_TYPE_NORMAL = 0;      // 普通地图
+  MAP_TYPE_DUNGEON = 1;     // 副本
+  MAP_TYPE_PVP = 2;         // PVP竞技场
+  MAP_TYPE_RAID = 3;        // 团队副本
+  MAP_TYPE_BATTLE = 4;      // 战场
+  MAP_TYPE_CITY = 5;        // 主城
+  MAP_TYPE_WILD = 6;        // 野外
+}
+
+// 聊天消息类型
+enum ChatMessageType {
+  CHAT_MESSAGE_WORLD = 0;   // 世界聊天
+  CHAT_MESSAGE_MAP = 1;     // 地图聊天
+  CHAT_MESSAGE_GROUP = 2;   // 组队聊天
+  CHAT_MESSAGE_GUILD = 3;   // 公会聊天
+  CHAT_MESSAGE_PRIVATE = 4; // 私聊
+  CHAT_MESSAGE_SYSTEM = 5;  // 系统消息
+}
+
+// 出生点类型
+enum SpawnPointType {
+  SPAWN_POINT_DEFAULT = 0;  // 默认出生点
+  SPAWN_POINT_PLAYER = 1;   // 玩家出生点
+  SPAWN_POINT_MONSTER = 2;  // 怪物刷新点
+  SPAWN_POINT_NPC = 3;      // NPC出生点
+  SPAWN_POINT_BOSS = 4;     // Boss刷新点
+}

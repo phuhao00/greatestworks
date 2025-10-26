@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+package greatestworks.fight;
+
+import "proto/entity.proto";
+
+option go_package = "greatestworks/internal/proto/fight";
+option csharp_namespace = "GreatestWorks.Fight";
+
+// ========== 技能释放 ==========
+
+// 技能释放请求（客户端→服务器）
+message SpellRequest {
+  CastInfo info = 1;
+}
+
+// 技能释放成功响应（服务器→广播所有客户端）
+message SpellResponse {
+  CastInfo info = 1;
+}
+
+// 技能释放失败响应（服务器→请求的客户端）
+message SpellFailResponse {
+  int32 skill_id = 1;
+  int32 caster_id = 2;
+  CastResult reason = 3;
+}
+
+// 释放信息
+message CastInfo {
+  int32 skill_id = 1;           // 技能ID
+  int32 caster_id = 2;          // 施法者实体ID
+  NetCastTarget cast_target = 3; // 施法目标
+}
+
+// 施法目标
+message NetCastTarget {
+  int32 target_id = 1;          // 目标实体ID（单体目标时使用）
+  entity.NetVector3 target_pos = 2; // 目标位置（范围技能时使用）
+}
+
+// ========== 伤害系统 ==========
+
+// 实体受伤通知（服务器→客户端广播）
+message EntityHurtResponse {
+  DamageInfo info = 1;
+}
+
+// 伤害信息
+message DamageInfo {
+  int32 target_id = 1;          // 受伤目标ID
+  AttackerInfo attacker_info = 2; // 攻击者信息
+  int32 amount = 3;             // 伤害数值
+  DamageType damage_type = 4;   // 伤害类型
+  bool is_crit = 5;             // 是否暴击
+  bool is_miss = 6;             // 是否未命中
+}
+
+// 攻击者信息
+message AttackerInfo {
+  int32 attacker_id = 1;        // 攻击者实体ID
+  AttackerType attacker_type = 2; // 攻击者类型
+  int32 skill_id = 3;           // 技能ID（如果是技能攻击）
+  int32 buff_id = 4;            // BuffID（如果是Buff伤害）
+}
+
+// ========== Buff系统 ==========
+
+// Buff添加通知
+message BuffAddResponse {
+  int32 target_id = 1;          // 目标实体ID
+  BuffInfo buff = 2;            // Buff信息
+}
+
+// Buff移除通知
+message BuffRemoveResponse {
+  int32 target_id = 1;          // 目标实体ID
+  int32 buff_id = 2;            // Buff ID
+  int32 buff_instance_id = 3;   // Buff实例ID
+}
+
+// Buff更新通知
+message BuffUpdateResponse {
+  int32 target_id = 1;          // 目标实体ID
+  BuffInfo buff = 2;            // 更新后的Buff信息
+}
+
+// Buff信息
+message BuffInfo {
+  int32 buff_id = 1;            // Buff定义ID
+  int32 buff_instance_id = 2;   // Buff实例ID（同一个Buff可能有多个实例）
+  int32 caster_id = 3;          // 施加者实体ID
+  float duration = 4;           // 持续时间（秒）
+  float remaining_time = 5;     // 剩余时间（秒）
+  int32 layer = 6;              // 层数
+  int32 level = 7;              // 等级
+  BuffType buff_type = 8;       // Buff类型
+}
+
+// ========== 技能信息 ==========
+
+// 技能信息
+message SkillInfo {
+  int32 skill_id = 1;           // 技能ID
+  int32 skill_level = 2;        // 技能等级
+  float cooldown = 3;           // 冷却时间（秒）
+  float remaining_cooldown = 4; // 剩余冷却时间（秒）
+  SkillState state = 5;         // 技能状态
+}
+
+// 技能列表请求
+message GetSkillListRequest {
+  int32 entity_id = 1;          // 实体ID
+}
+
+// 技能列表响应
+message GetSkillListResponse {
+  repeated SkillInfo skills = 1; // 技能列表
+}
+
+// ========== 枚举定义 ==========
+
+// 施法结果
+enum CastResult {
+  CAST_SUCCESS = 0;             // 成功
+  CAST_NOT_CAST = 1;            // 不可释放技能
+  CAST_TARGET_INVALID = 2;      // 无效目标
+  CAST_ENTITY_DEAD = 3;         // 实体已死亡
+  CAST_OUT_OF_RANGE = 4;        // 超出范围
+  CAST_MP_LACK = 5;             // MP不足
+  CAST_RUNNING = 6;             // 进行中
+  CAST_COOLING = 7;             // 冷却中
+  CAST_INVALID_SKILL_ID = 8;    // 无效的技能ID
+  CAST_UNMATCHED_CASTER = 9;    // 施法者ID不匹配
+  CAST_INVALID_CAST_TARGET = 10; // 无效的施法目标
+  CAST_NOT_ALLOWED = 11;        // 不允许释放技能
+  CAST_SILENCED = 12;           // 被沉默
+  CAST_STUNNED = 13;            // 被眩晕
+}
+
+// 攻击者类型
+enum AttackerType {
+  ATTACKER_TYPE_SKILL = 0;      // 技能攻击
+  ATTACKER_TYPE_BUFF = 1;       // Buff伤害
+  ATTACKER_TYPE_NORMAL = 2;     // 普通攻击
+  ATTACKER_TYPE_ENVIRONMENT = 3; // 环境伤害
+}
+
+// 伤害类型
+enum DamageType {
+  DAMAGE_TYPE_UNKNOWN = 0;      // 未知
+  DAMAGE_TYPE_PHYSICAL = 1;     // 物理伤害
+  DAMAGE_TYPE_MAGICAL = 2;      // 魔法伤害
+  DAMAGE_TYPE_REAL = 3;         // 真实伤害
+  DAMAGE_TYPE_HEAL = 4;         // 治疗（负伤害）
+}
+
+// Buff类型
+enum BuffType {
+  BUFF_TYPE_ATTRIBUTE = 0;      // 属性Buff（增减属性）
+  BUFF_TYPE_STATE = 1;          // 状态Buff（眩晕、沉默等）
+  BUFF_TYPE_DOT = 2;            // 持续伤害
+  BUFF_TYPE_HOT = 3;            // 持续治疗
+  BUFF_TYPE_SHIELD = 4;         // 护盾
+  BUFF_TYPE_IMMUNE = 5;         // 免疫
+}
+
+// 技能状态
+enum SkillState {
+  SKILL_STATE_IDLE = 0;         // 空闲（可以释放）
+  SKILL_STATE_READY = 1;        // 就绪
+  SKILL_STATE_INTONATE = 2;     // 吟唱中
+  SKILL_STATE_ACTIVE = 3;       // 激活中
+  SKILL_STATE_COOLING = 4;      // 冷却中
+}

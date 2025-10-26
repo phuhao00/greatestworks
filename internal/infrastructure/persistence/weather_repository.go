@@ -157,7 +157,7 @@ func (r *WeatherRepository) GetCurrentWeather(ctx context.Context, region string
 		"end_time":   bson.M{"$gte": now},
 	}
 
-	opts := options.FindOne().SetSort(bson.D{{"start_time", -1}})
+	opts := options.FindOne().SetSort(bson.D{{Key: "start_time", Value: -1}})
 
 	var weather WeatherRecord
 	err := r.collection.FindOne(ctx, filter, opts).Decode(&weather)
@@ -182,7 +182,7 @@ func (r *WeatherRepository) GetWeatherHistory(ctx context.Context, region string
 	}
 
 	opts := options.Find().
-		SetSort(bson.D{{"start_time", -1}}).
+		SetSort(bson.D{{Key: "start_time", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
@@ -214,7 +214,7 @@ func (r *WeatherRepository) GetWeatherHistory(ctx context.Context, region string
 func (r *WeatherRepository) GetWeatherByType(ctx context.Context, weatherType string, limit, offset int) ([]*WeatherRecord, error) {
 	filter := bson.M{"weather_type": weatherType}
 	opts := options.Find().
-		SetSort(bson.D{{"start_time", -1}}).
+		SetSort(bson.D{{Key: "start_time", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
@@ -306,8 +306,8 @@ func (r *WeatherRepository) GetWeatherForecast(ctx context.Context, region strin
 	}
 
 	opts := options.Find().
-		SetSort(bson.D{{"start_time", 1}}).
-		SetLimit(int64(days * 24)) // 假设每小时一条记�?
+		SetSort(bson.D{{Key: "start_time", Value: 1}}).
+		SetLimit(int64(days * 24)) // 假设每小时一条记录
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		r.logger.Error("获取天气预报失败", err, logging.Fields{

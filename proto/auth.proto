@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package greatestworks.auth;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/auth";
+option csharp_namespace = "GreatestWorks.Auth";
+
+// 认证服务 - 用户登录注册
+service AuthService {
+  // 用户注册
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  
+  // 用户登录
+  rpc Login(LoginRequest) returns (LoginResponse);
+  
+  // 用户登出
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // 心跳检测
+  rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse);
+  
+  // Token 验证
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  
+  // 刷新Token
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+}
+
+// ========== 注册相关 ==========
+
+// 注册请求
+message RegisterRequest {
+  string username = 1;      // 用户名
+  string password = 2;      // 密码（客户端加密后）
+  string email = 3;         // 邮箱（可选）
+  string device_id = 4;     // 设备ID
+  string client_version = 5; // 客户端版本
+}
+
+// 注册响应
+message RegisterResponse {
+  ErrorCode error = 1;      // 错误码
+  string message = 2;       // 错误消息
+  int64 user_id = 3;        // 用户ID
+  int64 timestamp = 4;      // 时间戳
+}
+
+// ========== 登录相关 ==========
+
+// 登录请求
+message LoginRequest {
+  string username = 1;      // 用户名
+  string password = 2;      // 密码（客户端加密后）
+  string device_id = 3;     // 设备ID
+  string client_version = 4; // 客户端版本
+}
+
+// 登录响应
+message LoginResponse {
+  ErrorCode error = 1;      // 错误码
+  string message = 2;       // 错误消息
+  int64 user_id = 3;        // 用户ID
+  string session_token = 4; // 会话Token
+  int64 expire_time = 5;    // Token过期时间
+  UserInfo user_info = 6;   // 用户信息
+  int64 timestamp = 7;      // 时间戳
+}
+
+// ========== 登出相关 ==========
+
+// 登出请求
+message LogoutRequest {
+  int64 user_id = 1;        // 用户ID
+  string session_token = 2; // 会话Token
+}
+
+// 登出响应
+message LogoutResponse {
+  ErrorCode error = 1;      // 错误码
+  string message = 2;       // 错误消息
+  int64 timestamp = 3;      // 时间戳
+}
+
+// ========== 心跳检测 ==========
+
+// 心跳请求
+message HeartBeatRequest {
+  int64 user_id = 1;        // 用户ID
+  string session_token = 2; // 会话Token
+  int64 client_time = 3;    // 客户端时间戳
+}
+
+// 心跳响应
+message HeartBeatResponse {
+  ErrorCode error = 1;      // 错误码
+  int64 server_time = 2;    // 服务器时间戳
+}
+
+// ========== Token验证 ==========
+
+// Token验证请求
+message VerifyTokenRequest {
+  int64 user_id = 1;        // 用户ID
+  string session_token = 2; // 会话Token
+}
+
+// Token验证响应
+message VerifyTokenResponse {
+  bool valid = 1;           // Token是否有效
+  ErrorCode error = 2;      // 错误码
+  int64 expire_time = 3;    // Token过期时间
+}
+
+// ========== Token刷新 ==========
+
+// Token刷新请求
+message RefreshTokenRequest {
+  int64 user_id = 1;        // 用户ID
+  string session_token = 2; // 当前会话Token
+}
+
+// Token刷新响应
+message RefreshTokenResponse {
+  ErrorCode error = 1;      // 错误码
+  string new_token = 2;     // 新Token
+  int64 expire_time = 3;    // Token过期时间
+}
+
+// ========== 通用数据结构 ==========
+
+// 用户信息
+message UserInfo {
+  int64 user_id = 1;        // 用户ID
+  string username = 2;      // 用户名
+  string email = 3;         // 邮箱
+  Authority authority = 4;  // 权限等级
+  int64 created_at = 5;     // 创建时间
+  int64 last_login = 6;     // 最后登录时间
+}
+
+// ========== 枚举定义 ==========
+
+// 错误码
+enum ErrorCode {
+  SUCCESS = 0;                          // 成功
+  UNKNOWN_ERROR = 1;                    // 未知错误
+  
+  // 用户相关错误 (100-199)
+  INCORRECT_USERNAME_OR_PASSWORD = 100; // 用户名或密码错误
+  ILLEGAL_USERNAME = 101;               // 非法用户名
+  REPEAT_USERNAME = 102;                // 用户名重复
+  LOGIN_CONFLICT = 103;                 // 账号已在别处登录
+  USER_NOT_FOUND = 104;                 // 用户不存在
+  USER_BANNED = 105;                    // 用户被封禁
+  
+  // Token相关错误 (200-299)
+  INVALID_TOKEN = 200;                  // 无效Token
+  TOKEN_EXPIRED = 201;                  // Token已过期
+  TOKEN_NOT_FOUND = 202;                // Token不存在
+  
+  // 参数相关错误 (300-399)
+  INVALID_PARAMETER = 300;              // 无效参数
+  MISSING_PARAMETER = 301;              // 缺少参数
+  
+  // 服务器相关错误 (900-999)
+  SERVER_MAINTENANCE = 900;             // 服务器维护中
+  SERVER_OVERLOAD = 901;                // 服务器过载
+  DATABASE_ERROR = 902;                 // 数据库错误
+}
+
+// 权限等级
+enum Authority {
+  PLAYER = 0;           // 普通玩家
+  VIP = 1;              // VIP玩家
+  GM = 2;               // GM（游戏管理员）
+  ADMINISTRATOR = 3;    // 管理员
+  SUPER_ADMIN = 4;      // 超级管理员
+}

@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package greatestworks.entity;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/entity";
+option csharp_namespace = "GreatestWorks.Entity";
+
+// ========== 实体进入/离开场景 ==========
+
+// 实体进入场景通知
+message EntityEnterResponse {
+  repeated EntityEnterData datas = 1;
+}
+
+// 实体进入数据
+message EntityEnterData {
+  int32 entity_id = 1;          // 实体ID
+  int32 unit_id = 2;            // 单位定义ID
+  EntityType entity_type = 3;   // 实体类型
+  NetTransform transform = 4;   // 位置和方向
+  NetActor actor = 5;           // Actor信息（如果是Actor类型）
+}
+
+// 实体离开场景通知
+message EntityLeaveResponse {
+  repeated int32 entity_ids = 1; // 离开的实体ID列表
+}
+
+// ========== 实体Transform同步 ==========
+
+// 实体Transform同步请求（客户端→服务器）
+message EntityTransformSyncRequest {
+  int32 entity_id = 1;          // 实体ID
+  NetTransform transform = 2;   // 新的Transform
+  int32 state_id = 3;           // 状态ID（动画状态）
+  bytes data = 4;               // 附加数据
+}
+
+// 实体Transform同步响应（服务器→客户端广播）
+message EntityTransformSyncResponse {
+  int32 entity_id = 1;          // 实体ID
+  NetTransform transform = 2;   // 新的Transform
+  int32 state_id = 3;           // 状态ID（动画状态）
+  bytes data = 4;               // 附加数据
+}
+
+// ========== 实体属性同步 ==========
+
+// 实体属性同步通知
+message EntityAttributeSyncResponse {
+  int32 entity_id = 1;                      // 实体ID
+  repeated EntityAttributeEntry entries = 2; // 属性条目列表
+}
+
+// 实体属性条目
+message EntityAttributeEntry {
+  EntityAttributeEntryType type = 1; // 属性类型
+  oneof value {
+    int32 int32_value = 2;           // 整数值
+    float float_value = 3;           // 浮点值
+    string string_value = 4;         // 字符串值
+  }
+}
+
+// ========== 数据结构 ==========
+
+// 网络Transform（位置和方向）
+message NetTransform {
+  NetVector3 position = 1;  // 位置
+  NetVector3 direction = 2; // 方向
+}
+
+// 网络3D向量
+message NetVector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// 网络Actor信息（有战斗属性的实体）
+message NetActor {
+  FlagStates flag_state = 1;    // 状态标志位
+  int32 level = 2;              // 等级
+  int32 max_hp = 3;             // 最大生命值
+  int32 hp = 4;                 // 当前生命值
+  int32 max_mp = 5;             // 最大魔法值
+  int32 mp = 6;                 // 当前魔法值
+  int32 exp = 7;                // 当前经验值
+  int32 max_exp = 8;            // 升级所需经验值
+  int32 resurrection_time = 9;  // 复活时间（毫秒）
+  string name = 10;             // 名称
+}
+
+// ========== 枚举定义 ==========
+
+// 实体类型
+enum EntityType {
+  ENTITY_TYPE_PLAYER = 0;       // 玩家
+  ENTITY_TYPE_MONSTER = 1;      // 怪物
+  ENTITY_TYPE_NPC = 2;          // NPC
+  ENTITY_TYPE_MISSILE = 3;      // 投射物（技能子弹等）
+  ENTITY_TYPE_DROPPED_ITEM = 4; // 掉落物品
+  ENTITY_TYPE_PET = 5;          // 宠物
+  ENTITY_TYPE_SUMMON = 6;       // 召唤物
+}
+
+// 动画状态
+enum AnimationState {
+  ANIMATION_STATE_IDLE = 0;   // 空闲
+  ANIMATION_STATE_MOVE = 1;   // 移动
+  ANIMATION_STATE_SKILL = 2;  // 释放技能
+  ANIMATION_STATE_HURT = 3;   // 受伤
+  ANIMATION_STATE_DEATH = 4;  // 死亡
+  ANIMATION_STATE_JUMP = 5;   // 跳跃
+  ANIMATION_STATE_FALL = 6;   // 下落
+}
+
+// 状态标志位（可组合）
+enum FlagStates {
+  FLAG_STATE_ZERO = 0;        // 无状态
+  FLAG_STATE_STUN = 1;        // 眩晕
+  FLAG_STATE_ROOT = 2;        // 定身
+  FLAG_STATE_SILENCE = 4;     // 沉默
+  FLAG_STATE_INVINCIBLE = 8;  // 无敌
+  FLAG_STATE_INVISIBLE = 16;  // 隐身
+  FLAG_STATE_DISARM = 32;     // 缴械
+  FLAG_STATE_SLOW = 64;       // 减速
+}
+
+// 实体属性条目类型
+enum EntityAttributeEntryType {
+  ATTRIBUTE_NONE = 0;
+  ATTRIBUTE_LEVEL = 1;        // 等级
+  ATTRIBUTE_EXP = 2;          // 经验值
+  ATTRIBUTE_GOLD = 3;         // 金币
+  ATTRIBUTE_HP = 4;           // 生命值
+  ATTRIBUTE_MP = 5;           // 魔法值
+  ATTRIBUTE_MAX_HP = 6;       // 最大生命值
+  ATTRIBUTE_MAX_EXP = 7;      // 最大经验值
+  ATTRIBUTE_MAX_MP = 8;       // 最大魔法值
+  ATTRIBUTE_FLAG_STATE = 9;   // 状态标志
+  ATTRIBUTE_SPEED = 10;       // 移动速度
+  ATTRIBUTE_ATTACK = 11;      // 攻击力
+  ATTRIBUTE_DEFENSE = 12;     // 防御力
+}

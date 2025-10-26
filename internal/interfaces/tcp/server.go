@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
 	appHandlers "greatestworks/internal/application/handlers"
+	appServices "greatestworks/internal/application/services"
+	"greatestworks/internal/domain/character"
 	"greatestworks/internal/infrastructure/logging"
 	"greatestworks/internal/interfaces/tcp/connection"
 	tcpHandlers "greatestworks/internal/interfaces/tcp/handlers"
@@ -52,6 +55,11 @@ type TCPServer struct {
 	wg               sync.WaitGroup
 	running          bool
 	mutex            sync.RWMutex
+
+	// optional references for wiring
+	mapService       *appServices.MapService
+	fightService     *appServices.FightService
+	characterService *appServices.CharacterService
 }
 
 // NewTCPServer 创建TCP服务器
@@ -69,7 +77,7 @@ func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, quer
 	heartbeatManager := connection.NewHeartbeatManager(logger, 30*time.Second, 60*time.Second)
 
 	// 创建游戏处理器
-	gameHandler := tcpHandlers.NewGameHandler(commandBus, queryBus, logger)
+	gameHandler := tcpHandlers.NewGameHandler(commandBus, queryBus, connManager, logger)
 
 	// 创建路由器
 	router := NewRouter(logger)
@@ -89,6 +97,33 @@ func NewTCPServer(config *ServerConfig, commandBus *appHandlers.CommandBus, quer
 
 	return server
 }
+
+// SetMapService allows injecting MapService for potential handler usage.
+func (s *TCPServer) SetMapService(ms *appServices.MapService) {
+	s.mapService = ms
+	if s.gameHandler != nil {
+		s.gameHandler.SetMapService(ms)
+	}
+}
+
+// SetFightService allows injecting FightService for handler usage.
+func (s *TCPServer) SetFightService(fs *appServices.FightService) {
+	s.fightService = fs
+	if s.gameHandler != nil {
+		s.gameHandler.SetFightService(fs)
+	}
+}
+
+// SetCharacterService allows injecting CharacterService for handler usage.
+func (s *TCPServer) SetCharacterService(cs *appServices.CharacterService) {
+	s.characterService = cs
+	if s.gameHandler != nil {
+		s.gameHandler.SetCharacterService(cs)
+	}
+}
+
+// GetConnectionManager exposes the underlying connection manager for wiring.
+func (s *TCPServer) GetConnectionManager() *connection.Manager { return s.connManager }
 
 // Start 启动TCP服务器
 func (s *TCPServer) Start() error {
@@ -327,6 +362,30 @@ func (s *TCPServer) cleanupConnection(session *connection.Session) {
 		"session_id": session.ID,
 		"user_id":    session.UserID,
 	})
+
+	// 从地图中移除与该会话绑定的实体；并保存最后位置
+	if s.mapService != nil {
+		if entityID, ok := s.connManager.GetPlayerBySession(session.ID); ok {
+			var mapID int32 = 1
+			if session.GroupID != "" && len(session.GroupID) > 4 && session.GroupID[:4] == "map:" {
+				if v, err := strconv.ParseInt(session.GroupID[4:], 10, 32); err == nil {
+					mapID = int32(v)
+				}
+			}
+			// 保存位置
+			if s.characterService != nil && mapID > 0 {
+				if m, err := s.mapService.GetMap(mapID); err == nil && m != nil {
+					if e := m.GetEntity(character.EntityID(entityID)); e != nil {
+						pos := e.Position()
+						_ = s.characterService.UpdateLastLocation(
+							s.ctx, int64(entityID), mapID, pos.X, pos.Y, pos.Z,
+						)
+					}
+				}
+			}
+			_ = s.mapService.LeaveMapByID(s.ctx, mapID, entityID)
+		}
+	}
 
 	// 从心跳管理器移除
 	s.heartbeatManager.RemoveSession(session.ID)

@@ -1,0 +1,28 @@
+# E2E 压力测试配置
+# 用法: go run ./tools/simclient/cmd/simclient -config=tools/simclient/e2e_load.yaml -mode=load
+
+scenario:
+  type: e2e
+  name: e2e-load-test
+  player_prefix: load_player
+  action_interval: 1s
+  duration: 0s
+  stop_on_error: false
+
+auth:
+  enabled: false
+
+gateway:
+  host: localhost
+  port: 9090
+  connect_timeout: 10s
+  read_timeout: 3s
+  write_timeout: 3s
+
+load:
+  enabled: true
+  virtual_users: 50      # 模拟50个玩家
+  concurrency: 10        # 并发10个
+  iterations: 3          # 每个玩家执行3次完整流程
+  ramp_up: 5s            # 5秒内逐步启动所有玩家
+  stop_on_error: false
