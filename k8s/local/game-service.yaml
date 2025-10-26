@@ -32,6 +32,13 @@ spec:
               value: "redis:6379"
             - name: REDIS_PASSWORD
               value: "redis123"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
           livenessProbe:
             tcpSocket:
               port: 8081

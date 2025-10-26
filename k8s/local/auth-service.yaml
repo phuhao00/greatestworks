@@ -38,6 +38,13 @@ spec:
               value: "redis123"
             - name: JWT_SECRET
               value: "dev-secret-change-me"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
           livenessProbe:
             httpGet:
               path: /health
