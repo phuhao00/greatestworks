@@ -1,0 +1,538 @@
+syntax = "proto3";
+
+package greatestworks.scene;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/scene";
+option csharp_namespace = "GreatestWorks.Scene";
+
+// 场景服务定义
+service SceneService {
+  // 进入场景
+  rpc EnterScene(EnterSceneRequest) returns (EnterSceneResponse);
+  
+  // 离开场景
+  rpc LeaveScene(LeaveSceneRequest) returns (LeaveSceneResponse);
+  
+  // 获取场景信息
+  rpc GetSceneInfo(GetSceneInfoRequest) returns (GetSceneInfoResponse);
+  
+  // 移动到场景中的位置
+  rpc MoveToPosition(MoveToPositionRequest) returns (MoveToPositionResponse);
+  
+  // 与场景对象交互
+  rpc InteractWithObject(InteractWithObjectRequest) returns (InteractWithObjectResponse);
+  
+  // 获取场景中的玩家列表
+  rpc GetPlayersInScene(GetPlayersInSceneRequest) returns (GetPlayersInSceneResponse);
+  
+  // 获取场景对象列表
+  rpc GetSceneObjects(GetSceneObjectsRequest) returns (GetSceneObjectsResponse);
+  
+  // 触发场景事件
+  rpc TriggerSceneEvent(TriggerSceneEventRequest) returns (TriggerSceneEventResponse);
+  
+  // 获取可用场景列表
+  rpc GetAvailableScenes(GetAvailableScenesRequest) returns (GetAvailableScenesResponse);
+  
+  // 传送到指定场景
+  rpc TeleportToScene(TeleportToSceneRequest) returns (TeleportToSceneResponse);
+  
+  // 设置场景天气
+  rpc SetWeather(SetWeatherRequest) returns (SetWeatherResponse);
+  
+  // 获取场景统计
+  rpc GetSceneStats(GetSceneStatsRequest) returns (GetSceneStatsResponse);
+}
+
+// 进入场景请求
+message EnterSceneRequest {
+  string player_id = 1;
+  string scene_id = 2;
+  greatestworks.common.Position spawn_position = 3;
+  string previous_scene_id = 4;
+  string entrance_id = 5; // 入口ID（如传送门、门等）
+  map<string, string> entry_context = 6;
+}
+
+// 进入场景响应
+message EnterSceneResponse {
+  greatestworks.common.CommonResponse common = 1;
+  SceneInfo scene_info = 2;
+  greatestworks.common.Position player_position = 3;
+  repeated ScenePlayer other_players = 4;
+  repeated SceneObject scene_objects = 5;
+  SceneEnvironment environment = 6;
+}
+
+// 离开场景请求
+message LeaveSceneRequest {
+  string player_id = 1;
+  string scene_id = 2;
+  string exit_id = 3; // 出口ID
+}
+
+// 离开场景响应
+message LeaveSceneResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 获取场景信息请求
+message GetSceneInfoRequest {
+  string scene_id = 1;
+  string player_id = 2; // 查询者ID，用于权限检查
+  bool include_players = 3;
+  bool include_objects = 4;
+}
+
+// 获取场景信息响应
+message GetSceneInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  SceneInfo scene_info = 2;
+  repeated ScenePlayer players = 3;
+  repeated SceneObject objects = 4;
+  SceneEnvironment environment = 5;
+}
+
+// 移动到位置请求
+message MoveToPositionRequest {
+  string player_id = 1;
+  string scene_id = 2;
+  greatestworks.common.Position target_position = 3;
+  MovementType movement_type = 4;
+  float speed = 5;
+}
+
+// 移动到位置响应
+message MoveToPositionResponse {
+  greatestworks.common.CommonResponse common = 1;
+  greatestworks.common.Position new_position = 2;
+  float actual_speed = 3;
+  int64 movement_time = 4;
+}
+
+// 与对象交互请求
+message InteractWithObjectRequest {
+  string player_id = 1;
+  string scene_id = 2;
+  string object_id = 3;
+  InteractionType interaction_type = 4;
+  map<string, string> parameters = 5;
+}
+
+// 与对象交互响应
+message InteractWithObjectResponse {
+  greatestworks.common.CommonResponse common = 1;
+  InteractionResult result = 2;
+  repeated SceneEvent triggered_events = 3;
+}
+
+// 获取场景中玩家列表请求
+message GetPlayersInSceneRequest {
+  string scene_id = 1;
+  string requester_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+  float radius = 5; // 搜索半径（以请求者为中心）
+  greatestworks.common.Position center_position = 6; // 搜索中心点
+}
+
+// 获取场景中玩家列表响应
+message GetPlayersInSceneResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated ScenePlayer players = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 获取场景对象请求
+message GetSceneObjectsRequest {
+  string scene_id = 1;
+  string player_id = 2;
+  ObjectType object_type = 3;
+  float radius = 4; // 搜索半径
+  greatestworks.common.Position center_position = 5;
+  bool interactive_only = 6; // 只返回可交互对象
+}
+
+// 获取场景对象响应
+message GetSceneObjectsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated SceneObject objects = 2;
+}
+
+// 触发场景事件请求
+message TriggerSceneEventRequest {
+  string player_id = 1;
+  string scene_id = 2;
+  string event_id = 3;
+  string trigger_id = 4; // 触发器ID
+  map<string, string> event_data = 5;
+}
+
+// 触发场景事件响应
+message TriggerSceneEventResponse {
+  greatestworks.common.CommonResponse common = 1;
+  SceneEvent event = 2;
+  repeated SceneEventEffect effects = 3;
+}
+
+// 获取可用场景列表请求
+message GetAvailableScenesRequest {
+  string player_id = 1;
+  SceneType scene_type = 2;
+  int32 min_level = 3;
+  int32 max_level = 4;
+  bool only_unlocked = 5;
+  int32 limit = 6;
+  int32 offset = 7;
+}
+
+// 获取可用场景列表响应
+message GetAvailableScenesResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated SceneInfo scenes = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 传送到场景请求
+message TeleportToSceneRequest {
+  string player_id = 1;
+  string target_scene_id = 2;
+  string teleport_point_id = 3; // 传送点ID
+  bool use_item = 4; // 是否使用传送道具
+  string item_id = 5; // 传送道具ID
+}
+
+// 传送到场景响应
+message TeleportToSceneResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string target_scene_id = 2;
+  greatestworks.common.Position spawn_position = 3;
+  int32 cost = 4; // 传送费用
+}
+
+// 设置天气请求
+message SetWeatherRequest {
+  string scene_id = 1;
+  string admin_id = 2; // 管理员ID
+  WeatherType weather_type = 3;
+  int32 intensity = 4; // 强度 (0-100)
+  int32 duration = 5; // 持续时间（秒）
+}
+
+// 设置天气响应
+message SetWeatherResponse {
+  greatestworks.common.CommonResponse common = 1;
+  SceneEnvironment new_environment = 2;
+}
+
+// 获取场景统计请求
+message GetSceneStatsRequest {
+  string scene_id = 1;
+  string admin_id = 2;
+}
+
+// 获取场景统计响应
+message GetSceneStatsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  SceneStats stats = 2;
+}
+
+// 场景信息
+message SceneInfo {
+  string scene_id = 1;
+  string name = 2;
+  string description = 3;
+  SceneType scene_type = 4;
+  SceneStatus status = 5;
+  int32 min_level = 6;
+  int32 max_level = 7;
+  int32 max_players = 8;
+  int32 current_players = 9;
+  greatestworks.common.Position spawn_point = 10;
+  repeated TeleportPoint teleport_points = 11;
+  SceneSettings settings = 12;
+  int64 created_at = 13;
+  int64 last_updated = 14;
+  string version = 15;
+  map<string, string> metadata = 16;
+}
+
+// 场景玩家
+message ScenePlayer {
+  string player_id = 1;
+  string player_name = 2;
+  int32 level = 3;
+  greatestworks.common.Position position = 4;
+  PlayerState state = 5;
+  bool is_visible = 6;
+  string current_activity = 7; // 当前活动
+  int64 entered_at = 8;
+  int64 last_update = 9;
+  map<string, string> player_data = 10;
+}
+
+// 场景对象
+message SceneObject {
+  string object_id = 1;
+  string name = 2;
+  ObjectType object_type = 3;
+  ObjectState state = 4;
+  greatestworks.common.Position position = 5;
+  float rotation_y = 6; // Y轴旋转角度
+  bool is_interactive = 7;
+  bool is_visible = 8;
+  repeated InteractionType available_interactions = 9;
+  map<string, string> properties = 10;
+  int64 created_at = 11;
+  int64 last_updated = 12;
+}
+
+// 场景环境
+message SceneEnvironment {
+  WeatherType weather = 1;
+  int32 weather_intensity = 2;
+  TimeOfDay time_of_day = 3;
+  float ambient_light = 4; // 环境光强度 (0.0-1.0)
+  float temperature = 5; // 温度
+  float humidity = 6; // 湿度
+  string background_music = 7;
+  repeated EnvironmentalEffect effects = 8;
+  map<string, string> custom_settings = 9;
+}
+
+// 传送点
+message TeleportPoint {
+  string point_id = 1;
+  string name = 2;
+  greatestworks.common.Position position = 3;
+  bool is_active = 4;
+  bool requires_discovery = 5; // 需要发现才能使用
+  int32 cost = 6; // 传送费用
+  repeated string required_items = 7; // 需要的物品
+  int32 min_level = 8; // 最低等级要求
+  string description = 9;
+}
+
+// 场景设置
+message SceneSettings {
+  bool pvp_enabled = 1; // 是否允许PVP
+  bool respawn_enabled = 2; // 是否允许复活
+  int32 respawn_time = 3; // 复活时间（秒）
+  bool drop_items_on_death = 4; // 死亡是否掉落物品
+  float experience_multiplier = 5; // 经验倍率
+  float drop_rate_multiplier = 6; // 掉落率倍率
+  bool safe_zone = 7; // 是否为安全区
+  bool allow_flying = 8; // 是否允许飞行
+  bool allow_mount = 9; // 是否允许坐骑
+  int32 idle_timeout = 10; // 闲置超时时间（秒）
+  map<string, float> movement_modifiers = 11; // 移动修正器
+}
+
+// 场景事件
+message SceneEvent {
+  string event_id = 1;
+  string event_name = 2;
+  EventType event_type = 3;
+  string trigger_player_id = 4;
+  string trigger_object_id = 5;
+  greatestworks.common.Position location = 6;
+  int64 timestamp = 7;
+  map<string, string> event_data = 8;
+  repeated string affected_player_ids = 9;
+}
+
+// 场景事件效果
+message SceneEventEffect {
+  string effect_id = 1;
+  EffectType effect_type = 2;
+  string target_id = 3; // 目标ID（玩家或对象）
+  int32 duration = 4; // 持续时间（秒）
+  float magnitude = 5; // 效果强度
+  map<string, string> parameters = 6;
+}
+
+// 交互结果
+message InteractionResult {
+  bool success = 1;
+  string message = 2;
+  repeated ItemReward rewards = 3;
+  int32 experience_gained = 4;
+  ObjectState new_object_state = 5;
+  map<string, string> result_data = 6;
+}
+
+// 物品奖励
+message ItemReward {
+  string item_id = 1;
+  string item_name = 2;
+  int32 quantity = 3;
+  greatestworks.common.ItemRarity rarity = 4;
+}
+
+// 环境效果
+message EnvironmentalEffect {
+  string effect_id = 1;
+  EffectType effect_type = 2;
+  float intensity = 3;
+  int32 duration = 4; // 持续时间（秒），0表示永久
+  map<string, string> parameters = 5;
+}
+
+// 场景统计
+message SceneStats {
+  int32 total_visits = 1;
+  int32 unique_visitors = 2;
+  int32 current_online = 3;
+  int32 peak_online = 4;
+  int64 average_session_time = 5;
+  int32 total_interactions = 6;
+  int32 total_events_triggered = 7;
+  map<string, int32> popular_areas = 8; // 热门区域访问量
+  int64 last_reset = 9;
+}
+
+// 场景类型枚举
+enum SceneType {
+  SCENE_TYPE_UNSPECIFIED = 0;
+  SCENE_TYPE_TOWN = 1;          // 城镇
+  SCENE_TYPE_DUNGEON = 2;       // 地下城
+  SCENE_TYPE_WILDERNESS = 3;    // 野外
+  SCENE_TYPE_BATTLE_ARENA = 4;  // 战斗竞技场
+  SCENE_TYPE_INSTANCE = 5;      // 副本
+  SCENE_TYPE_GUILD_HALL = 6;    // 公会大厅
+  SCENE_TYPE_PRIVATE_ROOM = 7;  // 私人房间
+  SCENE_TYPE_EVENT_AREA = 8;    // 活动区域
+  SCENE_TYPE_TRAINING_GROUND = 9; // 训练场
+}
+
+// 场景状态枚举
+enum SceneStatus {
+  SCENE_STATUS_UNSPECIFIED = 0;
+  SCENE_STATUS_ACTIVE = 1;      // 活跃
+  SCENE_STATUS_MAINTENANCE = 2; // 维护中
+  SCENE_STATUS_CLOSED = 3;      // 已关闭
+  SCENE_STATUS_FULL = 4;        // 已满员
+  SCENE_STATUS_LOADING = 5;     // 加载中
+}
+
+// 玩家状态枚举
+enum PlayerState {
+  PLAYER_STATE_UNSPECIFIED = 0;
+  PLAYER_STATE_IDLE = 1;        // 空闲
+  PLAYER_STATE_MOVING = 2;      // 移动中
+  PLAYER_STATE_INTERACTING = 3; // 交互中
+  PLAYER_STATE_COMBAT = 4;      // 战斗中
+  PLAYER_STATE_TRADING = 5;     // 交易中
+  PLAYER_STATE_AFK = 6;         // 暂离
+  PLAYER_STATE_INVISIBLE = 7;   // 隐身
+}
+
+// 对象类型枚举
+enum ObjectType {
+  OBJECT_TYPE_UNSPECIFIED = 0;
+  OBJECT_TYPE_NPC = 1;          // NPC
+  OBJECT_TYPE_ITEM = 2;         // 物品
+  OBJECT_TYPE_CHEST = 3;        // 宝箱
+  OBJECT_TYPE_DOOR = 4;         // 门
+  OBJECT_TYPE_PORTAL = 5;       // 传送门
+  OBJECT_TYPE_SIGN = 6;         // 标志牌
+  OBJECT_TYPE_DECORATION = 7;   // 装饰物
+  OBJECT_TYPE_FURNITURE = 8;    // 家具
+  OBJECT_TYPE_VEHICLE = 9;      // 载具
+  OBJECT_TYPE_RESOURCE = 10;    // 资源点
+  OBJECT_TYPE_TRAP = 11;        // 陷阱
+  OBJECT_TYPE_SWITCH = 12;      // 开关
+}
+
+// 对象状态枚举
+enum ObjectState {
+  OBJECT_STATE_UNSPECIFIED = 0;
+  OBJECT_STATE_NORMAL = 1;      // 正常
+  OBJECT_STATE_ACTIVATED = 2;   // 已激活
+  OBJECT_STATE_DISABLED = 3;    // 已禁用
+  OBJECT_STATE_BROKEN = 4;      // 已损坏
+  OBJECT_STATE_LOCKED = 5;      // 已锁定
+  OBJECT_STATE_HIDDEN = 6;      // 隐藏
+}
+
+// 交互类型枚举
+enum InteractionType {
+  INTERACTION_TYPE_UNSPECIFIED = 0;
+  INTERACTION_TYPE_TALK = 1;        // 对话
+  INTERACTION_TYPE_USE = 2;         // 使用
+  INTERACTION_TYPE_EXAMINE = 3;     // 检查
+  INTERACTION_TYPE_OPEN = 4;        // 打开
+  INTERACTION_TYPE_CLOSE = 5;       // 关闭
+  INTERACTION_TYPE_PICKUP = 6;      // 拾取
+  INTERACTION_TYPE_ACTIVATE = 7;    // 激活
+  INTERACTION_TYPE_REPAIR = 8;      // 修理
+  INTERACTION_TYPE_UPGRADE = 9;     // 升级
+  INTERACTION_TYPE_DESTROY = 10;    // 摧毁
+}
+
+// 移动类型枚举
+enum MovementType {
+  MOVEMENT_TYPE_UNSPECIFIED = 0;
+  MOVEMENT_TYPE_WALK = 1;       // 走路
+  MOVEMENT_TYPE_RUN = 2;        // 跑步
+  MOVEMENT_TYPE_TELEPORT = 3;   // 传送
+  MOVEMENT_TYPE_FLY = 4;        // 飞行
+  MOVEMENT_TYPE_SWIM = 5;       // 游泳
+  MOVEMENT_TYPE_MOUNT = 6;      // 坐骑
+}
+
+// 天气类型枚举
+enum WeatherType {
+  WEATHER_TYPE_UNSPECIFIED = 0;
+  WEATHER_TYPE_CLEAR = 1;       // 晴天
+  WEATHER_TYPE_CLOUDY = 2;      // 多云
+  WEATHER_TYPE_RAINY = 3;       // 雨天
+  WEATHER_TYPE_STORMY = 4;      // 暴风雨
+  WEATHER_TYPE_SNOWY = 5;       // 雪天
+  WEATHER_TYPE_FOGGY = 6;       // 雾天
+  WEATHER_TYPE_WINDY = 7;       // 大风
+}
+
+// 时间段枚举
+enum TimeOfDay {
+  TIME_OF_DAY_UNSPECIFIED = 0;
+  TIME_OF_DAY_DAWN = 1;         // 黎明
+  TIME_OF_DAY_MORNING = 2;      // 上午
+  TIME_OF_DAY_NOON = 3;         // 中午
+  TIME_OF_DAY_AFTERNOON = 4;    // 下午
+  TIME_OF_DAY_EVENING = 5;      // 傍晚
+  TIME_OF_DAY_NIGHT = 6;        // 夜晚
+  TIME_OF_DAY_MIDNIGHT = 7;     // 午夜
+}
+
+// 事件类型枚举
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_PLAYER_ENTER = 1;      // 玩家进入
+  EVENT_TYPE_PLAYER_LEAVE = 2;      // 玩家离开
+  EVENT_TYPE_OBJECT_INTERACTION = 3; // 对象交互
+  EVENT_TYPE_COMBAT_START = 4;      // 战斗开始
+  EVENT_TYPE_COMBAT_END = 5;        // 战斗结束
+  EVENT_TYPE_ITEM_PICKUP = 6;       // 物品拾取
+  EVENT_TYPE_QUEST_TRIGGER = 7;     // 任务触发
+  EVENT_TYPE_ACHIEVEMENT_UNLOCK = 8; // 成就解锁
+  EVENT_TYPE_WEATHER_CHANGE = 9;    // 天气变化
+  EVENT_TYPE_TIME_CHANGE = 10;      // 时间变化
+}
+
+// 效果类型枚举
+enum EffectType {
+  EFFECT_TYPE_UNSPECIFIED = 0;
+  EFFECT_TYPE_BUFF = 1;         // 增益
+  EFFECT_TYPE_DEBUFF = 2;       // 减益
+  EFFECT_TYPE_DAMAGE = 3;       // 伤害
+  EFFECT_TYPE_HEAL = 4;         // 治疗
+  EFFECT_TYPE_TELEPORT = 5;     // 传送
+  EFFECT_TYPE_TRANSFORM = 6;    // 变形
+  EFFECT_TYPE_INVISIBILITY = 7; // 隐身
+  EFFECT_TYPE_SPEED_BOOST = 8;  // 速度提升
+  EFFECT_TYPE_SHIELD = 9;       // 护盾
+  EFFECT_TYPE_STUN = 10;        // 眩晕
+}

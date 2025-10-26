@@ -1,5 +1,5 @@
-// Package main 网关服务主程序
-// 基于DDD架构的分布式网关服务
+// Package main 场景服务主程序
+// 负责地图/副本/区域等场景的生命周期与调度
 package main
 
 import (
@@ -14,27 +14,26 @@ import (
 	"greatestworks/internal/infrastructure/logging"
 )
 
-// GatewayServiceConfig aliases the shared configuration schema for readability.
-type GatewayServiceConfig = config.Config
+// SceneServiceConfig 配置别名
+type SceneServiceConfig = config.Config
 
-// loadInitialConfig 加载配置并返回配置与文件来源
-func loadInitialConfig() (*GatewayServiceConfig, []string, *config.Loader, error) {
+// loadInitialConfig 加载配置
+func loadInitialConfig() (*SceneServiceConfig, []string, *config.Loader, error) {
 	loader := config.NewLoader(
-		config.WithService("gateway-service"),
+		config.WithService("scene-service"),
 	)
 
-	cfg, sources, err := loader.Load()
+	cfg, files, err := loader.Load()
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
-	return cfg, sources, loader, nil
+	return cfg, files, loader, nil
 }
 
 // main 主函数
 func main() {
 	logger := logging.NewBaseLogger(logging.InfoLevel)
-	logger.Info("启动网关服务")
+	logger.Info("启动场景服务", logging.Fields{})
 
 	cfg, sources, loader, err := loadInitialConfig()
 	if err != nil {
@@ -50,19 +49,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("创建配置管理器失败: %v", err)
 	}
-	defer func() {
-		_ = manager.Close()
-	}()
+	defer func() { _ = manager.Close() }()
 
 	runtimeCfg := manager.Config()
-	service := bootstrap.NewGatewayBootstrap(runtimeCfg, logger)
+	service := bootstrap.NewSceneBootstrap(runtimeCfg, logger)
 
 	manager.OnChange(func(next *config.Config) {
 		if next == nil {
 			return
 		}
 		service.UpdateConfig(next)
-		logger.Info("网关服务配置已刷新", logging.Fields{
+		logger.Info("场景服务配置已刷新", logging.Fields{
 			"service_version": next.Service.Version,
 		})
 	})
@@ -79,7 +76,7 @@ func main() {
 	}
 
 	if err := service.Start(); err != nil {
-		log.Fatalf("启动网关服务失败: %v", err)
+		log.Fatalf("启动场景服务失败: %v", err)
 	}
 
 	sigChan := make(chan os.Signal, 1)
@@ -89,15 +86,15 @@ func main() {
 	case sig := <-sigChan:
 		logger.Info("收到关闭信号", logging.Fields{"signal": sig.String()})
 	case <-service.Done():
-		logger.Info("上下文已取消")
+		logger.Info("上下文已取消", logging.Fields{})
 	}
 
-	logger.Info("正在关闭网关服务...")
+	logger.Info("正在关闭场景服务...", logging.Fields{})
 	watchCancel()
 	if err := service.Stop(); err != nil {
-		logger.Error("关闭网关服务失败", err, logging.Fields{})
+		logger.Error("关闭场景服务失败", err, logging.Fields{})
 		os.Exit(1)
 	}
 
-	logger.Info("网关服务已关闭")
+	logger.Info("场景服务已关闭", logging.Fields{})
 }

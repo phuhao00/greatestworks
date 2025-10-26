@@ -22,6 +22,372 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 宠物稀有度枚举
+type PetRarity int32
+
+const (
+	PetRarity_PET_RARITY_UNSPECIFIED PetRarity = 0
+	PetRarity_PET_RARITY_COMMON      PetRarity = 1 // 普通
+	PetRarity_PET_RARITY_UNCOMMON    PetRarity = 2 // 不常见
+	PetRarity_PET_RARITY_RARE        PetRarity = 3 // 稀有
+	PetRarity_PET_RARITY_EPIC        PetRarity = 4 // 史诗
+	PetRarity_PET_RARITY_LEGENDARY   PetRarity = 5 // 传说
+	PetRarity_PET_RARITY_MYTHIC      PetRarity = 6 // 神话
+)
+
+// Enum value maps for PetRarity.
+var (
+	PetRarity_name = map[int32]string{
+		0: "PET_RARITY_UNSPECIFIED",
+		1: "PET_RARITY_COMMON",
+		2: "PET_RARITY_UNCOMMON",
+		3: "PET_RARITY_RARE",
+		4: "PET_RARITY_EPIC",
+		5: "PET_RARITY_LEGENDARY",
+		6: "PET_RARITY_MYTHIC",
+	}
+	PetRarity_value = map[string]int32{
+		"PET_RARITY_UNSPECIFIED": 0,
+		"PET_RARITY_COMMON":      1,
+		"PET_RARITY_UNCOMMON":    2,
+		"PET_RARITY_RARE":        3,
+		"PET_RARITY_EPIC":        4,
+		"PET_RARITY_LEGENDARY":   5,
+		"PET_RARITY_MYTHIC":      6,
+	}
+)
+
+func (x PetRarity) Enum() *PetRarity {
+	p := new(PetRarity)
+	*p = x
+	return p
+}
+
+func (x PetRarity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PetRarity) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_pet_proto_enumTypes[0].Descriptor()
+}
+
+func (PetRarity) Type() protoreflect.EnumType {
+	return &file_proto_pet_proto_enumTypes[0]
+}
+
+func (x PetRarity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PetRarity.Descriptor instead.
+func (PetRarity) EnumDescriptor() ([]byte, []int) {
+	return file_proto_pet_proto_rawDescGZIP(), []int{0}
+}
+
+// 宠物品质枚举
+type PetQuality int32
+
+const (
+	PetQuality_PET_QUALITY_UNSPECIFIED PetQuality = 0
+	PetQuality_PET_QUALITY_POOR        PetQuality = 1 // 劣质
+	PetQuality_PET_QUALITY_FAIR        PetQuality = 2 // 一般
+	PetQuality_PET_QUALITY_GOOD        PetQuality = 3 // 良好
+	PetQuality_PET_QUALITY_EXCELLENT   PetQuality = 4 // 优秀
+	PetQuality_PET_QUALITY_PERFECT     PetQuality = 5 // 完美
+)
+
+// Enum value maps for PetQuality.
+var (
+	PetQuality_name = map[int32]string{
+		0: "PET_QUALITY_UNSPECIFIED",
+		1: "PET_QUALITY_POOR",
+		2: "PET_QUALITY_FAIR",
+		3: "PET_QUALITY_GOOD",
+		4: "PET_QUALITY_EXCELLENT",
+		5: "PET_QUALITY_PERFECT",
+	}
+	PetQuality_value = map[string]int32{
+		"PET_QUALITY_UNSPECIFIED": 0,
+		"PET_QUALITY_POOR":        1,
+		"PET_QUALITY_FAIR":        2,
+		"PET_QUALITY_GOOD":        3,
+		"PET_QUALITY_EXCELLENT":   4,
+		"PET_QUALITY_PERFECT":     5,
+	}
+)
+
+func (x PetQuality) Enum() *PetQuality {
+	p := new(PetQuality)
+	*p = x
+	return p
+}
+
+func (x PetQuality) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PetQuality) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_pet_proto_enumTypes[1].Descriptor()
+}
+
+func (PetQuality) Type() protoreflect.EnumType {
+	return &file_proto_pet_proto_enumTypes[1]
+}
+
+func (x PetQuality) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PetQuality.Descriptor instead.
+func (PetQuality) EnumDescriptor() ([]byte, []int) {
+	return file_proto_pet_proto_rawDescGZIP(), []int{1}
+}
+
+// 宠物技能类型枚举
+type PetSkillType int32
+
+const (
+	PetSkillType_PET_SKILL_TYPE_UNSPECIFIED PetSkillType = 0
+	PetSkillType_PET_SKILL_TYPE_ATTACK      PetSkillType = 1 // 攻击技能
+	PetSkillType_PET_SKILL_TYPE_DEFENSE     PetSkillType = 2 // 防御技能
+	PetSkillType_PET_SKILL_TYPE_HEAL        PetSkillType = 3 // 治疗技能
+	PetSkillType_PET_SKILL_TYPE_BUFF        PetSkillType = 4 // 增益技能
+	PetSkillType_PET_SKILL_TYPE_DEBUFF      PetSkillType = 5 // 减益技能
+	PetSkillType_PET_SKILL_TYPE_PASSIVE     PetSkillType = 6 // 被动技能
+	PetSkillType_PET_SKILL_TYPE_ULTIMATE    PetSkillType = 7 // 终极技能
+)
+
+// Enum value maps for PetSkillType.
+var (
+	PetSkillType_name = map[int32]string{
+		0: "PET_SKILL_TYPE_UNSPECIFIED",
+		1: "PET_SKILL_TYPE_ATTACK",
+		2: "PET_SKILL_TYPE_DEFENSE",
+		3: "PET_SKILL_TYPE_HEAL",
+		4: "PET_SKILL_TYPE_BUFF",
+		5: "PET_SKILL_TYPE_DEBUFF",
+		6: "PET_SKILL_TYPE_PASSIVE",
+		7: "PET_SKILL_TYPE_ULTIMATE",
+	}
+	PetSkillType_value = map[string]int32{
+		"PET_SKILL_TYPE_UNSPECIFIED": 0,
+		"PET_SKILL_TYPE_ATTACK":      1,
+		"PET_SKILL_TYPE_DEFENSE":     2,
+		"PET_SKILL_TYPE_HEAL":        3,
+		"PET_SKILL_TYPE_BUFF":        4,
+		"PET_SKILL_TYPE_DEBUFF":      5,
+		"PET_SKILL_TYPE_PASSIVE":     6,
+		"PET_SKILL_TYPE_ULTIMATE":    7,
+	}
+)
+
+func (x PetSkillType) Enum() *PetSkillType {
+	p := new(PetSkillType)
+	*p = x
+	return p
+}
+
+func (x PetSkillType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PetSkillType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_pet_proto_enumTypes[2].Descriptor()
+}
+
+func (PetSkillType) Type() protoreflect.EnumType {
+	return &file_proto_pet_proto_enumTypes[2]
+}
+
+func (x PetSkillType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PetSkillType.Descriptor instead.
+func (PetSkillType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_pet_proto_rawDescGZIP(), []int{2}
+}
+
+// 宠物心情枚举
+type PetMood int32
+
+const (
+	PetMood_PET_MOOD_UNSPECIFIED PetMood = 0
+	PetMood_PET_MOOD_VERY_HAPPY  PetMood = 1 // 非常开心
+	PetMood_PET_MOOD_HAPPY       PetMood = 2 // 开心
+	PetMood_PET_MOOD_NORMAL      PetMood = 3 // 正常
+	PetMood_PET_MOOD_SAD         PetMood = 4 // 难过
+	PetMood_PET_MOOD_VERY_SAD    PetMood = 5 // 非常难过
+	PetMood_PET_MOOD_ANGRY       PetMood = 6 // 愤怒
+	PetMood_PET_MOOD_SICK        PetMood = 7 // 生病
+)
+
+// Enum value maps for PetMood.
+var (
+	PetMood_name = map[int32]string{
+		0: "PET_MOOD_UNSPECIFIED",
+		1: "PET_MOOD_VERY_HAPPY",
+		2: "PET_MOOD_HAPPY",
+		3: "PET_MOOD_NORMAL",
+		4: "PET_MOOD_SAD",
+		5: "PET_MOOD_VERY_SAD",
+		6: "PET_MOOD_ANGRY",
+		7: "PET_MOOD_SICK",
+	}
+	PetMood_value = map[string]int32{
+		"PET_MOOD_UNSPECIFIED": 0,
+		"PET_MOOD_VERY_HAPPY":  1,
+		"PET_MOOD_HAPPY":       2,
+		"PET_MOOD_NORMAL":      3,
+		"PET_MOOD_SAD":         4,
+		"PET_MOOD_VERY_SAD":    5,
+		"PET_MOOD_ANGRY":       6,
+		"PET_MOOD_SICK":        7,
+	}
+)
+
+func (x PetMood) Enum() *PetMood {
+	p := new(PetMood)
+	*p = x
+	return p
+}
+
+func (x PetMood) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PetMood) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_pet_proto_enumTypes[3].Descriptor()
+}
+
+func (PetMood) Type() protoreflect.EnumType {
+	return &file_proto_pet_proto_enumTypes[3]
+}
+
+func (x PetMood) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PetMood.Descriptor instead.
+func (PetMood) EnumDescriptor() ([]byte, []int) {
+	return file_proto_pet_proto_rawDescGZIP(), []int{3}
+}
+
+// 宠物训练类型枚举
+type PetTrainingType int32
+
+const (
+	PetTrainingType_PET_TRAINING_TYPE_UNSPECIFIED  PetTrainingType = 0
+	PetTrainingType_PET_TRAINING_TYPE_STRENGTH     PetTrainingType = 1 // 力量训练
+	PetTrainingType_PET_TRAINING_TYPE_AGILITY      PetTrainingType = 2 // 敏捷训练
+	PetTrainingType_PET_TRAINING_TYPE_INTELLIGENCE PetTrainingType = 3 // 智力训练
+	PetTrainingType_PET_TRAINING_TYPE_ENDURANCE    PetTrainingType = 4 // 耐力训练
+	PetTrainingType_PET_TRAINING_TYPE_BALANCED     PetTrainingType = 5 // 平衡训练
+)
+
+// Enum value maps for PetTrainingType.
+var (
+	PetTrainingType_name = map[int32]string{
+		0: "PET_TRAINING_TYPE_UNSPECIFIED",
+		1: "PET_TRAINING_TYPE_STRENGTH",
+		2: "PET_TRAINING_TYPE_AGILITY",
+		3: "PET_TRAINING_TYPE_INTELLIGENCE",
+		4: "PET_TRAINING_TYPE_ENDURANCE",
+		5: "PET_TRAINING_TYPE_BALANCED",
+	}
+	PetTrainingType_value = map[string]int32{
+		"PET_TRAINING_TYPE_UNSPECIFIED":  0,
+		"PET_TRAINING_TYPE_STRENGTH":     1,
+		"PET_TRAINING_TYPE_AGILITY":      2,
+		"PET_TRAINING_TYPE_INTELLIGENCE": 3,
+		"PET_TRAINING_TYPE_ENDURANCE":    4,
+		"PET_TRAINING_TYPE_BALANCED":     5,
+	}
+)
+
+func (x PetTrainingType) Enum() *PetTrainingType {
+	p := new(PetTrainingType)
+	*p = x
+	return p
+}
+
+func (x PetTrainingType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PetTrainingType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_pet_proto_enumTypes[4].Descriptor()
+}
+
+func (PetTrainingType) Type() protoreflect.EnumType {
+	return &file_proto_pet_proto_enumTypes[4]
+}
+
+func (x PetTrainingType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PetTrainingType.Descriptor instead.
+func (PetTrainingType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_pet_proto_rawDescGZIP(), []int{4}
+}
+
+// 宠物训练强度枚举
+type PetTrainingIntensity int32
+
+const (
+	PetTrainingIntensity_PET_TRAINING_INTENSITY_UNSPECIFIED PetTrainingIntensity = 0
+	PetTrainingIntensity_PET_TRAINING_INTENSITY_LIGHT       PetTrainingIntensity = 1 // 轻度训练
+	PetTrainingIntensity_PET_TRAINING_INTENSITY_MODERATE    PetTrainingIntensity = 2 // 中度训练
+	PetTrainingIntensity_PET_TRAINING_INTENSITY_INTENSE     PetTrainingIntensity = 3 // 强度训练
+	PetTrainingIntensity_PET_TRAINING_INTENSITY_EXTREME     PetTrainingIntensity = 4 // 极限训练
+)
+
+// Enum value maps for PetTrainingIntensity.
+var (
+	PetTrainingIntensity_name = map[int32]string{
+		0: "PET_TRAINING_INTENSITY_UNSPECIFIED",
+		1: "PET_TRAINING_INTENSITY_LIGHT",
+		2: "PET_TRAINING_INTENSITY_MODERATE",
+		3: "PET_TRAINING_INTENSITY_INTENSE",
+		4: "PET_TRAINING_INTENSITY_EXTREME",
+	}
+	PetTrainingIntensity_value = map[string]int32{
+		"PET_TRAINING_INTENSITY_UNSPECIFIED": 0,
+		"PET_TRAINING_INTENSITY_LIGHT":       1,
+		"PET_TRAINING_INTENSITY_MODERATE":    2,
+		"PET_TRAINING_INTENSITY_INTENSE":     3,
+		"PET_TRAINING_INTENSITY_EXTREME":     4,
+	}
+)
+
+func (x PetTrainingIntensity) Enum() *PetTrainingIntensity {
+	p := new(PetTrainingIntensity)
+	*p = x
+	return p
+}
+
+func (x PetTrainingIntensity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PetTrainingIntensity) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_pet_proto_enumTypes[5].Descriptor()
+}
+
+func (PetTrainingIntensity) Type() protoreflect.EnumType {
+	return &file_proto_pet_proto_enumTypes[5]
+}
+
+func (x PetTrainingIntensity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PetTrainingIntensity.Descriptor instead.
+func (PetTrainingIntensity) EnumDescriptor() ([]byte, []int) {
+	return file_proto_pet_proto_rawDescGZIP(), []int{5}
+}
+
 // 创建宠物请求
 type CreatePetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1033,7 +1399,7 @@ type PetSkill struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Level         int32                  `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitempty"`
 	MaxLevel      int32                  `protobuf:"varint,5,opt,name=max_level,json=maxLevel,proto3" json:"max_level,omitempty"`
-	SkillType     string                 `protobuf:"bytes,6,opt,name=skill_type,json=skillType,proto3" json:"skill_type,omitempty"`
+	SkillType     PetSkillType           `protobuf:"varint,6,opt,name=skill_type,json=skillType,proto3,enum=greatestworks.pet.PetSkillType" json:"skill_type,omitempty"`
 	Cooldown      int32                  `protobuf:"varint,7,opt,name=cooldown,proto3" json:"cooldown,omitempty"`
 	ManaCost      int32                  `protobuf:"varint,8,opt,name=mana_cost,json=manaCost,proto3" json:"mana_cost,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1105,11 +1471,11 @@ func (x *PetSkill) GetMaxLevel() int32 {
 	return 0
 }
 
-func (x *PetSkill) GetSkillType() string {
+func (x *PetSkill) GetSkillType() PetSkillType {
 	if x != nil {
 		return x.SkillType
 	}
-	return ""
+	return PetSkillType_PET_SKILL_TYPE_UNSPECIFIED
 }
 
 func (x *PetSkill) GetCooldown() int32 {
@@ -1215,17 +1581,64 @@ const file_proto_pet_proto_rawDesc = "" +
 	"\thappiness\x18\b \x01(\x05R\thappiness\"c\n" +
 	"\tPetSkills\x123\n" +
 	"\x06skills\x18\x01 \x03(\v2\x1b.greatestworks.pet.PetSkillR\x06skills\x12!\n" +
-	"\fskill_points\x18\x02 \x01(\x05R\vskillPoints\"\xe6\x01\n" +
+	"\fskill_points\x18\x02 \x01(\x05R\vskillPoints\"\x87\x02\n" +
 	"\bPetSkill\x12\x19\n" +
 	"\bskill_id\x18\x01 \x01(\tR\askillId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
 	"\x05level\x18\x04 \x01(\x05R\x05level\x12\x1b\n" +
-	"\tmax_level\x18\x05 \x01(\x05R\bmaxLevel\x12\x1d\n" +
+	"\tmax_level\x18\x05 \x01(\x05R\bmaxLevel\x12>\n" +
 	"\n" +
-	"skill_type\x18\x06 \x01(\tR\tskillType\x12\x1a\n" +
+	"skill_type\x18\x06 \x01(\x0e2\x1f.greatestworks.pet.PetSkillTypeR\tskillType\x12\x1a\n" +
 	"\bcooldown\x18\a \x01(\x05R\bcooldown\x12\x1b\n" +
-	"\tmana_cost\x18\b \x01(\x05R\bmanaCost2\xae\x04\n" +
+	"\tmana_cost\x18\b \x01(\x05R\bmanaCost*\xb2\x01\n" +
+	"\tPetRarity\x12\x1a\n" +
+	"\x16PET_RARITY_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11PET_RARITY_COMMON\x10\x01\x12\x17\n" +
+	"\x13PET_RARITY_UNCOMMON\x10\x02\x12\x13\n" +
+	"\x0fPET_RARITY_RARE\x10\x03\x12\x13\n" +
+	"\x0fPET_RARITY_EPIC\x10\x04\x12\x18\n" +
+	"\x14PET_RARITY_LEGENDARY\x10\x05\x12\x15\n" +
+	"\x11PET_RARITY_MYTHIC\x10\x06*\x9f\x01\n" +
+	"\n" +
+	"PetQuality\x12\x1b\n" +
+	"\x17PET_QUALITY_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10PET_QUALITY_POOR\x10\x01\x12\x14\n" +
+	"\x10PET_QUALITY_FAIR\x10\x02\x12\x14\n" +
+	"\x10PET_QUALITY_GOOD\x10\x03\x12\x19\n" +
+	"\x15PET_QUALITY_EXCELLENT\x10\x04\x12\x17\n" +
+	"\x13PET_QUALITY_PERFECT\x10\x05*\xeb\x01\n" +
+	"\fPetSkillType\x12\x1e\n" +
+	"\x1aPET_SKILL_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15PET_SKILL_TYPE_ATTACK\x10\x01\x12\x1a\n" +
+	"\x16PET_SKILL_TYPE_DEFENSE\x10\x02\x12\x17\n" +
+	"\x13PET_SKILL_TYPE_HEAL\x10\x03\x12\x17\n" +
+	"\x13PET_SKILL_TYPE_BUFF\x10\x04\x12\x19\n" +
+	"\x15PET_SKILL_TYPE_DEBUFF\x10\x05\x12\x1a\n" +
+	"\x16PET_SKILL_TYPE_PASSIVE\x10\x06\x12\x1b\n" +
+	"\x17PET_SKILL_TYPE_ULTIMATE\x10\a*\xb5\x01\n" +
+	"\aPetMood\x12\x18\n" +
+	"\x14PET_MOOD_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13PET_MOOD_VERY_HAPPY\x10\x01\x12\x12\n" +
+	"\x0ePET_MOOD_HAPPY\x10\x02\x12\x13\n" +
+	"\x0fPET_MOOD_NORMAL\x10\x03\x12\x10\n" +
+	"\fPET_MOOD_SAD\x10\x04\x12\x15\n" +
+	"\x11PET_MOOD_VERY_SAD\x10\x05\x12\x12\n" +
+	"\x0ePET_MOOD_ANGRY\x10\x06\x12\x11\n" +
+	"\rPET_MOOD_SICK\x10\a*\xd8\x01\n" +
+	"\x0fPetTrainingType\x12!\n" +
+	"\x1dPET_TRAINING_TYPE_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aPET_TRAINING_TYPE_STRENGTH\x10\x01\x12\x1d\n" +
+	"\x19PET_TRAINING_TYPE_AGILITY\x10\x02\x12\"\n" +
+	"\x1ePET_TRAINING_TYPE_INTELLIGENCE\x10\x03\x12\x1f\n" +
+	"\x1bPET_TRAINING_TYPE_ENDURANCE\x10\x04\x12\x1e\n" +
+	"\x1aPET_TRAINING_TYPE_BALANCED\x10\x05*\xcd\x01\n" +
+	"\x14PetTrainingIntensity\x12&\n" +
+	"\"PET_TRAINING_INTENSITY_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cPET_TRAINING_INTENSITY_LIGHT\x10\x01\x12#\n" +
+	"\x1fPET_TRAINING_INTENSITY_MODERATE\x10\x02\x12\"\n" +
+	"\x1ePET_TRAINING_INTENSITY_INTENSE\x10\x03\x12\"\n" +
+	"\x1ePET_TRAINING_INTENSITY_EXTREME\x10\x042\xae\x04\n" +
 	"\n" +
 	"PetService\x12V\n" +
 	"\tCreatePet\x12#.greatestworks.pet.CreatePetRequest\x1a$.greatestworks.pet.CreatePetResponse\x12Y\n" +
@@ -1249,63 +1662,71 @@ func file_proto_pet_proto_rawDescGZIP() []byte {
 	return file_proto_pet_proto_rawDescData
 }
 
+var file_proto_pet_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_proto_pet_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_proto_pet_proto_goTypes = []any{
-	(*CreatePetRequest)(nil),      // 0: greatestworks.pet.CreatePetRequest
-	(*CreatePetResponse)(nil),     // 1: greatestworks.pet.CreatePetResponse
-	(*GetPetInfoRequest)(nil),     // 2: greatestworks.pet.GetPetInfoRequest
-	(*GetPetInfoResponse)(nil),    // 3: greatestworks.pet.GetPetInfoResponse
-	(*UpdatePetRequest)(nil),      // 4: greatestworks.pet.UpdatePetRequest
-	(*UpdatePetResponse)(nil),     // 5: greatestworks.pet.UpdatePetResponse
-	(*LevelUpPetRequest)(nil),     // 6: greatestworks.pet.LevelUpPetRequest
-	(*LevelUpPetResponse)(nil),    // 7: greatestworks.pet.LevelUpPetResponse
-	(*EvolvePetRequest)(nil),      // 8: greatestworks.pet.EvolvePetRequest
-	(*EvolvePetResponse)(nil),     // 9: greatestworks.pet.EvolvePetResponse
-	(*GetPlayerPetsRequest)(nil),  // 10: greatestworks.pet.GetPlayerPetsRequest
-	(*GetPlayerPetsResponse)(nil), // 11: greatestworks.pet.GetPlayerPetsResponse
-	(*PetInfo)(nil),               // 12: greatestworks.pet.PetInfo
-	(*PetStats)(nil),              // 13: greatestworks.pet.PetStats
-	(*PetSkills)(nil),             // 14: greatestworks.pet.PetSkills
-	(*PetSkill)(nil),              // 15: greatestworks.pet.PetSkill
-	nil,                           // 16: greatestworks.pet.UpdatePetRequest.UpdatesEntry
-	(*common.CommonResponse)(nil), // 17: greatestworks.common.CommonResponse
-	(*common.PaginationInfo)(nil), // 18: greatestworks.common.PaginationInfo
+	(PetRarity)(0),                // 0: greatestworks.pet.PetRarity
+	(PetQuality)(0),               // 1: greatestworks.pet.PetQuality
+	(PetSkillType)(0),             // 2: greatestworks.pet.PetSkillType
+	(PetMood)(0),                  // 3: greatestworks.pet.PetMood
+	(PetTrainingType)(0),          // 4: greatestworks.pet.PetTrainingType
+	(PetTrainingIntensity)(0),     // 5: greatestworks.pet.PetTrainingIntensity
+	(*CreatePetRequest)(nil),      // 6: greatestworks.pet.CreatePetRequest
+	(*CreatePetResponse)(nil),     // 7: greatestworks.pet.CreatePetResponse
+	(*GetPetInfoRequest)(nil),     // 8: greatestworks.pet.GetPetInfoRequest
+	(*GetPetInfoResponse)(nil),    // 9: greatestworks.pet.GetPetInfoResponse
+	(*UpdatePetRequest)(nil),      // 10: greatestworks.pet.UpdatePetRequest
+	(*UpdatePetResponse)(nil),     // 11: greatestworks.pet.UpdatePetResponse
+	(*LevelUpPetRequest)(nil),     // 12: greatestworks.pet.LevelUpPetRequest
+	(*LevelUpPetResponse)(nil),    // 13: greatestworks.pet.LevelUpPetResponse
+	(*EvolvePetRequest)(nil),      // 14: greatestworks.pet.EvolvePetRequest
+	(*EvolvePetResponse)(nil),     // 15: greatestworks.pet.EvolvePetResponse
+	(*GetPlayerPetsRequest)(nil),  // 16: greatestworks.pet.GetPlayerPetsRequest
+	(*GetPlayerPetsResponse)(nil), // 17: greatestworks.pet.GetPlayerPetsResponse
+	(*PetInfo)(nil),               // 18: greatestworks.pet.PetInfo
+	(*PetStats)(nil),              // 19: greatestworks.pet.PetStats
+	(*PetSkills)(nil),             // 20: greatestworks.pet.PetSkills
+	(*PetSkill)(nil),              // 21: greatestworks.pet.PetSkill
+	nil,                           // 22: greatestworks.pet.UpdatePetRequest.UpdatesEntry
+	(*common.CommonResponse)(nil), // 23: greatestworks.common.CommonResponse
+	(*common.PaginationInfo)(nil), // 24: greatestworks.common.PaginationInfo
 }
 var file_proto_pet_proto_depIdxs = []int32{
-	17, // 0: greatestworks.pet.CreatePetResponse.common:type_name -> greatestworks.common.CommonResponse
-	12, // 1: greatestworks.pet.CreatePetResponse.pet:type_name -> greatestworks.pet.PetInfo
-	17, // 2: greatestworks.pet.GetPetInfoResponse.common:type_name -> greatestworks.common.CommonResponse
-	12, // 3: greatestworks.pet.GetPetInfoResponse.pet:type_name -> greatestworks.pet.PetInfo
-	16, // 4: greatestworks.pet.UpdatePetRequest.updates:type_name -> greatestworks.pet.UpdatePetRequest.UpdatesEntry
-	17, // 5: greatestworks.pet.UpdatePetResponse.common:type_name -> greatestworks.common.CommonResponse
-	12, // 6: greatestworks.pet.UpdatePetResponse.pet:type_name -> greatestworks.pet.PetInfo
-	17, // 7: greatestworks.pet.LevelUpPetResponse.common:type_name -> greatestworks.common.CommonResponse
-	12, // 8: greatestworks.pet.LevelUpPetResponse.pet:type_name -> greatestworks.pet.PetInfo
-	17, // 9: greatestworks.pet.EvolvePetResponse.common:type_name -> greatestworks.common.CommonResponse
-	12, // 10: greatestworks.pet.EvolvePetResponse.pet:type_name -> greatestworks.pet.PetInfo
-	17, // 11: greatestworks.pet.GetPlayerPetsResponse.common:type_name -> greatestworks.common.CommonResponse
-	12, // 12: greatestworks.pet.GetPlayerPetsResponse.pets:type_name -> greatestworks.pet.PetInfo
-	18, // 13: greatestworks.pet.GetPlayerPetsResponse.pagination:type_name -> greatestworks.common.PaginationInfo
-	13, // 14: greatestworks.pet.PetInfo.stats:type_name -> greatestworks.pet.PetStats
-	14, // 15: greatestworks.pet.PetInfo.skills:type_name -> greatestworks.pet.PetSkills
-	15, // 16: greatestworks.pet.PetSkills.skills:type_name -> greatestworks.pet.PetSkill
-	0,  // 17: greatestworks.pet.PetService.CreatePet:input_type -> greatestworks.pet.CreatePetRequest
-	2,  // 18: greatestworks.pet.PetService.GetPetInfo:input_type -> greatestworks.pet.GetPetInfoRequest
-	4,  // 19: greatestworks.pet.PetService.UpdatePet:input_type -> greatestworks.pet.UpdatePetRequest
-	6,  // 20: greatestworks.pet.PetService.LevelUpPet:input_type -> greatestworks.pet.LevelUpPetRequest
-	8,  // 21: greatestworks.pet.PetService.EvolvePet:input_type -> greatestworks.pet.EvolvePetRequest
-	10, // 22: greatestworks.pet.PetService.GetPlayerPets:input_type -> greatestworks.pet.GetPlayerPetsRequest
-	1,  // 23: greatestworks.pet.PetService.CreatePet:output_type -> greatestworks.pet.CreatePetResponse
-	3,  // 24: greatestworks.pet.PetService.GetPetInfo:output_type -> greatestworks.pet.GetPetInfoResponse
-	5,  // 25: greatestworks.pet.PetService.UpdatePet:output_type -> greatestworks.pet.UpdatePetResponse
-	7,  // 26: greatestworks.pet.PetService.LevelUpPet:output_type -> greatestworks.pet.LevelUpPetResponse
-	9,  // 27: greatestworks.pet.PetService.EvolvePet:output_type -> greatestworks.pet.EvolvePetResponse
-	11, // 28: greatestworks.pet.PetService.GetPlayerPets:output_type -> greatestworks.pet.GetPlayerPetsResponse
-	23, // [23:29] is the sub-list for method output_type
-	17, // [17:23] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	23, // 0: greatestworks.pet.CreatePetResponse.common:type_name -> greatestworks.common.CommonResponse
+	18, // 1: greatestworks.pet.CreatePetResponse.pet:type_name -> greatestworks.pet.PetInfo
+	23, // 2: greatestworks.pet.GetPetInfoResponse.common:type_name -> greatestworks.common.CommonResponse
+	18, // 3: greatestworks.pet.GetPetInfoResponse.pet:type_name -> greatestworks.pet.PetInfo
+	22, // 4: greatestworks.pet.UpdatePetRequest.updates:type_name -> greatestworks.pet.UpdatePetRequest.UpdatesEntry
+	23, // 5: greatestworks.pet.UpdatePetResponse.common:type_name -> greatestworks.common.CommonResponse
+	18, // 6: greatestworks.pet.UpdatePetResponse.pet:type_name -> greatestworks.pet.PetInfo
+	23, // 7: greatestworks.pet.LevelUpPetResponse.common:type_name -> greatestworks.common.CommonResponse
+	18, // 8: greatestworks.pet.LevelUpPetResponse.pet:type_name -> greatestworks.pet.PetInfo
+	23, // 9: greatestworks.pet.EvolvePetResponse.common:type_name -> greatestworks.common.CommonResponse
+	18, // 10: greatestworks.pet.EvolvePetResponse.pet:type_name -> greatestworks.pet.PetInfo
+	23, // 11: greatestworks.pet.GetPlayerPetsResponse.common:type_name -> greatestworks.common.CommonResponse
+	18, // 12: greatestworks.pet.GetPlayerPetsResponse.pets:type_name -> greatestworks.pet.PetInfo
+	24, // 13: greatestworks.pet.GetPlayerPetsResponse.pagination:type_name -> greatestworks.common.PaginationInfo
+	19, // 14: greatestworks.pet.PetInfo.stats:type_name -> greatestworks.pet.PetStats
+	20, // 15: greatestworks.pet.PetInfo.skills:type_name -> greatestworks.pet.PetSkills
+	21, // 16: greatestworks.pet.PetSkills.skills:type_name -> greatestworks.pet.PetSkill
+	2,  // 17: greatestworks.pet.PetSkill.skill_type:type_name -> greatestworks.pet.PetSkillType
+	6,  // 18: greatestworks.pet.PetService.CreatePet:input_type -> greatestworks.pet.CreatePetRequest
+	8,  // 19: greatestworks.pet.PetService.GetPetInfo:input_type -> greatestworks.pet.GetPetInfoRequest
+	10, // 20: greatestworks.pet.PetService.UpdatePet:input_type -> greatestworks.pet.UpdatePetRequest
+	12, // 21: greatestworks.pet.PetService.LevelUpPet:input_type -> greatestworks.pet.LevelUpPetRequest
+	14, // 22: greatestworks.pet.PetService.EvolvePet:input_type -> greatestworks.pet.EvolvePetRequest
+	16, // 23: greatestworks.pet.PetService.GetPlayerPets:input_type -> greatestworks.pet.GetPlayerPetsRequest
+	7,  // 24: greatestworks.pet.PetService.CreatePet:output_type -> greatestworks.pet.CreatePetResponse
+	9,  // 25: greatestworks.pet.PetService.GetPetInfo:output_type -> greatestworks.pet.GetPetInfoResponse
+	11, // 26: greatestworks.pet.PetService.UpdatePet:output_type -> greatestworks.pet.UpdatePetResponse
+	13, // 27: greatestworks.pet.PetService.LevelUpPet:output_type -> greatestworks.pet.LevelUpPetResponse
+	15, // 28: greatestworks.pet.PetService.EvolvePet:output_type -> greatestworks.pet.EvolvePetResponse
+	17, // 29: greatestworks.pet.PetService.GetPlayerPets:output_type -> greatestworks.pet.GetPlayerPetsResponse
+	24, // [24:30] is the sub-list for method output_type
+	18, // [18:24] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_proto_pet_proto_init() }
@@ -1318,13 +1739,14 @@ func file_proto_pet_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_pet_proto_rawDesc), len(file_proto_pet_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      6,
 			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_proto_pet_proto_goTypes,
 		DependencyIndexes: file_proto_pet_proto_depIdxs,
+		EnumInfos:         file_proto_pet_proto_enumTypes,
 		MessageInfos:      file_proto_pet_proto_msgTypes,
 	}.Build()
 	File_proto_pet_proto = out.File

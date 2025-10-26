@@ -21,6 +21,387 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 物品类型枚举
+type ItemType int32
+
+const (
+	ItemType_ITEM_TYPE_UNSPECIFIED ItemType = 0
+	ItemType_ITEM_TYPE_WEAPON      ItemType = 1 // 武器
+	ItemType_ITEM_TYPE_ARMOR       ItemType = 2 // 护甲
+	ItemType_ITEM_TYPE_ACCESSORY   ItemType = 3 // 饰品
+	ItemType_ITEM_TYPE_CONSUMABLE  ItemType = 4 // 消耗品
+	ItemType_ITEM_TYPE_MATERIAL    ItemType = 5 // 材料
+	ItemType_ITEM_TYPE_QUEST       ItemType = 6 // 任务物品
+	ItemType_ITEM_TYPE_CURRENCY    ItemType = 7 // 货币
+	ItemType_ITEM_TYPE_SPECIAL     ItemType = 8 // 特殊物品
+)
+
+// Enum value maps for ItemType.
+var (
+	ItemType_name = map[int32]string{
+		0: "ITEM_TYPE_UNSPECIFIED",
+		1: "ITEM_TYPE_WEAPON",
+		2: "ITEM_TYPE_ARMOR",
+		3: "ITEM_TYPE_ACCESSORY",
+		4: "ITEM_TYPE_CONSUMABLE",
+		5: "ITEM_TYPE_MATERIAL",
+		6: "ITEM_TYPE_QUEST",
+		7: "ITEM_TYPE_CURRENCY",
+		8: "ITEM_TYPE_SPECIAL",
+	}
+	ItemType_value = map[string]int32{
+		"ITEM_TYPE_UNSPECIFIED": 0,
+		"ITEM_TYPE_WEAPON":      1,
+		"ITEM_TYPE_ARMOR":       2,
+		"ITEM_TYPE_ACCESSORY":   3,
+		"ITEM_TYPE_CONSUMABLE":  4,
+		"ITEM_TYPE_MATERIAL":    5,
+		"ITEM_TYPE_QUEST":       6,
+		"ITEM_TYPE_CURRENCY":    7,
+		"ITEM_TYPE_SPECIAL":     8,
+	}
+)
+
+func (x ItemType) Enum() *ItemType {
+	p := new(ItemType)
+	*p = x
+	return p
+}
+
+func (x ItemType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ItemType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_common_proto_enumTypes[0].Descriptor()
+}
+
+func (ItemType) Type() protoreflect.EnumType {
+	return &file_proto_common_proto_enumTypes[0]
+}
+
+func (x ItemType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ItemType.Descriptor instead.
+func (ItemType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_common_proto_rawDescGZIP(), []int{0}
+}
+
+// 技能类型枚举
+type SkillType int32
+
+const (
+	SkillType_SKILL_TYPE_UNSPECIFIED SkillType = 0
+	SkillType_SKILL_TYPE_ATTACK      SkillType = 1 // 攻击技能
+	SkillType_SKILL_TYPE_DEFENSE     SkillType = 2 // 防御技能
+	SkillType_SKILL_TYPE_HEAL        SkillType = 3 // 治疗技能
+	SkillType_SKILL_TYPE_BUFF        SkillType = 4 // 增益技能
+	SkillType_SKILL_TYPE_DEBUFF      SkillType = 5 // 减益技能
+	SkillType_SKILL_TYPE_PASSIVE     SkillType = 6 // 被动技能
+	SkillType_SKILL_TYPE_ULTIMATE    SkillType = 7 // 终极技能
+)
+
+// Enum value maps for SkillType.
+var (
+	SkillType_name = map[int32]string{
+		0: "SKILL_TYPE_UNSPECIFIED",
+		1: "SKILL_TYPE_ATTACK",
+		2: "SKILL_TYPE_DEFENSE",
+		3: "SKILL_TYPE_HEAL",
+		4: "SKILL_TYPE_BUFF",
+		5: "SKILL_TYPE_DEBUFF",
+		6: "SKILL_TYPE_PASSIVE",
+		7: "SKILL_TYPE_ULTIMATE",
+	}
+	SkillType_value = map[string]int32{
+		"SKILL_TYPE_UNSPECIFIED": 0,
+		"SKILL_TYPE_ATTACK":      1,
+		"SKILL_TYPE_DEFENSE":     2,
+		"SKILL_TYPE_HEAL":        3,
+		"SKILL_TYPE_BUFF":        4,
+		"SKILL_TYPE_DEBUFF":      5,
+		"SKILL_TYPE_PASSIVE":     6,
+		"SKILL_TYPE_ULTIMATE":    7,
+	}
+)
+
+func (x SkillType) Enum() *SkillType {
+	p := new(SkillType)
+	*p = x
+	return p
+}
+
+func (x SkillType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SkillType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_common_proto_enumTypes[1].Descriptor()
+}
+
+func (SkillType) Type() protoreflect.EnumType {
+	return &file_proto_common_proto_enumTypes[1]
+}
+
+func (x SkillType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SkillType.Descriptor instead.
+func (SkillType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_common_proto_rawDescGZIP(), []int{1}
+}
+
+// 聊天频道枚举
+type ChatChannel int32
+
+const (
+	ChatChannel_CHAT_CHANNEL_UNSPECIFIED ChatChannel = 0
+	ChatChannel_CHAT_CHANNEL_WORLD       ChatChannel = 1 // 世界频道
+	ChatChannel_CHAT_CHANNEL_GUILD       ChatChannel = 2 // 公会频道
+	ChatChannel_CHAT_CHANNEL_TEAM        ChatChannel = 3 // 队伍频道
+	ChatChannel_CHAT_CHANNEL_PRIVATE     ChatChannel = 4 // 私聊频道
+	ChatChannel_CHAT_CHANNEL_SYSTEM      ChatChannel = 5 // 系统频道
+	ChatChannel_CHAT_CHANNEL_TRADE       ChatChannel = 6 // 交易频道
+	ChatChannel_CHAT_CHANNEL_HELP        ChatChannel = 7 // 帮助频道
+)
+
+// Enum value maps for ChatChannel.
+var (
+	ChatChannel_name = map[int32]string{
+		0: "CHAT_CHANNEL_UNSPECIFIED",
+		1: "CHAT_CHANNEL_WORLD",
+		2: "CHAT_CHANNEL_GUILD",
+		3: "CHAT_CHANNEL_TEAM",
+		4: "CHAT_CHANNEL_PRIVATE",
+		5: "CHAT_CHANNEL_SYSTEM",
+		6: "CHAT_CHANNEL_TRADE",
+		7: "CHAT_CHANNEL_HELP",
+	}
+	ChatChannel_value = map[string]int32{
+		"CHAT_CHANNEL_UNSPECIFIED": 0,
+		"CHAT_CHANNEL_WORLD":       1,
+		"CHAT_CHANNEL_GUILD":       2,
+		"CHAT_CHANNEL_TEAM":        3,
+		"CHAT_CHANNEL_PRIVATE":     4,
+		"CHAT_CHANNEL_SYSTEM":      5,
+		"CHAT_CHANNEL_TRADE":       6,
+		"CHAT_CHANNEL_HELP":        7,
+	}
+)
+
+func (x ChatChannel) Enum() *ChatChannel {
+	p := new(ChatChannel)
+	*p = x
+	return p
+}
+
+func (x ChatChannel) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ChatChannel) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_common_proto_enumTypes[2].Descriptor()
+}
+
+func (ChatChannel) Type() protoreflect.EnumType {
+	return &file_proto_common_proto_enumTypes[2]
+}
+
+func (x ChatChannel) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ChatChannel.Descriptor instead.
+func (ChatChannel) EnumDescriptor() ([]byte, []int) {
+	return file_proto_common_proto_rawDescGZIP(), []int{2}
+}
+
+// 任务状态枚举
+type QuestStatus int32
+
+const (
+	QuestStatus_QUEST_STATUS_UNSPECIFIED QuestStatus = 0
+	QuestStatus_QUEST_STATUS_NOT_STARTED QuestStatus = 1 // 未开始
+	QuestStatus_QUEST_STATUS_IN_PROGRESS QuestStatus = 2 // 进行中
+	QuestStatus_QUEST_STATUS_COMPLETED   QuestStatus = 3 // 已完成
+	QuestStatus_QUEST_STATUS_FAILED      QuestStatus = 4 // 已失败
+	QuestStatus_QUEST_STATUS_CANCELLED   QuestStatus = 5 // 已取消
+)
+
+// Enum value maps for QuestStatus.
+var (
+	QuestStatus_name = map[int32]string{
+		0: "QUEST_STATUS_UNSPECIFIED",
+		1: "QUEST_STATUS_NOT_STARTED",
+		2: "QUEST_STATUS_IN_PROGRESS",
+		3: "QUEST_STATUS_COMPLETED",
+		4: "QUEST_STATUS_FAILED",
+		5: "QUEST_STATUS_CANCELLED",
+	}
+	QuestStatus_value = map[string]int32{
+		"QUEST_STATUS_UNSPECIFIED": 0,
+		"QUEST_STATUS_NOT_STARTED": 1,
+		"QUEST_STATUS_IN_PROGRESS": 2,
+		"QUEST_STATUS_COMPLETED":   3,
+		"QUEST_STATUS_FAILED":      4,
+		"QUEST_STATUS_CANCELLED":   5,
+	}
+)
+
+func (x QuestStatus) Enum() *QuestStatus {
+	p := new(QuestStatus)
+	*p = x
+	return p
+}
+
+func (x QuestStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (QuestStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_common_proto_enumTypes[3].Descriptor()
+}
+
+func (QuestStatus) Type() protoreflect.EnumType {
+	return &file_proto_common_proto_enumTypes[3]
+}
+
+func (x QuestStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use QuestStatus.Descriptor instead.
+func (QuestStatus) EnumDescriptor() ([]byte, []int) {
+	return file_proto_common_proto_rawDescGZIP(), []int{3}
+}
+
+// 任务类型枚举
+type QuestType int32
+
+const (
+	QuestType_QUEST_TYPE_UNSPECIFIED QuestType = 0
+	QuestType_QUEST_TYPE_MAIN        QuestType = 1 // 主线任务
+	QuestType_QUEST_TYPE_SIDE        QuestType = 2 // 支线任务
+	QuestType_QUEST_TYPE_DAILY       QuestType = 3 // 日常任务
+	QuestType_QUEST_TYPE_WEEKLY      QuestType = 4 // 周常任务
+	QuestType_QUEST_TYPE_EVENT       QuestType = 5 // 活动任务
+	QuestType_QUEST_TYPE_ACHIEVEMENT QuestType = 6 // 成就任务
+)
+
+// Enum value maps for QuestType.
+var (
+	QuestType_name = map[int32]string{
+		0: "QUEST_TYPE_UNSPECIFIED",
+		1: "QUEST_TYPE_MAIN",
+		2: "QUEST_TYPE_SIDE",
+		3: "QUEST_TYPE_DAILY",
+		4: "QUEST_TYPE_WEEKLY",
+		5: "QUEST_TYPE_EVENT",
+		6: "QUEST_TYPE_ACHIEVEMENT",
+	}
+	QuestType_value = map[string]int32{
+		"QUEST_TYPE_UNSPECIFIED": 0,
+		"QUEST_TYPE_MAIN":        1,
+		"QUEST_TYPE_SIDE":        2,
+		"QUEST_TYPE_DAILY":       3,
+		"QUEST_TYPE_WEEKLY":      4,
+		"QUEST_TYPE_EVENT":       5,
+		"QUEST_TYPE_ACHIEVEMENT": 6,
+	}
+)
+
+func (x QuestType) Enum() *QuestType {
+	p := new(QuestType)
+	*p = x
+	return p
+}
+
+func (x QuestType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (QuestType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_common_proto_enumTypes[4].Descriptor()
+}
+
+func (QuestType) Type() protoreflect.EnumType {
+	return &file_proto_common_proto_enumTypes[4]
+}
+
+func (x QuestType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use QuestType.Descriptor instead.
+func (QuestType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_common_proto_rawDescGZIP(), []int{4}
+}
+
+// 物品稀有度枚举
+type ItemRarity int32
+
+const (
+	ItemRarity_ITEM_RARITY_UNSPECIFIED ItemRarity = 0
+	ItemRarity_ITEM_RARITY_COMMON      ItemRarity = 1 // 普通
+	ItemRarity_ITEM_RARITY_UNCOMMON    ItemRarity = 2 // 不常见
+	ItemRarity_ITEM_RARITY_RARE        ItemRarity = 3 // 稀有
+	ItemRarity_ITEM_RARITY_EPIC        ItemRarity = 4 // 史诗
+	ItemRarity_ITEM_RARITY_LEGENDARY   ItemRarity = 5 // 传说
+	ItemRarity_ITEM_RARITY_MYTHIC      ItemRarity = 6 // 神话
+)
+
+// Enum value maps for ItemRarity.
+var (
+	ItemRarity_name = map[int32]string{
+		0: "ITEM_RARITY_UNSPECIFIED",
+		1: "ITEM_RARITY_COMMON",
+		2: "ITEM_RARITY_UNCOMMON",
+		3: "ITEM_RARITY_RARE",
+		4: "ITEM_RARITY_EPIC",
+		5: "ITEM_RARITY_LEGENDARY",
+		6: "ITEM_RARITY_MYTHIC",
+	}
+	ItemRarity_value = map[string]int32{
+		"ITEM_RARITY_UNSPECIFIED": 0,
+		"ITEM_RARITY_COMMON":      1,
+		"ITEM_RARITY_UNCOMMON":    2,
+		"ITEM_RARITY_RARE":        3,
+		"ITEM_RARITY_EPIC":        4,
+		"ITEM_RARITY_LEGENDARY":   5,
+		"ITEM_RARITY_MYTHIC":      6,
+	}
+)
+
+func (x ItemRarity) Enum() *ItemRarity {
+	p := new(ItemRarity)
+	*p = x
+	return p
+}
+
+func (x ItemRarity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ItemRarity) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_common_proto_enumTypes[5].Descriptor()
+}
+
+func (ItemRarity) Type() protoreflect.EnumType {
+	return &file_proto_common_proto_enumTypes[5]
+}
+
+func (x ItemRarity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ItemRarity.Descriptor instead.
+func (ItemRarity) EnumDescriptor() ([]byte, []int) {
+	return file_proto_common_proto_rawDescGZIP(), []int{5}
+}
+
 // 通用响应结构
 type CommonResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -507,7 +888,59 @@ const file_proto_common_proto_rawDesc = "" +
 	"\vmax_players\x18\x04 \x01(\x05R\n" +
 	"maxPlayers\x12'\n" +
 	"\x0fcurrent_players\x18\x05 \x01(\x05R\x0ecurrentPlayers\x12\x1b\n" +
-	"\tis_online\x18\x06 \x01(\bR\bisOnlineB<Z#greatestworks/internal/proto/common\xaa\x02\x14GreatestWorks.Commonb\x06proto3"
+	"\tis_online\x18\x06 \x01(\bR\bisOnline*\xdf\x01\n" +
+	"\bItemType\x12\x19\n" +
+	"\x15ITEM_TYPE_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10ITEM_TYPE_WEAPON\x10\x01\x12\x13\n" +
+	"\x0fITEM_TYPE_ARMOR\x10\x02\x12\x17\n" +
+	"\x13ITEM_TYPE_ACCESSORY\x10\x03\x12\x18\n" +
+	"\x14ITEM_TYPE_CONSUMABLE\x10\x04\x12\x16\n" +
+	"\x12ITEM_TYPE_MATERIAL\x10\x05\x12\x13\n" +
+	"\x0fITEM_TYPE_QUEST\x10\x06\x12\x16\n" +
+	"\x12ITEM_TYPE_CURRENCY\x10\a\x12\x15\n" +
+	"\x11ITEM_TYPE_SPECIAL\x10\b*\xc8\x01\n" +
+	"\tSkillType\x12\x1a\n" +
+	"\x16SKILL_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11SKILL_TYPE_ATTACK\x10\x01\x12\x16\n" +
+	"\x12SKILL_TYPE_DEFENSE\x10\x02\x12\x13\n" +
+	"\x0fSKILL_TYPE_HEAL\x10\x03\x12\x13\n" +
+	"\x0fSKILL_TYPE_BUFF\x10\x04\x12\x15\n" +
+	"\x11SKILL_TYPE_DEBUFF\x10\x05\x12\x16\n" +
+	"\x12SKILL_TYPE_PASSIVE\x10\x06\x12\x17\n" +
+	"\x13SKILL_TYPE_ULTIMATE\x10\a*\xd4\x01\n" +
+	"\vChatChannel\x12\x1c\n" +
+	"\x18CHAT_CHANNEL_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12CHAT_CHANNEL_WORLD\x10\x01\x12\x16\n" +
+	"\x12CHAT_CHANNEL_GUILD\x10\x02\x12\x15\n" +
+	"\x11CHAT_CHANNEL_TEAM\x10\x03\x12\x18\n" +
+	"\x14CHAT_CHANNEL_PRIVATE\x10\x04\x12\x17\n" +
+	"\x13CHAT_CHANNEL_SYSTEM\x10\x05\x12\x16\n" +
+	"\x12CHAT_CHANNEL_TRADE\x10\x06\x12\x15\n" +
+	"\x11CHAT_CHANNEL_HELP\x10\a*\xb8\x01\n" +
+	"\vQuestStatus\x12\x1c\n" +
+	"\x18QUEST_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18QUEST_STATUS_NOT_STARTED\x10\x01\x12\x1c\n" +
+	"\x18QUEST_STATUS_IN_PROGRESS\x10\x02\x12\x1a\n" +
+	"\x16QUEST_STATUS_COMPLETED\x10\x03\x12\x17\n" +
+	"\x13QUEST_STATUS_FAILED\x10\x04\x12\x1a\n" +
+	"\x16QUEST_STATUS_CANCELLED\x10\x05*\xb0\x01\n" +
+	"\tQuestType\x12\x1a\n" +
+	"\x16QUEST_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fQUEST_TYPE_MAIN\x10\x01\x12\x13\n" +
+	"\x0fQUEST_TYPE_SIDE\x10\x02\x12\x14\n" +
+	"\x10QUEST_TYPE_DAILY\x10\x03\x12\x15\n" +
+	"\x11QUEST_TYPE_WEEKLY\x10\x04\x12\x14\n" +
+	"\x10QUEST_TYPE_EVENT\x10\x05\x12\x1a\n" +
+	"\x16QUEST_TYPE_ACHIEVEMENT\x10\x06*\xba\x01\n" +
+	"\n" +
+	"ItemRarity\x12\x1b\n" +
+	"\x17ITEM_RARITY_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12ITEM_RARITY_COMMON\x10\x01\x12\x18\n" +
+	"\x14ITEM_RARITY_UNCOMMON\x10\x02\x12\x14\n" +
+	"\x10ITEM_RARITY_RARE\x10\x03\x12\x14\n" +
+	"\x10ITEM_RARITY_EPIC\x10\x04\x12\x19\n" +
+	"\x15ITEM_RARITY_LEGENDARY\x10\x05\x12\x16\n" +
+	"\x12ITEM_RARITY_MYTHIC\x10\x06B<Z#greatestworks/internal/proto/common\xaa\x02\x14GreatestWorks.Commonb\x06proto3"
 
 var (
 	file_proto_common_proto_rawDescOnce sync.Once
@@ -521,24 +954,31 @@ func file_proto_common_proto_rawDescGZIP() []byte {
 	return file_proto_common_proto_rawDescData
 }
 
+var file_proto_common_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_proto_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_proto_common_proto_goTypes = []any{
-	(*CommonResponse)(nil),  // 0: greatestworks.common.CommonResponse
-	(*CommonRequest)(nil),   // 1: greatestworks.common.CommonRequest
-	(*PaginationInfo)(nil),  // 2: greatestworks.common.PaginationInfo
-	(*Position)(nil),        // 3: greatestworks.common.Position
-	(*PlayerBasicInfo)(nil), // 4: greatestworks.common.PlayerBasicInfo
-	(*ServerInfo)(nil),      // 5: greatestworks.common.ServerInfo
-	nil,                     // 6: greatestworks.common.CommonRequest.MetadataEntry
+	(ItemType)(0),           // 0: greatestworks.common.ItemType
+	(SkillType)(0),          // 1: greatestworks.common.SkillType
+	(ChatChannel)(0),        // 2: greatestworks.common.ChatChannel
+	(QuestStatus)(0),        // 3: greatestworks.common.QuestStatus
+	(QuestType)(0),          // 4: greatestworks.common.QuestType
+	(ItemRarity)(0),         // 5: greatestworks.common.ItemRarity
+	(*CommonResponse)(nil),  // 6: greatestworks.common.CommonResponse
+	(*CommonRequest)(nil),   // 7: greatestworks.common.CommonRequest
+	(*PaginationInfo)(nil),  // 8: greatestworks.common.PaginationInfo
+	(*Position)(nil),        // 9: greatestworks.common.Position
+	(*PlayerBasicInfo)(nil), // 10: greatestworks.common.PlayerBasicInfo
+	(*ServerInfo)(nil),      // 11: greatestworks.common.ServerInfo
+	nil,                     // 12: greatestworks.common.CommonRequest.MetadataEntry
 }
 var file_proto_common_proto_depIdxs = []int32{
-	6, // 0: greatestworks.common.CommonRequest.metadata:type_name -> greatestworks.common.CommonRequest.MetadataEntry
-	3, // 1: greatestworks.common.PlayerBasicInfo.position:type_name -> greatestworks.common.Position
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	12, // 0: greatestworks.common.CommonRequest.metadata:type_name -> greatestworks.common.CommonRequest.MetadataEntry
+	9,  // 1: greatestworks.common.PlayerBasicInfo.position:type_name -> greatestworks.common.Position
+	2,  // [2:2] is the sub-list for method output_type
+	2,  // [2:2] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_common_proto_init() }
@@ -551,13 +991,14 @@ func file_proto_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_common_proto_rawDesc), len(file_proto_common_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      6,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_proto_common_proto_goTypes,
 		DependencyIndexes: file_proto_common_proto_depIdxs,
+		EnumInfos:         file_proto_common_proto_enumTypes,
 		MessageInfos:      file_proto_common_proto_msgTypes,
 	}.Build()
 	File_proto_common_proto = out.File

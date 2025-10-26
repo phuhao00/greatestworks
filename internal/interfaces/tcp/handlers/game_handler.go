@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"greatestworks/internal/infrastructure/logging"
@@ -38,6 +39,16 @@ func (h *GameHandler) HandleMessage(session *connection.Session, message *protoc
 		return h.handlePlayerChat(session, message)
 	case uint32(protocol.MsgPlayerStats):
 		return h.handlePlayerAction(session, message)
+	case uint32(protocol.MsgChatMessage):
+		return h.handleChatMessage(session, message)
+	case uint32(protocol.MsgTeamCreate):
+		return h.handleTeamCreate(session, message)
+	case uint32(protocol.MsgTeamJoin):
+		return h.handleTeamJoin(session, message)
+	case uint32(protocol.MsgTeamLeave):
+		return h.handleTeamLeave(session, message)
+	case uint32(protocol.MsgTeamInfo):
+		return h.handleTeamInfo(session, message)
 	default:
 		return fmt.Errorf("未知的消息类型: %d", message.Header.MessageType)
 	}
@@ -112,6 +123,76 @@ func (h *GameHandler) handlePlayerAction(session *connection.Session, message *p
 	// 3. 更新游戏状态
 
 	return nil
+}
+
+// handleChatMessage 处理聊天消息
+func (h *GameHandler) handleChatMessage(session *connection.Session, message *protocol.Message) error {
+	h.logger.Info("处理聊天消息", logging.Fields{
+		"player_id":    message.Header.PlayerID,
+		"message_id":   message.Header.MessageID,
+		"message_type": message.Header.MessageType,
+	})
+
+	// 简单回执响应
+	resp := &protocol.Message{
+		Header: protocol.MessageHeader{
+			Magic:       protocol.MessageMagic,
+			MessageID:   message.Header.MessageID,
+			MessageType: uint32(protocol.MsgChatMessage),
+			Flags:       protocol.FlagResponse,
+			PlayerID:    message.Header.PlayerID,
+			Timestamp:   message.Header.Timestamp,
+			Sequence:    0,
+		},
+		Payload: protocol.NewBaseResponse(true, "chat received"),
+	}
+
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return fmt.Errorf("序列化聊天响应失败: %w", err)
+	}
+	return session.Send(data)
+}
+
+// handleTeamCreate 处理创建队伍
+func (h *GameHandler) handleTeamCreate(session *connection.Session, message *protocol.Message) error {
+	return h.replyOK(session, message, uint32(protocol.MsgTeamCreate), "team created")
+}
+
+// handleTeamJoin 处理加入队伍
+func (h *GameHandler) handleTeamJoin(session *connection.Session, message *protocol.Message) error {
+	return h.replyOK(session, message, uint32(protocol.MsgTeamJoin), "team joined")
+}
+
+// handleTeamLeave 处理离开队伍
+func (h *GameHandler) handleTeamLeave(session *connection.Session, message *protocol.Message) error {
+	return h.replyOK(session, message, uint32(protocol.MsgTeamLeave), "team left")
+}
+
+// handleTeamInfo 处理队伍信息
+func (h *GameHandler) handleTeamInfo(session *connection.Session, message *protocol.Message) error {
+	return h.replyOK(session, message, uint32(protocol.MsgTeamInfo), "team info")
+}
+
+// replyOK 通用成功回执
+func (h *GameHandler) replyOK(session *connection.Session, message *protocol.Message, msgType uint32, text string) error {
+	resp := &protocol.Message{
+		Header: protocol.MessageHeader{
+			Magic:       protocol.MessageMagic,
+			MessageID:   message.Header.MessageID,
+			MessageType: msgType,
+			Flags:       protocol.FlagResponse,
+			PlayerID:    message.Header.PlayerID,
+			Timestamp:   message.Header.Timestamp,
+			Sequence:    0,
+		},
+		Payload: protocol.NewBaseResponse(true, text),
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return fmt.Errorf("序列化响应失败: %w", err)
+	}
+	return session.Send(data)
 }
 
 // SendResponse 发送响应

@@ -1,0 +1,438 @@
+syntax = "proto3";
+
+package greatestworks.room;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/room";
+option csharp_namespace = "GreatestWorks.Room";
+
+// 房间服务定义
+service RoomService {
+  // 创建房间
+  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
+  
+  // 加入房间
+  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse);
+  
+  // 离开房间
+  rpc LeaveRoom(LeaveRoomRequest) returns (LeaveRoomResponse);
+  
+  // 获取房间列表
+  rpc GetRoomList(GetRoomListRequest) returns (GetRoomListResponse);
+  
+  // 获取房间信息
+  rpc GetRoomInfo(GetRoomInfoRequest) returns (GetRoomInfoResponse);
+  
+  // 更新房间设置
+  rpc UpdateRoomSettings(UpdateRoomSettingsRequest) returns (UpdateRoomSettingsResponse);
+  
+  // 踢出玩家
+  rpc KickPlayer(KickPlayerRequest) returns (KickPlayerResponse);
+  
+  // 转移房主
+  rpc TransferOwnership(TransferOwnershipRequest) returns (TransferOwnershipResponse);
+  
+  // 开始游戏/匹配
+  rpc StartGame(StartGameRequest) returns (StartGameResponse);
+  
+  // 准备状态
+  rpc SetReady(SetReadyRequest) returns (SetReadyResponse);
+  
+  // 邀请玩家
+  rpc InvitePlayer(InvitePlayerRequest) returns (InvitePlayerResponse);
+  
+  // 搜索房间
+  rpc SearchRooms(SearchRoomsRequest) returns (SearchRoomsResponse);
+  
+  // 发送房间消息
+  rpc SendRoomMessage(SendRoomMessageRequest) returns (SendRoomMessageResponse);
+  
+  // 设置房间密码
+  rpc SetRoomPassword(SetRoomPasswordRequest) returns (SetRoomPasswordResponse);
+}
+
+// 创建房间请求
+message CreateRoomRequest {
+  string owner_id = 1;
+  string room_name = 2;
+  RoomType room_type = 3;
+  string game_mode = 4;
+  string map_id = 5;
+  int32 max_players = 6;
+  bool is_private = 7;
+  string password = 8;
+  RoomSettings settings = 9;
+  map<string, string> custom_rules = 10;
+}
+
+// 创建房间响应
+message CreateRoomResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string room_id = 2;
+  RoomInfo room_info = 3;
+}
+
+// 加入房间请求
+message JoinRoomRequest {
+  string player_id = 1;
+  string room_id = 2;
+  string password = 3;
+  string invitation_code = 4;
+  int32 preferred_team = 5; // 希望加入的队伍
+}
+
+// 加入房间响应
+message JoinRoomResponse {
+  greatestworks.common.CommonResponse common = 1;
+  RoomInfo room_info = 2;
+  RoomPlayer player_info = 3;
+  repeated RoomPlayer other_players = 4;
+}
+
+// 离开房间请求
+message LeaveRoomRequest {
+  string player_id = 1;
+  string room_id = 2;
+}
+
+// 离开房间响应
+message LeaveRoomResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 获取房间列表请求
+message GetRoomListRequest {
+  RoomType room_type = 1;
+  string game_mode = 2;
+  bool only_public = 3;
+  bool only_available = 4; // 只显示有空位的房间
+  int32 limit = 5;
+  int32 offset = 6;
+  RoomSortBy sort_by = 7;
+}
+
+// 获取房间列表响应
+message GetRoomListResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated RoomInfo rooms = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 获取房间信息请求
+message GetRoomInfoRequest {
+  string room_id = 1;
+  string player_id = 2; // 查询者ID，用于权限检查
+}
+
+// 获取房间信息响应
+message GetRoomInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  RoomDetail room_detail = 2;
+}
+
+// 更新房间设置请求
+message UpdateRoomSettingsRequest {
+  string player_id = 1;
+  string room_id = 2;
+  RoomSettings settings = 3;
+  map<string, string> custom_rules = 4;
+}
+
+// 更新房间设置响应
+message UpdateRoomSettingsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  RoomSettings new_settings = 2;
+}
+
+// 踢出玩家请求
+message KickPlayerRequest {
+  string kicker_id = 1;
+  string room_id = 2;
+  string target_player_id = 3;
+  string reason = 4;
+}
+
+// 踢出玩家响应
+message KickPlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 转移房主请求
+message TransferOwnershipRequest {
+  string current_owner_id = 1;
+  string room_id = 2;
+  string new_owner_id = 3;
+}
+
+// 转移房主响应
+message TransferOwnershipResponse {
+  greatestworks.common.CommonResponse common = 1;
+  RoomPlayer new_owner = 2;
+}
+
+// 开始游戏请求
+message StartGameRequest {
+  string owner_id = 1;
+  string room_id = 2;
+  bool force_start = 3; // 强制开始（即使人数不足）
+}
+
+// 开始游戏响应
+message StartGameResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string game_session_id = 2;
+  int64 start_time = 3;
+}
+
+// 设置准备状态请求
+message SetReadyRequest {
+  string player_id = 1;
+  string room_id = 2;
+  bool is_ready = 3;
+}
+
+// 设置准备状态响应
+message SetReadyResponse {
+  greatestworks.common.CommonResponse common = 1;
+  bool is_ready = 2;
+  bool all_players_ready = 3;
+}
+
+// 邀请玩家请求
+message InvitePlayerRequest {
+  string inviter_id = 1;
+  string room_id = 2;
+  string target_player_id = 3;
+  string message = 4;
+}
+
+// 邀请玩家响应
+message InvitePlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string invitation_id = 2;
+}
+
+// 搜索房间请求
+message SearchRoomsRequest {
+  string keyword = 1;
+  string owner_name = 2;
+  RoomType room_type = 3;
+  string game_mode = 4;
+  bool only_public = 5;
+  bool only_available = 6;
+  int32 limit = 7;
+  int32 offset = 8;
+}
+
+// 搜索房间响应
+message SearchRoomsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated RoomInfo rooms = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 发送房间消息请求
+message SendRoomMessageRequest {
+  string sender_id = 1;
+  string room_id = 2;
+  string content = 3;
+  RoomMessageType message_type = 4;
+}
+
+// 发送房间消息响应
+message SendRoomMessageResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string message_id = 2;
+}
+
+// 设置房间密码请求
+message SetRoomPasswordRequest {
+  string owner_id = 1;
+  string room_id = 2;
+  string new_password = 3; // 空字符串表示移除密码
+}
+
+// 设置房间密码响应
+message SetRoomPasswordResponse {
+  greatestworks.common.CommonResponse common = 1;
+  bool has_password = 2;
+}
+
+// 房间信息
+message RoomInfo {
+  string room_id = 1;
+  string room_name = 2;
+  string owner_id = 3;
+  string owner_name = 4;
+  RoomType room_type = 5;
+  string game_mode = 6;
+  string map_id = 7;
+  string map_name = 8;
+  RoomStatus status = 9;
+  int32 current_players = 10;
+  int32 max_players = 11;
+  bool is_private = 12;
+  bool has_password = 13;
+  int32 ping = 14;
+  string region = 15;
+  int64 created_at = 16;
+  RoomSettings settings = 17;
+}
+
+// 房间详情
+message RoomDetail {
+  RoomInfo basic_info = 1;
+  repeated RoomPlayer players = 2;
+  repeated RoomTeam teams = 3;
+  repeated RoomMessage recent_messages = 4;
+  map<string, string> custom_rules = 5;
+  RoomStats stats = 6;
+}
+
+// 房间玩家
+message RoomPlayer {
+  string player_id = 1;
+  string player_name = 2;
+  int32 level = 3;
+  int32 rank = 4;
+  PlayerRole role = 5;
+  int32 team_id = 6;
+  bool is_ready = 7;
+  bool is_online = 8;
+  int64 joined_at = 9;
+  PlayerStats stats = 10;
+  greatestworks.common.Position position = 11;
+}
+
+// 房间队伍
+message RoomTeam {
+  int32 team_id = 1;
+  string team_name = 2;
+  string team_color = 3;
+  int32 current_members = 4;
+  int32 max_members = 5;
+  repeated string player_ids = 6;
+  bool is_ready = 7;
+  TeamStats team_stats = 8;
+}
+
+// 房间消息
+message RoomMessage {
+  string message_id = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string content = 4;
+  RoomMessageType message_type = 5;
+  int64 timestamp = 6;
+}
+
+// 房间设置
+message RoomSettings {
+  int32 game_duration = 1; // 游戏时长（分钟）
+  int32 preparation_time = 2; // 准备时间（秒）
+  bool friendly_fire = 3; // 友军伤害
+  bool spectators_allowed = 4; // 允许观战
+  int32 max_spectators = 5; // 最大观战人数
+  bool auto_start = 6; // 自动开始
+  int32 auto_start_countdown = 7; // 自动开始倒计时
+  bool team_balance = 8; // 队伍平衡
+  DifficultyLevel difficulty = 9; // 难度等级
+  map<string, int32> score_limits = 10; // 分数限制
+  repeated string banned_items = 11; // 禁用物品
+  repeated string banned_skills = 12; // 禁用技能
+}
+
+// 玩家统计
+message PlayerStats {
+  int32 kills = 1;
+  int32 deaths = 2;
+  int32 assists = 3;
+  float kd_ratio = 4;
+  int32 score = 5;
+  int32 games_played = 6;
+  int32 wins = 7;
+  float win_rate = 8;
+}
+
+// 队伍统计
+message TeamStats {
+  int32 total_score = 1;
+  int32 total_kills = 2;
+  int32 total_deaths = 3;
+  float average_kd = 4;
+  int32 objectives_completed = 5;
+}
+
+// 房间统计
+message RoomStats {
+  int32 total_games_played = 1;
+  int64 total_playtime = 2;
+  int32 average_players = 3;
+  float average_game_duration = 4;
+  int64 last_active = 5;
+}
+
+// 房间类型枚举
+enum RoomType {
+  ROOM_TYPE_UNSPECIFIED = 0;
+  ROOM_TYPE_CASUAL = 1;        // 休闲模式
+  ROOM_TYPE_RANKED = 2;        // 排位模式
+  ROOM_TYPE_CUSTOM = 3;        // 自定义模式
+  ROOM_TYPE_TOURNAMENT = 4;    // 锦标赛模式
+  ROOM_TYPE_PRACTICE = 5;      // 练习模式
+  ROOM_TYPE_SPECTATE = 6;      // 观战模式
+  ROOM_TYPE_PRIVATE_MATCH = 7; // 私人对战
+}
+
+// 房间状态枚举
+enum RoomStatus {
+  ROOM_STATUS_UNSPECIFIED = 0;
+  ROOM_STATUS_WAITING = 1;     // 等待玩家
+  ROOM_STATUS_PREPARING = 2;   // 准备中
+  ROOM_STATUS_IN_GAME = 3;     // 游戏中
+  ROOM_STATUS_FINISHED = 4;    // 已结束
+  ROOM_STATUS_DISBANDED = 5;   // 已解散
+  ROOM_STATUS_PAUSED = 6;      // 已暂停
+}
+
+// 玩家角色枚举
+enum PlayerRole {
+  PLAYER_ROLE_UNSPECIFIED = 0;
+  PLAYER_ROLE_OWNER = 1;       // 房主
+  PLAYER_ROLE_MODERATOR = 2;   // 管理员
+  PLAYER_ROLE_PLAYER = 3;      // 玩家
+  PLAYER_ROLE_SPECTATOR = 4;   // 观战者
+}
+
+// 房间消息类型枚举
+enum RoomMessageType {
+  ROOM_MESSAGE_TYPE_UNSPECIFIED = 0;
+  ROOM_MESSAGE_TYPE_CHAT = 1;        // 聊天消息
+  ROOM_MESSAGE_TYPE_SYSTEM = 2;      // 系统消息
+  ROOM_MESSAGE_TYPE_JOIN = 3;        // 加入消息
+  ROOM_MESSAGE_TYPE_LEAVE = 4;       // 离开消息
+  ROOM_MESSAGE_TYPE_READY = 5;       // 准备消息
+  ROOM_MESSAGE_TYPE_START = 6;       // 开始消息
+  ROOM_MESSAGE_TYPE_END = 7;         // 结束消息
+}
+
+// 房间排序枚举
+enum RoomSortBy {
+  ROOM_SORT_BY_UNSPECIFIED = 0;
+  ROOM_SORT_BY_NAME = 1;           // 按名称排序
+  ROOM_SORT_BY_PLAYERS = 2;        // 按玩家数量排序
+  ROOM_SORT_BY_CREATED_TIME = 3;   // 按创建时间排序
+  ROOM_SORT_BY_PING = 4;           // 按延迟排序
+  ROOM_SORT_BY_POPULARITY = 5;     // 按热门程度排序
+}
+
+// 难度等级枚举
+enum DifficultyLevel {
+  DIFFICULTY_LEVEL_UNSPECIFIED = 0;
+  DIFFICULTY_LEVEL_EASY = 1;       // 简单
+  DIFFICULTY_LEVEL_NORMAL = 2;     // 普通
+  DIFFICULTY_LEVEL_HARD = 3;       // 困难
+  DIFFICULTY_LEVEL_EXPERT = 4;     // 专家
+  DIFFICULTY_LEVEL_NIGHTMARE = 5;  // 噩梦
+}

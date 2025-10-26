@@ -88,8 +88,8 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	//r.RegisterHandler(uint16(protocol.MsgBuildingList), handler)
 
 	// 社交相关消息
-	//r.RegisterHandler(uint16(protocol.MsgChatSend), handler)
-	//r.RegisterHandler(uint16(protocol.MsgChatReceive), handler)
+	// 聊天与社交
+	r.RegisterHandler(uint16(protocol.MsgChatMessage), handler)
 	//r.RegisterHandler(uint16(protocol.MsgFriendAdd), handler)
 	r.RegisterHandler(uint16(protocol.MsgFriendRemove), handler)
 	r.RegisterHandler(uint16(protocol.MsgFriendList), handler)

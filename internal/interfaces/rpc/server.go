@@ -35,6 +35,7 @@ type RPCServer struct {
 	listener   net.Listener
 	ctx        context.Context
 	cancel     context.CancelFunc
+	extras     []interface{}
 }
 
 // NewRPCServer 创建RPC服务器
@@ -64,6 +65,13 @@ func (s *RPCServer) Start() error {
 	// 注册服务
 	s.registerServices()
 
+	// 注册额外服务（由引导器注入）
+	for _, svc := range s.extras {
+		if err := s.server.Register(svc); err != nil {
+			s.logger.Error("failed to register extra RPC service", err, logging.Fields{})
+		}
+	}
+
 	// 创建监听器
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 	listener, err := net.Listen("tcp", addr)
@@ -81,6 +89,11 @@ func (s *RPCServer) Start() error {
 	}()
 
 	return nil
+}
+
+// RegisterService 允许引导器注册额外的RPC服务
+func (s *RPCServer) RegisterService(service interface{}) {
+	s.extras = append(s.extras, service)
 }
 
 // Stop 停止RPC服务器

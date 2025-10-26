@@ -26,28 +26,34 @@ const (
 type BattleStatus int32
 
 const (
-	BattleStatus_BATTLE_STATUS_WAITING  BattleStatus = 0
-	BattleStatus_BATTLE_STATUS_STARTING BattleStatus = 1
-	BattleStatus_BATTLE_STATUS_ACTIVE   BattleStatus = 2
-	BattleStatus_BATTLE_STATUS_ENDING   BattleStatus = 3
-	BattleStatus_BATTLE_STATUS_FINISHED BattleStatus = 4
+	BattleStatus_BATTLE_STATUS_UNSPECIFIED BattleStatus = 0
+	BattleStatus_BATTLE_STATUS_WAITING     BattleStatus = 1
+	BattleStatus_BATTLE_STATUS_STARTING    BattleStatus = 2
+	BattleStatus_BATTLE_STATUS_ACTIVE      BattleStatus = 3
+	BattleStatus_BATTLE_STATUS_ENDING      BattleStatus = 4
+	BattleStatus_BATTLE_STATUS_FINISHED    BattleStatus = 5
+	BattleStatus_BATTLE_STATUS_CANCELLED   BattleStatus = 6
 )
 
 // Enum value maps for BattleStatus.
 var (
 	BattleStatus_name = map[int32]string{
-		0: "BATTLE_STATUS_WAITING",
-		1: "BATTLE_STATUS_STARTING",
-		2: "BATTLE_STATUS_ACTIVE",
-		3: "BATTLE_STATUS_ENDING",
-		4: "BATTLE_STATUS_FINISHED",
+		0: "BATTLE_STATUS_UNSPECIFIED",
+		1: "BATTLE_STATUS_WAITING",
+		2: "BATTLE_STATUS_STARTING",
+		3: "BATTLE_STATUS_ACTIVE",
+		4: "BATTLE_STATUS_ENDING",
+		5: "BATTLE_STATUS_FINISHED",
+		6: "BATTLE_STATUS_CANCELLED",
 	}
 	BattleStatus_value = map[string]int32{
-		"BATTLE_STATUS_WAITING":  0,
-		"BATTLE_STATUS_STARTING": 1,
-		"BATTLE_STATUS_ACTIVE":   2,
-		"BATTLE_STATUS_ENDING":   3,
-		"BATTLE_STATUS_FINISHED": 4,
+		"BATTLE_STATUS_UNSPECIFIED": 0,
+		"BATTLE_STATUS_WAITING":     1,
+		"BATTLE_STATUS_STARTING":    2,
+		"BATTLE_STATUS_ACTIVE":      3,
+		"BATTLE_STATUS_ENDING":      4,
+		"BATTLE_STATUS_FINISHED":    5,
+		"BATTLE_STATUS_CANCELLED":   6,
 	}
 )
 
@@ -76,6 +82,269 @@ func (x BattleStatus) Number() protoreflect.EnumNumber {
 // Deprecated: Use BattleStatus.Descriptor instead.
 func (BattleStatus) EnumDescriptor() ([]byte, []int) {
 	return file_proto_battle_proto_rawDescGZIP(), []int{0}
+}
+
+// 战斗类型枚举
+type BattleType int32
+
+const (
+	BattleType_BATTLE_TYPE_UNSPECIFIED BattleType = 0
+	BattleType_BATTLE_TYPE_PVP         BattleType = 1 // 玩家对战
+	BattleType_BATTLE_TYPE_PVE         BattleType = 2 // 玩家对环境
+	BattleType_BATTLE_TYPE_ARENA       BattleType = 3 // 竞技场
+	BattleType_BATTLE_TYPE_RAID        BattleType = 4 // 团队副本
+	BattleType_BATTLE_TYPE_DUNGEON     BattleType = 5 // 地下城
+	BattleType_BATTLE_TYPE_BOSS        BattleType = 6 // BOSS战
+	BattleType_BATTLE_TYPE_TOURNAMENT  BattleType = 7 // 锦标赛
+)
+
+// Enum value maps for BattleType.
+var (
+	BattleType_name = map[int32]string{
+		0: "BATTLE_TYPE_UNSPECIFIED",
+		1: "BATTLE_TYPE_PVP",
+		2: "BATTLE_TYPE_PVE",
+		3: "BATTLE_TYPE_ARENA",
+		4: "BATTLE_TYPE_RAID",
+		5: "BATTLE_TYPE_DUNGEON",
+		6: "BATTLE_TYPE_BOSS",
+		7: "BATTLE_TYPE_TOURNAMENT",
+	}
+	BattleType_value = map[string]int32{
+		"BATTLE_TYPE_UNSPECIFIED": 0,
+		"BATTLE_TYPE_PVP":         1,
+		"BATTLE_TYPE_PVE":         2,
+		"BATTLE_TYPE_ARENA":       3,
+		"BATTLE_TYPE_RAID":        4,
+		"BATTLE_TYPE_DUNGEON":     5,
+		"BATTLE_TYPE_BOSS":        6,
+		"BATTLE_TYPE_TOURNAMENT":  7,
+	}
+)
+
+func (x BattleType) Enum() *BattleType {
+	p := new(BattleType)
+	*p = x
+	return p
+}
+
+func (x BattleType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BattleType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_battle_proto_enumTypes[1].Descriptor()
+}
+
+func (BattleType) Type() protoreflect.EnumType {
+	return &file_proto_battle_proto_enumTypes[1]
+}
+
+func (x BattleType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BattleType.Descriptor instead.
+func (BattleType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_battle_proto_rawDescGZIP(), []int{1}
+}
+
+// 战斗行动类型枚举
+type BattleActionType int32
+
+const (
+	BattleActionType_BATTLE_ACTION_TYPE_UNSPECIFIED BattleActionType = 0
+	BattleActionType_BATTLE_ACTION_TYPE_ATTACK      BattleActionType = 1 // 攻击
+	BattleActionType_BATTLE_ACTION_TYPE_SKILL       BattleActionType = 2 // 技能
+	BattleActionType_BATTLE_ACTION_TYPE_ITEM        BattleActionType = 3 // 使用物品
+	BattleActionType_BATTLE_ACTION_TYPE_DEFEND      BattleActionType = 4 // 防御
+	BattleActionType_BATTLE_ACTION_TYPE_ESCAPE      BattleActionType = 5 // 逃跑
+	BattleActionType_BATTLE_ACTION_TYPE_WAIT        BattleActionType = 6 // 等待
+)
+
+// Enum value maps for BattleActionType.
+var (
+	BattleActionType_name = map[int32]string{
+		0: "BATTLE_ACTION_TYPE_UNSPECIFIED",
+		1: "BATTLE_ACTION_TYPE_ATTACK",
+		2: "BATTLE_ACTION_TYPE_SKILL",
+		3: "BATTLE_ACTION_TYPE_ITEM",
+		4: "BATTLE_ACTION_TYPE_DEFEND",
+		5: "BATTLE_ACTION_TYPE_ESCAPE",
+		6: "BATTLE_ACTION_TYPE_WAIT",
+	}
+	BattleActionType_value = map[string]int32{
+		"BATTLE_ACTION_TYPE_UNSPECIFIED": 0,
+		"BATTLE_ACTION_TYPE_ATTACK":      1,
+		"BATTLE_ACTION_TYPE_SKILL":       2,
+		"BATTLE_ACTION_TYPE_ITEM":        3,
+		"BATTLE_ACTION_TYPE_DEFEND":      4,
+		"BATTLE_ACTION_TYPE_ESCAPE":      5,
+		"BATTLE_ACTION_TYPE_WAIT":        6,
+	}
+)
+
+func (x BattleActionType) Enum() *BattleActionType {
+	p := new(BattleActionType)
+	*p = x
+	return p
+}
+
+func (x BattleActionType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BattleActionType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_battle_proto_enumTypes[2].Descriptor()
+}
+
+func (BattleActionType) Type() protoreflect.EnumType {
+	return &file_proto_battle_proto_enumTypes[2]
+}
+
+func (x BattleActionType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BattleActionType.Descriptor instead.
+func (BattleActionType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_battle_proto_rawDescGZIP(), []int{2}
+}
+
+// 战斗结果类型枚举
+type BattleResultType int32
+
+const (
+	BattleResultType_BATTLE_RESULT_TYPE_UNSPECIFIED BattleResultType = 0
+	BattleResultType_BATTLE_RESULT_TYPE_VICTORY     BattleResultType = 1 // 胜利
+	BattleResultType_BATTLE_RESULT_TYPE_DEFEAT      BattleResultType = 2 // 失败
+	BattleResultType_BATTLE_RESULT_TYPE_DRAW        BattleResultType = 3 // 平局
+	BattleResultType_BATTLE_RESULT_TYPE_ESCAPE      BattleResultType = 4 // 逃跑
+	BattleResultType_BATTLE_RESULT_TYPE_TIMEOUT     BattleResultType = 5 // 超时
+	BattleResultType_BATTLE_RESULT_TYPE_DISCONNECT  BattleResultType = 6 // 断线
+)
+
+// Enum value maps for BattleResultType.
+var (
+	BattleResultType_name = map[int32]string{
+		0: "BATTLE_RESULT_TYPE_UNSPECIFIED",
+		1: "BATTLE_RESULT_TYPE_VICTORY",
+		2: "BATTLE_RESULT_TYPE_DEFEAT",
+		3: "BATTLE_RESULT_TYPE_DRAW",
+		4: "BATTLE_RESULT_TYPE_ESCAPE",
+		5: "BATTLE_RESULT_TYPE_TIMEOUT",
+		6: "BATTLE_RESULT_TYPE_DISCONNECT",
+	}
+	BattleResultType_value = map[string]int32{
+		"BATTLE_RESULT_TYPE_UNSPECIFIED": 0,
+		"BATTLE_RESULT_TYPE_VICTORY":     1,
+		"BATTLE_RESULT_TYPE_DEFEAT":      2,
+		"BATTLE_RESULT_TYPE_DRAW":        3,
+		"BATTLE_RESULT_TYPE_ESCAPE":      4,
+		"BATTLE_RESULT_TYPE_TIMEOUT":     5,
+		"BATTLE_RESULT_TYPE_DISCONNECT":  6,
+	}
+)
+
+func (x BattleResultType) Enum() *BattleResultType {
+	p := new(BattleResultType)
+	*p = x
+	return p
+}
+
+func (x BattleResultType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BattleResultType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_battle_proto_enumTypes[3].Descriptor()
+}
+
+func (BattleResultType) Type() protoreflect.EnumType {
+	return &file_proto_battle_proto_enumTypes[3]
+}
+
+func (x BattleResultType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BattleResultType.Descriptor instead.
+func (BattleResultType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_battle_proto_rawDescGZIP(), []int{3}
+}
+
+// 战斗事件类型枚举
+type BattleEventType int32
+
+const (
+	BattleEventType_BATTLE_EVENT_TYPE_UNSPECIFIED BattleEventType = 0
+	BattleEventType_BATTLE_EVENT_TYPE_DAMAGE      BattleEventType = 1  // 伤害
+	BattleEventType_BATTLE_EVENT_TYPE_HEAL        BattleEventType = 2  // 治疗
+	BattleEventType_BATTLE_EVENT_TYPE_BUFF        BattleEventType = 3  // 增益
+	BattleEventType_BATTLE_EVENT_TYPE_DEBUFF      BattleEventType = 4  // 减益
+	BattleEventType_BATTLE_EVENT_TYPE_CRITICAL    BattleEventType = 5  // 暴击
+	BattleEventType_BATTLE_EVENT_TYPE_MISS        BattleEventType = 6  // 未命中
+	BattleEventType_BATTLE_EVENT_TYPE_DODGE       BattleEventType = 7  // 闪避
+	BattleEventType_BATTLE_EVENT_TYPE_BLOCK       BattleEventType = 8  // 格挡
+	BattleEventType_BATTLE_EVENT_TYPE_DEATH       BattleEventType = 9  // 死亡
+	BattleEventType_BATTLE_EVENT_TYPE_REVIVE      BattleEventType = 10 // 复活
+)
+
+// Enum value maps for BattleEventType.
+var (
+	BattleEventType_name = map[int32]string{
+		0:  "BATTLE_EVENT_TYPE_UNSPECIFIED",
+		1:  "BATTLE_EVENT_TYPE_DAMAGE",
+		2:  "BATTLE_EVENT_TYPE_HEAL",
+		3:  "BATTLE_EVENT_TYPE_BUFF",
+		4:  "BATTLE_EVENT_TYPE_DEBUFF",
+		5:  "BATTLE_EVENT_TYPE_CRITICAL",
+		6:  "BATTLE_EVENT_TYPE_MISS",
+		7:  "BATTLE_EVENT_TYPE_DODGE",
+		8:  "BATTLE_EVENT_TYPE_BLOCK",
+		9:  "BATTLE_EVENT_TYPE_DEATH",
+		10: "BATTLE_EVENT_TYPE_REVIVE",
+	}
+	BattleEventType_value = map[string]int32{
+		"BATTLE_EVENT_TYPE_UNSPECIFIED": 0,
+		"BATTLE_EVENT_TYPE_DAMAGE":      1,
+		"BATTLE_EVENT_TYPE_HEAL":        2,
+		"BATTLE_EVENT_TYPE_BUFF":        3,
+		"BATTLE_EVENT_TYPE_DEBUFF":      4,
+		"BATTLE_EVENT_TYPE_CRITICAL":    5,
+		"BATTLE_EVENT_TYPE_MISS":        6,
+		"BATTLE_EVENT_TYPE_DODGE":       7,
+		"BATTLE_EVENT_TYPE_BLOCK":       8,
+		"BATTLE_EVENT_TYPE_DEATH":       9,
+		"BATTLE_EVENT_TYPE_REVIVE":      10,
+	}
+)
+
+func (x BattleEventType) Enum() *BattleEventType {
+	p := new(BattleEventType)
+	*p = x
+	return p
+}
+
+func (x BattleEventType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BattleEventType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_battle_proto_enumTypes[4].Descriptor()
+}
+
+func (BattleEventType) Type() protoreflect.EnumType {
+	return &file_proto_battle_proto_enumTypes[4]
+}
+
+func (x BattleEventType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BattleEventType.Descriptor instead.
+func (BattleEventType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_battle_proto_rawDescGZIP(), []int{4}
 }
 
 // 创建战斗请求
@@ -882,7 +1151,7 @@ func (x *BattleInfo) GetStatus() BattleStatus {
 	if x != nil {
 		return x.Status
 	}
-	return BattleStatus_BATTLE_STATUS_WAITING
+	return BattleStatus_BATTLE_STATUS_UNSPECIFIED
 }
 
 func (x *BattleInfo) GetMaxPlayers() int32 {
@@ -1388,13 +1657,54 @@ const file_proto_battle_proto_rawDesc = "" +
 	"\ttimestamp\x18\x05 \x01(\x03R\ttimestamp\x1a7\n" +
 	"\tDataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01*\x95\x01\n" +
-	"\fBattleStatus\x12\x19\n" +
-	"\x15BATTLE_STATUS_WAITING\x10\x00\x12\x1a\n" +
-	"\x16BATTLE_STATUS_STARTING\x10\x01\x12\x18\n" +
-	"\x14BATTLE_STATUS_ACTIVE\x10\x02\x12\x18\n" +
-	"\x14BATTLE_STATUS_ENDING\x10\x03\x12\x1a\n" +
-	"\x16BATTLE_STATUS_FINISHED\x10\x042\xf9\x04\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01*\xd1\x01\n" +
+	"\fBattleStatus\x12\x1d\n" +
+	"\x19BATTLE_STATUS_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15BATTLE_STATUS_WAITING\x10\x01\x12\x1a\n" +
+	"\x16BATTLE_STATUS_STARTING\x10\x02\x12\x18\n" +
+	"\x14BATTLE_STATUS_ACTIVE\x10\x03\x12\x18\n" +
+	"\x14BATTLE_STATUS_ENDING\x10\x04\x12\x1a\n" +
+	"\x16BATTLE_STATUS_FINISHED\x10\x05\x12\x1b\n" +
+	"\x17BATTLE_STATUS_CANCELLED\x10\x06*\xcb\x01\n" +
+	"\n" +
+	"BattleType\x12\x1b\n" +
+	"\x17BATTLE_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fBATTLE_TYPE_PVP\x10\x01\x12\x13\n" +
+	"\x0fBATTLE_TYPE_PVE\x10\x02\x12\x15\n" +
+	"\x11BATTLE_TYPE_ARENA\x10\x03\x12\x14\n" +
+	"\x10BATTLE_TYPE_RAID\x10\x04\x12\x17\n" +
+	"\x13BATTLE_TYPE_DUNGEON\x10\x05\x12\x14\n" +
+	"\x10BATTLE_TYPE_BOSS\x10\x06\x12\x1a\n" +
+	"\x16BATTLE_TYPE_TOURNAMENT\x10\a*\xeb\x01\n" +
+	"\x10BattleActionType\x12\"\n" +
+	"\x1eBATTLE_ACTION_TYPE_UNSPECIFIED\x10\x00\x12\x1d\n" +
+	"\x19BATTLE_ACTION_TYPE_ATTACK\x10\x01\x12\x1c\n" +
+	"\x18BATTLE_ACTION_TYPE_SKILL\x10\x02\x12\x1b\n" +
+	"\x17BATTLE_ACTION_TYPE_ITEM\x10\x03\x12\x1d\n" +
+	"\x19BATTLE_ACTION_TYPE_DEFEND\x10\x04\x12\x1d\n" +
+	"\x19BATTLE_ACTION_TYPE_ESCAPE\x10\x05\x12\x1b\n" +
+	"\x17BATTLE_ACTION_TYPE_WAIT\x10\x06*\xf4\x01\n" +
+	"\x10BattleResultType\x12\"\n" +
+	"\x1eBATTLE_RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aBATTLE_RESULT_TYPE_VICTORY\x10\x01\x12\x1d\n" +
+	"\x19BATTLE_RESULT_TYPE_DEFEAT\x10\x02\x12\x1b\n" +
+	"\x17BATTLE_RESULT_TYPE_DRAW\x10\x03\x12\x1d\n" +
+	"\x19BATTLE_RESULT_TYPE_ESCAPE\x10\x04\x12\x1e\n" +
+	"\x1aBATTLE_RESULT_TYPE_TIMEOUT\x10\x05\x12!\n" +
+	"\x1dBATTLE_RESULT_TYPE_DISCONNECT\x10\x06*\xd9\x02\n" +
+	"\x0fBattleEventType\x12!\n" +
+	"\x1dBATTLE_EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18BATTLE_EVENT_TYPE_DAMAGE\x10\x01\x12\x1a\n" +
+	"\x16BATTLE_EVENT_TYPE_HEAL\x10\x02\x12\x1a\n" +
+	"\x16BATTLE_EVENT_TYPE_BUFF\x10\x03\x12\x1c\n" +
+	"\x18BATTLE_EVENT_TYPE_DEBUFF\x10\x04\x12\x1e\n" +
+	"\x1aBATTLE_EVENT_TYPE_CRITICAL\x10\x05\x12\x1a\n" +
+	"\x16BATTLE_EVENT_TYPE_MISS\x10\x06\x12\x1b\n" +
+	"\x17BATTLE_EVENT_TYPE_DODGE\x10\a\x12\x1b\n" +
+	"\x17BATTLE_EVENT_TYPE_BLOCK\x10\b\x12\x1b\n" +
+	"\x17BATTLE_EVENT_TYPE_DEATH\x10\t\x12\x1c\n" +
+	"\x18BATTLE_EVENT_TYPE_REVIVE\x10\n" +
+	"2\xf9\x04\n" +
 	"\rBattleService\x12e\n" +
 	"\fCreateBattle\x12).greatestworks.battle.CreateBattleRequest\x1a*.greatestworks.battle.CreateBattleResponse\x12_\n" +
 	"\n" +
@@ -1416,68 +1726,72 @@ func file_proto_battle_proto_rawDescGZIP() []byte {
 	return file_proto_battle_proto_rawDescData
 }
 
-var file_proto_battle_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_proto_battle_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
 var file_proto_battle_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_proto_battle_proto_goTypes = []any{
 	(BattleStatus)(0),             // 0: greatestworks.battle.BattleStatus
-	(*CreateBattleRequest)(nil),   // 1: greatestworks.battle.CreateBattleRequest
-	(*CreateBattleResponse)(nil),  // 2: greatestworks.battle.CreateBattleResponse
-	(*JoinBattleRequest)(nil),     // 3: greatestworks.battle.JoinBattleRequest
-	(*JoinBattleResponse)(nil),    // 4: greatestworks.battle.JoinBattleResponse
-	(*LeaveBattleRequest)(nil),    // 5: greatestworks.battle.LeaveBattleRequest
-	(*LeaveBattleResponse)(nil),   // 6: greatestworks.battle.LeaveBattleResponse
-	(*ExecuteActionRequest)(nil),  // 7: greatestworks.battle.ExecuteActionRequest
-	(*ExecuteActionResponse)(nil), // 8: greatestworks.battle.ExecuteActionResponse
-	(*GetBattleInfoRequest)(nil),  // 9: greatestworks.battle.GetBattleInfoRequest
-	(*GetBattleInfoResponse)(nil), // 10: greatestworks.battle.GetBattleInfoResponse
-	(*GetBattleListRequest)(nil),  // 11: greatestworks.battle.GetBattleListRequest
-	(*GetBattleListResponse)(nil), // 12: greatestworks.battle.GetBattleListResponse
-	(*BattleInfo)(nil),            // 13: greatestworks.battle.BattleInfo
-	(*BattlePlayer)(nil),          // 14: greatestworks.battle.BattlePlayer
-	(*PlayerBattleStats)(nil),     // 15: greatestworks.battle.PlayerBattleStats
-	(*BattleResult)(nil),          // 16: greatestworks.battle.BattleResult
-	(*BattleEvent)(nil),           // 17: greatestworks.battle.BattleEvent
-	nil,                           // 18: greatestworks.battle.CreateBattleRequest.SettingsEntry
-	nil,                           // 19: greatestworks.battle.ExecuteActionRequest.ParametersEntry
-	nil,                           // 20: greatestworks.battle.BattleResult.EffectsEntry
-	nil,                           // 21: greatestworks.battle.BattleEvent.DataEntry
-	(*common.CommonResponse)(nil), // 22: greatestworks.common.CommonResponse
-	(*common.Position)(nil),       // 23: greatestworks.common.Position
-	(*common.PaginationInfo)(nil), // 24: greatestworks.common.PaginationInfo
+	(BattleType)(0),               // 1: greatestworks.battle.BattleType
+	(BattleActionType)(0),         // 2: greatestworks.battle.BattleActionType
+	(BattleResultType)(0),         // 3: greatestworks.battle.BattleResultType
+	(BattleEventType)(0),          // 4: greatestworks.battle.BattleEventType
+	(*CreateBattleRequest)(nil),   // 5: greatestworks.battle.CreateBattleRequest
+	(*CreateBattleResponse)(nil),  // 6: greatestworks.battle.CreateBattleResponse
+	(*JoinBattleRequest)(nil),     // 7: greatestworks.battle.JoinBattleRequest
+	(*JoinBattleResponse)(nil),    // 8: greatestworks.battle.JoinBattleResponse
+	(*LeaveBattleRequest)(nil),    // 9: greatestworks.battle.LeaveBattleRequest
+	(*LeaveBattleResponse)(nil),   // 10: greatestworks.battle.LeaveBattleResponse
+	(*ExecuteActionRequest)(nil),  // 11: greatestworks.battle.ExecuteActionRequest
+	(*ExecuteActionResponse)(nil), // 12: greatestworks.battle.ExecuteActionResponse
+	(*GetBattleInfoRequest)(nil),  // 13: greatestworks.battle.GetBattleInfoRequest
+	(*GetBattleInfoResponse)(nil), // 14: greatestworks.battle.GetBattleInfoResponse
+	(*GetBattleListRequest)(nil),  // 15: greatestworks.battle.GetBattleListRequest
+	(*GetBattleListResponse)(nil), // 16: greatestworks.battle.GetBattleListResponse
+	(*BattleInfo)(nil),            // 17: greatestworks.battle.BattleInfo
+	(*BattlePlayer)(nil),          // 18: greatestworks.battle.BattlePlayer
+	(*PlayerBattleStats)(nil),     // 19: greatestworks.battle.PlayerBattleStats
+	(*BattleResult)(nil),          // 20: greatestworks.battle.BattleResult
+	(*BattleEvent)(nil),           // 21: greatestworks.battle.BattleEvent
+	nil,                           // 22: greatestworks.battle.CreateBattleRequest.SettingsEntry
+	nil,                           // 23: greatestworks.battle.ExecuteActionRequest.ParametersEntry
+	nil,                           // 24: greatestworks.battle.BattleResult.EffectsEntry
+	nil,                           // 25: greatestworks.battle.BattleEvent.DataEntry
+	(*common.CommonResponse)(nil), // 26: greatestworks.common.CommonResponse
+	(*common.Position)(nil),       // 27: greatestworks.common.Position
+	(*common.PaginationInfo)(nil), // 28: greatestworks.common.PaginationInfo
 }
 var file_proto_battle_proto_depIdxs = []int32{
-	18, // 0: greatestworks.battle.CreateBattleRequest.settings:type_name -> greatestworks.battle.CreateBattleRequest.SettingsEntry
-	22, // 1: greatestworks.battle.CreateBattleResponse.common:type_name -> greatestworks.common.CommonResponse
-	13, // 2: greatestworks.battle.CreateBattleResponse.battle:type_name -> greatestworks.battle.BattleInfo
-	22, // 3: greatestworks.battle.JoinBattleResponse.common:type_name -> greatestworks.common.CommonResponse
-	22, // 4: greatestworks.battle.LeaveBattleResponse.common:type_name -> greatestworks.common.CommonResponse
-	19, // 5: greatestworks.battle.ExecuteActionRequest.parameters:type_name -> greatestworks.battle.ExecuteActionRequest.ParametersEntry
-	23, // 6: greatestworks.battle.ExecuteActionRequest.target_position:type_name -> greatestworks.common.Position
-	22, // 7: greatestworks.battle.ExecuteActionResponse.common:type_name -> greatestworks.common.CommonResponse
-	16, // 8: greatestworks.battle.ExecuteActionResponse.result:type_name -> greatestworks.battle.BattleResult
-	22, // 9: greatestworks.battle.GetBattleInfoResponse.common:type_name -> greatestworks.common.CommonResponse
-	13, // 10: greatestworks.battle.GetBattleInfoResponse.battle:type_name -> greatestworks.battle.BattleInfo
-	22, // 11: greatestworks.battle.GetBattleListResponse.common:type_name -> greatestworks.common.CommonResponse
-	13, // 12: greatestworks.battle.GetBattleListResponse.battles:type_name -> greatestworks.battle.BattleInfo
-	24, // 13: greatestworks.battle.GetBattleListResponse.pagination:type_name -> greatestworks.common.PaginationInfo
+	22, // 0: greatestworks.battle.CreateBattleRequest.settings:type_name -> greatestworks.battle.CreateBattleRequest.SettingsEntry
+	26, // 1: greatestworks.battle.CreateBattleResponse.common:type_name -> greatestworks.common.CommonResponse
+	17, // 2: greatestworks.battle.CreateBattleResponse.battle:type_name -> greatestworks.battle.BattleInfo
+	26, // 3: greatestworks.battle.JoinBattleResponse.common:type_name -> greatestworks.common.CommonResponse
+	26, // 4: greatestworks.battle.LeaveBattleResponse.common:type_name -> greatestworks.common.CommonResponse
+	23, // 5: greatestworks.battle.ExecuteActionRequest.parameters:type_name -> greatestworks.battle.ExecuteActionRequest.ParametersEntry
+	27, // 6: greatestworks.battle.ExecuteActionRequest.target_position:type_name -> greatestworks.common.Position
+	26, // 7: greatestworks.battle.ExecuteActionResponse.common:type_name -> greatestworks.common.CommonResponse
+	20, // 8: greatestworks.battle.ExecuteActionResponse.result:type_name -> greatestworks.battle.BattleResult
+	26, // 9: greatestworks.battle.GetBattleInfoResponse.common:type_name -> greatestworks.common.CommonResponse
+	17, // 10: greatestworks.battle.GetBattleInfoResponse.battle:type_name -> greatestworks.battle.BattleInfo
+	26, // 11: greatestworks.battle.GetBattleListResponse.common:type_name -> greatestworks.common.CommonResponse
+	17, // 12: greatestworks.battle.GetBattleListResponse.battles:type_name -> greatestworks.battle.BattleInfo
+	28, // 13: greatestworks.battle.GetBattleListResponse.pagination:type_name -> greatestworks.common.PaginationInfo
 	0,  // 14: greatestworks.battle.BattleInfo.status:type_name -> greatestworks.battle.BattleStatus
-	14, // 15: greatestworks.battle.BattleInfo.players:type_name -> greatestworks.battle.BattlePlayer
-	15, // 16: greatestworks.battle.BattlePlayer.stats:type_name -> greatestworks.battle.PlayerBattleStats
-	20, // 17: greatestworks.battle.BattleResult.effects:type_name -> greatestworks.battle.BattleResult.EffectsEntry
-	17, // 18: greatestworks.battle.BattleResult.events:type_name -> greatestworks.battle.BattleEvent
-	21, // 19: greatestworks.battle.BattleEvent.data:type_name -> greatestworks.battle.BattleEvent.DataEntry
-	1,  // 20: greatestworks.battle.BattleService.CreateBattle:input_type -> greatestworks.battle.CreateBattleRequest
-	3,  // 21: greatestworks.battle.BattleService.JoinBattle:input_type -> greatestworks.battle.JoinBattleRequest
-	5,  // 22: greatestworks.battle.BattleService.LeaveBattle:input_type -> greatestworks.battle.LeaveBattleRequest
-	7,  // 23: greatestworks.battle.BattleService.ExecuteAction:input_type -> greatestworks.battle.ExecuteActionRequest
-	9,  // 24: greatestworks.battle.BattleService.GetBattleInfo:input_type -> greatestworks.battle.GetBattleInfoRequest
-	11, // 25: greatestworks.battle.BattleService.GetBattleList:input_type -> greatestworks.battle.GetBattleListRequest
-	2,  // 26: greatestworks.battle.BattleService.CreateBattle:output_type -> greatestworks.battle.CreateBattleResponse
-	4,  // 27: greatestworks.battle.BattleService.JoinBattle:output_type -> greatestworks.battle.JoinBattleResponse
-	6,  // 28: greatestworks.battle.BattleService.LeaveBattle:output_type -> greatestworks.battle.LeaveBattleResponse
-	8,  // 29: greatestworks.battle.BattleService.ExecuteAction:output_type -> greatestworks.battle.ExecuteActionResponse
-	10, // 30: greatestworks.battle.BattleService.GetBattleInfo:output_type -> greatestworks.battle.GetBattleInfoResponse
-	12, // 31: greatestworks.battle.BattleService.GetBattleList:output_type -> greatestworks.battle.GetBattleListResponse
+	18, // 15: greatestworks.battle.BattleInfo.players:type_name -> greatestworks.battle.BattlePlayer
+	19, // 16: greatestworks.battle.BattlePlayer.stats:type_name -> greatestworks.battle.PlayerBattleStats
+	24, // 17: greatestworks.battle.BattleResult.effects:type_name -> greatestworks.battle.BattleResult.EffectsEntry
+	21, // 18: greatestworks.battle.BattleResult.events:type_name -> greatestworks.battle.BattleEvent
+	25, // 19: greatestworks.battle.BattleEvent.data:type_name -> greatestworks.battle.BattleEvent.DataEntry
+	5,  // 20: greatestworks.battle.BattleService.CreateBattle:input_type -> greatestworks.battle.CreateBattleRequest
+	7,  // 21: greatestworks.battle.BattleService.JoinBattle:input_type -> greatestworks.battle.JoinBattleRequest
+	9,  // 22: greatestworks.battle.BattleService.LeaveBattle:input_type -> greatestworks.battle.LeaveBattleRequest
+	11, // 23: greatestworks.battle.BattleService.ExecuteAction:input_type -> greatestworks.battle.ExecuteActionRequest
+	13, // 24: greatestworks.battle.BattleService.GetBattleInfo:input_type -> greatestworks.battle.GetBattleInfoRequest
+	15, // 25: greatestworks.battle.BattleService.GetBattleList:input_type -> greatestworks.battle.GetBattleListRequest
+	6,  // 26: greatestworks.battle.BattleService.CreateBattle:output_type -> greatestworks.battle.CreateBattleResponse
+	8,  // 27: greatestworks.battle.BattleService.JoinBattle:output_type -> greatestworks.battle.JoinBattleResponse
+	10, // 28: greatestworks.battle.BattleService.LeaveBattle:output_type -> greatestworks.battle.LeaveBattleResponse
+	12, // 29: greatestworks.battle.BattleService.ExecuteAction:output_type -> greatestworks.battle.ExecuteActionResponse
+	14, // 30: greatestworks.battle.BattleService.GetBattleInfo:output_type -> greatestworks.battle.GetBattleInfoResponse
+	16, // 31: greatestworks.battle.BattleService.GetBattleList:output_type -> greatestworks.battle.GetBattleListResponse
 	26, // [26:32] is the sub-list for method output_type
 	20, // [20:26] is the sub-list for method input_type
 	20, // [20:20] is the sub-list for extension type_name
@@ -1495,7 +1809,7 @@ func file_proto_battle_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_battle_proto_rawDesc), len(file_proto_battle_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      5,
 			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,

@@ -12,7 +12,7 @@ require (
 	go.mongodb.org/mongo-driver v1.13.4
 	go.opentelemetry.io/otel/trace v1.38.0
 	golang.org/x/crypto v0.37.0
-	google.golang.org/protobuf v1.36.9
+	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
 
