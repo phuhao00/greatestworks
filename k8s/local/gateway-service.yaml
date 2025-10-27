@@ -24,6 +24,10 @@ spec:
           env:
             - name: APP_ENV
               value: development
+            - name: MONGODB_URI
+              value: "mongodb://admin:admin123@mongodb:27017/admin"
+            - name: MONGODB_DATABASE
+              value: "gateway_service"
             - name: REDIS_ADDR
               value: "redis:6379"
             - name: REDIS_PASSWORD

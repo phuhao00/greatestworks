@@ -19,8 +19,8 @@ function Ensure-LoggedIn() {
 }
 
 function Publish-ServiceImage([string]$service) {
-    $local = "greatestworks-$service:$Tag"
-    $remote = "$Registry/$Namespace/greatestworks-$service:$Tag"
+    $local = "greatestworks-${service}:${Tag}"
+    $remote = "${Registry}/${Namespace}/greatestworks-${service}:${Tag}"
 
     Write-Host "Pushing $local -> $remote" -ForegroundColor Cyan
 
@@ -38,7 +38,7 @@ function Publish-InfraImage([string]$image) {
     $name = $parts[0]
     $tag = if ($parts.Length -gt 1) { $parts[1] } else { "latest" }
 
-    $remote = "$Registry/$Namespace/$name:$tag"
+    $remote = "${Registry}/${Namespace}/${name}:${tag}"
     Write-Host "Re-tagging infra $image -> $remote" -ForegroundColor Cyan
 
     # Pull if missing locally (pull may fail if your Docker daemon has an invalid mirror)
