@@ -769,32 +769,382 @@ docker run -d --name gateway-service -p 9090:9090 greatestworks gateway-service
 
 ### ☸️ Kubernetes部署
 
-#### 基础部署
+项目提供了完整的 Kubernetes 本地部署方案，支持 Docker Desktop 和 Minikube。所有 k8s 配置文件位于 `k8s/local/` 目录。
+
+#### 📋 前置要求
+
+- **Kubernetes**: Docker Desktop 内置 k8s 或 Minikube 1.28+
+- **kubectl**: 与集群版本匹配
+- **Docker**: 20.10+ (用于构建镜像)
+- **PowerShell**: 5.1+ (Windows) 或 Bash (Linux/macOS)
+
+#### 🚀 快速部署（三步启动）
+
+**步骤 1: 构建服务镜像**
+
+```powershell
+# Windows PowerShell
+./scripts/build-images.ps1 -Tag dev
+
+# Linux / macOS
+./scripts/build-images.sh -t dev
+```
+
+构建产物:
+- `greatestworks-auth:dev` (认证服务)
+- `greatestworks-game:dev` (游戏服务)
+- `greatestworks-gateway:dev` (网关服务)
+
+**步骤 2: 加载镜像到 Kubernetes 节点**
+
+> 此步骤解决 Docker Desktop k8s 无法直接使用本地镜像的问题。
+
+```powershell
+# Windows PowerShell
+./scripts/load-images-to-k8s.ps1 -Tag dev
+
+# Minikube 用户替代方案
+minikube image load greatestworks-auth:dev
+minikube image load greatestworks-game:dev
+minikube image load greatestworks-gateway:dev
+minikube image load mongo:7
+minikube image load redis:7
+```
+
+**步骤 3: 部署到集群**
+
+```powershell
+# 创建命名空间和部署所有服务
+kubectl apply -f k8s/local/namespace.yaml
+kubectl apply -f k8s/local/mongodb.yaml
+kubectl apply -f k8s/local/redis.yaml
+kubectl apply -f k8s/local/configmap-gateway.yaml
+kubectl apply -f k8s/local/auth-service.yaml
+kubectl apply -f k8s/local/game-service.yaml
+kubectl apply -f k8s/local/gateway-service.yaml
+
+# 等待 Pod 就绪（约 1-2 分钟）
+kubectl -n gaming get pods -w
+```
+
+预期输出（所有 Pod 状态为 `Running` 且 `READY` 为 `1/1`）:
+
+```
+NAME                               READY   STATUS    RESTARTS   AGE
+auth-service-xxxxxxxxx-xxxxx       1/1     Running   0          2m
+game-service-xxxxxxxxx-xxxxx       1/1     Running   0          2m
+gateway-service-xxxxxxxxx-xxxxx    1/1     Running   0          2m
+mongodb-xxxxxxxxx-xxxxx            1/1     Running   0          2m
+redis-xxxxxxxxx-xxxxx              1/1     Running   0          2m
+```
+
+#### 🌐 访问服务
+
+部署成功后，服务通过 NodePort 暴露在本地：
+
+| 服务 | 协议 | 端口 | 访问地址 | 用途 |
+|-----|------|------|---------|------|
+| **认证服务** | HTTP | 30080 | `http://localhost:30080` | 用户登录、注册、JWT 验证 |
+| **网关服务** | TCP | 30909 | `localhost:30909` | 游戏客户端长连接入口 |
+| **游戏服务** | RPC | 8081 | 仅集群内部 | 游戏逻辑处理（不对外暴露） |
+| **MongoDB** | TCP | 27017 | 仅集群内部 | 数据持久化 |
+| **Redis** | TCP | 6379 | 仅集群内部 | 缓存与会话 |
+
+**验证服务可用性:**
+
+```powershell
+# 查看服务端点
+kubectl -n gaming get svc
+
+# 查看 Pod 日志
+kubectl -n gaming logs -l app=auth-service --tail=50
+kubectl -n gaming logs -l app=gateway-service --tail=50
+kubectl -n gaming logs -l app=game-service --tail=50
+
+# 测试认证服务健康检查（如果实现了 /health 端点）
+curl http://localhost:30080/health
+```
+
+#### 🔧 常见操作
+
+**查看集群状态:**
+
+```powershell
+# 查看所有资源
+kubectl -n gaming get all
+
+# 查看 Pod 详情
+kubectl -n gaming describe pod <pod-name>
+
+# 进入容器调试
+kubectl -n gaming exec -it <pod-name> -- sh
+```
+
+**重启服务（应用配置更改后）:**
+
+```powershell
+# 重启单个服务
+kubectl -n gaming rollout restart deploy/auth-service
+
+# 重启所有服务
+kubectl -n gaming rollout restart deploy --all
+
+# 等待滚动更新完成
+kubectl -n gaming rollout status deploy/auth-service
+```
+
+**更新镜像（代码变更后）:**
+
+```powershell
+# 1. 重新构建镜像
+./scripts/build-images.ps1 -Tag dev
+
+# 2. 重新加载到 k8s 节点
+./scripts/load-images-to-k8s.ps1 -Tag dev
+
+# 3. 强制重启 Pod（触发镜像重新拉取）
+kubectl -n gaming rollout restart deploy --all
+```
+
+**清理环境:**
+
+```powershell
+# 删除所有资源（保留命名空间）
+kubectl delete -f k8s/local/gateway-service.yaml
+kubectl delete -f k8s/local/game-service.yaml
+kubectl delete -f k8s/local/auth-service.yaml
+kubectl delete -f k8s/local/configmap-gateway.yaml
+kubectl delete -f k8s/local/redis.yaml
+kubectl delete -f k8s/local/mongodb.yaml
+
+# 删除命名空间（会级联删除所有资源）
+kubectl delete namespace gaming
+```
+
+#### 📦 推送镜像到远程仓库（可选）
+
+如果需要在多台机器或 CI/CD 环境中部署，可以将镜像推送到 Docker Hub 或私有仓库：
+
+**方式 1: 使用发布脚本**
+
+```powershell
+# 登录 Docker Hub
+docker login
+
+# 推送镜像到你的仓库
+./scripts/publish-images.ps1 `
+  -Registry docker.io `
+  -Namespace YOUR_DOCKERHUB_USERNAME `
+  -Tag dev `
+  -IncludeInfra  # 可选：同时推送 mongo 和 redis
+```
+
+**方式 2: 使用 Kustomize 覆盖层**
+
+项目提供了 `k8s/local/overlays/registry/` 配置，可以在部署时自动替换镜像路径：
+
+```powershell
+# 1. 编辑 k8s/local/overlays/registry/kustomization.yaml
+#    将 REPLACE_ME 替换为你的仓库命名空间，例如：docker.io/phuhao00
+
+# 2. 使用 kustomize 部署
+kubectl apply -k k8s/local/overlays/registry
+
+# 3. 验证部署
+kubectl -n gaming get pods
+```
+
+#### 🐛 故障排查
+
+**问题 1: Pod 状态为 `ImagePullBackOff` 或 `ErrImagePull`**
+
+**原因**: Kubernetes 无法从本地 Docker 拉取镜像。
+
+**解决方案**:
+- 确保已执行 `./scripts/load-images-to-k8s.ps1`
+- 检查 Pod 的 `imagePullPolicy` 是否为 `IfNotPresent`
+- 验证镜像已加载: `kubectl -n gaming describe pod <pod-name> | Select-String -Pattern "Image"`
+
+**问题 2: Pod 状态为 `CrashLoopBackOff`**
+
+**原因**: 服务启动失败，通常是配置错误或依赖未就绪。
+
+**解决方案**:
+```powershell
+# 查看崩溃日志
+kubectl -n gaming logs <pod-name> --previous
+
+# 常见原因：
+# - MongoDB/Redis 未就绪 → 等待基础设施 Pod 先启动
+# - 环境变量配置错误 → 检查 Deployment 的 env 配置
+# - 端口冲突 → 检查 containerPort 和 Service port 映射
+```
+
+**问题 3: 无法通过 NodePort 访问服务**
+
+**原因**: NodePort 未正确映射或防火墙阻止。
+
+**解决方案**:
+```powershell
+# 验证 Service 配置
+kubectl -n gaming get svc
+
+# 确认 NodePort 范围（默认 30000-32767）
+# 检查 Windows 防火墙或 Docker Desktop 网络设置
+
+# 临时替代方案：使用端口转发
+kubectl -n gaming port-forward svc/auth-service 8080:8080
+kubectl -n gaming port-forward svc/gateway-service 9090:9090
+```
+
+**问题 4: MongoDB/Redis 连接失败**
+
+**原因**: 服务启动顺序问题或 DNS 解析失败。
+
+**解决方案**:
+```powershell
+# 检查基础设施服务是否运行
+kubectl -n gaming get pods -l app=mongodb
+kubectl -n gaming get pods -l app=redis
+
+# 验证服务 DNS 解析（在 Pod 内测试）
+kubectl -n gaming exec -it <auth-pod> -- nslookup mongodb
+kubectl -n gaming exec -it <auth-pod> -- nslookup redis
+
+# 检查服务端点
+kubectl -n gaming get endpoints
+```
+
+#### 📊 监控与日志
+
+**实时查看日志:**
+
+```powershell
+# 跟踪单个服务
+kubectl -n gaming logs -f deploy/auth-service
+
+# 查看所有服务日志（多窗口）
+kubectl -n gaming logs -f -l app=auth-service
+kubectl -n gaming logs -f -l app=game-service
+kubectl -n gaming logs -f -l app=gateway-service
+
+# 查看 Pod 事件
+kubectl -n gaming get events --sort-by='.lastTimestamp'
+```
+
+**资源使用情况:**
+
+```powershell
+# 查看 Pod 资源占用
+kubectl -n gaming top pods
+
+# 查看节点资源
+kubectl top nodes
+```
+
+#### 🔐 生产环境增强配置
+
+本地部署使用简化配置，生产环境建议增强：
+
+**安全性:**
+- 使用 Kubernetes Secrets 管理敏感信息（数据库密码、JWT密钥）
+- 启用 NetworkPolicy 限制 Pod 间通信
+- 配置 RBAC 权限控制
+- 使用 TLS 加密服务间通信
+
+**高可用:**
+- 增加副本数 (`replicas: 3`)
+- 配置 PodDisruptionBudget
+- 使用 StatefulSet 部署有状态服务（MongoDB）
+- 启用 HorizontalPodAutoscaler 自动扩缩容
+
+**持久化:**
+- 为 MongoDB 配置 PersistentVolumeClaim（避免使用 emptyDir）
+- 定期备份数据库
+- 配置数据保留策略
+
+**示例：生产级 MongoDB 部署**
+
 ```yaml
+# 使用 StatefulSet + PVC（生产环境推荐）
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: auth-service
+  name: mongodb
   namespace: gaming
 spec:
-  replicas: 2
+  serviceName: mongodb
+  replicas: 3
   selector:
     matchLabels:
-      app: auth-service
+      app: mongodb
   template:
-    metadata:
-      labels:
-        app: auth-service
     spec:
       containers:
-      - name: auth-service
-        image: greatestworks:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: SERVICE_TYPE
-          value: "auth-service"
+      - name: mongodb
+        image: mongo:7
+        volumeMounts:
+        - name: mongo-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
 ```
+
+#### 🎯 性能调优建议
+
+**资源配额调整:**
+
+根据实际负载修改 `k8s/local/*-service.yaml` 中的资源限制：
+
+```yaml
+resources:
+  requests:
+    cpu: "500m"      # 保证分配
+    memory: "512Mi"
+  limits:
+    cpu: "2"         # 最大使用
+    memory: "2Gi"
+```
+
+**并发连接优化:**
+
+在 `k8s/local/configmap-gateway.yaml` 中调整网关配置：
+
+```yaml
+server:
+  tcp:
+    max_connections: 50000  # 根据节点能力调整
+    buffer_size: 8192       # 增大缓冲区
+```
+
+**数据库连接池:**
+
+在各服务配置中优化连接池参数：
+
+```yaml
+database:
+  mongodb:
+    max_pool_size: 200
+    min_pool_size: 50
+  redis:
+    pool_size: 200
+    min_idle_conns: 50
+```
+
+#### 📚 相关文档
+
+- [Kubernetes 配置清单说明](k8s/local/README.md)（待创建）
+- [Docker 镜像构建脚本](scripts/build-images.ps1)
+- [镜像加载脚本](scripts/load-images-to-k8s.ps1)
+- [Kustomize 覆盖层](k8s/local/overlays/registry/)
+
+---
 
 ### 🔧 生产环境配置
 
