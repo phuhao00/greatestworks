@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Use this overlay to replace local image names with registry-qualified ones
+# After publishing with scripts/publish-images.ps1, edit REPLACE_ME below or generate a copy per your registry
+resources:
+  - ../../namespace.yaml
+  - ../../mongodb.yaml
+  - ../../redis.yaml
+  - ../../auth-service.yaml
+  - ../../game-service.yaml
+  - ../../gateway-service.yaml
+  - ../../configmap-gateway.yaml
+
+images:
+  - name: greatestworks-auth
+    newName: REPLACE_ME/greatestworks-auth
+    newTag: dev
+  - name: greatestworks-game
+    newName: REPLACE_ME/greatestworks-game
+    newTag: dev
+  - name: greatestworks-gateway
+    newName: REPLACE_ME/greatestworks-gateway
+    newTag: dev
+
+# Optional: if you also re-tag/push infra images (mongo/redis) with -IncludeInfra in publish script
+# uncomment and adjust below to your registry path. This can bypass a broken docker.io mirror in your cluster
+#  - name: mongo
+#    newName: REPLACE_ME/mongo
+#    newTag: "7"
+#  - name: redis
+#    newName: REPLACE_ME/redis
+#    newTag: "7"

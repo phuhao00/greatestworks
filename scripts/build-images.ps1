@@ -16,14 +16,16 @@ function Build-ServiceImage {
     [Parameter(Mandatory=$true)][string]$ServicePackage
   )
 
-  $image = "greatestworks-$ServiceName:$Tag"
-  Write-Host " -> Building $image from package $ServicePackage"
+  $imageName = "greatestworks-${ServiceName}:${Tag}"
+  Write-Host " -> Building $imageName from package $ServicePackage"
+  $buildTime = Get-Date -Format o
+  $gitCommit = git rev-parse --short HEAD 2>$null
   docker build `
     --build-arg SERVICE_PACKAGE=$ServicePackage `
     --build-arg BUILD_VERSION=$Tag `
-    --build-arg BUILD_TIME=$(Get-Date -Format o) `
-    --build-arg GIT_COMMIT=$(git rev-parse --short HEAD 2>$null) `
-    -t $image `
+    --build-arg BUILD_TIME=$buildTime `
+    --build-arg GIT_COMMIT=$gitCommit `
+    -t $imageName `
     -f Dockerfile .
 }
 
