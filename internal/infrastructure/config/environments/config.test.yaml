@@ -5,7 +5,7 @@
 # 服务器配置
 server:
   gateway:
-    port: 19080
+    port: 18080
     host: "127.0.0.1"
     max_connections: 100
     read_timeout: 10s
@@ -17,7 +17,7 @@ server:
     key_file: ""
   
   scene:
-    port: 19081
+    port: 18081
     host: "127.0.0.1"
     max_players: 50
     tick_rate: 10

@@ -485,7 +485,7 @@ main() {
     if [ "$push" = false ]; then
         local image_name="$registry/$namespace/$PROJECT_NAME:$tag"
         log_info "后续操作:"
-        log_info "  运行镜像: docker run -p 9080:9080 $image_name"
+        log_info "  运行镜像: docker run -p 8080:8080 $image_name"
         log_info "  推送镜像: docker push $image_name"
         log_info "  安全扫描: $0 --scan"
     fi

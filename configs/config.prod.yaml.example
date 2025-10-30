@@ -15,7 +15,7 @@ app:
 server:
   http:
     host: "0.0.0.0"
-    port: 9080
+    port: 8080
     read_timeout: "30s"
     write_timeout: "30s"
     idle_timeout: "120s"
@@ -23,7 +23,7 @@ server:
   
   websocket:
     host: "0.0.0.0"
-    port: 9081
+    port: 8081
     read_buffer_size: 8192
     write_buffer_size: 8192
     check_origin: true  # 生产环境严格检查来源

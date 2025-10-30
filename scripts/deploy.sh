@@ -389,7 +389,7 @@ main() {
     
     # 健康检查
     if [ "$skip_health_check" != true ]; then
-        local health_url="${HEALTH_CHECK_URL:-http://localhost:9080/health}"
+        local health_url="${HEALTH_CHECK_URL:-http://localhost:8080/health}"
         if ! health_check "$health_url"; then
             log_error "部署可能失败，请检查服务状态"
             exit 1

@@ -60,7 +60,7 @@ ENV GIN_MODE=release
 ENV LOG_LEVEL=info
 
 # 暴露端口
-EXPOSE 9080 9081 9090
+EXPOSE 8080 8081 9090
 
 # 添加健康检查用户
 USER 65534:65534
@@ -107,11 +107,11 @@ ENV GIN_MODE=debug
 ENV LOG_LEVEL=debug
 
 # 暴露端口
-EXPOSE 9080 9081 9090
+EXPOSE 8080 8081 9090
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider --timeout=5 http://localhost:9080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider --timeout=5 http://localhost:8080/health || exit 1
 
 # 运行应用
 CMD ["./server"]

@@ -72,7 +72,7 @@ gateway:
           - "localhost:2379"
       static:
         endpoints:
-          - "localhost:9081"
+          - "localhost:8081"
           - "localhost:8082"
           - "localhost:8083"
     rpc:
@@ -93,7 +93,7 @@ gateway:
         timeout: "5s"
         path: "/health"
   auth_service:
-    base_url: "http://localhost:9080"
+    base_url: "http://localhost:8080"
     timeout: "10s"
     retry_attempts: 3
     retry_delay: "1s"

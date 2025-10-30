@@ -745,7 +745,7 @@ func (c *Config) ApplyDefaults() {
 		c.Server.HTTP.Host = "0.0.0.0"
 	}
 	if c.Server.HTTP.Port == 0 {
-		c.Server.HTTP.Port = 9080
+		c.Server.HTTP.Port = 8080
 	}
 	if c.Server.HTTP.ReadTimeout == 0 {
 		c.Server.HTTP.ReadTimeout = 30 * time.Second
@@ -761,7 +761,7 @@ func (c *Config) ApplyDefaults() {
 		c.Server.RPC.Host = c.Server.HTTP.Host
 	}
 	if c.Server.RPC.Port == 0 {
-		c.Server.RPC.Port = 9081
+		c.Server.RPC.Port = 8081
 	}
 	if c.Server.RPC.Timeout == 0 {
 		c.Server.RPC.Timeout = 30 * time.Second

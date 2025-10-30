@@ -5,7 +5,7 @@
 # 服务器配置
 server:
   gateway:
-    port: 9080
+    port: 8080
     host: "0.0.0.0"
     max_connections: 10000
     read_timeout: 30s
@@ -17,7 +17,7 @@ server:
     key_file: "${TLS_KEY_FILE:/etc/ssl/private/server.key}"
   
   scene:
-    port: 9081
+    port: 8081
     host: "0.0.0.0"
     max_players: 2000
     tick_rate: 20
