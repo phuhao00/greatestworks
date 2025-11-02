@@ -4,13 +4,13 @@ package main
 
 import (
 	"context"
+	"greatestworks/internal/bootstrap"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"greatestworks/internal/config"
-	"greatestworks/internal/infrastructure/bootstrap"
 	"greatestworks/internal/infrastructure/logging"
 )
 
