@@ -1,0 +1,337 @@
+syntax = "proto3";
+
+package greatestworks.mail;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/mail";
+option csharp_namespace = "GreatestWorks.Mail";
+
+// 邮件服务定义
+service MailService {
+  // 发送邮件
+  rpc SendMail(SendMailRequest) returns (SendMailResponse);
+  
+  // 获取邮件列表
+  rpc GetMailList(GetMailListRequest) returns (GetMailListResponse);
+  
+  // 读取邮件
+  rpc ReadMail(ReadMailRequest) returns (ReadMailResponse);
+  
+  // 删除邮件
+  rpc DeleteMail(DeleteMailRequest) returns (DeleteMailResponse);
+  
+  // 批量删除邮件
+  rpc BatchDeleteMails(BatchDeleteMailsRequest) returns (BatchDeleteMailsResponse);
+  
+  // 领取邮件附件
+  rpc ClaimAttachment(ClaimAttachmentRequest) returns (ClaimAttachmentResponse);
+  
+  // 批量领取附件
+  rpc BatchClaimAttachments(BatchClaimAttachmentsRequest) returns (BatchClaimAttachmentsResponse);
+  
+  // 标记邮件
+  rpc MarkMail(MarkMailRequest) returns (MarkMailResponse);
+  
+  // 搜索邮件
+  rpc SearchMails(SearchMailsRequest) returns (SearchMailsResponse);
+  
+  // 获取邮件统计
+  rpc GetMailStats(GetMailStatsRequest) returns (GetMailStatsResponse);
+  
+  // 设置邮件配置
+  rpc SetMailConfig(SetMailConfigRequest) returns (SetMailConfigResponse);
+}
+
+// 发送邮件请求
+message SendMailRequest {
+  string sender_id = 1;
+  repeated string recipient_ids = 2;
+  string subject = 3;
+  string content = 4;
+  MailType mail_type = 5;
+  repeated MailAttachment attachments = 6;
+  int64 expire_at = 7; // 过期时间，0表示不过期
+  bool is_system_mail = 8;
+  map<string, string> metadata = 9;
+}
+
+// 发送邮件响应
+message SendMailResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated string mail_ids = 2; // 为每个收件人创建的邮件ID
+}
+
+// 获取邮件列表请求
+message GetMailListRequest {
+  string player_id = 1;
+  MailStatus status = 2;
+  MailType mail_type = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+  bool only_unread = 6;
+  bool only_with_attachments = 7;
+}
+
+// 获取邮件列表响应
+message GetMailListResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated MailInfo mails = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+  MailStats stats = 4;
+}
+
+// 读取邮件请求
+message ReadMailRequest {
+  string player_id = 1;
+  string mail_id = 2;
+}
+
+// 读取邮件响应
+message ReadMailResponse {
+  greatestworks.common.CommonResponse common = 1;
+  MailDetail mail = 2;
+}
+
+// 删除邮件请求
+message DeleteMailRequest {
+  string player_id = 1;
+  string mail_id = 2;
+}
+
+// 删除邮件响应
+message DeleteMailResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 批量删除邮件请求
+message BatchDeleteMailsRequest {
+  string player_id = 1;
+  repeated string mail_ids = 2;
+  bool delete_all_read = 3; // 删除所有已读邮件
+  bool delete_expired = 4;  // 删除过期邮件
+}
+
+// 批量删除邮件响应
+message BatchDeleteMailsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  int32 deleted_count = 2;
+  repeated string failed_mail_ids = 3;
+}
+
+// 领取邮件附件请求
+message ClaimAttachmentRequest {
+  string player_id = 1;
+  string mail_id = 2;
+  repeated string attachment_ids = 3; // 空则领取所有附件
+}
+
+// 领取邮件附件响应
+message ClaimAttachmentResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated ClaimedAttachment claimed_attachments = 2;
+  repeated string failed_attachment_ids = 3;
+}
+
+// 批量领取附件请求
+message BatchClaimAttachmentsRequest {
+  string player_id = 1;
+  repeated string mail_ids = 2;
+  bool claim_all_available = 3; // 领取所有可领取的附件
+}
+
+// 批量领取附件响应
+message BatchClaimAttachmentsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated ClaimedAttachment claimed_attachments = 2;
+  int32 total_claimed = 3;
+  repeated string failed_mail_ids = 4;
+}
+
+// 标记邮件请求
+message MarkMailRequest {
+  string player_id = 1;
+  repeated string mail_ids = 2;
+  MailMarkType mark_type = 3;
+}
+
+// 标记邮件响应
+message MarkMailResponse {
+  greatestworks.common.CommonResponse common = 1;
+  int32 marked_count = 2;
+}
+
+// 搜索邮件请求
+message SearchMailsRequest {
+  string player_id = 1;
+  string keyword = 2; // 搜索关键词
+  string sender_name = 3; // 发件人名称
+  MailType mail_type = 4;
+  int64 start_date = 5;
+  int64 end_date = 6;
+  int32 limit = 7;
+  int32 offset = 8;
+}
+
+// 搜索邮件响应
+message SearchMailsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated MailInfo mails = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 获取邮件统计请求
+message GetMailStatsRequest {
+  string player_id = 1;
+}
+
+// 获取邮件统计响应
+message GetMailStatsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  MailStats stats = 2;
+}
+
+// 设置邮件配置请求
+message SetMailConfigRequest {
+  string player_id = 1;
+  MailConfig config = 2;
+}
+
+// 设置邮件配置响应
+message SetMailConfigResponse {
+  greatestworks.common.CommonResponse common = 1;
+  MailConfig config = 2;
+}
+
+// 邮件信息
+message MailInfo {
+  string mail_id = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string recipient_id = 4;
+  string subject = 5;
+  MailType mail_type = 6;
+  MailStatus status = 7;
+  bool has_attachments = 8;
+  bool has_unclaimed_attachments = 9;
+  int64 sent_at = 10;
+  int64 read_at = 11;
+  int64 expire_at = 12;
+  bool is_important = 13;
+  bool is_favorite = 14;
+}
+
+// 邮件详情
+message MailDetail {
+  string mail_id = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string recipient_id = 4;
+  string subject = 5;
+  string content = 6;
+  MailType mail_type = 7;
+  MailStatus status = 8;
+  repeated MailAttachment attachments = 9;
+  int64 sent_at = 10;
+  int64 read_at = 11;
+  int64 expire_at = 12;
+  bool is_important = 13;
+  bool is_favorite = 14;
+  map<string, string> metadata = 15;
+}
+
+// 邮件附件
+message MailAttachment {
+  string attachment_id = 1;
+  string name = 2;
+  AttachmentType attachment_type = 3;
+  string item_id = 4; // 物品ID
+  int32 quantity = 5; // 数量
+  int32 gold_amount = 6; // 金币数量
+  int32 diamond_amount = 7; // 钻石数量
+  bool is_claimed = 8;
+  int64 claimed_at = 9;
+  map<string, string> properties = 10;
+}
+
+// 已领取附件
+message ClaimedAttachment {
+  string attachment_id = 1;
+  string name = 2;
+  AttachmentType attachment_type = 3;
+  int32 quantity = 4;
+  bool success = 5;
+  string error_message = 6;
+}
+
+// 邮件统计
+message MailStats {
+  int32 total_mails = 1;
+  int32 unread_mails = 2;
+  int32 mails_with_attachments = 3;
+  int32 mails_with_unclaimed_attachments = 4;
+  int32 important_mails = 5;
+  int32 favorite_mails = 6;
+  int32 system_mails = 7;
+  int32 player_mails = 8;
+  int64 oldest_mail_date = 9;
+  int64 newest_mail_date = 10;
+}
+
+// 邮件配置
+message MailConfig {
+  bool auto_delete_read_mails = 1;
+  int32 auto_delete_days = 2; // 自动删除天数
+  bool notify_new_mail = 3;
+  bool notify_system_mail = 4;
+  bool auto_claim_attachments = 5;
+  int32 max_mails_per_page = 6;
+  repeated MailType blocked_mail_types = 7;
+}
+
+// 邮件类型枚举
+enum MailType {
+  MAIL_TYPE_UNSPECIFIED = 0;
+  MAIL_TYPE_SYSTEM = 1;         // 系统邮件
+  MAIL_TYPE_PLAYER = 2;         // 玩家邮件
+  MAIL_TYPE_REWARD = 3;         // 奖励邮件
+  MAIL_TYPE_NOTIFICATION = 4;   // 通知邮件
+  MAIL_TYPE_PROMOTION = 5;      // 推广邮件
+  MAIL_TYPE_ANNOUNCEMENT = 6;   // 公告邮件
+  MAIL_TYPE_GIFT = 7;           // 礼品邮件
+  MAIL_TYPE_COMPENSATION = 8;   // 补偿邮件
+  MAIL_TYPE_BATTLE_REPORT = 9;  // 战斗报告
+  MAIL_TYPE_GUILD = 10;         // 公会邮件
+}
+
+// 邮件状态枚举
+enum MailStatus {
+  MAIL_STATUS_UNSPECIFIED = 0;
+  MAIL_STATUS_UNREAD = 1;       // 未读
+  MAIL_STATUS_READ = 2;         // 已读
+  MAIL_STATUS_ARCHIVED = 3;     // 已归档
+  MAIL_STATUS_DELETED = 4;      // 已删除
+  MAIL_STATUS_EXPIRED = 5;      // 已过期
+}
+
+// 附件类型枚举
+enum AttachmentType {
+  ATTACHMENT_TYPE_UNSPECIFIED = 0;
+  ATTACHMENT_TYPE_ITEM = 1;       // 物品
+  ATTACHMENT_TYPE_CURRENCY = 2;   // 货币
+  ATTACHMENT_TYPE_EXPERIENCE = 3; // 经验
+  ATTACHMENT_TYPE_BUFF = 4;       // 增益效果
+  ATTACHMENT_TYPE_TITLE = 5;      // 称号
+  ATTACHMENT_TYPE_ACHIEVEMENT = 6; // 成就
+}
+
+// 邮件标记类型枚举
+enum MailMarkType {
+  MAIL_MARK_TYPE_UNSPECIFIED = 0;
+  MAIL_MARK_TYPE_READ = 1;        // 标记为已读
+  MAIL_MARK_TYPE_UNREAD = 2;      // 标记为未读
+  MAIL_MARK_TYPE_IMPORTANT = 3;   // 标记为重要
+  MAIL_MARK_TYPE_UNIMPORTANT = 4; // 取消重要标记
+  MAIL_MARK_TYPE_FAVORITE = 5;    // 标记为收藏
+  MAIL_MARK_TYPE_UNFAVORITE = 6;  // 取消收藏标记
+}

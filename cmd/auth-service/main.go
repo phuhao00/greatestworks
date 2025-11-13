@@ -4,175 +4,18 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"greatestworks/internal/bootstrap"
 	"log"
 	"os"
 	"os/signal"
-	"sync/atomic"
 	"syscall"
 
 	"greatestworks/internal/config"
 	"greatestworks/internal/infrastructure/logging"
-	"greatestworks/internal/infrastructure/monitoring"
-	"greatestworks/internal/interfaces/http"
 )
 
 // AuthServiceConfig aliases the shared configuration schema for readability.
 type AuthServiceConfig = config.Config
-
-// AuthService 认证服务
-type AuthService struct {
-	config   atomic.Pointer[AuthServiceConfig]
-	logger   logging.Logger
-	server   *http.Server
-	profiler *monitoring.Profiler
-	ctx      context.Context
-	cancel   context.CancelFunc
-}
-
-// NewAuthService 创建认证服务
-func NewAuthService(cfg *AuthServiceConfig, logger logging.Logger) *AuthService {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	service := &AuthService{
-		logger:   logger,
-		ctx:      ctx,
-		cancel:   cancel,
-		profiler: monitoring.NewProfiler(logger),
-	}
-
-	if cfg != nil {
-		service.config.Store(cfg)
-	}
-
-	return service
-}
-
-// UpdateConfig replaces the in-memory configuration snapshot.
-func (s *AuthService) UpdateConfig(cfg *AuthServiceConfig) {
-	if cfg == nil {
-		return
-	}
-	s.config.Store(cfg)
-}
-
-// Start 启动认证服务
-func (s *AuthService) Start() error {
-	cfg := s.config.Load()
-	if cfg == nil {
-		return fmt.Errorf("auth service configuration not loaded")
-	}
-
-	s.logger.Info("Starting auth service", logging.Fields{
-		"service": cfg.Service.Name,
-		"version": cfg.Service.Version,
-		"node_id": cfg.Service.NodeID,
-	})
-
-	if err := s.initializeDatabase(cfg); err != nil {
-		return fmt.Errorf("初始化数据库失败: %w", err)
-	}
-
-	if err := s.initializeHTTPServer(cfg); err != nil {
-		return fmt.Errorf("初始化HTTP服务器失败: %w", err)
-	}
-
-	go func() {
-		if err := s.server.Start(); err != nil {
-			s.logger.Error("HTTP server start failed", err)
-		}
-	}()
-
-	if cfg.Monitoring.Profiling.Enabled {
-		host := cfg.Monitoring.Profiling.Host
-		if host == "" {
-			host = cfg.Server.HTTP.Host
-		}
-
-		if cfg.Monitoring.Profiling.Port == 0 {
-			s.logger.Warn("pprof未启动: 未配置端口")
-		} else if host == cfg.Server.HTTP.Host && cfg.Monitoring.Profiling.Port == cfg.Server.HTTP.Port {
-			s.logger.Info("pprof routes enabled on primary HTTP server", logging.Fields{
-				"addr": fmt.Sprintf("%s:%d", cfg.Server.HTTP.Host, cfg.Server.HTTP.Port),
-				"path": "/debug/pprof/",
-			})
-		} else if err := s.profiler.Start(host, cfg.Monitoring.Profiling.Port); err != nil {
-			s.logger.Error("Failed to start pprof server", err, logging.Fields{
-				"host": host,
-				"port": cfg.Monitoring.Profiling.Port,
-			})
-		}
-	}
-
-	s.logger.Info("Auth service started successfully", logging.Fields{
-		"http_addr": fmt.Sprintf("%s:%d", cfg.Server.HTTP.Host, cfg.Server.HTTP.Port),
-	})
-
-	return nil
-}
-
-// Stop 停止认证服务
-func (s *AuthService) Stop() error {
-	s.logger.Info("停止认证服务")
-
-	// 取消上下文
-	s.cancel()
-
-	// 停止HTTP服务器
-	if s.server != nil {
-		if err := s.server.Stop(); err != nil {
-			s.logger.Error("Failed to stop HTTP server", err)
-			return err
-		}
-	}
-
-	if s.profiler != nil {
-		if err := s.profiler.Stop(context.Background()); err != nil {
-			s.logger.Error("Failed to stop pprof server", err)
-			return err
-		}
-	}
-
-	s.logger.Info("认证服务已停止")
-	return nil
-}
-
-// initializeDatabase 初始化数据库连接
-func (s *AuthService) initializeDatabase(cfg *AuthServiceConfig) error {
-	s.logger.Info("初始化数据库连接")
-
-	// TODO: 实现MongoDB连接，使用 cfg.Database.MongoDB
-	// TODO: 实现Redis连接，使用 cfg.Database.Redis
-
-	s.logger.Info("数据库连接初始化完成")
-	return nil
-}
-
-// initializeHTTPServer 初始化HTTP服务器
-func (s *AuthService) initializeHTTPServer(cfg *AuthServiceConfig) error {
-	s.logger.Info("初始化HTTP服务器")
-
-	httpConfig := &http.ServerConfig{
-		Host:         cfg.Server.HTTP.Host,
-		Port:         cfg.Server.HTTP.Port,
-		ReadTimeout:  cfg.Server.HTTP.ReadTimeout,
-		WriteTimeout: cfg.Server.HTTP.WriteTimeout,
-		IdleTimeout:  cfg.Server.HTTP.IdleTimeout,
-	}
-
-	// TODO: 根据配置启用CORS、Swagger、限流等特性
-
-	s.server = http.NewServer(httpConfig, s.logger)
-
-	if cfg.Monitoring.Profiling.Enabled &&
-		cfg.Monitoring.Profiling.Host == cfg.Server.HTTP.Host &&
-		cfg.Monitoring.Profiling.Port == cfg.Server.HTTP.Port {
-		s.server.EnableProfiling()
-	}
-
-	s.logger.Info("HTTP服务器初始化完成")
-	return nil
-}
 
 // loadInitialConfig 加载配置并返回配置与文件来源
 func loadInitialConfig() (*AuthServiceConfig, []string, *config.Loader, error) {
@@ -212,7 +55,7 @@ func main() {
 	}()
 
 	runtimeCfg := manager.Config()
-	service := NewAuthService(runtimeCfg, logger)
+	service := bootstrap.NewAuthBootstrap(runtimeCfg, logger)
 
 	manager.OnChange(func(next *config.Config) {
 		if next == nil {
@@ -244,10 +87,8 @@ func main() {
 
 	select {
 	case sig := <-sigChan:
-		logger.Info("收到关闭信号", logging.Fields{
-			"signal": sig.String(),
-		})
-	case <-service.ctx.Done():
+		logger.Info("收到关闭信号", logging.Fields{"signal": sig.String()})
+	case <-service.Done():
 		logger.Info("上下文已取消")
 	}
 

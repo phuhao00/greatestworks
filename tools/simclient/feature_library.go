@@ -80,6 +80,15 @@ var featureLibrary = map[string][]ScenarioActionConfig{
 	"social.friend_remove": {
 		{Name: "social.friend_remove", Message: "social.friend_remove", ExpectResponse: boolPtr(true)},
 	},
+	"social.chat": {
+		{Name: "social.chat", Message: "social.chat", ExpectResponse: boolPtr(true)},
+	},
+	"social.team_basic": {
+		{Name: "social.team_create", Message: "social.team_create", ExpectResponse: boolPtr(true)},
+		{Name: "social.team_info", Message: "social.team_info", ExpectResponse: boolPtr(true)},
+		{Name: "social.team_join", Message: "social.team_join", ExpectResponse: boolPtr(true)},
+		{Name: "social.team_leave", Message: "social.team_leave", ExpectResponse: boolPtr(true)},
+	},
 	"item.use": {
 		{Name: "item.use", Message: "item.use", ExpectResponse: boolPtr(true)},
 	},

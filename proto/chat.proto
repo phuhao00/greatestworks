@@ -1,0 +1,251 @@
+syntax = "proto3";
+
+package greatestworks.chat;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/chat";
+option csharp_namespace = "GreatestWorks.Chat";
+
+// 聊天服务定义
+service ChatService {
+  // 发送消息
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  
+  // 获取消息历史
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+  
+  // 加入聊天频道
+  rpc JoinChannel(JoinChannelRequest) returns (JoinChannelResponse);
+  
+  // 离开聊天频道
+  rpc LeaveChannel(LeaveChannelRequest) returns (LeaveChannelResponse);
+  
+  // 创建私聊
+  rpc CreatePrivateChat(CreatePrivateChatRequest) returns (CreatePrivateChatResponse);
+  
+  // 获取在线用户列表
+  rpc GetOnlineUsers(GetOnlineUsersRequest) returns (GetOnlineUsersResponse);
+  
+  // 设置用户状态
+  rpc SetUserStatus(SetUserStatusRequest) returns (SetUserStatusResponse);
+  
+  // 屏蔽用户
+  rpc BlockUser(BlockUserRequest) returns (BlockUserResponse);
+  
+  // 举报消息
+  rpc ReportMessage(ReportMessageRequest) returns (ReportMessageResponse);
+}
+
+// 发送消息请求
+message SendMessageRequest {
+  string sender_id = 1;
+  string content = 2;
+  greatestworks.common.ChatChannel channel = 3;
+  string target_id = 4; // 私聊目标用户ID或频道ID
+  MessageType message_type = 5;
+  map<string, string> metadata = 6;
+}
+
+// 发送消息响应
+message SendMessageResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string message_id = 2;
+  int64 timestamp = 3;
+}
+
+// 获取消息历史请求
+message GetMessagesRequest {
+  greatestworks.common.ChatChannel channel = 1;
+  string channel_id = 2;
+  string user_id = 3;
+  int32 limit = 4;
+  int64 before_timestamp = 5;
+  int64 after_timestamp = 6;
+}
+
+// 获取消息历史响应
+message GetMessagesResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated ChatMessage messages = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 加入聊天频道请求
+message JoinChannelRequest {
+  string user_id = 1;
+  greatestworks.common.ChatChannel channel = 2;
+  string channel_id = 3;
+  string password = 4; // 如果是私有频道
+}
+
+// 加入聊天频道响应
+message JoinChannelResponse {
+  greatestworks.common.CommonResponse common = 1;
+  ChannelInfo channel_info = 2;
+  repeated ChatUser online_users = 3;
+}
+
+// 离开聊天频道请求
+message LeaveChannelRequest {
+  string user_id = 1;
+  greatestworks.common.ChatChannel channel = 2;
+  string channel_id = 3;
+}
+
+// 离开聊天频道响应
+message LeaveChannelResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 创建私聊请求
+message CreatePrivateChatRequest {
+  string creator_id = 1;
+  repeated string participant_ids = 2;
+  string chat_name = 3;
+}
+
+// 创建私聊响应
+message CreatePrivateChatResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string chat_id = 2;
+  ChannelInfo chat_info = 3;
+}
+
+// 获取在线用户列表请求
+message GetOnlineUsersRequest {
+  greatestworks.common.ChatChannel channel = 1;
+  string channel_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+// 获取在线用户列表响应
+message GetOnlineUsersResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated ChatUser users = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 设置用户状态请求
+message SetUserStatusRequest {
+  string user_id = 1;
+  UserStatus status = 2;
+  string status_message = 3;
+}
+
+// 设置用户状态响应
+message SetUserStatusResponse {
+  greatestworks.common.CommonResponse common = 1;
+  UserStatus new_status = 2;
+}
+
+// 屏蔽用户请求
+message BlockUserRequest {
+  string user_id = 1;
+  string target_user_id = 2;
+  bool block = 3; // true=屏蔽, false=解除屏蔽
+}
+
+// 屏蔽用户响应
+message BlockUserResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 举报消息请求
+message ReportMessageRequest {
+  string reporter_id = 1;
+  string message_id = 2;
+  ReportReason reason = 3;
+  string description = 4;
+}
+
+// 举报消息响应
+message ReportMessageResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string report_id = 2;
+}
+
+// 聊天消息
+message ChatMessage {
+  string message_id = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string content = 4;
+  greatestworks.common.ChatChannel channel = 5;
+  string channel_id = 6;
+  MessageType message_type = 7;
+  int64 timestamp = 8;
+  bool is_edited = 9;
+  int64 edited_timestamp = 10;
+  map<string, string> metadata = 11;
+}
+
+// 频道信息
+message ChannelInfo {
+  string channel_id = 1;
+  string name = 2;
+  string description = 3;
+  greatestworks.common.ChatChannel channel_type = 4;
+  int32 max_users = 5;
+  int32 current_users = 6;
+  bool is_private = 7;
+  string owner_id = 8;
+  repeated string moderator_ids = 9;
+  int64 created_at = 10;
+}
+
+// 聊天用户
+message ChatUser {
+  string user_id = 1;
+  string username = 2;
+  string display_name = 3;
+  UserStatus status = 4;
+  string status_message = 5;
+  UserRole role = 6;
+  int64 last_active = 7;
+  bool is_online = 8;
+}
+
+// 消息类型枚举
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_TEXT = 1;          // 文本消息
+  MESSAGE_TYPE_EMOJI = 2;         // 表情消息
+  MESSAGE_TYPE_IMAGE = 3;         // 图片消息
+  MESSAGE_TYPE_FILE = 4;          // 文件消息
+  MESSAGE_TYPE_VOICE = 5;         // 语音消息
+  MESSAGE_TYPE_SYSTEM = 6;        // 系统消息
+  MESSAGE_TYPE_ANNOUNCEMENT = 7;   // 公告消息
+  MESSAGE_TYPE_COMMAND = 8;       // 命令消息
+}
+
+// 用户状态枚举
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_ONLINE = 1;         // 在线
+  USER_STATUS_AWAY = 2;           // 离开
+  USER_STATUS_BUSY = 3;           // 忙碌
+  USER_STATUS_INVISIBLE = 4;      // 隐身
+  USER_STATUS_OFFLINE = 5;        // 离线
+}
+
+// 用户角色枚举
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_MEMBER = 1;           // 普通成员
+  USER_ROLE_MODERATOR = 2;        // 版主
+  USER_ROLE_ADMIN = 3;            // 管理员
+  USER_ROLE_OWNER = 4;            // 所有者
+}
+
+// 举报原因枚举
+enum ReportReason {
+  REPORT_REASON_UNSPECIFIED = 0;
+  REPORT_REASON_SPAM = 1;         // 垃圾信息
+  REPORT_REASON_HARASSMENT = 2;   // 骚扰
+  REPORT_REASON_HATE_SPEECH = 3;  // 仇恨言论
+  REPORT_REASON_INAPPROPRIATE = 4; // 不当内容
+  REPORT_REASON_CHEATING = 5;     // 作弊
+  REPORT_REASON_OTHER = 6;        // 其他
+}

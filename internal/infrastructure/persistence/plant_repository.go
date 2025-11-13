@@ -153,7 +153,7 @@ func (r *PlantRepository) DeletePlant(ctx context.Context, id string) error {
 func (r *PlantRepository) GetPlayerPlants(ctx context.Context, playerID string, limit, offset int) ([]*PlantRecord, error) {
 	filter := bson.M{"player_id": playerID}
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}).
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
@@ -183,7 +183,7 @@ func (r *PlantRepository) GetPlayerPlants(ctx context.Context, playerID string, 
 func (r *PlantRepository) GetPlantsByType(ctx context.Context, plantType string, limit, offset int) ([]*PlantRecord, error) {
 	filter := bson.M{"plant_type": plantType}
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}).
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 

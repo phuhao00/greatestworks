@@ -2,8 +2,9 @@
 package player
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // PlayerID 玩家ID值对象
@@ -44,6 +45,7 @@ type Player struct {
 	exp       int64
 	status    PlayerStatus
 	position  Position
+	lastMapID int32 // 上次所在地图ID
 	stats     PlayerStats
 	createdAt time.Time
 	updatedAt time.Time
@@ -78,6 +80,7 @@ func NewPlayer(name string) *Player {
 		exp:       0,
 		status:    PlayerStatusOffline,
 		position:  Position{X: 0, Y: 0, Z: 0},
+		lastMapID: 1001, // 默认新手地图
 		stats:     PlayerStats{HP: 100, MaxHP: 100, MP: 50, MaxMP: 50, Attack: 10, Defense: 5, Speed: 10},
 		createdAt: now,
 		updatedAt: now,
@@ -110,6 +113,11 @@ func (p *Player) GetPosition() Position {
 	return p.position
 }
 
+// LastMapID 获取上次所在地图ID
+func (p *Player) LastMapID() int32 {
+	return p.lastMapID
+}
+
 // Stats 获取玩家属性
 func (p *Player) Stats() PlayerStats {
 	return p.stats
@@ -138,6 +146,14 @@ func (p *Player) MoveTo(pos Position) error {
 	p.updatedAt = time.Now()
 	p.version++
 	return nil
+}
+
+// SetLastLocation 设置上次位置（用于登出保存）
+func (p *Player) SetLastLocation(mapID int32, pos Position) {
+	p.lastMapID = mapID
+	p.position = pos
+	p.updatedAt = time.Now()
+	p.version++
 }
 
 // GainExp 获得经验值
@@ -226,7 +242,7 @@ func (p *Player) Exp() int64 {
 }
 
 // ReconstructPlayer 从持久化数据重建玩家聚合根
-func ReconstructPlayer(id PlayerID, name string, level int, exp int64, status PlayerStatus, position Position, stats PlayerStats, createdAt, updatedAt time.Time, version int64) *Player {
+func ReconstructPlayer(id PlayerID, name string, level int, exp int64, status PlayerStatus, position Position, lastMapID int32, stats PlayerStats, createdAt, updatedAt time.Time, version int64) *Player {
 	return &Player{
 		id:        id,
 		name:      name,
@@ -234,6 +250,7 @@ func ReconstructPlayer(id PlayerID, name string, level int, exp int64, status Pl
 		exp:       exp,
 		status:    status,
 		position:  position,
+		lastMapID: lastMapID,
 		stats:     stats,
 		createdAt: createdAt,
 		updatedAt: updatedAt,

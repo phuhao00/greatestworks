@@ -433,6 +433,34 @@ func (s *Scene) Status() SceneStatus {
 	return s.status
 }
 
+// Type 获取场景类型
+func (s *Scene) Type() SceneType {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sceneType
+}
+
+// Width 获取场景宽度
+func (s *Scene) GetWidth() float64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.width
+}
+
+// Height 获取场景高度
+func (s *Scene) GetHeight() float64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.height
+}
+
+// MaxPlayers 获取最大玩家数
+func (s *Scene) GetMaxPlayers() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.maxPlayers
+}
+
 // PlayerCount 获取当前玩家数量
 func (s *Scene) PlayerCount() int {
 	s.mu.RLock()

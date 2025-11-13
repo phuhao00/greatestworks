@@ -1,0 +1,228 @@
+syntax = "proto3";
+
+package greatestworks.npc;
+
+import "proto/common.proto";
+import "proto/auth.proto";
+
+option go_package = "greatestworks/internal/proto/npc";
+option csharp_namespace = "GreatestWorks.NPC";
+
+// NPC服务
+service NPCService {
+  // 与NPC交互
+  rpc Interact(InteractRequest) returns (InteractResponse);
+  
+  // 查询NPC对话ID
+  rpc QueryDialogue(QueryDialogueIdRequest) returns (QueryDialogueIdResponse);
+  
+  // 开始对话
+  rpc StartDialogue(StartDialogueRequest) returns (StartDialogueResponse);
+  
+  // 结束对话
+  rpc EndDialogue(EndDialogueRequest) returns (EndDialogueResponse);
+  
+  // 打开商店
+  rpc OpenShop(OpenShopRequest) returns (OpenShopResponse);
+  
+  // 购买物品
+  rpc BuyItem(BuyItemRequest) returns (BuyItemResponse);
+  
+  // 出售物品
+  rpc SellItem(SellItemRequest) returns (SellItemResponse);
+}
+
+// ========== NPC交互 ==========
+
+// 交互请求
+message InteractRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 npc_id = 2;             // NPC实体ID
+  int32 select_idx = 3;         // 选择项索引
+}
+
+// 交互响应
+message InteractResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  int32 npc_id = 3;             // NPC实体ID
+  int32 dialogue_id = 4;        // 对话ID
+}
+
+// ========== 查询对话 ==========
+
+// 查询对话ID请求
+message QueryDialogueIdRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 npc_id = 2;             // NPC实体ID
+}
+
+// 查询对话ID响应
+message QueryDialogueIdResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  int32 npc_id = 3;             // NPC实体ID
+  int32 dialogue_id = 4;        // 对话ID
+}
+
+// ========== 对话系统 ==========
+
+// 开始对话请求
+message StartDialogueRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 npc_id = 2;             // NPC实体ID
+}
+
+// 开始对话响应
+message StartDialogueResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  DialogueData dialogue = 3;    // 对话数据
+}
+
+// 结束对话请求
+message EndDialogueRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 npc_id = 2;             // NPC实体ID
+}
+
+// 结束对话响应
+message EndDialogueResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+}
+
+// ========== 商店系统 ==========
+
+// 打开商店请求
+message OpenShopRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 npc_id = 2;             // NPC实体ID
+  int32 shop_id = 3;            // 商店ID
+}
+
+// 打开商店响应
+message OpenShopResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  ShopInfo shop = 3;            // 商店信息
+}
+
+// 购买物品请求
+message BuyItemRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 shop_id = 2;            // 商店ID
+  int32 item_id = 3;            // 物品ID
+  int32 count = 4;              // 购买数量
+}
+
+// 购买物品响应
+message BuyItemResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  int32 total_cost = 3;         // 总花费
+  int32 remaining_gold = 4;     // 剩余金币
+}
+
+// 出售物品请求
+message SellItemRequest {
+  int32 player_id = 1;          // 玩家实体ID
+  int32 npc_id = 2;             // NPC实体ID
+  int32 slot_id = 3;            // 物品槽位
+  int32 count = 4;              // 出售数量
+}
+
+// 出售物品响应
+message SellItemResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  int32 total_gain = 3;         // 总收益
+  int32 current_gold = 4;       // 当前金币
+}
+
+// ========== 数据结构 ==========
+
+// NPC对话记录
+message DialogueRecord {
+  int32 npc_id = 1;             // NPC ID
+  int32 dialogue_id = 2;        // 对话ID
+}
+
+// NPC对话信息（用于序列化存储）
+message DialogueInfo {
+  repeated DialogueRecord dialogue_arr = 1; // 对话记录数组
+}
+
+// 对话数据
+message DialogueData {
+  int32 dialogue_id = 1;        // 对话ID
+  string npc_name = 2;          // NPC名称
+  string content = 3;           // 对话内容
+  repeated DialogueOption options = 4; // 对话选项
+  DialogueType dialogue_type = 5;      // 对话类型
+}
+
+// 对话选项
+message DialogueOption {
+  int32 option_id = 1;          // 选项ID
+  string text = 2;              // 选项文本
+  int32 next_dialogue_id = 3;   // 下一个对话ID（-1表示结束）
+  OptionAction action = 4;      // 选项动作
+}
+
+// 选项动作
+message OptionAction {
+  ActionType action_type = 1;   // 动作类型
+  int32 action_value = 2;       // 动作值（任务ID、商店ID等）
+}
+
+// 商店信息
+message ShopInfo {
+  int32 shop_id = 1;            // 商店ID
+  string shop_name = 2;         // 商店名称
+  ShopType shop_type = 3;       // 商店类型
+  repeated ShopItem items = 4;  // 商品列表
+  int32 refresh_time = 5;       // 刷新时间（秒，0表示不刷新）
+}
+
+// 商品项
+message ShopItem {
+  int32 item_id = 1;            // 物品ID
+  int32 price = 2;              // 价格
+  int32 stock = 3;              // 库存（-1表示无限）
+  int32 max_buy_count = 4;      // 最大购买数量（-1表示无限）
+  int32 discount = 5;           // 折扣（百分比，100表示无折扣）
+  bool is_limited = 6;          // 是否限时
+  int64 expire_time = 7;        // 过期时间
+}
+
+// ========== 枚举定义 ==========
+
+// 对话类型
+enum DialogueType {
+  DIALOGUE_TYPE_NORMAL = 0;     // 普通对话
+  DIALOGUE_TYPE_QUEST = 1;      // 任务对话
+  DIALOGUE_TYPE_SHOP = 2;       // 商店对话
+  DIALOGUE_TYPE_TELEPORT = 3;   // 传送对话
+  DIALOGUE_TYPE_CRAFT = 4;      // 制作对话
+}
+
+// 动作类型
+enum ActionType {
+  ACTION_NONE = 0;              // 无动作
+  ACTION_ACCEPT_QUEST = 1;      // 接受任务
+  ACTION_SUBMIT_QUEST = 2;      // 提交任务
+  ACTION_OPEN_SHOP = 3;         // 打开商店
+  ACTION_TELEPORT = 4;          // 传送
+  ACTION_LEARN_SKILL = 5;       // 学习技能
+}
+
+// 商店类型
+enum ShopType {
+  SHOP_TYPE_GENERAL = 0;        // 普通商店
+  SHOP_TYPE_WEAPON = 1;         // 武器商店
+  SHOP_TYPE_ARMOR = 2;          // 护甲商店
+  SHOP_TYPE_POTION = 3;         // 药水商店
+  SHOP_TYPE_MATERIAL = 4;       // 材料商店
+  SHOP_TYPE_SPECIAL = 5;        // 特殊商店
+}

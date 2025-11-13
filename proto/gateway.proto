@@ -1,0 +1,384 @@
+syntax = "proto3";
+
+package greatestworks.gateway;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/gateway";
+option csharp_namespace = "GreatestWorks.Gateway";
+
+// 网关服务定义
+service GatewayService {
+  // 用户认证
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+  
+  // 刷新Token
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  
+  // 登出
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // 获取服务器列表
+  rpc GetServerList(GetServerListRequest) returns (GetServerListResponse);
+  
+  // 选择服务器
+  rpc SelectServer(SelectServerRequest) returns (SelectServerResponse);
+  
+  // 路由请求到后端服务
+  rpc RouteRequest(RouteRequestMessage) returns (RouteResponseMessage);
+  
+  // 建立WebSocket连接
+  rpc EstablishConnection(ConnectionRequest) returns (ConnectionResponse);
+  
+  // 心跳检测
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  
+  // 获取网关状态
+  rpc GetGatewayStatus(GetGatewayStatusRequest) returns (GetGatewayStatusResponse);
+  
+  // 限流检查
+  rpc RateLimitCheck(RateLimitRequest) returns (RateLimitResponse);
+  
+  // 获取用户会话信息
+  rpc GetSessionInfo(GetSessionInfoRequest) returns (GetSessionInfoResponse);
+}
+
+// 认证请求
+message AuthenticateRequest {
+  string username = 1;
+  string password = 2;
+  string client_id = 3;
+  string client_version = 4;
+  string device_info = 5;
+  AuthType auth_type = 6;
+  string third_party_token = 7; // 第三方登录token
+  map<string, string> metadata = 8;
+}
+
+// 认证响应
+message AuthenticateResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4;
+  string user_id = 5;
+  string session_id = 6;
+  UserProfile user_profile = 7;
+  repeated string permissions = 8;
+}
+
+// 刷新Token请求
+message RefreshTokenRequest {
+  string refresh_token = 1;
+  string user_id = 2;
+}
+
+// 刷新Token响应
+message RefreshTokenResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4;
+}
+
+// 登出请求
+message LogoutRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string access_token = 3;
+}
+
+// 登出响应
+message LogoutResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 获取服务器列表请求
+message GetServerListRequest {
+  string region = 1;
+  ServerType server_type = 2;
+  bool only_available = 3;
+}
+
+// 获取服务器列表响应
+message GetServerListResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated ServerInfo servers = 2;
+  string recommended_server_id = 3;
+}
+
+// 选择服务器请求
+message SelectServerRequest {
+  string user_id = 1;
+  string server_id = 2;
+  string character_id = 3;
+}
+
+// 选择服务器响应
+message SelectServerResponse {
+  greatestworks.common.CommonResponse common = 1;
+  ServerInfo server_info = 2;
+  string connection_token = 3;
+  repeated string service_endpoints = 4;
+}
+
+// 路由请求消息
+message RouteRequestMessage {
+  string request_id = 1;
+  string service_name = 2;
+  string method_name = 3;
+  bytes payload = 4;
+  string user_id = 5;
+  string session_id = 6;
+  map<string, string> headers = 7;
+  int32 timeout = 8; // 超时时间（秒）
+}
+
+// 路由响应消息
+message RouteResponseMessage {
+  string request_id = 1;
+  bool success = 2;
+  bytes payload = 3;
+  string error_message = 4;
+  int32 status_code = 5;
+  map<string, string> headers = 6;
+  int64 processing_time = 7; // 处理时间（毫秒）
+}
+
+// 连接请求
+message ConnectionRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string access_token = 3;
+  ConnectionType connection_type = 4;
+  string client_version = 5;
+  map<string, string> connection_params = 6;
+}
+
+// 连接响应
+message ConnectionResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string connection_id = 2;
+  string websocket_url = 3;
+  repeated string supported_protocols = 4;
+  int32 heartbeat_interval = 5; // 心跳间隔（秒）
+}
+
+// 心跳请求
+message HeartbeatRequest {
+  string connection_id = 1;
+  string user_id = 2;
+  int64 timestamp = 3;
+  map<string, string> status_info = 4;
+}
+
+// 心跳响应
+message HeartbeatResponse {
+  greatestworks.common.CommonResponse common = 1;
+  int64 server_timestamp = 2;
+  int32 next_heartbeat_interval = 3;
+  GatewayStatus gateway_status = 4;
+}
+
+// 获取网关状态请求
+message GetGatewayStatusRequest {
+  string admin_token = 1;
+  bool include_metrics = 2;
+}
+
+// 获取网关状态响应
+message GetGatewayStatusResponse {
+  greatestworks.common.CommonResponse common = 1;
+  GatewayStatus status = 2;
+  GatewayMetrics metrics = 3;
+  repeated ServiceStatus backend_services = 4;
+}
+
+// 限流检查请求
+message RateLimitRequest {
+  string user_id = 1;
+  string ip_address = 2;
+  string resource = 3; // 请求的资源
+  string action = 4; // 请求的操作
+}
+
+// 限流检查响应
+message RateLimitResponse {
+  bool allowed = 1;
+  int32 remaining_requests = 2;
+  int64 reset_time = 3; // 限制重置时间
+  string limit_type = 4;
+  string error_message = 5;
+}
+
+// 获取会话信息请求
+message GetSessionInfoRequest {
+  string session_id = 1;
+  string user_id = 2;
+}
+
+// 获取会话信息响应
+message GetSessionInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  SessionInfo session_info = 2;
+}
+
+// 服务器信息
+message ServerInfo {
+  string server_id = 1;
+  string name = 2;
+  string region = 3;
+  ServerType server_type = 4;
+  ServerStatus status = 5;
+  int32 current_players = 6;
+  int32 max_players = 7;
+  float load_percentage = 8;
+  int32 ping = 9;
+  string version = 10;
+  bool is_recommended = 11;
+  bool is_new = 12;
+  int64 last_update = 13;
+  map<string, string> features = 14; // 服务器特性
+}
+
+// 用户档案
+message UserProfile {
+  string user_id = 1;
+  string username = 2;
+  string email = 3;
+  string display_name = 4;
+  string avatar_url = 5;
+  UserLevel user_level = 6;
+  bool is_premium = 7;
+  int64 created_at = 8;
+  int64 last_login = 9;
+  string preferred_language = 10;
+  string timezone = 11;
+  map<string, string> preferences = 12;
+}
+
+// 网关状态
+message GatewayStatus {
+  bool is_healthy = 1;
+  string version = 2;
+  int64 uptime = 3; // 运行时间（秒）
+  int32 active_connections = 4;
+  int32 total_requests = 5;
+  float cpu_usage = 6;
+  float memory_usage = 7;
+  int32 error_rate = 8; // 错误率（每万次请求）
+}
+
+// 网关指标
+message GatewayMetrics {
+  int64 total_requests = 1;
+  int64 successful_requests = 2;
+  int64 failed_requests = 3;
+  float average_response_time = 4; // 平均响应时间（毫秒）
+  int32 active_users = 5;
+  int32 peak_concurrent_users = 6;
+  map<string, int64> requests_per_service = 7; // 各服务请求数
+  map<string, float> response_times_per_service = 8; // 各服务响应时间
+  int64 bandwidth_in = 9; // 入站带宽（字节）
+  int64 bandwidth_out = 10; // 出站带宽（字节）
+}
+
+// 服务状态
+message ServiceStatus {
+  string service_name = 1;
+  string service_url = 2;
+  ServiceHealth health = 3;
+  float response_time = 4; // 平均响应时间
+  int32 active_connections = 5;
+  int64 last_check = 6;
+  string version = 7;
+  map<string, string> metadata = 8;
+}
+
+// 会话信息
+message SessionInfo {
+  string session_id = 1;
+  string user_id = 2;
+  string access_token = 3;
+  int64 created_at = 4;
+  int64 expires_at = 5;
+  int64 last_activity = 6;
+  string client_ip = 7;
+  string user_agent = 8;
+  string current_server = 9;
+  SessionStatus status = 10;
+  map<string, string> session_data = 11;
+}
+
+// 认证类型枚举
+enum AuthType {
+  AUTH_TYPE_UNSPECIFIED = 0;
+  AUTH_TYPE_PASSWORD = 1;     // 密码认证
+  AUTH_TYPE_OAUTH = 2;        // OAuth认证
+  AUTH_TYPE_JWT = 3;          // JWT认证
+  AUTH_TYPE_GUEST = 4;        // 游客认证
+  AUTH_TYPE_FACEBOOK = 5;     // Facebook登录
+  AUTH_TYPE_GOOGLE = 6;       // Google登录
+  AUTH_TYPE_TWITTER = 7;      // Twitter登录
+  AUTH_TYPE_APPLE = 8;        // Apple登录
+}
+
+// 服务器类型枚举
+enum ServerType {
+  SERVER_TYPE_UNSPECIFIED = 0;
+  SERVER_TYPE_GAME = 1;       // 游戏服务器
+  SERVER_TYPE_CHAT = 2;       // 聊天服务器
+  SERVER_TYPE_MATCH = 3;      // 匹配服务器
+  SERVER_TYPE_BATTLE = 4;     // 战斗服务器
+  SERVER_TYPE_SOCIAL = 5;     // 社交服务器
+  SERVER_TYPE_TEST = 6;       // 测试服务器
+}
+
+// 服务器状态枚举
+enum ServerStatus {
+  SERVER_STATUS_UNSPECIFIED = 0;
+  SERVER_STATUS_ONLINE = 1;      // 在线
+  SERVER_STATUS_OFFLINE = 2;     // 离线
+  SERVER_STATUS_MAINTENANCE = 3; // 维护中
+  SERVER_STATUS_FULL = 4;        // 已满
+  SERVER_STATUS_RESTRICTED = 5;  // 受限制
+}
+
+// 连接类型枚举
+enum ConnectionType {
+  CONNECTION_TYPE_UNSPECIFIED = 0;
+  CONNECTION_TYPE_WEBSOCKET = 1;   // WebSocket连接
+  CONNECTION_TYPE_TCP = 2;         // TCP连接
+  CONNECTION_TYPE_HTTP = 3;        // HTTP连接
+  CONNECTION_TYPE_GRPC = 4;        // gRPC连接
+}
+
+// 用户等级枚举
+enum UserLevel {
+  USER_LEVEL_UNSPECIFIED = 0;
+  USER_LEVEL_GUEST = 1;        // 游客
+  USER_LEVEL_REGISTERED = 2;   // 注册用户
+  USER_LEVEL_VERIFIED = 3;     // 认证用户
+  USER_LEVEL_PREMIUM = 4;      // 高级用户
+  USER_LEVEL_VIP = 5;          // VIP用户
+  USER_LEVEL_ADMIN = 6;        // 管理员
+}
+
+// 服务健康状态枚举
+enum ServiceHealth {
+  SERVICE_HEALTH_UNSPECIFIED = 0;
+  SERVICE_HEALTH_HEALTHY = 1;     // 健康
+  SERVICE_HEALTH_DEGRADED = 2;    // 降级
+  SERVICE_HEALTH_UNHEALTHY = 3;   // 不健康
+  SERVICE_HEALTH_CRITICAL = 4;    // 严重
+}
+
+// 会话状态枚举
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ACTIVE = 1;      // 活跃
+  SESSION_STATUS_IDLE = 2;        // 空闲
+  SESSION_STATUS_EXPIRED = 3;     // 已过期
+  SESSION_STATUS_TERMINATED = 4;  // 已终止
+  SESSION_STATUS_SUSPENDED = 5;   // 已暂停
+}

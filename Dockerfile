@@ -9,6 +9,8 @@ FROM golang:1.24-alpine AS builder
 ARG BUILD_VERSION=dev
 ARG BUILD_TIME
 ARG GIT_COMMIT
+# 选择要构建的服务包，默认构建 game-service，可传入 ./cmd/auth-service 或 ./cmd/gateway-service
+ARG SERVICE_PACKAGE=./cmd/game-service
 
 # 安装构建依赖
 RUN apk add --no-cache \
@@ -36,7 +38,7 @@ RUN CGO_ENABLED=0 \
     -installsuffix cgo \
     -ldflags="-s -w -X main.version=${BUILD_VERSION} -X main.buildTime=${BUILD_TIME} -X main.gitCommit=${GIT_COMMIT}" \
     -o server \
-    ./cmd/game-service
+    ${SERVICE_PACKAGE}
 
 # 使用 UPX 压缩二进制文件（可选）
 RUN upx --best --lzma server

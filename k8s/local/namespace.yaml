@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gaming
+  labels:
+    app.kubernetes.io/name: greatestworks
+    app.kubernetes.io/part-of: greatestworks

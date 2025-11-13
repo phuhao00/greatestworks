@@ -22,6 +22,251 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 玩家性别枚举
+type PlayerGender int32
+
+const (
+	PlayerGender_PLAYER_GENDER_UNSPECIFIED PlayerGender = 0
+	PlayerGender_PLAYER_GENDER_MALE        PlayerGender = 1 // 男性
+	PlayerGender_PLAYER_GENDER_FEMALE      PlayerGender = 2 // 女性
+	PlayerGender_PLAYER_GENDER_OTHER       PlayerGender = 3 // 其他
+)
+
+// Enum value maps for PlayerGender.
+var (
+	PlayerGender_name = map[int32]string{
+		0: "PLAYER_GENDER_UNSPECIFIED",
+		1: "PLAYER_GENDER_MALE",
+		2: "PLAYER_GENDER_FEMALE",
+		3: "PLAYER_GENDER_OTHER",
+	}
+	PlayerGender_value = map[string]int32{
+		"PLAYER_GENDER_UNSPECIFIED": 0,
+		"PLAYER_GENDER_MALE":        1,
+		"PLAYER_GENDER_FEMALE":      2,
+		"PLAYER_GENDER_OTHER":       3,
+	}
+)
+
+func (x PlayerGender) Enum() *PlayerGender {
+	p := new(PlayerGender)
+	*p = x
+	return p
+}
+
+func (x PlayerGender) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlayerGender) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_player_proto_enumTypes[0].Descriptor()
+}
+
+func (PlayerGender) Type() protoreflect.EnumType {
+	return &file_proto_player_proto_enumTypes[0]
+}
+
+func (x PlayerGender) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlayerGender.Descriptor instead.
+func (PlayerGender) EnumDescriptor() ([]byte, []int) {
+	return file_proto_player_proto_rawDescGZIP(), []int{0}
+}
+
+// 玩家职业枚举
+type PlayerClass int32
+
+const (
+	PlayerClass_PLAYER_CLASS_UNSPECIFIED PlayerClass = 0
+	PlayerClass_PLAYER_CLASS_WARRIOR     PlayerClass = 1 // 战士
+	PlayerClass_PLAYER_CLASS_MAGE        PlayerClass = 2 // 法师
+	PlayerClass_PLAYER_CLASS_ARCHER      PlayerClass = 3 // 弓箭手
+	PlayerClass_PLAYER_CLASS_ASSASSIN    PlayerClass = 4 // 刺客
+	PlayerClass_PLAYER_CLASS_PRIEST      PlayerClass = 5 // 牧师
+	PlayerClass_PLAYER_CLASS_PALADIN     PlayerClass = 6 // 圣骑士
+	PlayerClass_PLAYER_CLASS_DRUID       PlayerClass = 7 // 德鲁伊
+	PlayerClass_PLAYER_CLASS_NECROMANCER PlayerClass = 8 // 死灵法师
+)
+
+// Enum value maps for PlayerClass.
+var (
+	PlayerClass_name = map[int32]string{
+		0: "PLAYER_CLASS_UNSPECIFIED",
+		1: "PLAYER_CLASS_WARRIOR",
+		2: "PLAYER_CLASS_MAGE",
+		3: "PLAYER_CLASS_ARCHER",
+		4: "PLAYER_CLASS_ASSASSIN",
+		5: "PLAYER_CLASS_PRIEST",
+		6: "PLAYER_CLASS_PALADIN",
+		7: "PLAYER_CLASS_DRUID",
+		8: "PLAYER_CLASS_NECROMANCER",
+	}
+	PlayerClass_value = map[string]int32{
+		"PLAYER_CLASS_UNSPECIFIED": 0,
+		"PLAYER_CLASS_WARRIOR":     1,
+		"PLAYER_CLASS_MAGE":        2,
+		"PLAYER_CLASS_ARCHER":      3,
+		"PLAYER_CLASS_ASSASSIN":    4,
+		"PLAYER_CLASS_PRIEST":      5,
+		"PLAYER_CLASS_PALADIN":     6,
+		"PLAYER_CLASS_DRUID":       7,
+		"PLAYER_CLASS_NECROMANCER": 8,
+	}
+)
+
+func (x PlayerClass) Enum() *PlayerClass {
+	p := new(PlayerClass)
+	*p = x
+	return p
+}
+
+func (x PlayerClass) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlayerClass) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_player_proto_enumTypes[1].Descriptor()
+}
+
+func (PlayerClass) Type() protoreflect.EnumType {
+	return &file_proto_player_proto_enumTypes[1]
+}
+
+func (x PlayerClass) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlayerClass.Descriptor instead.
+func (PlayerClass) EnumDescriptor() ([]byte, []int) {
+	return file_proto_player_proto_rawDescGZIP(), []int{1}
+}
+
+// 玩家等级枚举
+type PlayerLevel int32
+
+const (
+	PlayerLevel_PLAYER_LEVEL_UNSPECIFIED  PlayerLevel = 0
+	PlayerLevel_PLAYER_LEVEL_BEGINNER     PlayerLevel = 1 // 新手
+	PlayerLevel_PLAYER_LEVEL_INTERMEDIATE PlayerLevel = 2 // 中级
+	PlayerLevel_PLAYER_LEVEL_ADVANCED     PlayerLevel = 3 // 高级
+	PlayerLevel_PLAYER_LEVEL_EXPERT       PlayerLevel = 4 // 专家
+	PlayerLevel_PLAYER_LEVEL_MASTER       PlayerLevel = 5 // 大师
+	PlayerLevel_PLAYER_LEVEL_GRANDMASTER  PlayerLevel = 6 // 宗师
+)
+
+// Enum value maps for PlayerLevel.
+var (
+	PlayerLevel_name = map[int32]string{
+		0: "PLAYER_LEVEL_UNSPECIFIED",
+		1: "PLAYER_LEVEL_BEGINNER",
+		2: "PLAYER_LEVEL_INTERMEDIATE",
+		3: "PLAYER_LEVEL_ADVANCED",
+		4: "PLAYER_LEVEL_EXPERT",
+		5: "PLAYER_LEVEL_MASTER",
+		6: "PLAYER_LEVEL_GRANDMASTER",
+	}
+	PlayerLevel_value = map[string]int32{
+		"PLAYER_LEVEL_UNSPECIFIED":  0,
+		"PLAYER_LEVEL_BEGINNER":     1,
+		"PLAYER_LEVEL_INTERMEDIATE": 2,
+		"PLAYER_LEVEL_ADVANCED":     3,
+		"PLAYER_LEVEL_EXPERT":       4,
+		"PLAYER_LEVEL_MASTER":       5,
+		"PLAYER_LEVEL_GRANDMASTER":  6,
+	}
+)
+
+func (x PlayerLevel) Enum() *PlayerLevel {
+	p := new(PlayerLevel)
+	*p = x
+	return p
+}
+
+func (x PlayerLevel) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlayerLevel) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_player_proto_enumTypes[2].Descriptor()
+}
+
+func (PlayerLevel) Type() protoreflect.EnumType {
+	return &file_proto_player_proto_enumTypes[2]
+}
+
+func (x PlayerLevel) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlayerLevel.Descriptor instead.
+func (PlayerLevel) EnumDescriptor() ([]byte, []int) {
+	return file_proto_player_proto_rawDescGZIP(), []int{2}
+}
+
+// 玩家状态枚举
+type PlayerStatus int32
+
+const (
+	PlayerStatus_PLAYER_STATUS_UNSPECIFIED PlayerStatus = 0
+	PlayerStatus_PLAYER_STATUS_OFFLINE     PlayerStatus = 1 // 离线
+	PlayerStatus_PLAYER_STATUS_ONLINE      PlayerStatus = 2 // 在线
+	PlayerStatus_PLAYER_STATUS_IN_BATTLE   PlayerStatus = 3 // 战斗中
+	PlayerStatus_PLAYER_STATUS_IN_QUEUE    PlayerStatus = 4 // 排队中
+	PlayerStatus_PLAYER_STATUS_AFK         PlayerStatus = 5 // 离开
+	PlayerStatus_PLAYER_STATUS_BANNED      PlayerStatus = 6 // 被封禁
+)
+
+// Enum value maps for PlayerStatus.
+var (
+	PlayerStatus_name = map[int32]string{
+		0: "PLAYER_STATUS_UNSPECIFIED",
+		1: "PLAYER_STATUS_OFFLINE",
+		2: "PLAYER_STATUS_ONLINE",
+		3: "PLAYER_STATUS_IN_BATTLE",
+		4: "PLAYER_STATUS_IN_QUEUE",
+		5: "PLAYER_STATUS_AFK",
+		6: "PLAYER_STATUS_BANNED",
+	}
+	PlayerStatus_value = map[string]int32{
+		"PLAYER_STATUS_UNSPECIFIED": 0,
+		"PLAYER_STATUS_OFFLINE":     1,
+		"PLAYER_STATUS_ONLINE":      2,
+		"PLAYER_STATUS_IN_BATTLE":   3,
+		"PLAYER_STATUS_IN_QUEUE":    4,
+		"PLAYER_STATUS_AFK":         5,
+		"PLAYER_STATUS_BANNED":      6,
+	}
+)
+
+func (x PlayerStatus) Enum() *PlayerStatus {
+	p := new(PlayerStatus)
+	*p = x
+	return p
+}
+
+func (x PlayerStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlayerStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_player_proto_enumTypes[3].Descriptor()
+}
+
+func (PlayerStatus) Type() protoreflect.EnumType {
+	return &file_proto_player_proto_enumTypes[3]
+}
+
+func (x PlayerStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlayerStatus.Descriptor instead.
+func (PlayerStatus) EnumDescriptor() ([]byte, []int) {
+	return file_proto_player_proto_rawDescGZIP(), []int{3}
+}
+
 // 创建玩家请求
 type CreatePlayerRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
@@ -1005,8 +1250,8 @@ type InventoryItem struct {
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Quantity      int32                  `protobuf:"varint,3,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	MaxStack      int32                  `protobuf:"varint,4,opt,name=max_stack,json=maxStack,proto3" json:"max_stack,omitempty"`
-	ItemType      string                 `protobuf:"bytes,5,opt,name=item_type,json=itemType,proto3" json:"item_type,omitempty"`
-	Rarity        int32                  `protobuf:"varint,6,opt,name=rarity,proto3" json:"rarity,omitempty"`
+	ItemType      common.ItemType        `protobuf:"varint,5,opt,name=item_type,json=itemType,proto3,enum=greatestworks.common.ItemType" json:"item_type,omitempty"`
+	Rarity        common.ItemRarity      `protobuf:"varint,6,opt,name=rarity,proto3,enum=greatestworks.common.ItemRarity" json:"rarity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1069,18 +1314,18 @@ func (x *InventoryItem) GetMaxStack() int32 {
 	return 0
 }
 
-func (x *InventoryItem) GetItemType() string {
+func (x *InventoryItem) GetItemType() common.ItemType {
 	if x != nil {
 		return x.ItemType
 	}
-	return ""
+	return common.ItemType(0)
 }
 
-func (x *InventoryItem) GetRarity() int32 {
+func (x *InventoryItem) GetRarity() common.ItemRarity {
 	if x != nil {
 		return x.Rarity
 	}
-	return 0
+	return common.ItemRarity(0)
 }
 
 var File_proto_player_proto protoreflect.FileDescriptor
@@ -1163,14 +1408,45 @@ const file_proto_player_proto_rawDesc = "" +
 	"\bcapacity\x18\x01 \x01(\x05R\bcapacity\x12\x1d\n" +
 	"\n" +
 	"used_slots\x18\x02 \x01(\x05R\tusedSlots\x129\n" +
-	"\x05items\x18\x03 \x03(\v2#.greatestworks.player.InventoryItemR\x05items\"\xaa\x01\n" +
+	"\x05items\x18\x03 \x03(\v2#.greatestworks.player.InventoryItemR\x05items\"\xec\x01\n" +
 	"\rInventoryItem\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
 	"\bquantity\x18\x03 \x01(\x05R\bquantity\x12\x1b\n" +
-	"\tmax_stack\x18\x04 \x01(\x05R\bmaxStack\x12\x1b\n" +
-	"\titem_type\x18\x05 \x01(\tR\bitemType\x12\x16\n" +
-	"\x06rarity\x18\x06 \x01(\x05R\x06rarity2\xc2\x05\n" +
+	"\tmax_stack\x18\x04 \x01(\x05R\bmaxStack\x12;\n" +
+	"\titem_type\x18\x05 \x01(\x0e2\x1e.greatestworks.common.ItemTypeR\bitemType\x128\n" +
+	"\x06rarity\x18\x06 \x01(\x0e2 .greatestworks.common.ItemRarityR\x06rarity*x\n" +
+	"\fPlayerGender\x12\x1d\n" +
+	"\x19PLAYER_GENDER_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12PLAYER_GENDER_MALE\x10\x01\x12\x18\n" +
+	"\x14PLAYER_GENDER_FEMALE\x10\x02\x12\x17\n" +
+	"\x13PLAYER_GENDER_OTHER\x10\x03*\xf9\x01\n" +
+	"\vPlayerClass\x12\x1c\n" +
+	"\x18PLAYER_CLASS_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14PLAYER_CLASS_WARRIOR\x10\x01\x12\x15\n" +
+	"\x11PLAYER_CLASS_MAGE\x10\x02\x12\x17\n" +
+	"\x13PLAYER_CLASS_ARCHER\x10\x03\x12\x19\n" +
+	"\x15PLAYER_CLASS_ASSASSIN\x10\x04\x12\x17\n" +
+	"\x13PLAYER_CLASS_PRIEST\x10\x05\x12\x18\n" +
+	"\x14PLAYER_CLASS_PALADIN\x10\x06\x12\x16\n" +
+	"\x12PLAYER_CLASS_DRUID\x10\a\x12\x1c\n" +
+	"\x18PLAYER_CLASS_NECROMANCER\x10\b*\xd0\x01\n" +
+	"\vPlayerLevel\x12\x1c\n" +
+	"\x18PLAYER_LEVEL_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15PLAYER_LEVEL_BEGINNER\x10\x01\x12\x1d\n" +
+	"\x19PLAYER_LEVEL_INTERMEDIATE\x10\x02\x12\x19\n" +
+	"\x15PLAYER_LEVEL_ADVANCED\x10\x03\x12\x17\n" +
+	"\x13PLAYER_LEVEL_EXPERT\x10\x04\x12\x17\n" +
+	"\x13PLAYER_LEVEL_MASTER\x10\x05\x12\x1c\n" +
+	"\x18PLAYER_LEVEL_GRANDMASTER\x10\x06*\xcc\x01\n" +
+	"\fPlayerStatus\x12\x1d\n" +
+	"\x19PLAYER_STATUS_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15PLAYER_STATUS_OFFLINE\x10\x01\x12\x18\n" +
+	"\x14PLAYER_STATUS_ONLINE\x10\x02\x12\x1b\n" +
+	"\x17PLAYER_STATUS_IN_BATTLE\x10\x03\x12\x1a\n" +
+	"\x16PLAYER_STATUS_IN_QUEUE\x10\x04\x12\x15\n" +
+	"\x11PLAYER_STATUS_AFK\x10\x05\x12\x18\n" +
+	"\x14PLAYER_STATUS_BANNED\x10\x062\xc2\x05\n" +
 	"\rPlayerService\x12e\n" +
 	"\fCreatePlayer\x12).greatestworks.player.CreatePlayerRequest\x1a*.greatestworks.player.CreatePlayerResponse\x12P\n" +
 	"\x05Login\x12\".greatestworks.player.LoginRequest\x1a#.greatestworks.player.LoginResponse\x12S\n" +
@@ -1193,71 +1469,80 @@ func file_proto_player_proto_rawDescGZIP() []byte {
 	return file_proto_player_proto_rawDescData
 }
 
+var file_proto_player_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_proto_player_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_proto_player_proto_goTypes = []any{
-	(*CreatePlayerRequest)(nil),      // 0: greatestworks.player.CreatePlayerRequest
-	(*CreatePlayerResponse)(nil),     // 1: greatestworks.player.CreatePlayerResponse
-	(*LoginRequest)(nil),             // 2: greatestworks.player.LoginRequest
-	(*LoginResponse)(nil),            // 3: greatestworks.player.LoginResponse
-	(*LogoutRequest)(nil),            // 4: greatestworks.player.LogoutRequest
-	(*LogoutResponse)(nil),           // 5: greatestworks.player.LogoutResponse
-	(*GetPlayerInfoRequest)(nil),     // 6: greatestworks.player.GetPlayerInfoRequest
-	(*GetPlayerInfoResponse)(nil),    // 7: greatestworks.player.GetPlayerInfoResponse
-	(*UpdatePlayerRequest)(nil),      // 8: greatestworks.player.UpdatePlayerRequest
-	(*UpdatePlayerResponse)(nil),     // 9: greatestworks.player.UpdatePlayerResponse
-	(*MovePlayerRequest)(nil),        // 10: greatestworks.player.MovePlayerRequest
-	(*MovePlayerResponse)(nil),       // 11: greatestworks.player.MovePlayerResponse
-	(*GetOnlinePlayersRequest)(nil),  // 12: greatestworks.player.GetOnlinePlayersRequest
-	(*GetOnlinePlayersResponse)(nil), // 13: greatestworks.player.GetOnlinePlayersResponse
-	(*PlayerStats)(nil),              // 14: greatestworks.player.PlayerStats
-	(*PlayerInventory)(nil),          // 15: greatestworks.player.PlayerInventory
-	(*InventoryItem)(nil),            // 16: greatestworks.player.InventoryItem
-	nil,                              // 17: greatestworks.player.UpdatePlayerRequest.UpdatesEntry
-	(*common.Position)(nil),          // 18: greatestworks.common.Position
-	(*common.CommonResponse)(nil),    // 19: greatestworks.common.CommonResponse
-	(*common.PlayerBasicInfo)(nil),   // 20: greatestworks.common.PlayerBasicInfo
-	(*common.PaginationInfo)(nil),    // 21: greatestworks.common.PaginationInfo
+	(PlayerGender)(0),                // 0: greatestworks.player.PlayerGender
+	(PlayerClass)(0),                 // 1: greatestworks.player.PlayerClass
+	(PlayerLevel)(0),                 // 2: greatestworks.player.PlayerLevel
+	(PlayerStatus)(0),                // 3: greatestworks.player.PlayerStatus
+	(*CreatePlayerRequest)(nil),      // 4: greatestworks.player.CreatePlayerRequest
+	(*CreatePlayerResponse)(nil),     // 5: greatestworks.player.CreatePlayerResponse
+	(*LoginRequest)(nil),             // 6: greatestworks.player.LoginRequest
+	(*LoginResponse)(nil),            // 7: greatestworks.player.LoginResponse
+	(*LogoutRequest)(nil),            // 8: greatestworks.player.LogoutRequest
+	(*LogoutResponse)(nil),           // 9: greatestworks.player.LogoutResponse
+	(*GetPlayerInfoRequest)(nil),     // 10: greatestworks.player.GetPlayerInfoRequest
+	(*GetPlayerInfoResponse)(nil),    // 11: greatestworks.player.GetPlayerInfoResponse
+	(*UpdatePlayerRequest)(nil),      // 12: greatestworks.player.UpdatePlayerRequest
+	(*UpdatePlayerResponse)(nil),     // 13: greatestworks.player.UpdatePlayerResponse
+	(*MovePlayerRequest)(nil),        // 14: greatestworks.player.MovePlayerRequest
+	(*MovePlayerResponse)(nil),       // 15: greatestworks.player.MovePlayerResponse
+	(*GetOnlinePlayersRequest)(nil),  // 16: greatestworks.player.GetOnlinePlayersRequest
+	(*GetOnlinePlayersResponse)(nil), // 17: greatestworks.player.GetOnlinePlayersResponse
+	(*PlayerStats)(nil),              // 18: greatestworks.player.PlayerStats
+	(*PlayerInventory)(nil),          // 19: greatestworks.player.PlayerInventory
+	(*InventoryItem)(nil),            // 20: greatestworks.player.InventoryItem
+	nil,                              // 21: greatestworks.player.UpdatePlayerRequest.UpdatesEntry
+	(*common.Position)(nil),          // 22: greatestworks.common.Position
+	(*common.CommonResponse)(nil),    // 23: greatestworks.common.CommonResponse
+	(*common.PlayerBasicInfo)(nil),   // 24: greatestworks.common.PlayerBasicInfo
+	(*common.PaginationInfo)(nil),    // 25: greatestworks.common.PaginationInfo
+	(common.ItemType)(0),             // 26: greatestworks.common.ItemType
+	(common.ItemRarity)(0),           // 27: greatestworks.common.ItemRarity
 }
 var file_proto_player_proto_depIdxs = []int32{
-	18, // 0: greatestworks.player.CreatePlayerRequest.initial_position:type_name -> greatestworks.common.Position
-	19, // 1: greatestworks.player.CreatePlayerResponse.common:type_name -> greatestworks.common.CommonResponse
-	20, // 2: greatestworks.player.CreatePlayerResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
-	19, // 3: greatestworks.player.LoginResponse.common:type_name -> greatestworks.common.CommonResponse
-	20, // 4: greatestworks.player.LoginResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
-	19, // 5: greatestworks.player.LogoutResponse.common:type_name -> greatestworks.common.CommonResponse
-	19, // 6: greatestworks.player.GetPlayerInfoResponse.common:type_name -> greatestworks.common.CommonResponse
-	20, // 7: greatestworks.player.GetPlayerInfoResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
-	14, // 8: greatestworks.player.GetPlayerInfoResponse.stats:type_name -> greatestworks.player.PlayerStats
-	15, // 9: greatestworks.player.GetPlayerInfoResponse.inventory:type_name -> greatestworks.player.PlayerInventory
-	17, // 10: greatestworks.player.UpdatePlayerRequest.updates:type_name -> greatestworks.player.UpdatePlayerRequest.UpdatesEntry
-	19, // 11: greatestworks.player.UpdatePlayerResponse.common:type_name -> greatestworks.common.CommonResponse
-	20, // 12: greatestworks.player.UpdatePlayerResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
-	18, // 13: greatestworks.player.MovePlayerRequest.position:type_name -> greatestworks.common.Position
-	19, // 14: greatestworks.player.MovePlayerResponse.common:type_name -> greatestworks.common.CommonResponse
-	18, // 15: greatestworks.player.MovePlayerResponse.new_position:type_name -> greatestworks.common.Position
-	19, // 16: greatestworks.player.GetOnlinePlayersResponse.common:type_name -> greatestworks.common.CommonResponse
-	20, // 17: greatestworks.player.GetOnlinePlayersResponse.players:type_name -> greatestworks.common.PlayerBasicInfo
-	21, // 18: greatestworks.player.GetOnlinePlayersResponse.pagination:type_name -> greatestworks.common.PaginationInfo
-	16, // 19: greatestworks.player.PlayerInventory.items:type_name -> greatestworks.player.InventoryItem
-	0,  // 20: greatestworks.player.PlayerService.CreatePlayer:input_type -> greatestworks.player.CreatePlayerRequest
-	2,  // 21: greatestworks.player.PlayerService.Login:input_type -> greatestworks.player.LoginRequest
-	4,  // 22: greatestworks.player.PlayerService.Logout:input_type -> greatestworks.player.LogoutRequest
-	6,  // 23: greatestworks.player.PlayerService.GetPlayerInfo:input_type -> greatestworks.player.GetPlayerInfoRequest
-	8,  // 24: greatestworks.player.PlayerService.UpdatePlayer:input_type -> greatestworks.player.UpdatePlayerRequest
-	10, // 25: greatestworks.player.PlayerService.MovePlayer:input_type -> greatestworks.player.MovePlayerRequest
-	12, // 26: greatestworks.player.PlayerService.GetOnlinePlayers:input_type -> greatestworks.player.GetOnlinePlayersRequest
-	1,  // 27: greatestworks.player.PlayerService.CreatePlayer:output_type -> greatestworks.player.CreatePlayerResponse
-	3,  // 28: greatestworks.player.PlayerService.Login:output_type -> greatestworks.player.LoginResponse
-	5,  // 29: greatestworks.player.PlayerService.Logout:output_type -> greatestworks.player.LogoutResponse
-	7,  // 30: greatestworks.player.PlayerService.GetPlayerInfo:output_type -> greatestworks.player.GetPlayerInfoResponse
-	9,  // 31: greatestworks.player.PlayerService.UpdatePlayer:output_type -> greatestworks.player.UpdatePlayerResponse
-	11, // 32: greatestworks.player.PlayerService.MovePlayer:output_type -> greatestworks.player.MovePlayerResponse
-	13, // 33: greatestworks.player.PlayerService.GetOnlinePlayers:output_type -> greatestworks.player.GetOnlinePlayersResponse
-	27, // [27:34] is the sub-list for method output_type
-	20, // [20:27] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	22, // 0: greatestworks.player.CreatePlayerRequest.initial_position:type_name -> greatestworks.common.Position
+	23, // 1: greatestworks.player.CreatePlayerResponse.common:type_name -> greatestworks.common.CommonResponse
+	24, // 2: greatestworks.player.CreatePlayerResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
+	23, // 3: greatestworks.player.LoginResponse.common:type_name -> greatestworks.common.CommonResponse
+	24, // 4: greatestworks.player.LoginResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
+	23, // 5: greatestworks.player.LogoutResponse.common:type_name -> greatestworks.common.CommonResponse
+	23, // 6: greatestworks.player.GetPlayerInfoResponse.common:type_name -> greatestworks.common.CommonResponse
+	24, // 7: greatestworks.player.GetPlayerInfoResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
+	18, // 8: greatestworks.player.GetPlayerInfoResponse.stats:type_name -> greatestworks.player.PlayerStats
+	19, // 9: greatestworks.player.GetPlayerInfoResponse.inventory:type_name -> greatestworks.player.PlayerInventory
+	21, // 10: greatestworks.player.UpdatePlayerRequest.updates:type_name -> greatestworks.player.UpdatePlayerRequest.UpdatesEntry
+	23, // 11: greatestworks.player.UpdatePlayerResponse.common:type_name -> greatestworks.common.CommonResponse
+	24, // 12: greatestworks.player.UpdatePlayerResponse.player:type_name -> greatestworks.common.PlayerBasicInfo
+	22, // 13: greatestworks.player.MovePlayerRequest.position:type_name -> greatestworks.common.Position
+	23, // 14: greatestworks.player.MovePlayerResponse.common:type_name -> greatestworks.common.CommonResponse
+	22, // 15: greatestworks.player.MovePlayerResponse.new_position:type_name -> greatestworks.common.Position
+	23, // 16: greatestworks.player.GetOnlinePlayersResponse.common:type_name -> greatestworks.common.CommonResponse
+	24, // 17: greatestworks.player.GetOnlinePlayersResponse.players:type_name -> greatestworks.common.PlayerBasicInfo
+	25, // 18: greatestworks.player.GetOnlinePlayersResponse.pagination:type_name -> greatestworks.common.PaginationInfo
+	20, // 19: greatestworks.player.PlayerInventory.items:type_name -> greatestworks.player.InventoryItem
+	26, // 20: greatestworks.player.InventoryItem.item_type:type_name -> greatestworks.common.ItemType
+	27, // 21: greatestworks.player.InventoryItem.rarity:type_name -> greatestworks.common.ItemRarity
+	4,  // 22: greatestworks.player.PlayerService.CreatePlayer:input_type -> greatestworks.player.CreatePlayerRequest
+	6,  // 23: greatestworks.player.PlayerService.Login:input_type -> greatestworks.player.LoginRequest
+	8,  // 24: greatestworks.player.PlayerService.Logout:input_type -> greatestworks.player.LogoutRequest
+	10, // 25: greatestworks.player.PlayerService.GetPlayerInfo:input_type -> greatestworks.player.GetPlayerInfoRequest
+	12, // 26: greatestworks.player.PlayerService.UpdatePlayer:input_type -> greatestworks.player.UpdatePlayerRequest
+	14, // 27: greatestworks.player.PlayerService.MovePlayer:input_type -> greatestworks.player.MovePlayerRequest
+	16, // 28: greatestworks.player.PlayerService.GetOnlinePlayers:input_type -> greatestworks.player.GetOnlinePlayersRequest
+	5,  // 29: greatestworks.player.PlayerService.CreatePlayer:output_type -> greatestworks.player.CreatePlayerResponse
+	7,  // 30: greatestworks.player.PlayerService.Login:output_type -> greatestworks.player.LoginResponse
+	9,  // 31: greatestworks.player.PlayerService.Logout:output_type -> greatestworks.player.LogoutResponse
+	11, // 32: greatestworks.player.PlayerService.GetPlayerInfo:output_type -> greatestworks.player.GetPlayerInfoResponse
+	13, // 33: greatestworks.player.PlayerService.UpdatePlayer:output_type -> greatestworks.player.UpdatePlayerResponse
+	15, // 34: greatestworks.player.PlayerService.MovePlayer:output_type -> greatestworks.player.MovePlayerResponse
+	17, // 35: greatestworks.player.PlayerService.GetOnlinePlayers:output_type -> greatestworks.player.GetOnlinePlayersResponse
+	29, // [29:36] is the sub-list for method output_type
+	22, // [22:29] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_proto_player_proto_init() }
@@ -1270,13 +1555,14 @@ func file_proto_player_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_player_proto_rawDesc), len(file_proto_player_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      4,
 			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_proto_player_proto_goTypes,
 		DependencyIndexes: file_proto_player_proto_depIdxs,
+		EnumInfos:         file_proto_player_proto_enumTypes,
 		MessageInfos:      file_proto_player_proto_msgTypes,
 	}.Build()
 	File_proto_player_proto = out.File

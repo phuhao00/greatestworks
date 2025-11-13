@@ -1,0 +1,364 @@
+syntax = "proto3";
+
+package greatestworks.team;
+
+import "proto/common.proto";
+
+option go_package = "greatestworks/internal/proto/team";
+option csharp_namespace = "GreatestWorks.Team";
+
+// 团队服务定义
+service TeamService {
+  // 创建团队
+  rpc CreateTeam(CreateTeamRequest) returns (CreateTeamResponse);
+  
+  // 加入团队
+  rpc JoinTeam(JoinTeamRequest) returns (JoinTeamResponse);
+  
+  // 离开团队
+  rpc LeaveTeam(LeaveTeamRequest) returns (LeaveTeamResponse);
+  
+  // 邀请玩家
+  rpc InvitePlayer(InvitePlayerRequest) returns (InvitePlayerResponse);
+  
+  // 踢出玩家
+  rpc KickPlayer(KickPlayerRequest) returns (KickPlayerResponse);
+  
+  // 转让队长
+  rpc TransferLeadership(TransferLeadershipRequest) returns (TransferLeadershipResponse);
+  
+  // 获取团队信息
+  rpc GetTeamInfo(GetTeamInfoRequest) returns (GetTeamInfoResponse);
+  
+  // 搜索团队
+  rpc SearchTeams(SearchTeamsRequest) returns (SearchTeamsResponse);
+  
+  // 设置团队设置
+  rpc UpdateTeamSettings(UpdateTeamSettingsRequest) returns (UpdateTeamSettingsResponse);
+  
+  // 处理邀请
+  rpc HandleInvitation(HandleInvitationRequest) returns (HandleInvitationResponse);
+  
+  // 申请加入团队
+  rpc ApplyToJoin(ApplyToJoinRequest) returns (ApplyToJoinResponse);
+  
+  // 处理申请
+  rpc HandleApplication(HandleApplicationRequest) returns (HandleApplicationResponse);
+}
+
+// 创建团队请求
+message CreateTeamRequest {
+  string creator_id = 1;
+  string team_name = 2;
+  string description = 3;
+  TeamType team_type = 4;
+  int32 max_members = 5;
+  bool is_public = 6;
+  string password = 7;
+  map<string, string> settings = 8;
+}
+
+// 创建团队响应
+message CreateTeamResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string team_id = 2;
+  TeamInfo team_info = 3;
+}
+
+// 加入团队请求
+message JoinTeamRequest {
+  string player_id = 1;
+  string team_id = 2;
+  string password = 3; // 如果是私有团队
+  string invitation_code = 4;
+}
+
+// 加入团队响应
+message JoinTeamResponse {
+  greatestworks.common.CommonResponse common = 1;
+  TeamInfo team_info = 2;
+  TeamMember member_info = 3;
+}
+
+// 离开团队请求
+message LeaveTeamRequest {
+  string player_id = 1;
+  string team_id = 2;
+}
+
+// 离开团队响应
+message LeaveTeamResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 邀请玩家请求
+message InvitePlayerRequest {
+  string inviter_id = 1;
+  string team_id = 2;
+  string target_player_id = 3;
+  string message = 4;
+}
+
+// 邀请玩家响应
+message InvitePlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string invitation_id = 2;
+}
+
+// 踢出玩家请求
+message KickPlayerRequest {
+  string kicker_id = 1;
+  string team_id = 2;
+  string target_player_id = 3;
+  string reason = 4;
+}
+
+// 踢出玩家响应
+message KickPlayerResponse {
+  greatestworks.common.CommonResponse common = 1;
+}
+
+// 转让队长请求
+message TransferLeadershipRequest {
+  string current_leader_id = 1;
+  string team_id = 2;
+  string new_leader_id = 3;
+}
+
+// 转让队长响应
+message TransferLeadershipResponse {
+  greatestworks.common.CommonResponse common = 1;
+  TeamMember new_leader = 2;
+}
+
+// 获取团队信息请求
+message GetTeamInfoRequest {
+  string team_id = 1;
+  string player_id = 2; // 查询者ID，用于权限检查
+}
+
+// 获取团队信息响应
+message GetTeamInfoResponse {
+  greatestworks.common.CommonResponse common = 1;
+  TeamInfo team_info = 2;
+  repeated TeamMember members = 3;
+  repeated TeamInvitation pending_invitations = 4;
+  repeated TeamApplication pending_applications = 5;
+}
+
+// 搜索团队请求
+message SearchTeamsRequest {
+  string query = 1;
+  TeamType team_type = 2;
+  bool only_public = 3;
+  int32 min_level = 4;
+  int32 max_level = 5;
+  int32 limit = 6;
+  int32 offset = 7;
+}
+
+// 搜索团队响应
+message SearchTeamsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  repeated TeamInfo teams = 2;
+  greatestworks.common.PaginationInfo pagination = 3;
+}
+
+// 更新团队设置请求
+message UpdateTeamSettingsRequest {
+  string player_id = 1;
+  string team_id = 2;
+  TeamSettings settings = 3;
+}
+
+// 更新团队设置响应
+message UpdateTeamSettingsResponse {
+  greatestworks.common.CommonResponse common = 1;
+  TeamSettings new_settings = 2;
+}
+
+// 处理邀请请求
+message HandleInvitationRequest {
+  string player_id = 1;
+  string invitation_id = 2;
+  bool accept = 3;
+}
+
+// 处理邀请响应
+message HandleInvitationResponse {
+  greatestworks.common.CommonResponse common = 1;
+  TeamInfo team_info = 2; // 如果接受邀请
+}
+
+// 申请加入团队请求
+message ApplyToJoinRequest {
+  string player_id = 1;
+  string team_id = 2;
+  string message = 3;
+}
+
+// 申请加入团队响应
+message ApplyToJoinResponse {
+  greatestworks.common.CommonResponse common = 1;
+  string application_id = 2;
+}
+
+// 处理申请请求
+message HandleApplicationRequest {
+  string handler_id = 1;
+  string application_id = 2;
+  bool approve = 3;
+  string reason = 4;
+}
+
+// 处理申请响应
+message HandleApplicationResponse {
+  greatestworks.common.CommonResponse common = 1;
+  TeamMember new_member = 2; // 如果批准申请
+}
+
+// 团队信息
+message TeamInfo {
+  string team_id = 1;
+  string name = 2;
+  string description = 3;
+  TeamType team_type = 4;
+  TeamStatus status = 5;
+  string leader_id = 6;
+  string leader_name = 7;
+  int32 member_count = 8;
+  int32 max_members = 9;
+  int32 average_level = 10;
+  bool is_public = 11;
+  bool is_recruiting = 12;
+  int64 created_at = 13;
+  int64 last_activity = 14;
+  TeamSettings settings = 15;
+  TeamStats stats = 16;
+}
+
+// 团队成员
+message TeamMember {
+  string player_id = 1;
+  string player_name = 2;
+  int32 level = 3;
+  MemberRole role = 4;
+  MemberStatus status = 5;
+  int64 joined_at = 6;
+  int64 last_online = 7;
+  int32 contribution_points = 8;
+  greatestworks.common.Position position = 9;
+}
+
+// 团队邀请
+message TeamInvitation {
+  string invitation_id = 1;
+  string team_id = 2;
+  string team_name = 3;
+  string inviter_id = 4;
+  string inviter_name = 5;
+  string invitee_id = 6;
+  string invitee_name = 7;
+  string message = 8;
+  int64 created_at = 9;
+  int64 expires_at = 10;
+  InvitationStatus status = 11;
+}
+
+// 团队申请
+message TeamApplication {
+  string application_id = 1;
+  string team_id = 2;
+  string applicant_id = 3;
+  string applicant_name = 4;
+  int32 applicant_level = 5;
+  string message = 6;
+  int64 created_at = 7;
+  ApplicationStatus status = 8;
+}
+
+// 团队设置
+message TeamSettings {
+  bool auto_accept_applications = 1;
+  int32 min_level_requirement = 2;
+  int32 max_level_requirement = 3;
+  bool allow_member_invite = 4;
+  bool require_approval = 5;
+  string welcome_message = 6;
+  repeated string tags = 7;
+  map<string, string> custom_settings = 8;
+}
+
+// 团队统计
+message TeamStats {
+  int32 total_battles = 1;
+  int32 wins = 2;
+  int32 losses = 3;
+  float win_rate = 4;
+  int32 total_experience = 5;
+  int32 achievements_unlocked = 6;
+  int64 total_playtime = 7;
+}
+
+// 团队类型枚举
+enum TeamType {
+  TEAM_TYPE_UNSPECIFIED = 0;
+  TEAM_TYPE_CASUAL = 1;          // 休闲团队
+  TEAM_TYPE_COMPETITIVE = 2;     // 竞技团队
+  TEAM_TYPE_PVE = 3;            // PVE团队
+  TEAM_TYPE_PVP = 4;            // PVP团队
+  TEAM_TYPE_GUILD = 5;          // 公会
+  TEAM_TYPE_PARTY = 6;          // 小队
+  TEAM_TYPE_RAID = 7;           // 团本队伍
+  TEAM_TYPE_TOURNAMENT = 8;     // 锦标赛队伍
+}
+
+// 团队状态枚举
+enum TeamStatus {
+  TEAM_STATUS_UNSPECIFIED = 0;
+  TEAM_STATUS_ACTIVE = 1;        // 活跃
+  TEAM_STATUS_INACTIVE = 2;      // 不活跃
+  TEAM_STATUS_DISBANDED = 3;     // 已解散
+  TEAM_STATUS_SUSPENDED = 4;     // 已暂停
+  TEAM_STATUS_RECRUITING = 5;    // 招募中
+  TEAM_STATUS_FULL = 6;          // 已满员
+}
+
+// 成员角色枚举
+enum MemberRole {
+  MEMBER_ROLE_UNSPECIFIED = 0;
+  MEMBER_ROLE_LEADER = 1;        // 队长
+  MEMBER_ROLE_OFFICER = 2;       // 副队长
+  MEMBER_ROLE_VETERAN = 3;       // 老队员
+  MEMBER_ROLE_MEMBER = 4;        // 普通成员
+  MEMBER_ROLE_RECRUIT = 5;       // 新成员
+}
+
+// 成员状态枚举
+enum MemberStatus {
+  MEMBER_STATUS_UNSPECIFIED = 0;
+  MEMBER_STATUS_ONLINE = 1;      // 在线
+  MEMBER_STATUS_OFFLINE = 2;     // 离线
+  MEMBER_STATUS_IN_BATTLE = 3;   // 战斗中
+  MEMBER_STATUS_AFK = 4;         // 暂离
+  MEMBER_STATUS_BUSY = 5;        // 忙碌
+}
+
+// 邀请状态枚举
+enum InvitationStatus {
+  INVITATION_STATUS_UNSPECIFIED = 0;
+  INVITATION_STATUS_PENDING = 1;    // 待处理
+  INVITATION_STATUS_ACCEPTED = 2;   // 已接受
+  INVITATION_STATUS_REJECTED = 3;   // 已拒绝
+  INVITATION_STATUS_EXPIRED = 4;    // 已过期
+  INVITATION_STATUS_CANCELLED = 5;  // 已取消
+}
+
+// 申请状态枚举
+enum ApplicationStatus {
+  APPLICATION_STATUS_UNSPECIFIED = 0;
+  APPLICATION_STATUS_PENDING = 1;     // 待审核
+  APPLICATION_STATUS_APPROVED = 2;    // 已批准
+  APPLICATION_STATUS_REJECTED = 3;    // 已拒绝
+  APPLICATION_STATUS_WITHDRAWN = 4;   // 已撤回
+}

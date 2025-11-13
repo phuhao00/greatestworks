@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: gaming
+  labels:
+    app: gateway-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      containers:
+        - name: gateway-service
+          image: greatestworks-gateway:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+          env:
+            - name: APP_ENV
+              value: development
+            - name: MONGODB_URI
+              value: "mongodb://admin:admin123@mongodb:27017/admin"
+            - name: MONGODB_DATABASE
+              value: "gateway_service"
+            - name: REDIS_ADDR
+              value: "redis:6379"
+            - name: REDIS_PASSWORD
+              value: "redis123"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          volumeMounts:
+            - name: gateway-config
+              mountPath: /configs/gateway-service.yaml
+              subPath: gateway-service.yaml
+          livenessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: gateway-config
+          configMap:
+            name: gateway-config
+            items:
+              - key: gateway-service.yaml
+                path: gateway-service.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: gaming
+  labels:
+    app: gateway-service
+spec:
+  type: NodePort
+  selector:
+    app: gateway-service
+  ports:
+    - name: tcp
+      port: 9090
+      targetPort: 9090
+      nodePort: 30909

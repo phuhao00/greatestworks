@@ -14,7 +14,7 @@ gateway:
   write_timeout: "2s"
 
 scenario:
-  name: "pet-feature-check"
+  name: "feature-check"
   type: "feature"
   duration: "15s"
   action_interval: "1s"
@@ -23,6 +23,8 @@ scenario:
   features:
     - "player.basic"
     - "pet.basic"
+    - "social.chat"
+    - "social.team_basic"
   actions:
     - name: "quest.accept"
       message: "quest.accept"

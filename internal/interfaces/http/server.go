@@ -25,9 +25,17 @@ type Server struct {
 	config           *ServerConfig
 	logger           logging.Logger
 	server           *http.Server
+	mux              *http.ServeMux
 	ctx              context.Context
 	cancel           context.CancelFunc
 	profilingEnabled bool
+	routes           []route
+}
+
+type route struct {
+	method  string
+	path    string
+	handler http.HandlerFunc
 }
 
 // NewServer 创建HTTP服务器
@@ -47,23 +55,41 @@ func (s *Server) EnableProfiling() {
 	s.profilingEnabled = true
 }
 
+// Handle 注册业务路由
+func (s *Server) Handle(method, path string, handler http.HandlerFunc) {
+	s.routes = append(s.routes, route{method: method, path: path, handler: handler})
+}
+
 // Start 启动HTTP服务器
 func (s *Server) Start() error {
 	// 创建路由
-	mux := http.NewServeMux()
+	s.mux = http.NewServeMux()
 
 	// 健康检查端点
-	mux.HandleFunc("/health", s.healthHandler)
-	mux.HandleFunc("/ready", s.readyHandler)
+	s.mux.HandleFunc("/health", s.healthHandler)
+	s.mux.HandleFunc("/ready", s.readyHandler)
 
 	if s.profilingEnabled {
-		monitoring.RegisterHandlers(mux)
+		monitoring.RegisterHandlers(s.mux)
+	}
+
+	// 注册业务路由
+	for _, r := range s.routes {
+		handler := r.handler
+		method := r.method
+		s.mux.HandleFunc(r.path, func(w http.ResponseWriter, req *http.Request) {
+			if method != "" && req.Method != method {
+				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+				return
+			}
+			handler(w, req)
+		})
 	}
 
 	// 创建HTTP服务器
 	s.server = &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", s.config.Host, s.config.Port),
-		Handler:      mux,
+		Handler:      s.mux,
 		ReadTimeout:  s.config.ReadTimeout,
 		WriteTimeout: s.config.WriteTimeout,
 		IdleTimeout:  s.config.IdleTimeout,

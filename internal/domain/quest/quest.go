@@ -1,3 +1,4 @@
+//nolint:staticcheck // Quest rich model contains fields reserved for future use; suppress U1000 unused field warnings in early stage
 package quest
 
 import (
@@ -33,47 +34,47 @@ func NewQuestManager(playerID string) *QuestManager {
 
 // Quest 任务实体
 type Quest struct {
-	id                string
-	name              string
-	description       string
-	questType         QuestType
-	category          QuestCategory
-	status            QuestStatus
-	priority          QuestPriority
-	objectives        []*QuestObjective
-	rewards           []*QuestReward
-	prerequisites     []string // 前置任务ID
-	startTime         *time.Time
-	expireTime        *time.Time
-	completedTime     *time.Time
-	timeLimit         *time.Duration
-	repeatType        RepeatType
-	repeatCount       int
-	maxRepeats        int
-	level             int
-	minLevel          int
-	maxLevel          int
-	classRestrictions []string
-	raceRestrictions  []string
-	createdAt         time.Time
-	updatedAt         time.Time
+	ID                string
+	Name              string
+	Description       string
+	QuestType         QuestType
+	Category          QuestCategory
+	Status            QuestStatus
+	Priority          QuestPriority
+	Objectives        []*QuestObjective
+	Rewards           []*QuestReward
+	Prerequisites     []string // 前置任务ID
+	StartTime         *time.Time
+	ExpireTime        *time.Time
+	CompletedTime     *time.Time
+	TimeLimit         *time.Duration
+	RepeatType        RepeatType
+	RepeatCount       int
+	MaxRepeats        int
+	Level             int
+	MinLevel          int
+	MaxLevel          int
+	ClassRestrictions []string
+	RaceRestrictions  []string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 // NewQuest 创建新任务
 func NewQuest(id, name string, questType QuestType) *Quest {
 	return &Quest{
-		id:          id,
-		name:        name,
-		questType:   questType,
-		status:      QuestStatusAvailable,
-		priority:    QuestPriorityNormal,
-		objectives:  make([]*QuestObjective, 0),
-		rewards:     make([]*QuestReward, 0),
-		repeatType:  RepeatTypeNone,
-		repeatCount: 0,
-		maxRepeats:  1,
-		createdAt:   time.Now(),
-		updatedAt:   time.Now(),
+		ID:          id,
+		Name:        name,
+		QuestType:   questType,
+		Status:      QuestStatusAvailable,
+		Priority:    QuestPriorityNormal,
+		Objectives:  make([]*QuestObjective, 0),
+		Rewards:     make([]*QuestReward, 0),
+		RepeatType:  RepeatTypeNone,
+		RepeatCount: 0,
+		MaxRepeats:  1,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 }
 
@@ -143,16 +144,16 @@ const (
 
 // QuestObjective 任务目标
 type QuestObjective struct {
-	id            string
-	description   string
-	objectiveType ObjectiveType
-	target        string // 目标ID或名称
-	current       int64
-	required      int64
-	completed     bool
-	optional      bool
-	order         int
-	metadata      map[string]interface{}
+	ID            string
+	Description   string
+	ObjectiveType ObjectiveType
+	Target        string // 目标ID或名称
+	Current       int64
+	Required      int64
+	Completed     bool
+	Optional      bool
+	Order         int
+	Metadata      map[string]interface{}
 }
 
 // ObjectiveType 目标类型
@@ -174,11 +175,11 @@ const (
 
 // QuestReward 任务奖励
 type QuestReward struct {
-	rewardType RewardType
-	rewardID   string
-	quantity   int64
-	optional   bool
-	condition  *RewardCondition
+	RewardType RewardType
+	RewardID   string
+	Quantity   int64
+	Optional   bool
+	Condition  *RewardCondition
 }
 
 // RewardType 奖励类型
@@ -197,8 +198,8 @@ const (
 
 // RewardCondition 奖励条件
 type RewardCondition struct {
-	conditionType ConditionType
-	value         interface{}
+	ConditionType ConditionType
+	Value         interface{}
 }
 
 // ConditionType 条件类型
@@ -215,19 +216,19 @@ const (
 
 // Achievement 成就实体
 type Achievement struct {
-	id            string
-	name          string
-	description   string
-	category      AchievementCategory
-	points        int64
-	requirements  []*AchievementRequirement
-	rewards       []*QuestReward
-	unlocked      bool
-	progress      int64
-	totalProgress int64
-	unlockedAt    *time.Time
-	hidden        bool
-	rare          bool
+	ID            string
+	Name          string
+	Description   string
+	Category      AchievementCategory
+	Points        int64
+	Requirements  []*AchievementRequirement
+	Rewards       []*QuestReward
+	Unlocked      bool
+	Progress      int64
+	TotalProgress int64
+	UnlockedAt    *time.Time
+	Hidden        bool
+	Rare          bool
 }
 
 // AchievementCategory 成就分类
@@ -246,11 +247,11 @@ const (
 
 // AchievementRequirement 成就要求
 type AchievementRequirement struct {
-	requirementType RequirementType
-	target          string
-	value           int64
-	current         int64
-	completed       bool
+	RequirementType RequirementType
+	Target          string
+	Value           int64
+	Current         int64
+	Completed       bool
 }
 
 // RequirementType 要求类型
@@ -276,67 +277,67 @@ type DomainEvent interface {
 
 // QuestAcceptedEvent 任务接受事件
 type QuestAcceptedEvent struct {
-	playerID   string
-	questID    string
-	questName  string
-	occurredAt time.Time
+	Player         string
+	QuestID        string
+	QuestName      string
+	OccurredAtTime time.Time
 }
 
 func (e QuestAcceptedEvent) EventType() string     { return "quest.accepted" }
-func (e QuestAcceptedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e QuestAcceptedEvent) PlayerID() string      { return e.playerID }
+func (e QuestAcceptedEvent) OccurredAt() time.Time { return e.OccurredAtTime }
+func (e QuestAcceptedEvent) PlayerID() string      { return e.Player }
 
 // QuestCompletedEvent 任务完成事件
 type QuestCompletedEvent struct {
-	playerID   string
-	questID    string
-	questName  string
-	rewards    []*QuestReward
-	occurredAt time.Time
+	Player         string
+	QuestID        string
+	QuestName      string
+	Rewards        []*QuestReward
+	OccurredAtTime time.Time
 }
 
 func (e QuestCompletedEvent) EventType() string     { return "quest.completed" }
-func (e QuestCompletedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e QuestCompletedEvent) PlayerID() string      { return e.playerID }
+func (e QuestCompletedEvent) OccurredAt() time.Time { return e.OccurredAtTime }
+func (e QuestCompletedEvent) PlayerID() string      { return e.Player }
 
 // QuestFailedEvent 任务失败事件
 type QuestFailedEvent struct {
-	playerID   string
-	questID    string
-	questName  string
-	reason     string
-	occurredAt time.Time
+	Player         string
+	QuestID        string
+	QuestName      string
+	Reason         string
+	OccurredAtTime time.Time
 }
 
 func (e QuestFailedEvent) EventType() string     { return "quest.failed" }
-func (e QuestFailedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e QuestFailedEvent) PlayerID() string      { return e.playerID }
+func (e QuestFailedEvent) OccurredAt() time.Time { return e.OccurredAtTime }
+func (e QuestFailedEvent) PlayerID() string      { return e.Player }
 
 // ObjectiveCompletedEvent 目标完成事件
 type ObjectiveCompletedEvent struct {
-	playerID      string
-	questID       string
-	objectiveID   string
-	objectiveName string
-	occurredAt    time.Time
+	Player         string
+	QuestID        string
+	ObjectiveID    string
+	ObjectiveName  string
+	OccurredAtTime time.Time
 }
 
 func (e ObjectiveCompletedEvent) EventType() string     { return "objective.completed" }
-func (e ObjectiveCompletedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e ObjectiveCompletedEvent) PlayerID() string      { return e.playerID }
+func (e ObjectiveCompletedEvent) OccurredAt() time.Time { return e.OccurredAtTime }
+func (e ObjectiveCompletedEvent) PlayerID() string      { return e.Player }
 
 // AchievementUnlockedEvent 成就解锁事件
 type AchievementUnlockedEvent struct {
-	playerID        string
-	achievementID   string
-	achievementName string
-	points          int64
-	occurredAt      time.Time
+	Player          string
+	AchievementID   string
+	AchievementName string
+	Points          int64
+	OccurredAtTime  time.Time
 }
 
 func (e AchievementUnlockedEvent) EventType() string     { return "achievement.unlocked" }
-func (e AchievementUnlockedEvent) OccurredAt() time.Time { return e.occurredAt }
-func (e AchievementUnlockedEvent) PlayerID() string      { return e.playerID }
+func (e AchievementUnlockedEvent) OccurredAt() time.Time { return e.OccurredAtTime }
+func (e AchievementUnlockedEvent) PlayerID() string      { return e.Player }
 
 // QuestManager 业务方法
 
@@ -363,46 +364,46 @@ func (qm *QuestManager) Achievements() map[string]*Achievement {
 // AcceptQuest 接受任务
 func (qm *QuestManager) AcceptQuest(quest *Quest) error {
 	// 检查任务是否可接受
-	if quest.status != QuestStatusAvailable {
+	if quest.Status != QuestStatusAvailable {
 		return ErrQuestNotAvailable
 	}
 
 	// 检查是否已接受
-	if _, exists := qm.activeQuests[quest.id]; exists {
+	if _, exists := qm.activeQuests[quest.ID]; exists {
 		return ErrQuestAlreadyAccepted
 	}
 
 	// 检查前置条件
-	if !qm.checkPrerequisites(quest.prerequisites) {
+	if !qm.checkPrerequisites(quest.Prerequisites) {
 		return ErrPrerequisitesNotMet
 	}
 
 	// 检查等级限制
-	if quest.minLevel > 0 || quest.maxLevel > 0 {
+	if quest.MinLevel > 0 || quest.MaxLevel > 0 {
 		// 这里需要获取玩家等级，暂时跳过
 	}
 
 	// 接受任务
-	quest.status = QuestStatusAccepted
+	quest.Status = QuestStatusAccepted
 	now := time.Now()
-	quest.startTime = &now
-	quest.updatedAt = time.Now()
+	quest.StartTime = &now
+	quest.UpdatedAt = time.Now()
 
 	// 设置过期时间
-	if quest.timeLimit != nil {
-		expireTime := now.Add(*quest.timeLimit)
-		quest.expireTime = &expireTime
+	if quest.TimeLimit != nil {
+		expireTime := now.Add(*quest.TimeLimit)
+		quest.ExpireTime = &expireTime
 	}
 
-	qm.activeQuests[quest.id] = quest
+	qm.activeQuests[quest.ID] = quest
 	qm.lastUpdate = time.Now()
 
 	// 发布事件
 	qm.addEvent(QuestAcceptedEvent{
-		playerID:   qm.playerID,
-		questID:    quest.id,
-		questName:  quest.name,
-		occurredAt: time.Now(),
+		Player:         qm.playerID,
+		QuestID:        quest.ID,
+		QuestName:      quest.Name,
+		OccurredAtTime: time.Now(),
 	})
 
 	return nil
@@ -417,8 +418,8 @@ func (qm *QuestManager) UpdateObjectiveProgress(questID string, objectiveID stri
 
 	// 查找目标
 	var objective *QuestObjective
-	for _, obj := range quest.objectives {
-		if obj.id == objectiveID {
+	for _, obj := range quest.Objectives {
+		if obj.ID == objectiveID {
 			objective = obj
 			break
 		}
@@ -428,27 +429,27 @@ func (qm *QuestManager) UpdateObjectiveProgress(questID string, objectiveID stri
 		return ErrObjectiveNotFound
 	}
 
-	if objective.completed {
+	if objective.Completed {
 		return ErrObjectiveAlreadyCompleted
 	}
 
 	// 更新进度
-	objective.current += progress
-	if objective.current >= objective.required {
-		objective.current = objective.required
-		objective.completed = true
+	objective.Current += progress
+	if objective.Current >= objective.Required {
+		objective.Current = objective.Required
+		objective.Completed = true
 
 		// 发布目标完成事件
 		qm.addEvent(ObjectiveCompletedEvent{
-			playerID:      qm.playerID,
-			questID:       questID,
-			objectiveID:   objectiveID,
-			objectiveName: objective.description,
-			occurredAt:    time.Now(),
+			Player:         qm.playerID,
+			QuestID:        questID,
+			ObjectiveID:    objectiveID,
+			ObjectiveName:  objective.Description,
+			OccurredAtTime: time.Now(),
 		})
 	}
 
-	quest.updatedAt = time.Now()
+	quest.UpdatedAt = time.Now()
 	qm.lastUpdate = time.Now()
 
 	// 检查任务是否完成
@@ -466,7 +467,7 @@ func (qm *QuestManager) CompleteQuest(questID string) error {
 		return ErrQuestNotFound
 	}
 
-	if quest.status != QuestStatusAccepted && quest.status != QuestStatusInProgress {
+	if quest.Status != QuestStatusAccepted && quest.Status != QuestStatusInProgress {
 		return ErrQuestNotActive
 	}
 
@@ -476,19 +477,19 @@ func (qm *QuestManager) CompleteQuest(questID string) error {
 	}
 
 	// 完成任务
-	quest.status = QuestStatusCompleted
+	quest.Status = QuestStatusCompleted
 	now := time.Now()
-	quest.completedTime = &now
-	quest.updatedAt = time.Now()
+	quest.CompletedTime = &now
+	quest.UpdatedAt = time.Now()
 
 	// 移动到已完成任务
 	delete(qm.activeQuests, questID)
 	qm.completedQuests[questID] = quest
 
 	// 处理重复任务
-	if quest.repeatType != RepeatTypeNone {
-		quest.repeatCount++
-		if quest.maxRepeats == 0 || quest.repeatCount < quest.maxRepeats {
+	if quest.RepeatType != RepeatTypeNone {
+		quest.RepeatCount++
+		if quest.MaxRepeats == 0 || quest.RepeatCount < quest.MaxRepeats {
 			// 重置任务状态以便重复
 			qm.resetQuestForRepeat(quest)
 		}
@@ -498,11 +499,11 @@ func (qm *QuestManager) CompleteQuest(questID string) error {
 
 	// 发布事件
 	qm.addEvent(QuestCompletedEvent{
-		playerID:   qm.playerID,
-		questID:    questID,
-		questName:  quest.name,
-		rewards:    quest.rewards,
-		occurredAt: time.Now(),
+		Player:         qm.playerID,
+		QuestID:        questID,
+		QuestName:      quest.Name,
+		Rewards:        quest.Rewards,
+		OccurredAtTime: time.Now(),
 	})
 
 	return nil
@@ -516,12 +517,12 @@ func (qm *QuestManager) AbandonQuest(questID string) error {
 	}
 
 	// 检查是否可以放弃
-	if quest.questType == QuestTypeMain {
+	if quest.QuestType == QuestTypeMain {
 		return ErrCannotAbandonMainQuest
 	}
 
-	quest.status = QuestStatusAbandoned
-	quest.updatedAt = time.Now()
+	quest.Status = QuestStatusAbandoned
+	quest.UpdatedAt = time.Now()
 	delete(qm.activeQuests, questID)
 	qm.lastUpdate = time.Now()
 
@@ -539,19 +540,19 @@ func (qm *QuestManager) UnlockAchievement(achievementID string, achievement *Ach
 		return ErrAchievementRequirementsNotMet
 	}
 
-	achievement.unlocked = true
+	achievement.Unlocked = true
 	now := time.Now()
-	achievement.unlockedAt = &now
+	achievement.UnlockedAt = &now
 	qm.achievements[achievementID] = achievement
 	qm.lastUpdate = time.Now()
 
 	// 发布事件
 	qm.addEvent(AchievementUnlockedEvent{
-		playerID:        qm.playerID,
-		achievementID:   achievementID,
-		achievementName: achievement.name,
-		points:          achievement.points,
-		occurredAt:      time.Now(),
+		Player:          qm.playerID,
+		AchievementID:   achievementID,
+		AchievementName: achievement.Name,
+		Points:          achievement.Points,
+		OccurredAtTime:  time.Now(),
 	})
 
 	return nil
@@ -569,8 +570,8 @@ func (qm *QuestManager) checkPrerequisites(prerequisites []string) bool {
 
 // checkQuestCompletion 检查任务完成条件
 func (qm *QuestManager) checkQuestCompletion(quest *Quest) bool {
-	for _, objective := range quest.objectives {
-		if !objective.optional && !objective.completed {
+	for _, objective := range quest.Objectives {
+		if !objective.Optional && !objective.Completed {
 			return false
 		}
 	}
@@ -579,8 +580,8 @@ func (qm *QuestManager) checkQuestCompletion(quest *Quest) bool {
 
 // checkAchievementRequirements 检查成就要求
 func (qm *QuestManager) checkAchievementRequirements(achievement *Achievement) bool {
-	for _, req := range achievement.requirements {
-		if !req.completed {
+	for _, req := range achievement.Requirements {
+		if !req.Completed {
 			return false
 		}
 	}
@@ -589,15 +590,15 @@ func (qm *QuestManager) checkAchievementRequirements(achievement *Achievement) b
 
 // resetQuestForRepeat 重置任务以便重复
 func (qm *QuestManager) resetQuestForRepeat(quest *Quest) {
-	quest.status = QuestStatusAvailable
-	quest.startTime = nil
-	quest.completedTime = nil
-	quest.expireTime = nil
+	quest.Status = QuestStatusAvailable
+	quest.StartTime = nil
+	quest.CompletedTime = nil
+	quest.ExpireTime = nil
 
 	// 重置所有目标
-	for _, objective := range quest.objectives {
-		objective.current = 0
-		objective.completed = false
+	for _, objective := range quest.Objectives {
+		objective.Current = 0
+		objective.Completed = false
 	}
 }
 

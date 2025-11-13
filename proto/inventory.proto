@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+package greatestworks.inventory;
+
+import "proto/common.proto";
+import "proto/auth.proto";
+
+option go_package = "greatestworks/internal/proto/inventory";
+option csharp_namespace = "GreatestWorks.Inventory";
+
+// 背包服务
+service InventoryService {
+  // 查询背包信息
+  rpc QueryInventory(InventoryQueryRequest) returns (InventoryQueryResponse);
+  
+  // 拾取物品
+  rpc PickupItem(PickupItemRequest) returns (PickupItemResponse);
+  
+  // 丢弃物品
+  rpc DiscardItem(DiscardItemRequest) returns (DiscardItemResponse);
+  
+  // 使用物品
+  rpc UseItem(UseItemRequest) returns (UseItemResponse);
+  
+  // 物品放置/交换
+  rpc PlacementItem(PlacementItemRequest) returns (PlacementItemResponse);
+  
+  // 整理背包
+  rpc SortInventory(SortInventoryRequest) returns (SortInventoryResponse);
+}
+
+// ========== 查询背包 ==========
+
+// 查询背包请求
+message InventoryQueryRequest {
+  int32 entity_id = 1;          // 实体ID
+  bool query_knapsack = 2;      // 是否查询背包
+  bool query_warehouse = 3;     // 是否查询仓库
+  bool query_equipment = 4;     // 是否查询装备栏
+}
+
+// 查询背包响应
+message InventoryQueryResponse {
+  int32 entity_id = 1;              // 实体ID
+  InventoryInfo knapsack_info = 2;  // 背包信息
+  InventoryInfo warehouse_info = 3; // 仓库信息
+  InventoryInfo equipment_info = 4; // 装备栏信息
+}
+
+// ========== 拾取物品 ==========
+
+// 拾取物品请求
+message PickupItemRequest {
+  int32 picker_id = 1;          // 拾取者实体ID
+  int32 dropped_item_id = 2;    // 掉落物实体ID
+}
+
+// 拾取物品响应
+message PickupItemResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  int32 item_id = 3;            // 物品ID
+  int32 amount = 4;             // 拾取数量
+}
+
+// ========== 丢弃物品 ==========
+
+// 丢弃物品请求
+message DiscardItemRequest {
+  int32 entity_id = 1;          // 实体ID
+  int32 slot_id = 2;            // 插槽索引
+  int32 count = 3;              // 丢弃数量
+}
+
+// 丢弃物品响应
+message DiscardItemResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  int32 dropped_item_id = 3;    // 掉落物实体ID（如果成功丢弃）
+}
+
+// ========== 使用物品 ==========
+
+// 使用物品请求
+message UseItemRequest {
+  int32 entity_id = 1;          // 使用者实体ID
+  int32 slot_id = 2;            // 使用哪个插槽的物品
+  int32 target_id = 3;          // 目标ID（部分物品需要）
+}
+
+// 使用物品响应
+message UseItemResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  ItemEffect effect = 3;        // 物品效果
+}
+
+// ========== 物品放置/交换 ==========
+
+// 物品放置请求
+message PlacementItemRequest {
+  int32 entity_id = 1;          // 实体ID
+  int32 origin_slot_id = 2;     // 原始索引
+  int32 target_slot_id = 3;     // 目标索引
+  InventoryType inventory_type = 4; // 背包类型
+}
+
+// 物品放置响应
+message PlacementItemResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+}
+
+// ========== 整理背包 ==========
+
+// 整理背包请求
+message SortInventoryRequest {
+  int32 entity_id = 1;          // 实体ID
+  InventoryType inventory_type = 2; // 背包类型
+}
+
+// 整理背包响应
+message SortInventoryResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  InventoryInfo inventory = 3;  // 整理后的背包信息
+}
+
+// ========== 数据结构 ==========
+
+// 背包信息
+message InventoryInfo {
+  int32 capacity = 1;           // 格子数量
+  repeated ItemInfo items = 2;  // 物品列表
+}
+
+// 物品信息
+message ItemInfo {
+  int32 item_id = 1;            // 物品ID
+  int32 amount = 2;             // 物品数量
+  int32 slot_id = 3;            // 所处位置
+  int64 unique_id = 4;          // 唯一ID（装备等需要）
+  int32 quality = 5;            // 品质
+  int32 level = 6;              // 等级
+  int64 expire_time = 7;        // 过期时间（0表示永久）
+  bool is_bound = 8;            // 是否绑定
+}
+
+// 物品更新通知
+message ItemUpdate {
+  UpdateType type = 1;          // 更新类型
+  ItemInfo item = 2;            // 物品信息
+}
+
+// 物品效果
+message ItemEffect {
+  EffectType effect_type = 1;   // 效果类型
+  int32 value = 2;              // 效果值
+  repeated int32 buff_ids = 3;  // 添加的Buff ID列表
+}
+
+// ========== 枚举定义 ==========
+
+// 背包类型
+enum InventoryType {
+  INVENTORY_TYPE_KNAPSACK = 0;  // 背包
+  INVENTORY_TYPE_WAREHOUSE = 1; // 仓库
+  INVENTORY_TYPE_EQUIPMENT = 2; // 装备栏
+  INVENTORY_TYPE_CONSUMABLE = 3; // 消耗品栏
+}
+
+// 更新类型
+enum UpdateType {
+  UPDATE_TYPE_ADD = 0;          // 添加
+  UPDATE_TYPE_DELETE = 1;       // 删除
+  UPDATE_TYPE_UPDATE = 2;       // 更新
+}
+
+// 效果类型
+enum EffectType {
+  EFFECT_TYPE_NONE = 0;         // 无效果
+  EFFECT_TYPE_RESTORE_HP = 1;   // 恢复生命
+  EFFECT_TYPE_RESTORE_MP = 2;   // 恢复魔法
+  EFFECT_TYPE_ADD_EXP = 3;      // 增加经验
+  EFFECT_TYPE_ADD_GOLD = 4;     // 增加金币
+  EFFECT_TYPE_ADD_BUFF = 5;     // 添加Buff
+  EFFECT_TYPE_TELEPORT = 6;     // 传送
+}

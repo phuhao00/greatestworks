@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: gaming
+data:
+  gateway-service.yaml: |
+    app:
+      name: "GreatestWorks Gateway"
+      version: "1.0.0"
+      environment: "development"
+      debug: false
+
+    service:
+      name: "gateway-service"
+      version: "1.0.0"
+      environment: "development"
+      node_id: "gateway-node-1"
+
+    server:
+      tcp:
+        host: "0.0.0.0"
+        port: 9090
+        max_connections: 10000
+        read_timeout: "30s"
+        write_timeout: "30s"
+        buffer_size: 4096
+        compression_enabled: false
+        encryption_enabled: false
+        heartbeat_enabled: true
+        heartbeat_interval: "30s"
+        heartbeat_timeout: "10s"
+        heartbeat_max_missed: 3
+        keep_alive: true
+        keep_alive_interval: "30s"
+        no_delay: true
+
+    database:
+      redis:
+        addr: "redis:6379"
+        password: "redis123"
+        db: 1
+        pool_size: 100
+        min_idle_conns: 10
+        max_retries: 3
+        dial_timeout: "5s"
+        read_timeout: "3s"
+        write_timeout: "3s"
+        pool_timeout: "4s"
+        idle_timeout: "5m"
+
+    gateway:
+      game_services:
+        discovery:
+          type: "static"
+          static:
+            endpoints:
+              - "game-service:8081"
+        rpc:
+          protocol: "grpc"
+          timeout: "30s"
+          retry_attempts: 3
+          retry_delay: "1s"
+          circuit_breaker:
+            enabled: true
+            failure_threshold: 5
+            timeout: "30s"
+            max_requests: 100
+        load_balancer:
+          strategy: "round_robin"
+          health_check:
+            enabled: true
+            interval: "10s"
+            timeout: "5s"
+            path: "/health"
+      auth_service:
+        base_url: "http://auth-service:8080"
+        timeout: "10s"
+        retry_attempts: 3
+        retry_delay: "1s"
+        circuit_breaker:
+          enabled: true
+          failure_threshold: 5
+          timeout: "30s"
+          max_requests: 100
+      connection:
+        max_connections: 10000
+        connection_timeout: "30s"
+        idle_timeout: "5m"
+        cleanup_interval: "1m"
+        session:
+          timeout: "24h"
+          cleanup_interval: "1h"
+          store_type: "redis"
+        message_queue:
+          enabled: true
+          provider: "redis"
+          topics:
+            player_events: "gateway.player.events"
+            game_events: "gateway.game.events"
+            system_events: "gateway.system.events"
+      protocol:
+        client:
+          type: "tcp"
+          codec: "binary"
+          compression: false
+          encryption: false
+        game:
+          type: "grpc"
+          codec: "protobuf"
+          compression: true
+          encryption: true
+      routing:
+        rules:
+          - pattern: "player.*"
+            target: "game-service"
+            method: "rpc"
+          - pattern: "battle.*"
+            target: "game-service"
+            method: "rpc"
+          - pattern: "auth.*"
+            target: "auth-service"
+            method: "http"
+        load_balancer:
+          strategy: "round_robin"
+          health_check: true
+          failover: true
+
+    logging:
+      level: "info"
+      format: "json"
+      output: "stdout"
+      fields:
+        service: "gateway-service"
+        version: "1.0.0"
+
+    monitoring:
+      health:
+        enabled: true
+        path: "/health"
+      metrics:
+        enabled: false
+        namespace: "gateway_service"
+      profiling:
+        enabled: true
+        host: "0.0.0.0"
+        port: 6062
+
+    performance:
+      worker_pool:
+        size: 100
+        queue_size: 1000
+      cache:
+        default_ttl: "1h"
+        max_entries: 10000
+        cleanup_interval: "10m"
+        eviction_policy: "lfu"
+      connection_pool:
+        max_idle: 100
+        max_open: 200
+        max_lifetime: "1h"
+
+    environment:
+      hot_reload: false
+      mock_data: false
+      test_mode: false

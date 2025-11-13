@@ -1,0 +1,216 @@
+syntax = "proto3";
+
+package greatestworks.character;
+
+import "proto/common.proto";
+import "proto/auth.proto";
+
+option go_package = "greatestworks/internal/proto/character";
+option csharp_namespace = "GreatestWorks.Character";
+
+// 角色服务
+service CharacterService {
+  // 创建角色
+  rpc CreateCharacter(CharacterCreateRequest) returns (CharacterCreateResponse);
+  
+  // 删除角色
+  rpc DeleteCharacter(CharacterDeleteRequest) returns (CharacterDeleteResponse);
+  
+  // 获取角色列表
+  rpc GetCharacterList(CharacterListRequest) returns (CharacterListResponse);
+  
+  // 选择角色（进入游戏）
+  rpc SelectCharacter(CharacterSelectRequest) returns (CharacterSelectResponse);
+  
+  // 获取角色详情
+  rpc GetCharacterInfo(CharacterInfoRequest) returns (CharacterInfoResponse);
+}
+
+// ========== 创建角色 ==========
+
+// 创建角色请求
+message CharacterCreateRequest {
+  int64 user_id = 1;        // 用户ID
+  string name = 2;          // 角色名称
+  int32 unit_id = 3;        // 单位定义ID（决定外观、职业等）
+  int32 gender = 4;         // 性别 (0:男, 1:女)
+  string session_token = 5; // 会话Token
+}
+
+// 创建角色响应
+message CharacterCreateResponse {
+  auth.ErrorCode error = 1; // 错误码
+  string message = 2;       // 错误消息
+  NetCharacter character = 3; // 创建的角色信息
+  int64 timestamp = 4;      // 时间戳
+}
+
+// ========== 删除角色 ==========
+
+// 删除角色请求
+message CharacterDeleteRequest {
+  int64 user_id = 1;        // 用户ID
+  int64 character_id = 2;   // 角色ID
+  string session_token = 3; // 会话Token
+  string confirm_name = 4;  // 确认角色名称（防止误删）
+}
+
+// 删除角色响应
+message CharacterDeleteResponse {
+  auth.ErrorCode error = 1; // 错误码
+  string message = 2;       // 错误消息
+  int64 timestamp = 3;      // 时间戳
+}
+
+// ========== 获取角色列表 ==========
+
+// 角色列表请求
+message CharacterListRequest {
+  int64 user_id = 1;        // 用户ID
+  string session_token = 2; // 会话Token
+}
+
+// 角色列表响应
+message CharacterListResponse {
+  auth.ErrorCode error = 1;           // 错误码
+  string message = 2;                 // 错误消息
+  repeated NetCharacter characters = 3; // 角色列表
+  int32 max_characters = 4;           // 最大角色数量
+  int64 timestamp = 5;                // 时间戳
+}
+
+// ========== 选择角色 ==========
+
+// 选择角色请求
+message CharacterSelectRequest {
+  int64 user_id = 1;        // 用户ID
+  int64 character_id = 2;   // 角色ID
+  string session_token = 3; // 会话Token
+}
+
+// 选择角色响应
+message CharacterSelectResponse {
+  auth.ErrorCode error = 1;     // 错误码
+  string message = 2;           // 错误消息
+  NetCharacter character = 3;   // 角色信息
+  int32 map_id = 4;             // 当前地图ID
+  common.Position position = 5; // 当前位置
+  int64 timestamp = 6;          // 时间戳
+}
+
+// ========== 获取角色详情 ==========
+
+// 角色详情请求
+message CharacterInfoRequest {
+  int64 user_id = 1;        // 用户ID
+  int64 character_id = 2;   // 角色ID
+  string session_token = 3; // 会话Token
+}
+
+// 角色详情响应
+message CharacterInfoResponse {
+  auth.ErrorCode error = 1;        // 错误码
+  string message = 2;              // 错误消息
+  NetCharacter character = 3;      // 角色信息
+  CharacterAttributes attributes = 4; // 角色属性
+  int64 timestamp = 5;             // 时间戳
+}
+
+// ========== 数据结构 ==========
+
+// 网络角色信息（序列化传输用）
+message NetCharacter {
+  int64 character_id = 1;   // 角色ID
+  int64 user_id = 2;        // 所属用户ID
+  string name = 3;          // 角色名称
+  int32 unit_id = 4;        // 单位定义ID
+  int32 level = 5;          // 等级
+  int32 exp = 6;            // 经验值
+  int64 gold = 7;           // 金币
+  
+  // 位置信息
+  int32 map_id = 8;         // 当前地图ID
+  float position_x = 9;     // X坐标
+  float position_y = 10;    // Y坐标
+  float position_z = 11;    // Z坐标
+  
+  // 基础属性
+  int32 hp = 12;            // 当前生命值
+  int32 mp = 13;            // 当前魔法值
+  int32 max_hp = 14;        // 最大生命值
+  int32 max_mp = 15;        // 最大魔法值
+  
+  // 其他信息
+  int32 gender = 16;        // 性别
+  int64 created_at = 17;    // 创建时间
+  int64 last_login = 18;    // 最后登录时间
+  int32 total_play_time = 19; // 总游戏时长（秒）
+}
+
+// 角色属性
+message CharacterAttributes {
+  // 基础属性
+  BaseAttributes base = 1;
+  
+  // 最终属性（经过装备、Buff等加成后）
+  FinalAttributes final = 2;
+}
+
+// 基础属性
+message BaseAttributes {
+  float max_hp = 1;         // 最大生命值
+  float max_mp = 2;         // 最大魔法值
+  float hp_regen = 3;       // 生命回复
+  float mp_regen = 4;       // 魔法回复
+  
+  float ad = 5;             // 物理攻击力
+  float ap = 6;             // 法术攻击力
+  float def = 7;            // 物理防御
+  float mdef = 8;           // 法术防御
+  
+  float cri = 9;            // 暴击率
+  float crd = 10;           // 暴击伤害
+  float hit_rate = 11;      // 命中率
+  float dodge_rate = 12;    // 闪避率
+  
+  float speed = 13;         // 移动速度
+  float attack_speed = 14;  // 攻击速度
+}
+
+// 最终属性
+message FinalAttributes {
+  float max_hp = 1;
+  float max_mp = 2;
+  float hp_regen = 3;
+  float mp_regen = 4;
+  
+  float ad = 5;
+  float ap = 6;
+  float def = 7;
+  float mdef = 8;
+  
+  float cri = 9;
+  float crd = 10;
+  float hit_rate = 11;
+  float dodge_rate = 12;
+  
+  float speed = 13;
+  float attack_speed = 14;
+}
+
+// ========== 枚举定义 ==========
+
+// 角色性别
+enum CharacterGender {
+  MALE = 0;     // 男性
+  FEMALE = 1;   // 女性
+}
+
+// 角色状态
+enum CharacterState {
+  IDLE = 0;       // 空闲
+  MOVING = 1;     // 移动中
+  ATTACKING = 2;  // 攻击中
+  CASTING = 3;    // 施法中
+  DEAD = 4;       // 死亡
+}

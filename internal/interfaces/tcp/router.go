@@ -55,6 +55,8 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	r.RegisterHandler(uint16(protocol.MsgPlayerLogin), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerLogout), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerMove), handler)
+	r.RegisterHandler(uint16(protocol.MsgPlayerStatus), handler)
+	r.RegisterHandler(uint16(protocol.MsgBattleSkill), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerInfo), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerCreate), handler)
 	r.RegisterHandler(uint16(protocol.MsgPlayerStatus), handler)
@@ -68,6 +70,7 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	r.RegisterHandler(uint16(protocol.MsgJoinBattle), handler)
 	r.RegisterHandler(uint16(protocol.MsgStartBattle), handler)
 	r.RegisterHandler(uint16(protocol.MsgBattleAction), handler)
+	r.RegisterHandler(uint16(protocol.MsgBattleSkill), handler)
 	r.RegisterHandler(uint16(protocol.MsgLeaveBattle), handler)
 	r.RegisterHandler(uint16(protocol.MsgBattleStatus), handler)
 	r.RegisterHandler(uint16(protocol.MsgBattleResult), handler)
@@ -88,8 +91,8 @@ func (r *Router) RegisterGameHandler(handler *handlers.GameHandler) {
 	//r.RegisterHandler(uint16(protocol.MsgBuildingList), handler)
 
 	// 社交相关消息
-	//r.RegisterHandler(uint16(protocol.MsgChatSend), handler)
-	//r.RegisterHandler(uint16(protocol.MsgChatReceive), handler)
+	// 聊天与社交
+	r.RegisterHandler(uint16(protocol.MsgChatMessage), handler)
 	//r.RegisterHandler(uint16(protocol.MsgFriendAdd), handler)
 	r.RegisterHandler(uint16(protocol.MsgFriendRemove), handler)
 	r.RegisterHandler(uint16(protocol.MsgFriendList), handler)

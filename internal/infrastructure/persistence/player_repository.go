@@ -39,6 +39,7 @@ type PlayerDocument struct {
 	Exp       int64              `bson:"exp" json:"exp"`
 	Status    int                `bson:"status" json:"status"`
 	Position  PlayerPosition     `bson:"position" json:"position"`
+	LastMapID int32              `bson:"last_map_id" json:"last_map_id"`
 	Stats     PlayerStats        `bson:"stats" json:"stats"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
@@ -227,7 +228,7 @@ func (r *MongoPlayerRepository) Delete(ctx context.Context, id string) error {
 // List 获取玩家列表
 func (r *MongoPlayerRepository) List(ctx context.Context, limit, offset int) ([]*player.Player, error) {
 	opts := options.Find().
-		SetSort(bson.D{{"created_at", -1}}).
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset))
 
@@ -284,6 +285,7 @@ func (r *MongoPlayerRepository) toDocument(p *player.Player) *PlayerDocument {
 		Exp:       p.Exp(),
 		Status:    int(p.Status()),
 		Position:  PlayerPosition{X: position.X, Y: position.Y, Z: position.Z},
+		LastMapID: p.LastMapID(),
 		Stats:     PlayerStats{HP: stats.HP, MaxHP: stats.MaxHP, MP: stats.MP, MaxMP: stats.MaxMP, Attack: stats.Attack, Defense: stats.Defense, Speed: stats.Speed},
 		CreatedAt: p.CreatedAt(),
 		UpdatedAt: p.UpdatedAt(),
@@ -315,6 +317,7 @@ func (r *MongoPlayerRepository) toAggregate(doc *PlayerDocument) (*player.Player
 		doc.Exp,
 		status,
 		position,
+		doc.LastMapID,
 		stats,
 		doc.CreatedAt,
 		doc.UpdatedAt,

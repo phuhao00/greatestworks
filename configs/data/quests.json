@@ -1,0 +1,146 @@
+[
+  {
+    "id": 1001,
+    "name": "Goblin Hunt",
+    "description": "Help the village by eliminating goblins",
+    "level": 1,
+    "objectives": [
+      {
+        "type": 1,
+        "target_id": 2001,
+        "required": 10,
+        "description": "Kill 10 Goblins"
+      }
+    ],
+    "rewards": {
+      "exp": 500,
+      "gold": 100,
+      "items": [
+        {
+          "item_id": 10001,
+          "count": 5
+        }
+      ]
+    },
+    "prerequisite_quests": []
+  },
+  {
+    "id": 1002,
+    "name": "Collect Goblin Ears",
+    "description": "Collect goblin ears as proof of your hunt",
+    "level": 1,
+    "objectives": [
+      {
+        "type": 2,
+        "target_id": 30002,
+        "required": 5,
+        "description": "Collect 5 Goblin Ears"
+      }
+    ],
+    "rewards": {
+      "exp": 300,
+      "gold": 50,
+      "items": []
+    },
+    "prerequisite_quests": [1001]
+  },
+  {
+    "id": 1003,
+    "name": "Talk to the Elder",
+    "description": "Report your success to the village elder",
+    "level": 1,
+    "objectives": [
+      {
+        "type": 4,
+        "target_id": 3002,
+        "required": 1,
+        "description": "Talk to Quest Giver"
+      }
+    ],
+    "rewards": {
+      "exp": 200,
+      "gold": 50,
+      "items": [
+        {
+          "item_id": 20001,
+          "count": 1
+        }
+      ]
+    },
+    "prerequisite_quests": [1002]
+  },
+  {
+    "id": 2001,
+    "name": "Venture into the Dark Forest",
+    "description": "Explore the dangerous dark forest",
+    "level": 5,
+    "objectives": [
+      {
+        "type": 3,
+        "target_id": 100,
+        "required": 1,
+        "description": "Reach Dark Forest Entrance"
+      }
+    ],
+    "rewards": {
+      "exp": 800,
+      "gold": 200,
+      "items": []
+    },
+    "prerequisite_quests": [1003]
+  },
+  {
+    "id": 2002,
+    "name": "Defeat the Orc Warriors",
+    "description": "Clear the orc warriors blocking the path",
+    "level": 8,
+    "objectives": [
+      {
+        "type": 1,
+        "target_id": 2002,
+        "required": 15,
+        "description": "Kill 15 Orc Warriors"
+      }
+    ],
+    "rewards": {
+      "exp": 1500,
+      "gold": 300,
+      "items": [
+        {
+          "item_id": 20003,
+          "count": 1
+        }
+      ]
+    },
+    "prerequisite_quests": [2001]
+  },
+  {
+    "id": 3001,
+    "name": "Boss Challenge: Dark Mage",
+    "description": "Defeat the powerful dark mage",
+    "level": 15,
+    "objectives": [
+      {
+        "type": 1,
+        "target_id": 2003,
+        "required": 1,
+        "description": "Defeat the Dark Mage"
+      }
+    ],
+    "rewards": {
+      "exp": 5000,
+      "gold": 1000,
+      "items": [
+        {
+          "item_id": 20002,
+          "count": 1
+        },
+        {
+          "item_id": 30003,
+          "count": 3
+        }
+      ]
+    },
+    "prerequisite_quests": [2002]
+  }
+]

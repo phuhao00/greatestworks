@@ -164,7 +164,6 @@ func (s *RankingApplicationService) UpdatePlayerScore(ctx context.Context, req *
 	// 获取当前玩家排名条目
 	// TODO: 修复FindByRankingAndPlayer方法调用
 	// currentEntry, err := s.rankEntryRepo.FindByRankingAndPlayer(ctx, req.RankingID, req.PlayerID)
-	currentEntry := &ranking.RankEntry{}
 	// TODO: 修复err变量
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to find current entry: %w", err)
@@ -172,10 +171,6 @@ func (s *RankingApplicationService) UpdatePlayerScore(ctx context.Context, req *
 
 	oldScore := int64(0)
 	oldRank := int64(0)
-	if currentEntry != nil {
-		oldScore = currentEntry.GetScore()
-		oldRank = currentEntry.GetRank()
-	}
 
 	// 更新分数
 	// entry, err := s.rankingService.UpdatePlayerScore(ctx, req.RankingID, req.PlayerID, req.Score)
@@ -351,25 +346,23 @@ func (s *RankingApplicationService) GetPlayerRank(ctx context.Context, req *GetP
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to find player rank: %w", err)
 	// }
-	entry := &ranking.RankEntry{}
-
-	if entry == nil {
-		return &GetPlayerRankResponse{
-			RankingID: req.RankingID,
-			PlayerID:  req.PlayerID,
-			Found:     false,
-		}, nil
-	}
-
+	// 占位实现：未接入存储，默认未找到
 	return &GetPlayerRankResponse{
 		RankingID: req.RankingID,
 		PlayerID:  req.PlayerID,
-		Rank:      int32(entry.GetRank()),
-		Score:     entry.GetScore(),
-		Metadata:  entry.GetMetadata(),
-		UpdatedAt: entry.GetUpdatedAt(),
-		Found:     true,
+		Found:     false,
 	}, nil
+
+	// 以下为真实实现路径，待存储接入后启用
+	// return &GetPlayerRankResponse{
+	//     RankingID: req.RankingID,
+	//     PlayerID:  req.PlayerID,
+	//     Rank:      int32(entry.GetRank()),
+	//     Score:     entry.GetScore(),
+	//     Metadata:  entry.GetMetadata(),
+	//     UpdatedAt: entry.GetUpdatedAt(),
+	//     Found:     true,
+	// }, nil
 }
 
 // GetTopPlayersRequest 获取排行榜前N名请求
